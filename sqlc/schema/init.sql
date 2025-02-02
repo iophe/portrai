@@ -1,5 +1,17 @@
 CREATE SCHEMA IF NOT EXISTS public;
 
+-- Add triggers for updated_at timestamps
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+/******************************************************************************************/
+/******************************** SECTION : USER ******************************************/
+/******************************************************************************************/
 /**
 * USERS
 * Note: This table contains user data. Users should only be able to view and update their own data.
@@ -7,13 +19,22 @@ CREATE SCHEMA IF NOT EXISTS public;
 create table public.users (
   -- UUID from auth.users
   id uuid references auth.users not null primary key,
+
   full_name text,
 
   -- The customer's billing address, stored in JSON format.
   billing_address jsonb,
   -- Stores your customer's payment instruments.
-  payment_method jsonb
+  payment_method jsonb,
+
+  created_at timestamp with time zone default current_timestamp,
+  updated_at timestamp with time zone default current_timestamp
 );
+
+CREATE TRIGGER update_users_updated_at
+    BEFORE UPDATE ON public.users
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
 
 CREATE SCHEMA IF NOT EXISTS payment;
 /**
@@ -22,10 +43,14 @@ CREATE SCHEMA IF NOT EXISTS payment;
 */
 create table payment.customers (
   -- UUID from auth.users
-  id uuid references auth.users not null primary key,
+  id uuid primary key not null references auth.users on delete cascade,
   -- The user's customer ID in Stripe. User must not be able to update this.
   stripe_customer_id text
 );
+
+/******************************************************************************************/
+/******************************** SECTION : PAYMENT ***************************************/
+/******************************************************************************************/
 
 /**
 * PRODUCTS
@@ -87,7 +112,7 @@ create type subscription_status as enum ('trialing', 'active', 'canceled', 'inco
 create table payment.subscriptions (
   -- Subscription ID from Stripe, e.g. sub_1234.
   id text primary key,
-  user_id uuid references auth.users not null,
+  user_id uuid not null references auth.users on delete cascade,
   -- The status of the subscription object, one of subscription_status type above.
   status subscription_status,
   -- Set of key-value pairs, used to store additional information about the object in a structured format.
@@ -115,3 +140,37 @@ create table payment.subscriptions (
   -- If the subscription has a trial, the end of that trial.
   trial_end timestamp with time zone default timezone('utc'::text, now())
 );
+
+/******************************************************************************************/
+/******************************** SECTION : RESUME ****************************************/
+/******************************************************************************************/
+
+
+/**
+* Experiences
+* 
+*/
+create table public.experiences (
+  experience_id bigint primary key generated always as identity,
+  user_id uuid not null references auth.users on delete cascade,
+  company_name text not null default '',
+  job_title text not null default '',
+  location text not null default '',
+  start_date date not null,
+  end_date date,
+  is_current boolean default false,
+  description text,
+  priority integer,
+  tags text[],
+  notes jsonb[],
+  metadata jsonb,
+  created_at timestamp with time zone default current_timestamp,
+  updated_at timestamp with time zone default current_timestamp
+);
+
+CREATE TRIGGER update_experiences_updated_at
+    BEFORE UPDATE ON public.experiences
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE INDEX experiences_user_idx ON public.experiences(user_id);

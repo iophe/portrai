@@ -12,12 +12,17 @@ import (
 
 type Querier interface {
 	CreateCustomer(ctx context.Context, arg CreateCustomerParams) error
+	CreateExperience(ctx context.Context, arg CreateExperienceParams) (int64, error)
+	DeleteExperience(ctx context.Context, arg DeleteExperienceParams) error
 	DeleteSubscription(ctx context.Context, subscriptionID string) error
 	GetActiveSubscriptionByUserID(ctx context.Context, userID uuid.UUID) (GetActiveSubscriptionByUserIDRow, error)
 	GetCustomerByStripeID(ctx context.Context, stripeCustomerID string) (PaymentCustomer, error)
 	GetCustomerByUserID(ctx context.Context, userID uuid.UUID) (PaymentCustomer, error)
+	GetExperienceById(ctx context.Context, arg GetExperienceByIdParams) (GetExperienceByIdRow, error)
+	GetExperiencesByUserId(ctx context.Context, userID uuid.UUID) ([]GetExperiencesByUserIdRow, error)
 	GetPriceByID(ctx context.Context, priceID string) (GetPriceByIDRow, error)
 	GetSubscriptionByID(ctx context.Context, subscriptionID string) (GetSubscriptionByIDRow, error)
+	UpdateExperience(ctx context.Context, arg UpdateExperienceParams) error
 	UpdateSubscriptionStatus(ctx context.Context, arg UpdateSubscriptionStatusParams) error
 	UpsertSubscription(ctx context.Context, arg UpsertSubscriptionParams) error
 }

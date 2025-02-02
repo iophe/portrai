@@ -132,26 +132,27 @@ function FaultPopup(props: FaultProps) {
 	return (
 		<div
 			ref={ref}
-			class="flex gap-4 justify-between h-fit border-2 border-moon text-moon font-normal text-wrap transition-opacity duration-500 show"
+			class="flex gap-4 justify-between h-fit border-2 border-gray-500 text-gray-50 font-normal show text-wrap transition-opacity duration-500"
 			classList={{
-				"bg-indigo-700": props.severity === INFO,
-				"bg-purple-700": props.severity === MINOR,
-				"bg-rose-700": props.severity === MAJOR,
-				"bg-red-700": props.severity === CRITICAL,
+				"bg-indigo-600": props.severity === INFO,
+				"bg-purple-600": props.severity === MINOR,
+				"bg-rose-600": props.severity === MAJOR,
+				"bg-red-600": props.severity === CRITICAL,
 			}}
 		>
 			<span class="p-4">{props.children}</span>
-			<p
-				class="p-4 cursor-pointer text-moon font-semibold"
+			<button
+				class="p-4 cursor-pointer text-gray-50 font-semibold"
 				onclick={() => {
 					ref.classList.replace("show", "hide");
+					
 					ref.onanimationend = () => {
 						props.remove();
 					};
 				}}
 			>
 				X
-			</p>
+			</button>
 		</div>
 	);
 }

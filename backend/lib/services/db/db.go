@@ -89,6 +89,25 @@ func StringToTimestampz(s string) (pgtype.Timestamptz, error) {
 	return ts, nil
 }
 
+func StringToDate(s string) (pgtype.Date, error) {
+	var date pgtype.Date
+
+	if s == "" {
+		date.Valid = false
+		return date, nil
+	}
+
+	// Parse the YYYY-MM-DD string to time.Time
+	t, err := time.Parse(time.DateOnly, s)
+	if err != nil {
+		return date, fmt.Errorf("failed to parse date: %w", err)
+	}
+
+	date.Valid = true
+	date.Time = t
+
+	return date, nil
+}
 func Int64ToTimestamptz(unix_timestamp int64) pgtype.Timestamptz {
 	if unix_timestamp == 0 {
 		return pgtype.Timestamptz{}

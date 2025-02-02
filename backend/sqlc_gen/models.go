@@ -146,6 +146,24 @@ func (ns NullSubscriptionStatus) Value() (driver.Value, error) {
 	return string(ns.SubscriptionStatus), nil
 }
 
+type Experience struct {
+	ExperienceID int64              `json:"experience_id"`
+	UserID       uuid.UUID          `json:"user_id"`
+	CompanyName  string             `json:"company_name"`
+	JobTitle     string             `json:"job_title"`
+	Location     string             `json:"location"`
+	StartDate    pgtype.Date        `json:"start_date"`
+	EndDate      pgtype.Date        `json:"end_date"`
+	IsCurrent    pgtype.Bool        `json:"is_current"`
+	Description  pgtype.Text        `json:"description"`
+	Priority     pgtype.Int4        `json:"priority"`
+	Tags         []string           `json:"tags"`
+	Notes        [][]byte           `json:"notes"`
+	Metadata     []byte             `json:"metadata"`
+	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+}
+
 type PaymentCustomer struct {
 	ID               uuid.UUID   `json:"id"`
 	StripeCustomerID pgtype.Text `json:"stripe_customer_id"`
@@ -193,8 +211,10 @@ type PaymentSubscription struct {
 }
 
 type User struct {
-	ID             uuid.UUID   `json:"id"`
-	FullName       pgtype.Text `json:"full_name"`
-	BillingAddress []byte      `json:"billing_address"`
-	PaymentMethod  []byte      `json:"payment_method"`
+	ID             uuid.UUID          `json:"id"`
+	FullName       pgtype.Text        `json:"full_name"`
+	BillingAddress []byte             `json:"billing_address"`
+	PaymentMethod  []byte             `json:"payment_method"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt      pgtype.Timestamptz `json:"updated_at"`
 }

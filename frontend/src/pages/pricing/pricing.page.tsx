@@ -8,7 +8,7 @@ interface PricingProps {}
 
 function Pricing(props: PricingProps) {
 	const navigate = useNavigate();
-	
+
 	const [billingInterval, setBillingInterval] = createSignal<
 		"monthly" | "yearly"
 	>("monthly");
@@ -20,7 +20,10 @@ function Pricing(props: PricingProps) {
 					? "Monthly Plan"
 					: "Yearly Plan",
 			price: billingInterval() === "monthly" ? "10€" : "100€",
-			price_id: billingInterval() === "monthly" ? "price_1QlvR609qwIgCJScHRHHQWGR" : import.meta.env.STRIPE_YEARLY_PRICE_ID,
+			price_id:
+				billingInterval() === "monthly"
+					? "price_1QlvR609qwIgCJScHRHHQWGR"
+					: import.meta.env.STRIPE_YEARLY_PRICE_ID,
 			interval: billingInterval() === "monthly" ? "/month" : "/year",
 			features: [
 				"Full access to all features",
@@ -73,7 +76,7 @@ function Pricing(props: PricingProps) {
 			}
 		} catch (err) {
 			if ((err as AxiosError).response?.status === 401) {
-				navigate("/signin")
+				navigate("/signin");
 			}
 		} finally {
 			setLoading(null);
