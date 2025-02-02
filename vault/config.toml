@@ -1,0 +1,19 @@
+[vault]
+container_name="portrai_vault"
+url="http://127.0.0.1:8200"
+
+[vault.engines]
+portrai_supabase={backend_type="kv",path="portrai_supabase",options={"version"=2}}
+portrai_common={backend_type="kv",path="portrai_common",options={"version"=2}}
+
+[vault.secrets]
+POSTGRES_PASSWORD={name="POSTGRES_PASSWORD",engine="portrai_supabase",mount="db", type="pwd_urlsafe"}
+JWT_SECRET={name="JWT_SECRET",engine="portrai_supabase",mount="auth", type="key"}
+ANON_KEY={name="ANON_KEY",engine="portrai_supabase",mount="auth", type="key"}
+SERVICE_ROLE_KEY={name="SERVICE_ROLE_KEY",engine="portrai_supabase",mount="auth", type="key"}
+DASHBOARD_PASSWORD={name="DASHBOARD_PASSWORD",engine="portrai_supabase",mount="auth", type="pwd"}
+SECRET_KEY_BASE={name="SECRET_KEY_BASE",engine="portrai_supabase",mount="auth", type="key"}
+VAULT_ENC_KEY={name="VAULT_ENC_KEY",engine="portrai_supabase",mount="auth", type="key"}
+LOGFLARE_API_KEY={name="LOGFLARE_API_KEY",engine="portrai_supabase",mount="auth", type="key"}
+DRAGONFLY_PASSWORD={name="DRAGONFLY_PASSWORD",engine="portrai_common",mount="cache", type="pwd_urlsafe"}
+GF_SECURITY_ADMIN_PASSWORD={name="GF_SECURITY_ADMIN_PASSWORD",engine="portrai_common",mount="cache", type="pwd_urlsafe"}

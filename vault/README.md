@@ -1,0 +1,1 @@
+sudo $(which python3) vault_setup.py
