@@ -1,3 +1,4 @@
+import CVGenerator from "@components/pdf_resume/PDFGenerator";
 import Header from "../../components/header.default";
 
 interface LandingProps {}
@@ -15,6 +16,7 @@ function Landing(props: LandingProps) {
 					class="text-start md:text-center w-full md:w-fit md:px-4 border-b border-b-gray-700 pb-2 out"
 					placeholder="Enter your email address"
 				/>
+				<CVGenerator></CVGenerator>
 				<div class="grow"></div>
 			</section>
 		</main>

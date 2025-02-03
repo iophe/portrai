@@ -12,14 +12,80 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const createExperience = `-- name: CreateExperience :one
-INSERT INTO public.experiences (
+const createCertificate = `-- name: CreateCertificate :one
+/**
+* Certificates
+* 
+*/
+INSERT INTO public.certificates (
     user_id,
-    company_name,
-    job_title,
+    certificate_name,
+    optional_issuer,
+    optional_location,
+    optional_granted_date,
+    description,
+    priority,
+    tags,
+    notes,
+    metadata
+) VALUES (
+    $1::uuid,
+    $2::text,
+    $3::text,
+    $4::text,
+    $5::date,
+    $6::text,
+    $7::integer,
+    COALESCE($8::text[], ARRAY[]::text[]),
+    COALESCE($9::jsonb[], ARRAY[]::jsonb[]),
+    COALESCE($10::jsonb, '{}'::jsonb)
+)
+RETURNING certificate_id
+`
+
+type CreateCertificateParams struct {
+	UserID              uuid.UUID   `json:"user_id"`
+	CertificateName     string      `json:"certificate_name"`
+	OptionalIssuer      string      `json:"optional_issuer"`
+	OptionalLocation    string      `json:"optional_location"`
+	OptionalGrantedDate pgtype.Date `json:"optional_granted_date"`
+	Description         string      `json:"description"`
+	Priority            int32       `json:"priority"`
+	Tags                []string    `json:"tags"`
+	Notes               [][]byte    `json:"notes"`
+	Metadata            []byte      `json:"metadata"`
+}
+
+func (q *Queries) CreateCertificate(ctx context.Context, arg CreateCertificateParams) (int64, error) {
+	row := q.db.QueryRow(ctx, createCertificate,
+		arg.UserID,
+		arg.CertificateName,
+		arg.OptionalIssuer,
+		arg.OptionalLocation,
+		arg.OptionalGrantedDate,
+		arg.Description,
+		arg.Priority,
+		arg.Tags,
+		arg.Notes,
+		arg.Metadata,
+	)
+	var certificate_id int64
+	err := row.Scan(&certificate_id)
+	return certificate_id, err
+}
+
+const createEducation = `-- name: CreateEducation :one
+/**
+* Educations
+* 
+*/
+INSERT INTO public.educations (
+    user_id,
+    school,
+    degree,
     location,
     start_date,
-    end_date,
+    optional_end_date,
     is_current,
     description,
     priority,
@@ -36,26 +102,97 @@ INSERT INTO public.experiences (
     $7::boolean,
     $8::text,
     $9::integer,
-    $10::text[],
-    $11::jsonb[],
-    $12::jsonb
+    COALESCE($10::text[], ARRAY[]::text[]),
+    COALESCE($11::jsonb[], ARRAY[]::jsonb[]),
+    COALESCE($12::jsonb, '{}'::jsonb)
+)
+RETURNING education_id
+`
+
+type CreateEducationParams struct {
+	UserID          uuid.UUID   `json:"user_id"`
+	School          string      `json:"school"`
+	Degree          string      `json:"degree"`
+	Location        string      `json:"location"`
+	StartDate       pgtype.Date `json:"start_date"`
+	OptionalEndDate pgtype.Date `json:"optional_end_date"`
+	IsCurrent       bool        `json:"is_current"`
+	Description     string      `json:"description"`
+	Priority        int32       `json:"priority"`
+	Tags            []string    `json:"tags"`
+	Notes           [][]byte    `json:"notes"`
+	Metadata        []byte      `json:"metadata"`
+}
+
+func (q *Queries) CreateEducation(ctx context.Context, arg CreateEducationParams) (int64, error) {
+	row := q.db.QueryRow(ctx, createEducation,
+		arg.UserID,
+		arg.School,
+		arg.Degree,
+		arg.Location,
+		arg.StartDate,
+		arg.OptionalEndDate,
+		arg.IsCurrent,
+		arg.Description,
+		arg.Priority,
+		arg.Tags,
+		arg.Notes,
+		arg.Metadata,
+	)
+	var education_id int64
+	err := row.Scan(&education_id)
+	return education_id, err
+}
+
+const createExperience = `-- name: CreateExperience :one
+/**
+* Experiences
+* 
+*/
+
+INSERT INTO public.experiences (
+    user_id,
+    company_name,
+    job_title,
+    location,
+    start_date,
+    optional_end_date,
+    is_current,
+    description,
+    priority,
+    tags,
+    notes,
+    metadata
+) VALUES (
+    $1::uuid,
+    $2::text,
+    $3::text,
+    $4::text,
+    $5::date,
+    $6::date,
+    $7::boolean,
+    $8::text,
+    $9::integer,
+    COALESCE($10::text[], ARRAY[]::text[]),
+    COALESCE($11::jsonb[], ARRAY[]::jsonb[]),
+    COALESCE($12::jsonb, '{}'::jsonb)
 )
 RETURNING experience_id
 `
 
 type CreateExperienceParams struct {
-	UserID      uuid.UUID   `json:"user_id"`
-	CompanyName string      `json:"company_name"`
-	JobTitle    string      `json:"job_title"`
-	Location    string      `json:"location"`
-	StartDate   pgtype.Date `json:"start_date"`
-	EndDate     pgtype.Date `json:"end_date"`
-	IsCurrent   bool        `json:"is_current"`
-	Description string      `json:"description"`
-	Priority    int32       `json:"priority"`
-	Tags        []string    `json:"tags"`
-	Notes       [][]byte    `json:"notes"`
-	Metadata    []byte      `json:"metadata"`
+	UserID          uuid.UUID   `json:"user_id"`
+	CompanyName     string      `json:"company_name"`
+	JobTitle        string      `json:"job_title"`
+	Location        string      `json:"location"`
+	StartDate       pgtype.Date `json:"start_date"`
+	OptionalEndDate pgtype.Date `json:"optional_end_date"`
+	IsCurrent       bool        `json:"is_current"`
+	Description     string      `json:"description"`
+	Priority        int32       `json:"priority"`
+	Tags            []string    `json:"tags"`
+	Notes           [][]byte    `json:"notes"`
+	Metadata        []byte      `json:"metadata"`
 }
 
 func (q *Queries) CreateExperience(ctx context.Context, arg CreateExperienceParams) (int64, error) {
@@ -65,7 +202,7 @@ func (q *Queries) CreateExperience(ctx context.Context, arg CreateExperiencePara
 		arg.JobTitle,
 		arg.Location,
 		arg.StartDate,
-		arg.EndDate,
+		arg.OptionalEndDate,
 		arg.IsCurrent,
 		arg.Description,
 		arg.Priority,
@@ -76,6 +213,164 @@ func (q *Queries) CreateExperience(ctx context.Context, arg CreateExperiencePara
 	var experience_id int64
 	err := row.Scan(&experience_id)
 	return experience_id, err
+}
+
+const createProject = `-- name: CreateProject :one
+/**
+* Projects
+* 
+*/
+INSERT INTO public.projects (
+    user_id,
+    project_title,
+    optional_project_subtitle,
+    optional_start_date,
+    optional_end_date,
+    is_current,
+    description,
+    priority,
+    tags,
+    notes,
+    metadata
+) VALUES (
+    $1::uuid,
+    $2::text,
+    $3::text,
+    $4::date,
+    $5::date,
+    $6::boolean,
+    $7::text,
+    $8::integer,
+    COALESCE($9::text[], ARRAY[]::text[]),
+    COALESCE($10::jsonb[], ARRAY[]::jsonb[]),
+    COALESCE($11::jsonb, '{}'::jsonb)
+)
+RETURNING project_id
+`
+
+type CreateProjectParams struct {
+	UserID                  uuid.UUID   `json:"user_id"`
+	ProjectTitle            string      `json:"project_title"`
+	OptionalProjectSubtitle string      `json:"optional_project_subtitle"`
+	OptionalStartDate       pgtype.Date `json:"optional_start_date"`
+	OptionalEndDate         pgtype.Date `json:"optional_end_date"`
+	IsCurrent               bool        `json:"is_current"`
+	Description             string      `json:"description"`
+	Priority                int32       `json:"priority"`
+	Tags                    []string    `json:"tags"`
+	Notes                   [][]byte    `json:"notes"`
+	Metadata                []byte      `json:"metadata"`
+}
+
+func (q *Queries) CreateProject(ctx context.Context, arg CreateProjectParams) (int64, error) {
+	row := q.db.QueryRow(ctx, createProject,
+		arg.UserID,
+		arg.ProjectTitle,
+		arg.OptionalProjectSubtitle,
+		arg.OptionalStartDate,
+		arg.OptionalEndDate,
+		arg.IsCurrent,
+		arg.Description,
+		arg.Priority,
+		arg.Tags,
+		arg.Notes,
+		arg.Metadata,
+	)
+	var project_id int64
+	err := row.Scan(&project_id)
+	return project_id, err
+}
+
+const createSkill = `-- name: CreateSkill :one
+/**
+* Skills
+* 
+*/
+INSERT INTO public.skills (
+    user_id,
+    skill_name,
+    optional_skill_type,
+    optional_skill_level,
+    description,
+    priority,
+    tags,
+    notes,
+    metadata
+) VALUES (
+    $1::uuid,
+    $2::text,
+    $3::skill_type,
+    $4::skill_level,
+    $5::text,
+    $6::integer,
+    COALESCE($7::text[], ARRAY[]::text[]),
+    COALESCE($8::jsonb[], ARRAY[]::jsonb[]),
+    COALESCE($9::jsonb, '{}'::jsonb)
+)
+RETURNING skill_id
+`
+
+type CreateSkillParams struct {
+	UserID             uuid.UUID  `json:"user_id"`
+	SkillName          string     `json:"skill_name"`
+	OptionalSkillType  SkillType  `json:"optional_skill_type"`
+	OptionalSkillLevel SkillLevel `json:"optional_skill_level"`
+	Description        string     `json:"description"`
+	Priority           int32      `json:"priority"`
+	Tags               []string   `json:"tags"`
+	Notes              [][]byte   `json:"notes"`
+	Metadata           []byte     `json:"metadata"`
+}
+
+func (q *Queries) CreateSkill(ctx context.Context, arg CreateSkillParams) (int64, error) {
+	row := q.db.QueryRow(ctx, createSkill,
+		arg.UserID,
+		arg.SkillName,
+		arg.OptionalSkillType,
+		arg.OptionalSkillLevel,
+		arg.Description,
+		arg.Priority,
+		arg.Tags,
+		arg.Notes,
+		arg.Metadata,
+	)
+	var skill_id int64
+	err := row.Scan(&skill_id)
+	return skill_id, err
+}
+
+const deleteCertificate = `-- name: DeleteCertificate :exec
+DELETE FROM public.certificates
+WHERE 
+    certificate_id = $1::bigint 
+    AND user_id = $2::uuid
+`
+
+type DeleteCertificateParams struct {
+	CertificateID int64     `json:"certificate_id"`
+	UserID        uuid.UUID `json:"user_id"`
+}
+
+func (q *Queries) DeleteCertificate(ctx context.Context, arg DeleteCertificateParams) error {
+	_, err := q.db.Exec(ctx, deleteCertificate, arg.CertificateID, arg.UserID)
+	return err
+}
+
+const deleteEducation = `-- name: DeleteEducation :exec
+DELETE FROM public.educations
+WHERE 
+    education_id = $1::bigint 
+    AND user_id = $2::uuid
+`
+
+type DeleteEducationParams struct {
+	EducationID int64     `json:"education_id"`
+	UserID      uuid.UUID `json:"user_id"`
+}
+
+func (q *Queries) DeleteEducation(ctx context.Context, arg DeleteEducationParams) error {
+	_, err := q.db.Exec(ctx, deleteEducation, arg.EducationID, arg.UserID)
+	return err
 }
 
 const deleteExperience = `-- name: DeleteExperience :exec
@@ -95,6 +390,291 @@ func (q *Queries) DeleteExperience(ctx context.Context, arg DeleteExperiencePara
 	return err
 }
 
+const deleteProject = `-- name: DeleteProject :exec
+DELETE FROM public.projects
+WHERE 
+    project_id = $1::bigint 
+    AND user_id = $2::uuid
+`
+
+type DeleteProjectParams struct {
+	ProjectID int64     `json:"project_id"`
+	UserID    uuid.UUID `json:"user_id"`
+}
+
+func (q *Queries) DeleteProject(ctx context.Context, arg DeleteProjectParams) error {
+	_, err := q.db.Exec(ctx, deleteProject, arg.ProjectID, arg.UserID)
+	return err
+}
+
+const deleteSkill = `-- name: DeleteSkill :exec
+DELETE FROM public.skills
+WHERE 
+    skill_id = $1::bigint 
+    AND user_id = $2::uuid
+`
+
+type DeleteSkillParams struct {
+	SkillID int64     `json:"skill_id"`
+	UserID  uuid.UUID `json:"user_id"`
+}
+
+func (q *Queries) DeleteSkill(ctx context.Context, arg DeleteSkillParams) error {
+	_, err := q.db.Exec(ctx, deleteSkill, arg.SkillID, arg.UserID)
+	return err
+}
+
+const getCertificateById = `-- name: GetCertificateById :one
+SELECT 
+    certificate_id,
+    certificate_name,
+    optional_issuer,
+    optional_location,
+    optional_granted_date,
+    description,
+    priority,
+    tags,
+    notes,
+    metadata,
+    created_at,
+    updated_at
+FROM public.certificates
+WHERE 
+    certificate_id = $1::bigint 
+    AND user_id = $2::uuid
+`
+
+type GetCertificateByIdParams struct {
+	CertificateID int64     `json:"certificate_id"`
+	UserID        uuid.UUID `json:"user_id"`
+}
+
+type GetCertificateByIdRow struct {
+	CertificateID       int64              `json:"certificate_id"`
+	CertificateName     string             `json:"certificate_name"`
+	OptionalIssuer      pgtype.Text        `json:"optional_issuer"`
+	OptionalLocation    pgtype.Text        `json:"optional_location"`
+	OptionalGrantedDate pgtype.Date        `json:"optional_granted_date"`
+	Description         string             `json:"description"`
+	Priority            int32              `json:"priority"`
+	Tags                []string           `json:"tags"`
+	Notes               [][]byte           `json:"notes"`
+	Metadata            []byte             `json:"metadata"`
+	CreatedAt           pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) GetCertificateById(ctx context.Context, arg GetCertificateByIdParams) (GetCertificateByIdRow, error) {
+	row := q.db.QueryRow(ctx, getCertificateById, arg.CertificateID, arg.UserID)
+	var i GetCertificateByIdRow
+	err := row.Scan(
+		&i.CertificateID,
+		&i.CertificateName,
+		&i.OptionalIssuer,
+		&i.OptionalLocation,
+		&i.OptionalGrantedDate,
+		&i.Description,
+		&i.Priority,
+		&i.Tags,
+		&i.Notes,
+		&i.Metadata,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getCertificatesByUserId = `-- name: GetCertificatesByUserId :many
+SELECT 
+    certificate_id,
+    certificate_name,
+    optional_issuer,
+    optional_location,
+    optional_granted_date,
+    description,
+    priority,
+    tags,
+    notes
+FROM public.certificates
+WHERE user_id = $1::uuid
+ORDER BY 
+    COALESCE(priority, 999999) ASC,
+    COALESCE(optional_granted_date, '1900-01-01'::date) DESC,
+    certificate_name ASC
+`
+
+type GetCertificatesByUserIdRow struct {
+	CertificateID       int64       `json:"certificate_id"`
+	CertificateName     string      `json:"certificate_name"`
+	OptionalIssuer      pgtype.Text `json:"optional_issuer"`
+	OptionalLocation    pgtype.Text `json:"optional_location"`
+	OptionalGrantedDate pgtype.Date `json:"optional_granted_date"`
+	Description         string      `json:"description"`
+	Priority            int32       `json:"priority"`
+	Tags                []string    `json:"tags"`
+	Notes               [][]byte    `json:"notes"`
+}
+
+func (q *Queries) GetCertificatesByUserId(ctx context.Context, userID uuid.UUID) ([]GetCertificatesByUserIdRow, error) {
+	rows, err := q.db.Query(ctx, getCertificatesByUserId, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetCertificatesByUserIdRow{}
+	for rows.Next() {
+		var i GetCertificatesByUserIdRow
+		if err := rows.Scan(
+			&i.CertificateID,
+			&i.CertificateName,
+			&i.OptionalIssuer,
+			&i.OptionalLocation,
+			&i.OptionalGrantedDate,
+			&i.Description,
+			&i.Priority,
+			&i.Tags,
+			&i.Notes,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getEducationById = `-- name: GetEducationById :one
+SELECT 
+    education_id,
+    school,
+    degree,
+    location,
+    start_date,
+    optional_end_date,
+    is_current,
+    description,
+    priority,
+    tags,
+    notes,
+    metadata,
+    created_at,
+    updated_at
+FROM public.educations
+WHERE 
+    education_id = $1::bigint 
+    AND user_id = $2::uuid
+`
+
+type GetEducationByIdParams struct {
+	EducationID int64     `json:"education_id"`
+	UserID      uuid.UUID `json:"user_id"`
+}
+
+type GetEducationByIdRow struct {
+	EducationID     int64              `json:"education_id"`
+	School          string             `json:"school"`
+	Degree          string             `json:"degree"`
+	Location        string             `json:"location"`
+	StartDate       pgtype.Date        `json:"start_date"`
+	OptionalEndDate pgtype.Date        `json:"optional_end_date"`
+	IsCurrent       pgtype.Bool        `json:"is_current"`
+	Description     string             `json:"description"`
+	Priority        int32              `json:"priority"`
+	Tags            []string           `json:"tags"`
+	Notes           [][]byte           `json:"notes"`
+	Metadata        []byte             `json:"metadata"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) GetEducationById(ctx context.Context, arg GetEducationByIdParams) (GetEducationByIdRow, error) {
+	row := q.db.QueryRow(ctx, getEducationById, arg.EducationID, arg.UserID)
+	var i GetEducationByIdRow
+	err := row.Scan(
+		&i.EducationID,
+		&i.School,
+		&i.Degree,
+		&i.Location,
+		&i.StartDate,
+		&i.OptionalEndDate,
+		&i.IsCurrent,
+		&i.Description,
+		&i.Priority,
+		&i.Tags,
+		&i.Notes,
+		&i.Metadata,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getEducationsByUserId = `-- name: GetEducationsByUserId :many
+SELECT 
+    education_id,
+    school,
+    degree,
+    location,
+    start_date,
+    optional_end_date,
+    is_current,
+    description,
+    tags,
+    notes
+FROM public.educations
+WHERE user_id = $1::uuid
+ORDER BY 
+    COALESCE(priority, 999999) ASC,
+    COALESCE(optional_end_date, '9999-12-31'::date) DESC,
+    start_date DESC
+`
+
+type GetEducationsByUserIdRow struct {
+	EducationID     int64       `json:"education_id"`
+	School          string      `json:"school"`
+	Degree          string      `json:"degree"`
+	Location        string      `json:"location"`
+	StartDate       pgtype.Date `json:"start_date"`
+	OptionalEndDate pgtype.Date `json:"optional_end_date"`
+	IsCurrent       pgtype.Bool `json:"is_current"`
+	Description     string      `json:"description"`
+	Tags            []string    `json:"tags"`
+	Notes           [][]byte    `json:"notes"`
+}
+
+func (q *Queries) GetEducationsByUserId(ctx context.Context, userID uuid.UUID) ([]GetEducationsByUserIdRow, error) {
+	rows, err := q.db.Query(ctx, getEducationsByUserId, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetEducationsByUserIdRow{}
+	for rows.Next() {
+		var i GetEducationsByUserIdRow
+		if err := rows.Scan(
+			&i.EducationID,
+			&i.School,
+			&i.Degree,
+			&i.Location,
+			&i.StartDate,
+			&i.OptionalEndDate,
+			&i.IsCurrent,
+			&i.Description,
+			&i.Tags,
+			&i.Notes,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getExperienceById = `-- name: GetExperienceById :one
 SELECT 
     experience_id,
@@ -102,7 +682,7 @@ SELECT
     job_title,
     location,
     start_date,
-    end_date,
+    optional_end_date,
     is_current,
     description,
     priority,
@@ -123,20 +703,20 @@ type GetExperienceByIdParams struct {
 }
 
 type GetExperienceByIdRow struct {
-	ExperienceID int64              `json:"experience_id"`
-	CompanyName  string             `json:"company_name"`
-	JobTitle     string             `json:"job_title"`
-	Location     string             `json:"location"`
-	StartDate    pgtype.Date        `json:"start_date"`
-	EndDate      pgtype.Date        `json:"end_date"`
-	IsCurrent    pgtype.Bool        `json:"is_current"`
-	Description  pgtype.Text        `json:"description"`
-	Priority     pgtype.Int4        `json:"priority"`
-	Tags         []string           `json:"tags"`
-	Notes        [][]byte           `json:"notes"`
-	Metadata     []byte             `json:"metadata"`
-	CreatedAt    pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+	ExperienceID    int64              `json:"experience_id"`
+	CompanyName     string             `json:"company_name"`
+	JobTitle        string             `json:"job_title"`
+	Location        string             `json:"location"`
+	StartDate       pgtype.Date        `json:"start_date"`
+	OptionalEndDate pgtype.Date        `json:"optional_end_date"`
+	IsCurrent       pgtype.Bool        `json:"is_current"`
+	Description     string             `json:"description"`
+	Priority        int32              `json:"priority"`
+	Tags            []string           `json:"tags"`
+	Notes           [][]byte           `json:"notes"`
+	Metadata        []byte             `json:"metadata"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
 }
 
 func (q *Queries) GetExperienceById(ctx context.Context, arg GetExperienceByIdParams) (GetExperienceByIdRow, error) {
@@ -148,7 +728,7 @@ func (q *Queries) GetExperienceById(ctx context.Context, arg GetExperienceByIdPa
 		&i.JobTitle,
 		&i.Location,
 		&i.StartDate,
-		&i.EndDate,
+		&i.OptionalEndDate,
 		&i.IsCurrent,
 		&i.Description,
 		&i.Priority,
@@ -168,7 +748,7 @@ SELECT
     job_title,
     location,
     start_date,
-    end_date,
+    optional_end_date,
     is_current,
     description,
     tags,
@@ -177,21 +757,21 @@ FROM public.experiences
 WHERE user_id = $1::uuid
 ORDER BY 
     COALESCE(priority, 999999) ASC,
-    COALESCE(end_date, '9999-12-31'::date) DESC,
+    COALESCE(optional_end_date, '9999-12-31'::date) DESC,
     start_date DESC
 `
 
 type GetExperiencesByUserIdRow struct {
-	ExperienceID int64       `json:"experience_id"`
-	CompanyName  string      `json:"company_name"`
-	JobTitle     string      `json:"job_title"`
-	Location     string      `json:"location"`
-	StartDate    pgtype.Date `json:"start_date"`
-	EndDate      pgtype.Date `json:"end_date"`
-	IsCurrent    pgtype.Bool `json:"is_current"`
-	Description  pgtype.Text `json:"description"`
-	Tags         []string    `json:"tags"`
-	Notes        [][]byte    `json:"notes"`
+	ExperienceID    int64       `json:"experience_id"`
+	CompanyName     string      `json:"company_name"`
+	JobTitle        string      `json:"job_title"`
+	Location        string      `json:"location"`
+	StartDate       pgtype.Date `json:"start_date"`
+	OptionalEndDate pgtype.Date `json:"optional_end_date"`
+	IsCurrent       pgtype.Bool `json:"is_current"`
+	Description     string      `json:"description"`
+	Tags            []string    `json:"tags"`
+	Notes           [][]byte    `json:"notes"`
 }
 
 func (q *Queries) GetExperiencesByUserId(ctx context.Context, userID uuid.UUID) ([]GetExperiencesByUserIdRow, error) {
@@ -209,7 +789,7 @@ func (q *Queries) GetExperiencesByUserId(ctx context.Context, userID uuid.UUID) 
 			&i.JobTitle,
 			&i.Location,
 			&i.StartDate,
-			&i.EndDate,
+			&i.OptionalEndDate,
 			&i.IsCurrent,
 			&i.Description,
 			&i.Tags,
@@ -225,6 +805,419 @@ func (q *Queries) GetExperiencesByUserId(ctx context.Context, userID uuid.UUID) 
 	return items, nil
 }
 
+const getProjectById = `-- name: GetProjectById :one
+SELECT 
+    project_id,
+    project_title,
+    optional_project_subtitle,
+    optional_start_date,
+    optional_end_date,
+    is_current,
+    description,
+    priority,
+    tags,
+    notes,
+    metadata,
+    created_at,
+    updated_at
+FROM public.projects
+WHERE 
+    project_id = $1::bigint 
+    AND user_id = $2::uuid
+`
+
+type GetProjectByIdParams struct {
+	ProjectID int64     `json:"project_id"`
+	UserID    uuid.UUID `json:"user_id"`
+}
+
+type GetProjectByIdRow struct {
+	ProjectID               int64              `json:"project_id"`
+	ProjectTitle            string             `json:"project_title"`
+	OptionalProjectSubtitle pgtype.Text        `json:"optional_project_subtitle"`
+	OptionalStartDate       pgtype.Date        `json:"optional_start_date"`
+	OptionalEndDate         pgtype.Date        `json:"optional_end_date"`
+	IsCurrent               pgtype.Bool        `json:"is_current"`
+	Description             string             `json:"description"`
+	Priority                int32              `json:"priority"`
+	Tags                    []string           `json:"tags"`
+	Notes                   [][]byte           `json:"notes"`
+	Metadata                []byte             `json:"metadata"`
+	CreatedAt               pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt               pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) GetProjectById(ctx context.Context, arg GetProjectByIdParams) (GetProjectByIdRow, error) {
+	row := q.db.QueryRow(ctx, getProjectById, arg.ProjectID, arg.UserID)
+	var i GetProjectByIdRow
+	err := row.Scan(
+		&i.ProjectID,
+		&i.ProjectTitle,
+		&i.OptionalProjectSubtitle,
+		&i.OptionalStartDate,
+		&i.OptionalEndDate,
+		&i.IsCurrent,
+		&i.Description,
+		&i.Priority,
+		&i.Tags,
+		&i.Notes,
+		&i.Metadata,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getProjectsByUserId = `-- name: GetProjectsByUserId :many
+SELECT 
+    project_id,
+    project_title,
+    optional_project_subtitle,
+    optional_start_date,
+    optional_end_date,
+    is_current,
+    description,
+    priority,
+    tags,
+    notes
+FROM public.projects
+WHERE user_id = $1::uuid
+ORDER BY 
+    COALESCE(priority, 999999) ASC,
+    COALESCE(optional_end_date, '9999-12-31'::date) DESC,
+    COALESCE(optional_start_date, '9999-12-31'::date) DESC,
+    project_title ASC
+`
+
+type GetProjectsByUserIdRow struct {
+	ProjectID               int64       `json:"project_id"`
+	ProjectTitle            string      `json:"project_title"`
+	OptionalProjectSubtitle pgtype.Text `json:"optional_project_subtitle"`
+	OptionalStartDate       pgtype.Date `json:"optional_start_date"`
+	OptionalEndDate         pgtype.Date `json:"optional_end_date"`
+	IsCurrent               pgtype.Bool `json:"is_current"`
+	Description             string      `json:"description"`
+	Priority                int32       `json:"priority"`
+	Tags                    []string    `json:"tags"`
+	Notes                   [][]byte    `json:"notes"`
+}
+
+func (q *Queries) GetProjectsByUserId(ctx context.Context, userID uuid.UUID) ([]GetProjectsByUserIdRow, error) {
+	rows, err := q.db.Query(ctx, getProjectsByUserId, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetProjectsByUserIdRow{}
+	for rows.Next() {
+		var i GetProjectsByUserIdRow
+		if err := rows.Scan(
+			&i.ProjectID,
+			&i.ProjectTitle,
+			&i.OptionalProjectSubtitle,
+			&i.OptionalStartDate,
+			&i.OptionalEndDate,
+			&i.IsCurrent,
+			&i.Description,
+			&i.Priority,
+			&i.Tags,
+			&i.Notes,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getSkillById = `-- name: GetSkillById :one
+SELECT 
+    skill_id,
+    skill_name,
+    optional_skill_type,
+    optional_skill_level,
+    description,
+    priority,
+    tags,
+    notes,
+    metadata,
+    created_at,
+    updated_at
+FROM public.skills
+WHERE 
+    skill_id = $1::bigint 
+    AND user_id = $2::uuid
+`
+
+type GetSkillByIdParams struct {
+	SkillID int64     `json:"skill_id"`
+	UserID  uuid.UUID `json:"user_id"`
+}
+
+type GetSkillByIdRow struct {
+	SkillID            int64              `json:"skill_id"`
+	SkillName          string             `json:"skill_name"`
+	OptionalSkillType  NullSkillType      `json:"optional_skill_type"`
+	OptionalSkillLevel NullSkillLevel     `json:"optional_skill_level"`
+	Description        string             `json:"description"`
+	Priority           int32              `json:"priority"`
+	Tags               []string           `json:"tags"`
+	Notes              [][]byte           `json:"notes"`
+	Metadata           []byte             `json:"metadata"`
+	CreatedAt          pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt          pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) GetSkillById(ctx context.Context, arg GetSkillByIdParams) (GetSkillByIdRow, error) {
+	row := q.db.QueryRow(ctx, getSkillById, arg.SkillID, arg.UserID)
+	var i GetSkillByIdRow
+	err := row.Scan(
+		&i.SkillID,
+		&i.SkillName,
+		&i.OptionalSkillType,
+		&i.OptionalSkillLevel,
+		&i.Description,
+		&i.Priority,
+		&i.Tags,
+		&i.Notes,
+		&i.Metadata,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getSkillsByType = `-- name: GetSkillsByType :many
+SELECT 
+    skill_id,
+    skill_name,
+    optional_skill_type,
+    optional_skill_level,
+    description,
+    priority,
+    tags,
+    notes
+FROM public.skills
+WHERE 
+    user_id = $1::uuid
+    AND optional_skill_type = $2::skill_type
+ORDER BY 
+    COALESCE(priority, 999999) ASC,
+    skill_name ASC
+`
+
+type GetSkillsByTypeParams struct {
+	UserID    uuid.UUID `json:"user_id"`
+	SkillType SkillType `json:"skill_type"`
+}
+
+type GetSkillsByTypeRow struct {
+	SkillID            int64          `json:"skill_id"`
+	SkillName          string         `json:"skill_name"`
+	OptionalSkillType  NullSkillType  `json:"optional_skill_type"`
+	OptionalSkillLevel NullSkillLevel `json:"optional_skill_level"`
+	Description        string         `json:"description"`
+	Priority           int32          `json:"priority"`
+	Tags               []string       `json:"tags"`
+	Notes              [][]byte       `json:"notes"`
+}
+
+func (q *Queries) GetSkillsByType(ctx context.Context, arg GetSkillsByTypeParams) ([]GetSkillsByTypeRow, error) {
+	rows, err := q.db.Query(ctx, getSkillsByType, arg.UserID, arg.SkillType)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetSkillsByTypeRow{}
+	for rows.Next() {
+		var i GetSkillsByTypeRow
+		if err := rows.Scan(
+			&i.SkillID,
+			&i.SkillName,
+			&i.OptionalSkillType,
+			&i.OptionalSkillLevel,
+			&i.Description,
+			&i.Priority,
+			&i.Tags,
+			&i.Notes,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getSkillsByUserId = `-- name: GetSkillsByUserId :many
+SELECT 
+    skill_id,
+    skill_name,
+    optional_skill_type,
+    optional_skill_level,
+    description,
+    priority,
+    tags,
+    notes
+FROM public.skills
+WHERE user_id = $1::uuid
+ORDER BY 
+    COALESCE(priority, 999999) ASC,
+    skill_name ASC
+`
+
+type GetSkillsByUserIdRow struct {
+	SkillID            int64          `json:"skill_id"`
+	SkillName          string         `json:"skill_name"`
+	OptionalSkillType  NullSkillType  `json:"optional_skill_type"`
+	OptionalSkillLevel NullSkillLevel `json:"optional_skill_level"`
+	Description        string         `json:"description"`
+	Priority           int32          `json:"priority"`
+	Tags               []string       `json:"tags"`
+	Notes              [][]byte       `json:"notes"`
+}
+
+func (q *Queries) GetSkillsByUserId(ctx context.Context, userID uuid.UUID) ([]GetSkillsByUserIdRow, error) {
+	rows, err := q.db.Query(ctx, getSkillsByUserId, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetSkillsByUserIdRow{}
+	for rows.Next() {
+		var i GetSkillsByUserIdRow
+		if err := rows.Scan(
+			&i.SkillID,
+			&i.SkillName,
+			&i.OptionalSkillType,
+			&i.OptionalSkillLevel,
+			&i.Description,
+			&i.Priority,
+			&i.Tags,
+			&i.Notes,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const updateCertificate = `-- name: UpdateCertificate :exec
+UPDATE public.certificates
+SET
+    certificate_name = COALESCE($1::text, certificate_name),
+    optional_issuer = COALESCE($2::text, optional_issuer),
+    optional_location = COALESCE($3::text, optional_location),
+    optional_granted_date = COALESCE($4::date, optional_granted_date),
+    description = COALESCE($5::text, description),
+    priority = COALESCE($6::integer, priority),
+    tags = COALESCE($7::text[], tags),
+    notes = COALESCE($8::jsonb[], notes),
+    metadata = COALESCE($9::jsonb, metadata)
+WHERE 
+    certificate_id = $10::bigint 
+    AND user_id = $11::uuid
+`
+
+type UpdateCertificateParams struct {
+	CertificateName     string      `json:"certificate_name"`
+	OptionalIssuer      string      `json:"optional_issuer"`
+	OptionalLocation    string      `json:"optional_location"`
+	OptionalGrantedDate pgtype.Date `json:"optional_granted_date"`
+	Description         string      `json:"description"`
+	Priority            int32       `json:"priority"`
+	Tags                []string    `json:"tags"`
+	Notes               [][]byte    `json:"notes"`
+	Metadata            []byte      `json:"metadata"`
+	CertificateID       int64       `json:"certificate_id"`
+	UserID              uuid.UUID   `json:"user_id"`
+}
+
+func (q *Queries) UpdateCertificate(ctx context.Context, arg UpdateCertificateParams) error {
+	_, err := q.db.Exec(ctx, updateCertificate,
+		arg.CertificateName,
+		arg.OptionalIssuer,
+		arg.OptionalLocation,
+		arg.OptionalGrantedDate,
+		arg.Description,
+		arg.Priority,
+		arg.Tags,
+		arg.Notes,
+		arg.Metadata,
+		arg.CertificateID,
+		arg.UserID,
+	)
+	return err
+}
+
+const updateEducation = `-- name: UpdateEducation :exec
+UPDATE public.educations
+SET
+    school = COALESCE($1::text, school),
+    degree = COALESCE($2::text, degree),
+    location = COALESCE($3::text, location),
+    start_date = COALESCE($4::date, start_date),
+    optional_end_date = COALESCE($5::date, optional_end_date),
+    is_current = CASE 
+        WHEN $6::date IS NOT NULL THEN false 
+        ELSE COALESCE($7::boolean, is_current)
+    END,
+    description = COALESCE($8::text, description),
+    priority = COALESCE($9::integer, priority),
+    tags = COALESCE($10::text[], tags),
+    notes = COALESCE($11::jsonb[], notes),
+    metadata = COALESCE($12::jsonb, metadata)
+WHERE 
+    education_id = $13::bigint 
+    AND user_id = $14::uuid
+`
+
+type UpdateEducationParams struct {
+	School          string      `json:"school"`
+	Degree          string      `json:"degree"`
+	Location        string      `json:"location"`
+	StartDate       pgtype.Date `json:"start_date"`
+	OptionalEndDate pgtype.Date `json:"optional_end_date"`
+	EndDate         pgtype.Date `json:"end_date"`
+	IsCurrent       bool        `json:"is_current"`
+	Description     string      `json:"description"`
+	Priority        int32       `json:"priority"`
+	Tags            []string    `json:"tags"`
+	Notes           [][]byte    `json:"notes"`
+	Metadata        []byte      `json:"metadata"`
+	EducationID     int64       `json:"education_id"`
+	UserID          uuid.UUID   `json:"user_id"`
+}
+
+func (q *Queries) UpdateEducation(ctx context.Context, arg UpdateEducationParams) error {
+	_, err := q.db.Exec(ctx, updateEducation,
+		arg.School,
+		arg.Degree,
+		arg.Location,
+		arg.StartDate,
+		arg.OptionalEndDate,
+		arg.EndDate,
+		arg.IsCurrent,
+		arg.Description,
+		arg.Priority,
+		arg.Tags,
+		arg.Notes,
+		arg.Metadata,
+		arg.EducationID,
+		arg.UserID,
+	)
+	return err
+}
+
 const updateExperience = `-- name: UpdateExperience :exec
 UPDATE public.experiences
 SET
@@ -232,7 +1225,7 @@ SET
     job_title = COALESCE($2::text, job_title),
     location = COALESCE($3::text, location),
     start_date = COALESCE($4::date, start_date),
-    end_date = COALESCE($5::date, end_date),
+    optional_end_date = COALESCE($5::date, optional_end_date),
     is_current = CASE 
         WHEN $5::date IS NOT NULL THEN false 
         ELSE COALESCE($6::boolean, is_current)
@@ -248,19 +1241,19 @@ WHERE
 `
 
 type UpdateExperienceParams struct {
-	CompanyName  string      `json:"company_name"`
-	JobTitle     string      `json:"job_title"`
-	Location     string      `json:"location"`
-	StartDate    pgtype.Date `json:"start_date"`
-	EndDate      pgtype.Date `json:"end_date"`
-	IsCurrent    bool        `json:"is_current"`
-	Description  string      `json:"description"`
-	Priority     int32       `json:"priority"`
-	Tags         []string    `json:"tags"`
-	Notes        [][]byte    `json:"notes"`
-	Metadata     []byte      `json:"metadata"`
-	ExperienceID int64       `json:"experience_id"`
-	UserID       uuid.UUID   `json:"user_id"`
+	CompanyName     string      `json:"company_name"`
+	JobTitle        string      `json:"job_title"`
+	Location        string      `json:"location"`
+	StartDate       pgtype.Date `json:"start_date"`
+	OptionalEndDate pgtype.Date `json:"optional_end_date"`
+	IsCurrent       bool        `json:"is_current"`
+	Description     string      `json:"description"`
+	Priority        int32       `json:"priority"`
+	Tags            []string    `json:"tags"`
+	Notes           [][]byte    `json:"notes"`
+	Metadata        []byte      `json:"metadata"`
+	ExperienceID    int64       `json:"experience_id"`
+	UserID          uuid.UUID   `json:"user_id"`
 }
 
 func (q *Queries) UpdateExperience(ctx context.Context, arg UpdateExperienceParams) error {
@@ -269,7 +1262,7 @@ func (q *Queries) UpdateExperience(ctx context.Context, arg UpdateExperiencePara
 		arg.JobTitle,
 		arg.Location,
 		arg.StartDate,
-		arg.EndDate,
+		arg.OptionalEndDate,
 		arg.IsCurrent,
 		arg.Description,
 		arg.Priority,
@@ -277,6 +1270,107 @@ func (q *Queries) UpdateExperience(ctx context.Context, arg UpdateExperiencePara
 		arg.Notes,
 		arg.Metadata,
 		arg.ExperienceID,
+		arg.UserID,
+	)
+	return err
+}
+
+const updateProject = `-- name: UpdateProject :exec
+UPDATE public.projects
+SET
+    project_title = COALESCE($1::text, project_title),
+    optional_project_subtitle = COALESCE($2::text, optional_project_subtitle),
+    optional_start_date = COALESCE($3::date, optional_start_date),
+    optional_end_date = COALESCE($4::date, optional_end_date),
+    is_current = CASE 
+        WHEN $5::date IS NOT NULL THEN false 
+        ELSE COALESCE($6::boolean, is_current)
+    END,
+    description = COALESCE($7::text, description),
+    priority = COALESCE($8::integer, priority),
+    tags = COALESCE($9::text[], tags),
+    notes = COALESCE($10::jsonb[], notes),
+    metadata = COALESCE($11::jsonb, metadata)
+WHERE 
+    project_id = $12::bigint 
+    AND user_id = $13::uuid
+`
+
+type UpdateProjectParams struct {
+	ProjectTitle            string      `json:"project_title"`
+	OptionalProjectSubtitle string      `json:"optional_project_subtitle"`
+	OptionalStartDate       pgtype.Date `json:"optional_start_date"`
+	OptionalEndDate         pgtype.Date `json:"optional_end_date"`
+	EndDate                 pgtype.Date `json:"end_date"`
+	IsCurrent               bool        `json:"is_current"`
+	Description             string      `json:"description"`
+	Priority                int32       `json:"priority"`
+	Tags                    []string    `json:"tags"`
+	Notes                   [][]byte    `json:"notes"`
+	Metadata                []byte      `json:"metadata"`
+	ProjectID               int64       `json:"project_id"`
+	UserID                  uuid.UUID   `json:"user_id"`
+}
+
+func (q *Queries) UpdateProject(ctx context.Context, arg UpdateProjectParams) error {
+	_, err := q.db.Exec(ctx, updateProject,
+		arg.ProjectTitle,
+		arg.OptionalProjectSubtitle,
+		arg.OptionalStartDate,
+		arg.OptionalEndDate,
+		arg.EndDate,
+		arg.IsCurrent,
+		arg.Description,
+		arg.Priority,
+		arg.Tags,
+		arg.Notes,
+		arg.Metadata,
+		arg.ProjectID,
+		arg.UserID,
+	)
+	return err
+}
+
+const updateSkill = `-- name: UpdateSkill :exec
+UPDATE public.skills
+SET
+    skill_name = COALESCE($1::text, skill_name),
+    optional_skill_type = COALESCE($2::skill_type, optional_skill_type),
+    optional_skill_level = COALESCE($3::skill_level, optional_skill_level),
+    description = COALESCE($4::text, description),
+    priority = COALESCE($5::integer, priority),
+    tags = COALESCE($6::text[], tags),
+    notes = COALESCE($7::jsonb[], notes),
+    metadata = COALESCE($8::jsonb, metadata)
+WHERE 
+    skill_id = $9::bigint 
+    AND user_id = $10::uuid
+`
+
+type UpdateSkillParams struct {
+	SkillName          string     `json:"skill_name"`
+	OptionalSkillType  SkillType  `json:"optional_skill_type"`
+	OptionalSkillLevel SkillLevel `json:"optional_skill_level"`
+	Description        string     `json:"description"`
+	Priority           int32      `json:"priority"`
+	Tags               []string   `json:"tags"`
+	Notes              [][]byte   `json:"notes"`
+	Metadata           []byte     `json:"metadata"`
+	SkillID            int64      `json:"skill_id"`
+	UserID             uuid.UUID  `json:"user_id"`
+}
+
+func (q *Queries) UpdateSkill(ctx context.Context, arg UpdateSkillParams) error {
+	_, err := q.db.Exec(ctx, updateSkill,
+		arg.SkillName,
+		arg.OptionalSkillType,
+		arg.OptionalSkillLevel,
+		arg.Description,
+		arg.Priority,
+		arg.Tags,
+		arg.Notes,
+		arg.Metadata,
+		arg.SkillID,
 		arg.UserID,
 	)
 	return err

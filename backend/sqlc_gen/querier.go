@@ -11,18 +11,39 @@ import (
 )
 
 type Querier interface {
+	CreateCertificate(ctx context.Context, arg CreateCertificateParams) (int64, error)
 	CreateCustomer(ctx context.Context, arg CreateCustomerParams) error
+	CreateEducation(ctx context.Context, arg CreateEducationParams) (int64, error)
 	CreateExperience(ctx context.Context, arg CreateExperienceParams) (int64, error)
+	CreateProject(ctx context.Context, arg CreateProjectParams) (int64, error)
+	CreateSkill(ctx context.Context, arg CreateSkillParams) (int64, error)
+	DeleteCertificate(ctx context.Context, arg DeleteCertificateParams) error
+	DeleteEducation(ctx context.Context, arg DeleteEducationParams) error
 	DeleteExperience(ctx context.Context, arg DeleteExperienceParams) error
+	DeleteProject(ctx context.Context, arg DeleteProjectParams) error
+	DeleteSkill(ctx context.Context, arg DeleteSkillParams) error
 	DeleteSubscription(ctx context.Context, subscriptionID string) error
 	GetActiveSubscriptionByUserID(ctx context.Context, userID uuid.UUID) (GetActiveSubscriptionByUserIDRow, error)
+	GetCertificateById(ctx context.Context, arg GetCertificateByIdParams) (GetCertificateByIdRow, error)
+	GetCertificatesByUserId(ctx context.Context, userID uuid.UUID) ([]GetCertificatesByUserIdRow, error)
 	GetCustomerByStripeID(ctx context.Context, stripeCustomerID string) (PaymentCustomer, error)
 	GetCustomerByUserID(ctx context.Context, userID uuid.UUID) (PaymentCustomer, error)
+	GetEducationById(ctx context.Context, arg GetEducationByIdParams) (GetEducationByIdRow, error)
+	GetEducationsByUserId(ctx context.Context, userID uuid.UUID) ([]GetEducationsByUserIdRow, error)
 	GetExperienceById(ctx context.Context, arg GetExperienceByIdParams) (GetExperienceByIdRow, error)
 	GetExperiencesByUserId(ctx context.Context, userID uuid.UUID) ([]GetExperiencesByUserIdRow, error)
 	GetPriceByID(ctx context.Context, priceID string) (GetPriceByIDRow, error)
+	GetProjectById(ctx context.Context, arg GetProjectByIdParams) (GetProjectByIdRow, error)
+	GetProjectsByUserId(ctx context.Context, userID uuid.UUID) ([]GetProjectsByUserIdRow, error)
+	GetSkillById(ctx context.Context, arg GetSkillByIdParams) (GetSkillByIdRow, error)
+	GetSkillsByType(ctx context.Context, arg GetSkillsByTypeParams) ([]GetSkillsByTypeRow, error)
+	GetSkillsByUserId(ctx context.Context, userID uuid.UUID) ([]GetSkillsByUserIdRow, error)
 	GetSubscriptionByID(ctx context.Context, subscriptionID string) (GetSubscriptionByIDRow, error)
+	UpdateCertificate(ctx context.Context, arg UpdateCertificateParams) error
+	UpdateEducation(ctx context.Context, arg UpdateEducationParams) error
 	UpdateExperience(ctx context.Context, arg UpdateExperienceParams) error
+	UpdateProject(ctx context.Context, arg UpdateProjectParams) error
+	UpdateSkill(ctx context.Context, arg UpdateSkillParams) error
 	UpdateSubscriptionStatus(ctx context.Context, arg UpdateSubscriptionStatusParams) error
 	UpsertSubscription(ctx context.Context, arg UpsertSubscriptionParams) error
 }

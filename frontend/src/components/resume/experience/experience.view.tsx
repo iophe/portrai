@@ -1,33 +1,139 @@
 import { useFault } from "@components/fault";
-import { createSignal, For } from "solid-js";
+import { api } from "@utils/api";
+import { AxiosError } from "axios";
+import { createSignal, For, Show } from "solid-js";
 import { createStore } from "solid-js/store";
+
+interface ExperienceViewProps {
+	experience: Experience;
+	edit: (experience_id: number) => void;
+	delete: (experience_id: number) => void;
+}
+
+export function ExperienceView(props: ExperienceViewProps) {
+	return (
+		<article class="p-4 border border-gray-200 rounded-lg flex flex-col gap-2">
+			<header class="flex flex-col justify-between items-start mb-2">
+				<h3 class="text-lg font-medium text-gray-900">
+					{props.experience.job_title}
+				</h3>
+				<h4 class="text-gray-700">{props.experience.company_name}</h4>
+			</header>
+			<p class="text-gray-600 text-sm">{props.experience.location}</p>
+			<span class="flex flex-row">
+				<p class="text-gray-600 text-sm">
+					{props.experience.start_date}
+				</p>
+				-
+				<Show
+					when={props.experience.optional_end_date}
+					fallback={<p class="text-gray-600 text-sm">present</p>}
+				>
+					<p class="text-gray-600 text-sm">
+						{props.experience.optional_end_date}
+					</p>
+				</Show>
+			</span>
+			<p class="text-gray-700">{props.experience.description}</p>
+			<footer class="mt-2">
+				<ul class="flex gap-2 flex-wrap">
+					<For each={props.experience.tags}>
+						{(tag) => (
+							<li class="px-2 py-1 bg-gray-100 text-gray-700 text-sm rounded">
+								{tag}
+							</li>
+						)}
+					</For>
+				</ul>
+			</footer>
+			<div class="self-end flex flex-row gap-4">
+				<button
+					title="Edit this professional experience"
+					class="self-end w-fit px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded"
+					onclick={() => {
+						props.edit(props.experience.experience_id);
+					}}
+				>
+					Edit
+				</button>
+				<button
+					title="Edit this professional experience"
+					class="self-end w-fit px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded"
+					onclick={() => {
+						props.delete(props.experience.experience_id);
+					}}
+				>
+					Delete
+				</button>
+			</div>
+		</article>
+	);
+}
 
 interface ExperienceFormProps {
 	experience?: Experience;
-	onSubmit: (data: Omit<Experience, "experience_id">) => void;
+	is_new?: boolean;
+	onSubmit: (experience_id: number) => void;
 	onCancel: () => void;
 }
 
-function ExperienceForm(props: ExperienceFormProps) {
+export function ExperienceForm(props: ExperienceFormProps) {
 	const fault = useFault();
 	const [form_data, setFormData] = createStore({
 		company_name: props.experience?.company_name || "",
 		job_title: props.experience?.job_title || "",
 		location: props.experience?.location || "",
 		start_date: props.experience?.start_date || "",
-		end_date: props.experience?.end_date || "",
+		optional_end_date: props.experience?.optional_end_date || "",
 		is_current: props.experience?.is_current || false,
 		description: props.experience?.description || "",
 		priority: props.experience?.priority || 0,
 		tags: props.experience?.tags || [],
 		notes: props.experience?.notes || [],
 	});
-
 	const [new_tag, setNewTag] = createSignal("");
 
-	function handleSubmit(e: Event) {
+	async function handleSubmit(e: Event) {
 		e.preventDefault();
-		props.onSubmit(form_data);
+		if (!props.is_new) {
+			if (!props.experience) return;
+			// update existing experience
+			try {
+				console.log({ ...form_data });
+
+				await api.post("/resume/experience/update", {
+					...form_data,
+					experience_id: props.experience.experience_id,
+				});
+				console.log({
+					form_data: form_data,
+					experience_id: props.experience.experience_id,
+				});
+
+				props.onSubmit(props.experience.experience_id);
+			} catch (error) {
+				fault.minor({
+					message:
+						((error as AxiosError).response?.data as any).error ??
+						(error as AxiosError).message,
+				});
+			}
+		} else {
+			try {
+				const res = await api.post(
+					"/resume/experience/create",
+					form_data
+				);
+				const experience_id = res.data.experience_id;
+				props.onSubmit(experience_id);
+			} catch (error) {
+				fault.minor({
+					message:
+						((error as AxiosError).response?.data as any).error ??
+						(error as AxiosError).message,
+				});
+			}
+		}
 	}
 
 	function addTag(e: KeyboardEvent) {
@@ -39,7 +145,7 @@ function ExperienceForm(props: ExperienceFormProps) {
 	}
 
 	return (
-		<form onSubmit={handleSubmit} class="space-y-4 max-w-2xl mx-auto">
+		<form onSubmit={handleSubmit} class="">
 			<div class="space-y-2">
 				<label class="block text-sm font-medium text-gray-700">
 					Job Title
@@ -106,9 +212,12 @@ function ExperienceForm(props: ExperienceFormProps) {
 					</label>
 					<input
 						type="date"
-						value={form_data.end_date}
+						value={form_data.optional_end_date}
 						onInput={(e) =>
-							setFormData("end_date", e.currentTarget.value)
+							setFormData(
+								"optional_end_date",
+								e.currentTarget.value
+							)
 						}
 						disabled={form_data.is_current}
 						class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-gray-500"
@@ -194,5 +303,3 @@ function ExperienceForm(props: ExperienceFormProps) {
 		</form>
 	);
 }
-
-export default ExperienceForm;
