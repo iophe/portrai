@@ -243,6 +243,7 @@ type Certificate struct {
 	OptionalGrantedDate pgtype.Date        `json:"optional_granted_date"`
 	Description         string             `json:"description"`
 	Priority            int32              `json:"priority"`
+	IsVisible           pgtype.Bool        `json:"is_visible"`
 	Tags                []string           `json:"tags"`
 	Notes               [][]byte           `json:"notes"`
 	Metadata            []byte             `json:"metadata"`
@@ -261,6 +262,7 @@ type Education struct {
 	IsCurrent       pgtype.Bool        `json:"is_current"`
 	Description     string             `json:"description"`
 	Priority        int32              `json:"priority"`
+	IsVisible       pgtype.Bool        `json:"is_visible"`
 	Tags            []string           `json:"tags"`
 	Notes           [][]byte           `json:"notes"`
 	Metadata        []byte             `json:"metadata"`
@@ -279,6 +281,7 @@ type Experience struct {
 	IsCurrent       pgtype.Bool        `json:"is_current"`
 	Description     string             `json:"description"`
 	Priority        int32              `json:"priority"`
+	IsVisible       pgtype.Bool        `json:"is_visible"`
 	Tags            []string           `json:"tags"`
 	Notes           [][]byte           `json:"notes"`
 	Metadata        []byte             `json:"metadata"`
@@ -342,6 +345,7 @@ type Project struct {
 	IsCurrent               pgtype.Bool        `json:"is_current"`
 	Description             string             `json:"description"`
 	Priority                int32              `json:"priority"`
+	IsVisible               pgtype.Bool        `json:"is_visible"`
 	Tags                    []string           `json:"tags"`
 	Notes                   [][]byte           `json:"notes"`
 	Metadata                []byte             `json:"metadata"`
@@ -357,6 +361,7 @@ type Skill struct {
 	OptionalSkillLevel NullSkillLevel     `json:"optional_skill_level"`
 	Description        string             `json:"description"`
 	Priority           int32              `json:"priority"`
+	IsVisible          pgtype.Bool        `json:"is_visible"`
 	Tags               []string           `json:"tags"`
 	Notes              [][]byte           `json:"notes"`
 	Metadata           []byte             `json:"metadata"`

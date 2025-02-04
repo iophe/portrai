@@ -3,6 +3,7 @@ import Header from "@components/header.default";
 import { CertificateList } from "@components/resume/certificate/certificate.list";
 import { EducationList } from "@components/resume/education/education.list";
 import { ExperienceList } from "@components/resume/experience/experience.list";
+import ResumePreview from "@components/resume/generators/preview";
 import { ProjectList } from "@components/resume/project/project.list";
 import { SkillList } from "@components/resume/skill/skill.list";
 import { api } from "@utils/api";
@@ -21,6 +22,8 @@ function Resume(props: ResumeProps) {
 					<CertificateList />
 					<SkillList />
 					<ProjectList />
+
+					<ResumePreview />
 				</section>
 			</section>
 		</main>

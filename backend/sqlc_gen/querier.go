@@ -8,6 +8,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Querier interface {
@@ -36,9 +37,19 @@ type Querier interface {
 	GetProjectById(ctx context.Context, arg GetProjectByIdParams) (GetProjectByIdRow, error)
 	GetProjectsByUserId(ctx context.Context, userID uuid.UUID) ([]GetProjectsByUserIdRow, error)
 	GetSkillById(ctx context.Context, arg GetSkillByIdParams) (GetSkillByIdRow, error)
-	GetSkillsByType(ctx context.Context, arg GetSkillsByTypeParams) ([]GetSkillsByTypeRow, error)
 	GetSkillsByUserId(ctx context.Context, userID uuid.UUID) ([]GetSkillsByUserIdRow, error)
 	GetSubscriptionByID(ctx context.Context, subscriptionID string) (GetSubscriptionByIDRow, error)
+	ReorderCertificate(ctx context.Context, arg ReorderCertificateParams) error
+	ReorderEducation(ctx context.Context, arg ReorderEducationParams) error
+	// Finally, update the priority of the moved experience
+	ReorderExperience(ctx context.Context, arg ReorderExperienceParams) error
+	ReorderProject(ctx context.Context, arg ReorderProjectParams) error
+	ReorderSkill(ctx context.Context, arg ReorderSkillParams) error
+	ToggleCertificateVisibility(ctx context.Context, arg ToggleCertificateVisibilityParams) (pgtype.Bool, error)
+	ToggleEducationVisibility(ctx context.Context, arg ToggleEducationVisibilityParams) (pgtype.Bool, error)
+	ToggleExperienceVisibility(ctx context.Context, arg ToggleExperienceVisibilityParams) (pgtype.Bool, error)
+	ToggleProjectVisibility(ctx context.Context, arg ToggleProjectVisibilityParams) (pgtype.Bool, error)
+	ToggleSkillVisibility(ctx context.Context, arg ToggleSkillVisibilityParams) (pgtype.Bool, error)
 	UpdateCertificate(ctx context.Context, arg UpdateCertificateParams) error
 	UpdateEducation(ctx context.Context, arg UpdateEducationParams) error
 	UpdateExperience(ctx context.Context, arg UpdateExperienceParams) error

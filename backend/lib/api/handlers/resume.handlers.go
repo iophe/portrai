@@ -23,7 +23,6 @@ type ExperienceCreationData struct {
 	EndDate     string      `json:"end_date"`
 	IsCurrent   bool        `json:"is_current"`
 	Description string      `json:"description"`
-	Priority    int32       `json:"priority"`
 	Tags        []string    `json:"tags"`
 	Notes       []fiber.Map `json:"notes"`
 }
@@ -76,7 +75,6 @@ func HandleExperienceCreation(data ExperienceCreationData, c *fiber.Ctx, db *dat
 		OptionalEndDate: end_date,
 		IsCurrent:       data.IsCurrent,
 		Description:     data.Description,
-		Priority:        data.Priority,
 		Tags:            data.Tags,
 		Notes:           notes,
 	})
@@ -224,7 +222,7 @@ type DeleteExperienceData struct {
 	ExperienceId int64 `json:"experience_id"`
 }
 
-func HandleDeleteExperience(params DeleteExperienceData, c *fiber.Ctx, db *db.Database) error {
+func HandleDeleteExperience(data DeleteExperienceData, c *fiber.Ctx, db *db.Database) error {
 	user_id, err := middlewares.GetUserID(c)
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
@@ -234,14 +232,74 @@ func HandleDeleteExperience(params DeleteExperienceData, c *fiber.Ctx, db *db.Da
 	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	queries := sqlc_gen.New(db.Pool)
-	slog.Info("deleting experiences", "experience_id", params.ExperienceId, "user_id", user_id)
+	slog.Info("deleting experiences", "experience_id", data.ExperienceId, "user_id", user_id)
 	err = queries.DeleteExperience(query_ctx, sqlc_gen.DeleteExperienceParams{
-		ExperienceID: params.ExperienceId,
+		ExperienceID: data.ExperienceId,
 		UserID:       user_id,
 	})
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "could not delete this experiences",
+		})
+	}
+
+	return c.SendStatus(fiber.StatusOK)
+}
+
+type ToggleExperienceVisibilityData struct {
+	ExperienceId int64 `json:"experience_id"`
+}
+
+func HandleToggleExperienceVisibility(data ToggleExperienceVisibilityData, c *fiber.Ctx, db *db.Database) error {
+	user_id, err := middlewares.GetUserID(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized access",
+		})
+	}
+	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	queries := sqlc_gen.New(db.Pool)
+
+	visibility, err := queries.ToggleExperienceVisibility(query_ctx, sqlc_gen.ToggleExperienceVisibilityParams{
+		ExperienceID: data.ExperienceId,
+		UserID:       user_id,
+	})
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "could not toggle this experience visibility",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"visibility": visibility,
+	})
+}
+
+type ReorderExperienceData struct {
+	ExperienceId int64 `json:"experience_id"`
+	AfterID      int64 `json:"after_id"`
+}
+
+func HandleReorderExperience(data ReorderExperienceData, c *fiber.Ctx, db *db.Database) error {
+	user_id, err := middlewares.GetUserID(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized access",
+		})
+	}
+	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	queries := sqlc_gen.New(db.Pool)
+
+	err = queries.ReorderExperience(query_ctx, sqlc_gen.ReorderExperienceParams{
+		ExperienceID: data.ExperienceId,
+		AfterID:      data.AfterID,
+		UserID:       user_id,
+	})
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "could not toggle this experience visibility",
 		})
 	}
 
@@ -258,7 +316,6 @@ type EducationCreationData struct {
 	EndDate     string      `json:"end_date"`
 	IsCurrent   bool        `json:"is_current"`
 	Description string      `json:"description"`
-	Priority    int32       `json:"priority"`
 	Tags        []string    `json:"tags"`
 	Notes       []fiber.Map `json:"notes"`
 }
@@ -312,7 +369,6 @@ func HandleEducationCreation(data EducationCreationData, c *fiber.Ctx, db *datab
 		OptionalEndDate: end_date,
 		IsCurrent:       data.IsCurrent,
 		Description:     data.Description,
-		Priority:        data.Priority,
 		Tags:            data.Tags,
 		Notes:           notes,
 	})
@@ -483,6 +539,66 @@ func HandleDeleteEducation(params DeleteEducationData, c *fiber.Ctx, db *db.Data
 	return c.SendStatus(fiber.StatusOK)
 }
 
+type ToggleEducationVisibilityData struct {
+	EducationId int64 `json:"education_id"`
+}
+
+func HandleToggleEducationVisibility(data ToggleEducationVisibilityData, c *fiber.Ctx, db *db.Database) error {
+	user_id, err := middlewares.GetUserID(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized access",
+		})
+	}
+	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	queries := sqlc_gen.New(db.Pool)
+
+	visibility, err := queries.ToggleEducationVisibility(query_ctx, sqlc_gen.ToggleEducationVisibilityParams{
+		EducationID: data.EducationId,
+		UserID:      user_id,
+	})
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "could not toggle this experience visibility",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"visibility": visibility,
+	})
+}
+
+type ReorderEducationData struct {
+	EducationId int64 `json:"education_id"`
+	AfterID     int64 `json:"after_id"`
+}
+
+func HandleReorderEducation(data ReorderEducationData, c *fiber.Ctx, db *db.Database) error {
+	user_id, err := middlewares.GetUserID(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized access",
+		})
+	}
+	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	queries := sqlc_gen.New(db.Pool)
+
+	err = queries.ReorderEducation(query_ctx, sqlc_gen.ReorderEducationParams{
+		EducationID: data.EducationId,
+		AfterID:     data.AfterID,
+		UserID:      user_id,
+	})
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "could not toggle this experience visibility",
+		})
+	}
+
+	return c.SendStatus(fiber.StatusOK)
+}
+
 // Skills Handlers
 
 type SkillCreationData struct {
@@ -490,7 +606,6 @@ type SkillCreationData struct {
 	OptionalSkillType  string      `json:"optional_skill_type"`
 	OptionalSkillLevel string      `json:"optional_skill_level"`
 	Description        string      `json:"description"`
-	Priority           int32       `json:"priority"`
 	Tags               []string    `json:"tags"`
 	Notes              []fiber.Map `json:"notes"`
 }
@@ -525,7 +640,6 @@ func HandleSkillCreation(data SkillCreationData, c *fiber.Ctx, db *database.Data
 		OptionalSkillType:  sqlc_gen.SkillType(data.OptionalSkillType),
 		OptionalSkillLevel: sqlc_gen.SkillLevel(data.OptionalSkillLevel),
 		Description:        data.Description,
-		Priority:           data.Priority,
 		Tags:               data.Tags,
 		Notes:              notes,
 	})
@@ -674,6 +788,66 @@ func HandleDeleteSkill(params DeleteSkillData, c *fiber.Ctx, db *db.Database) er
 	return c.SendStatus(fiber.StatusOK)
 }
 
+type ToggleSkillVisibilityData struct {
+	SkillId int64 `json:"skill_id"`
+}
+
+func HandleToggleSkillVisibility(data ToggleSkillVisibilityData, c *fiber.Ctx, db *db.Database) error {
+	user_id, err := middlewares.GetUserID(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized access",
+		})
+	}
+	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	queries := sqlc_gen.New(db.Pool)
+
+	visibility, err := queries.ToggleSkillVisibility(query_ctx, sqlc_gen.ToggleSkillVisibilityParams{
+		SkillID: data.SkillId,
+		UserID:  user_id,
+	})
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "could not toggle this experience visibility",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"visibility": visibility,
+	})
+}
+
+type ReorderSkillData struct {
+	SkillId int64 `json:"skill_id"`
+	AfterID int64 `json:"after_id"`
+}
+
+func HandleReorderSkill(data ReorderSkillData, c *fiber.Ctx, db *db.Database) error {
+	user_id, err := middlewares.GetUserID(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized access",
+		})
+	}
+	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	queries := sqlc_gen.New(db.Pool)
+
+	err = queries.ReorderSkill(query_ctx, sqlc_gen.ReorderSkillParams{
+		SkillID: data.SkillId,
+		AfterID: data.AfterID,
+		UserID:  user_id,
+	})
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "could not toggle this experience visibility",
+		})
+	}
+
+	return c.SendStatus(fiber.StatusOK)
+}
+
 // Certificate Handlers
 
 type CertificateCreationData struct {
@@ -682,7 +856,6 @@ type CertificateCreationData struct {
 	OptionalLocation    string      `json:"optional_location"`
 	OptionalGrantedDate string      `json:"optional_granted_date"`
 	Description         string      `json:"description"`
-	Priority            int32       `json:"priority"`
 	Tags                []string    `json:"tags"`
 	Notes               []fiber.Map `json:"notes"`
 }
@@ -725,7 +898,6 @@ func HandleCertificateCreation(data CertificateCreationData, c *fiber.Ctx, db *d
 		OptionalLocation:    data.OptionalLocation,
 		OptionalGrantedDate: granted_date,
 		Description:         data.Description,
-		Priority:            data.Priority,
 		Tags:                data.Tags,
 		Notes:               notes,
 	})
@@ -883,6 +1055,66 @@ func HandleDeleteCertificate(params DeleteCertificateData, c *fiber.Ctx, db *db.
 	return c.SendStatus(fiber.StatusOK)
 }
 
+type ToggleCertificateVisibilityData struct {
+	CertificateId int64 `json:"certificate_id"`
+}
+
+func HandleToggleCertificateVisibility(data ToggleCertificateVisibilityData, c *fiber.Ctx, db *db.Database) error {
+	user_id, err := middlewares.GetUserID(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized access",
+		})
+	}
+	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	queries := sqlc_gen.New(db.Pool)
+
+	visibility, err := queries.ToggleCertificateVisibility(query_ctx, sqlc_gen.ToggleCertificateVisibilityParams{
+		CertificateID: data.CertificateId,
+		UserID:        user_id,
+	})
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "could not toggle this experience visibility",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"visibility": visibility,
+	})
+}
+
+type ReorderCertificateData struct {
+	CertificateId int64 `json:"certificate_id"`
+	AfterID       int64 `json:"after_id"`
+}
+
+func HandleReorderCertificate(data ReorderCertificateData, c *fiber.Ctx, db *db.Database) error {
+	user_id, err := middlewares.GetUserID(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized access",
+		})
+	}
+	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	queries := sqlc_gen.New(db.Pool)
+
+	err = queries.ReorderCertificate(query_ctx, sqlc_gen.ReorderCertificateParams{
+		CertificateID: data.CertificateId,
+		AfterID:       data.AfterID,
+		UserID:        user_id,
+	})
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "could not toggle this experience visibility",
+		})
+	}
+
+	return c.SendStatus(fiber.StatusOK)
+}
+
 // Project Handlers
 
 type ProjectCreationData struct {
@@ -892,7 +1124,6 @@ type ProjectCreationData struct {
 	EndDate                 string      `json:"end_date"`
 	IsCurrent               bool        `json:"is_current"`
 	Description             string      `json:"description"`
-	Priority                int32       `json:"priority"`
 	Tags                    []string    `json:"tags"`
 	Notes                   []fiber.Map `json:"notes"`
 }
@@ -949,7 +1180,6 @@ func HandleProjectCreation(data ProjectCreationData, c *fiber.Ctx, db *database.
 		OptionalEndDate:         end_date,
 		IsCurrent:               data.IsCurrent,
 		Description:             data.Description,
-		Priority:                data.Priority,
 		Tags:                    data.Tags,
 		Notes:                   notes,
 	})
@@ -1116,6 +1346,66 @@ func HandleDeleteProject(params DeleteProjectData, c *fiber.Ctx, db *db.Database
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "could not delete this project",
+		})
+	}
+
+	return c.SendStatus(fiber.StatusOK)
+}
+
+type ToggleProjectVisibilityData struct {
+	ProjectId int64 `json:"project_id"`
+}
+
+func HandleToggleProjectVisibility(data ToggleProjectVisibilityData, c *fiber.Ctx, db *db.Database) error {
+	user_id, err := middlewares.GetUserID(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized access",
+		})
+	}
+	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	queries := sqlc_gen.New(db.Pool)
+
+	visibility, err := queries.ToggleProjectVisibility(query_ctx, sqlc_gen.ToggleProjectVisibilityParams{
+		ProjectID: data.ProjectId,
+		UserID:    user_id,
+	})
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "could not toggle this experience visibility",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"visibility": visibility,
+	})
+}
+
+type ReorderProjectData struct {
+	ProjectId int64 `json:"project_id"`
+	AfterID   int64 `json:"after_id"`
+}
+
+func HandleReorderProject(data ReorderProjectData, c *fiber.Ctx, db *db.Database) error {
+	user_id, err := middlewares.GetUserID(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized access",
+		})
+	}
+	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	queries := sqlc_gen.New(db.Pool)
+
+	err = queries.ReorderProject(query_ctx, sqlc_gen.ReorderProjectParams{
+		ProjectID: data.ProjectId,
+		AfterID:   data.AfterID,
+		UserID:    user_id,
+	})
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "could not toggle this experience visibility",
 		})
 	}
 

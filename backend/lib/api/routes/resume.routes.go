@@ -54,10 +54,30 @@ func RegisterResumeRoutes(group fiber.Router) {
 		var params handlers.DeleteExperienceData
 		if err := c.BodyParser(&params); err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "invalid query parameters",
+				"error": "Invalid request body",
 			})
 		}
 		return handlers.HandleDeleteExperience(params, c, &db.DB)
+	})
+
+	experience_group.Post("/toggle", func(c *fiber.Ctx) error {
+		var data handlers.ToggleExperienceVisibilityData
+		if err := c.BodyParser(&data); err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Invalid request body",
+			})
+		}
+		return handlers.HandleToggleExperienceVisibility(data, c, &db.DB)
+	})
+
+	experience_group.Post("/reorder", func(c *fiber.Ctx) error {
+		var data handlers.ReorderExperienceData
+		if err := c.BodyParser(&data); err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Invalid request body",
+			})
+		}
+		return handlers.HandleReorderExperience(data, c, &db.DB)
 	})
 
 	// Education Routes
@@ -102,6 +122,25 @@ func RegisterResumeRoutes(group fiber.Router) {
 		return handlers.HandleDeleteEducation(params, c, &db.DB)
 	})
 
+	education_group.Post("/toggle", func(c *fiber.Ctx) error {
+		var data handlers.ToggleEducationVisibilityData
+		if err := c.BodyParser(&data); err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Invalid request body",
+			})
+		}
+		return handlers.HandleToggleEducationVisibility(data, c, &db.DB)
+	})
+
+	education_group.Post("/reorder", func(c *fiber.Ctx) error {
+		var data handlers.ReorderEducationData
+		if err := c.BodyParser(&data); err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Invalid request body",
+			})
+		}
+		return handlers.HandleReorderEducation(data, c, &db.DB)
+	})
 	// Skill Routes
 	skill_group := resume_group.Group("/skill")
 	skill_group.Post("/create", func(c *fiber.Ctx) error {
@@ -144,6 +183,25 @@ func RegisterResumeRoutes(group fiber.Router) {
 		return handlers.HandleDeleteSkill(params, c, &db.DB)
 	})
 
+	skill_group.Post("/toggle", func(c *fiber.Ctx) error {
+		var data handlers.ToggleSkillVisibilityData
+		if err := c.BodyParser(&data); err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Invalid request body",
+			})
+		}
+		return handlers.HandleToggleSkillVisibility(data, c, &db.DB)
+	})
+
+	skill_group.Post("/reorder", func(c *fiber.Ctx) error {
+		var data handlers.ReorderSkillData
+		if err := c.BodyParser(&data); err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Invalid request body",
+			})
+		}
+		return handlers.HandleReorderSkill(data, c, &db.DB)
+	})
 	// Certificate Routes
 	certificate_group := resume_group.Group("/certificate")
 	certificate_group.Post("/create", func(c *fiber.Ctx) error {
@@ -186,6 +244,25 @@ func RegisterResumeRoutes(group fiber.Router) {
 		return handlers.HandleDeleteCertificate(params, c, &db.DB)
 	})
 
+	certificate_group.Post("/toggle", func(c *fiber.Ctx) error {
+		var data handlers.ToggleCertificateVisibilityData
+		if err := c.BodyParser(&data); err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Invalid request body",
+			})
+		}
+		return handlers.HandleToggleCertificateVisibility(data, c, &db.DB)
+	})
+
+	certificate_group.Post("/reorder", func(c *fiber.Ctx) error {
+		var data handlers.ReorderCertificateData
+		if err := c.BodyParser(&data); err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Invalid request body",
+			})
+		}
+		return handlers.HandleReorderCertificate(data, c, &db.DB)
+	})
 	// Project Routes
 	project_group := resume_group.Group("/project")
 	project_group.Post("/create", func(c *fiber.Ctx) error {
@@ -226,5 +303,24 @@ func RegisterResumeRoutes(group fiber.Router) {
 			})
 		}
 		return handlers.HandleDeleteProject(params, c, &db.DB)
+	})
+	project_group.Post("/toggle", func(c *fiber.Ctx) error {
+		var data handlers.ToggleProjectVisibilityData
+		if err := c.BodyParser(&data); err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Invalid request body",
+			})
+		}
+		return handlers.HandleToggleProjectVisibility(data, c, &db.DB)
+	})
+
+	project_group.Post("/reorder", func(c *fiber.Ctx) error {
+		var data handlers.ReorderProjectData
+		if err := c.BodyParser(&data); err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Invalid request body",
+			})
+		}
+		return handlers.HandleReorderProject(data, c, &db.DB)
 	})
 }

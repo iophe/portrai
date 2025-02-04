@@ -25,6 +25,7 @@ INSERT INTO public.certificates (
     optional_granted_date,
     description,
     priority,
+    is_visible,
     tags,
     notes,
     metadata
@@ -36,9 +37,10 @@ INSERT INTO public.certificates (
     $5::date,
     $6::text,
     $7::integer,
-    COALESCE($8::text[], ARRAY[]::text[]),
-    COALESCE($9::jsonb[], ARRAY[]::jsonb[]),
-    COALESCE($10::jsonb, '{}'::jsonb)
+    $8::boolean,
+    COALESCE($9::text[], ARRAY[]::text[]),
+    COALESCE($10::jsonb[], ARRAY[]::jsonb[]),
+    COALESCE($11::jsonb, '{}'::jsonb)
 )
 RETURNING certificate_id
 `
@@ -51,6 +53,7 @@ type CreateCertificateParams struct {
 	OptionalGrantedDate pgtype.Date `json:"optional_granted_date"`
 	Description         string      `json:"description"`
 	Priority            int32       `json:"priority"`
+	IsVisible           bool        `json:"is_visible"`
 	Tags                []string    `json:"tags"`
 	Notes               [][]byte    `json:"notes"`
 	Metadata            []byte      `json:"metadata"`
@@ -65,6 +68,7 @@ func (q *Queries) CreateCertificate(ctx context.Context, arg CreateCertificatePa
 		arg.OptionalGrantedDate,
 		arg.Description,
 		arg.Priority,
+		arg.IsVisible,
 		arg.Tags,
 		arg.Notes,
 		arg.Metadata,
@@ -89,6 +93,7 @@ INSERT INTO public.educations (
     is_current,
     description,
     priority,
+    is_visible,
     tags,
     notes,
     metadata
@@ -102,9 +107,10 @@ INSERT INTO public.educations (
     $7::boolean,
     $8::text,
     $9::integer,
-    COALESCE($10::text[], ARRAY[]::text[]),
-    COALESCE($11::jsonb[], ARRAY[]::jsonb[]),
-    COALESCE($12::jsonb, '{}'::jsonb)
+    $10::boolean,
+    COALESCE($11::text[], ARRAY[]::text[]),
+    COALESCE($12::jsonb[], ARRAY[]::jsonb[]),
+    COALESCE($13::jsonb, '{}'::jsonb)
 )
 RETURNING education_id
 `
@@ -119,6 +125,7 @@ type CreateEducationParams struct {
 	IsCurrent       bool        `json:"is_current"`
 	Description     string      `json:"description"`
 	Priority        int32       `json:"priority"`
+	IsVisible       bool        `json:"is_visible"`
 	Tags            []string    `json:"tags"`
 	Notes           [][]byte    `json:"notes"`
 	Metadata        []byte      `json:"metadata"`
@@ -135,6 +142,7 @@ func (q *Queries) CreateEducation(ctx context.Context, arg CreateEducationParams
 		arg.IsCurrent,
 		arg.Description,
 		arg.Priority,
+		arg.IsVisible,
 		arg.Tags,
 		arg.Notes,
 		arg.Metadata,
@@ -160,6 +168,7 @@ INSERT INTO public.experiences (
     is_current,
     description,
     priority,
+    is_visible,
     tags,
     notes,
     metadata
@@ -173,9 +182,10 @@ INSERT INTO public.experiences (
     $7::boolean,
     $8::text,
     $9::integer,
-    COALESCE($10::text[], ARRAY[]::text[]),
-    COALESCE($11::jsonb[], ARRAY[]::jsonb[]),
-    COALESCE($12::jsonb, '{}'::jsonb)
+    $10::boolean,
+    COALESCE($11::text[], ARRAY[]::text[]),
+    COALESCE($12::jsonb[], ARRAY[]::jsonb[]),
+    COALESCE($13::jsonb, '{}'::jsonb)
 )
 RETURNING experience_id
 `
@@ -190,6 +200,7 @@ type CreateExperienceParams struct {
 	IsCurrent       bool        `json:"is_current"`
 	Description     string      `json:"description"`
 	Priority        int32       `json:"priority"`
+	IsVisible       bool        `json:"is_visible"`
 	Tags            []string    `json:"tags"`
 	Notes           [][]byte    `json:"notes"`
 	Metadata        []byte      `json:"metadata"`
@@ -206,6 +217,7 @@ func (q *Queries) CreateExperience(ctx context.Context, arg CreateExperiencePara
 		arg.IsCurrent,
 		arg.Description,
 		arg.Priority,
+		arg.IsVisible,
 		arg.Tags,
 		arg.Notes,
 		arg.Metadata,
@@ -229,6 +241,7 @@ INSERT INTO public.projects (
     is_current,
     description,
     priority,
+    is_visible,
     tags,
     notes,
     metadata
@@ -241,9 +254,10 @@ INSERT INTO public.projects (
     $6::boolean,
     $7::text,
     $8::integer,
-    COALESCE($9::text[], ARRAY[]::text[]),
-    COALESCE($10::jsonb[], ARRAY[]::jsonb[]),
-    COALESCE($11::jsonb, '{}'::jsonb)
+    $9::boolean,
+    COALESCE($10::text[], ARRAY[]::text[]),
+    COALESCE($11::jsonb[], ARRAY[]::jsonb[]),
+    COALESCE($12::jsonb, '{}'::jsonb)
 )
 RETURNING project_id
 `
@@ -257,6 +271,7 @@ type CreateProjectParams struct {
 	IsCurrent               bool        `json:"is_current"`
 	Description             string      `json:"description"`
 	Priority                int32       `json:"priority"`
+	IsVisible               bool        `json:"is_visible"`
 	Tags                    []string    `json:"tags"`
 	Notes                   [][]byte    `json:"notes"`
 	Metadata                []byte      `json:"metadata"`
@@ -272,6 +287,7 @@ func (q *Queries) CreateProject(ctx context.Context, arg CreateProjectParams) (i
 		arg.IsCurrent,
 		arg.Description,
 		arg.Priority,
+		arg.IsVisible,
 		arg.Tags,
 		arg.Notes,
 		arg.Metadata,
@@ -293,6 +309,7 @@ INSERT INTO public.skills (
     optional_skill_level,
     description,
     priority,
+    is_visible,
     tags,
     notes,
     metadata
@@ -303,9 +320,10 @@ INSERT INTO public.skills (
     $4::skill_level,
     $5::text,
     $6::integer,
-    COALESCE($7::text[], ARRAY[]::text[]),
-    COALESCE($8::jsonb[], ARRAY[]::jsonb[]),
-    COALESCE($9::jsonb, '{}'::jsonb)
+    $7::boolean,
+    COALESCE($8::text[], ARRAY[]::text[]),
+    COALESCE($9::jsonb[], ARRAY[]::jsonb[]),
+    COALESCE($10::jsonb, '{}'::jsonb)
 )
 RETURNING skill_id
 `
@@ -317,6 +335,7 @@ type CreateSkillParams struct {
 	OptionalSkillLevel SkillLevel `json:"optional_skill_level"`
 	Description        string     `json:"description"`
 	Priority           int32      `json:"priority"`
+	IsVisible          bool       `json:"is_visible"`
 	Tags               []string   `json:"tags"`
 	Notes              [][]byte   `json:"notes"`
 	Metadata           []byte     `json:"metadata"`
@@ -330,6 +349,7 @@ func (q *Queries) CreateSkill(ctx context.Context, arg CreateSkillParams) (int64
 		arg.OptionalSkillLevel,
 		arg.Description,
 		arg.Priority,
+		arg.IsVisible,
 		arg.Tags,
 		arg.Notes,
 		arg.Metadata,
@@ -433,6 +453,7 @@ SELECT
     optional_granted_date,
     description,
     priority,
+    is_visible,
     tags,
     notes,
     metadata,
@@ -457,6 +478,7 @@ type GetCertificateByIdRow struct {
 	OptionalGrantedDate pgtype.Date        `json:"optional_granted_date"`
 	Description         string             `json:"description"`
 	Priority            int32              `json:"priority"`
+	IsVisible           pgtype.Bool        `json:"is_visible"`
 	Tags                []string           `json:"tags"`
 	Notes               [][]byte           `json:"notes"`
 	Metadata            []byte             `json:"metadata"`
@@ -475,6 +497,7 @@ func (q *Queries) GetCertificateById(ctx context.Context, arg GetCertificateById
 		&i.OptionalGrantedDate,
 		&i.Description,
 		&i.Priority,
+		&i.IsVisible,
 		&i.Tags,
 		&i.Notes,
 		&i.Metadata,
@@ -493,12 +516,13 @@ SELECT
     optional_granted_date,
     description,
     priority,
+    is_visible,
     tags,
     notes
 FROM public.certificates
 WHERE user_id = $1::uuid
 ORDER BY 
-    COALESCE(priority, 999999) ASC,
+    COALESCE(priority, 0) DESC,
     COALESCE(optional_granted_date, '1900-01-01'::date) DESC,
     certificate_name ASC
 `
@@ -511,6 +535,7 @@ type GetCertificatesByUserIdRow struct {
 	OptionalGrantedDate pgtype.Date `json:"optional_granted_date"`
 	Description         string      `json:"description"`
 	Priority            int32       `json:"priority"`
+	IsVisible           pgtype.Bool `json:"is_visible"`
 	Tags                []string    `json:"tags"`
 	Notes               [][]byte    `json:"notes"`
 }
@@ -532,6 +557,7 @@ func (q *Queries) GetCertificatesByUserId(ctx context.Context, userID uuid.UUID)
 			&i.OptionalGrantedDate,
 			&i.Description,
 			&i.Priority,
+			&i.IsVisible,
 			&i.Tags,
 			&i.Notes,
 		); err != nil {
@@ -556,6 +582,7 @@ SELECT
     is_current,
     description,
     priority,
+    is_visible,
     tags,
     notes,
     metadata,
@@ -582,6 +609,7 @@ type GetEducationByIdRow struct {
 	IsCurrent       pgtype.Bool        `json:"is_current"`
 	Description     string             `json:"description"`
 	Priority        int32              `json:"priority"`
+	IsVisible       pgtype.Bool        `json:"is_visible"`
 	Tags            []string           `json:"tags"`
 	Notes           [][]byte           `json:"notes"`
 	Metadata        []byte             `json:"metadata"`
@@ -602,6 +630,7 @@ func (q *Queries) GetEducationById(ctx context.Context, arg GetEducationByIdPara
 		&i.IsCurrent,
 		&i.Description,
 		&i.Priority,
+		&i.IsVisible,
 		&i.Tags,
 		&i.Notes,
 		&i.Metadata,
@@ -620,13 +649,15 @@ SELECT
     start_date,
     optional_end_date,
     is_current,
+    priority,
+    is_visible,
     description,
     tags,
     notes
 FROM public.educations
 WHERE user_id = $1::uuid
 ORDER BY 
-    COALESCE(priority, 999999) ASC,
+    COALESCE(priority, 0) DESC,
     COALESCE(optional_end_date, '9999-12-31'::date) DESC,
     start_date DESC
 `
@@ -639,6 +670,8 @@ type GetEducationsByUserIdRow struct {
 	StartDate       pgtype.Date `json:"start_date"`
 	OptionalEndDate pgtype.Date `json:"optional_end_date"`
 	IsCurrent       pgtype.Bool `json:"is_current"`
+	Priority        int32       `json:"priority"`
+	IsVisible       pgtype.Bool `json:"is_visible"`
 	Description     string      `json:"description"`
 	Tags            []string    `json:"tags"`
 	Notes           [][]byte    `json:"notes"`
@@ -661,6 +694,8 @@ func (q *Queries) GetEducationsByUserId(ctx context.Context, userID uuid.UUID) (
 			&i.StartDate,
 			&i.OptionalEndDate,
 			&i.IsCurrent,
+			&i.Priority,
+			&i.IsVisible,
 			&i.Description,
 			&i.Tags,
 			&i.Notes,
@@ -686,6 +721,7 @@ SELECT
     is_current,
     description,
     priority,
+    is_visible,
     tags,
     notes,
     metadata,
@@ -712,6 +748,7 @@ type GetExperienceByIdRow struct {
 	IsCurrent       pgtype.Bool        `json:"is_current"`
 	Description     string             `json:"description"`
 	Priority        int32              `json:"priority"`
+	IsVisible       pgtype.Bool        `json:"is_visible"`
 	Tags            []string           `json:"tags"`
 	Notes           [][]byte           `json:"notes"`
 	Metadata        []byte             `json:"metadata"`
@@ -732,6 +769,7 @@ func (q *Queries) GetExperienceById(ctx context.Context, arg GetExperienceByIdPa
 		&i.IsCurrent,
 		&i.Description,
 		&i.Priority,
+		&i.IsVisible,
 		&i.Tags,
 		&i.Notes,
 		&i.Metadata,
@@ -750,13 +788,15 @@ SELECT
     start_date,
     optional_end_date,
     is_current,
+    is_visible,
+    priority,
     description,
     tags,
     notes
 FROM public.experiences
 WHERE user_id = $1::uuid
 ORDER BY 
-    COALESCE(priority, 999999) ASC,
+    COALESCE(priority, 0) DESC,
     COALESCE(optional_end_date, '9999-12-31'::date) DESC,
     start_date DESC
 `
@@ -769,6 +809,8 @@ type GetExperiencesByUserIdRow struct {
 	StartDate       pgtype.Date `json:"start_date"`
 	OptionalEndDate pgtype.Date `json:"optional_end_date"`
 	IsCurrent       pgtype.Bool `json:"is_current"`
+	IsVisible       pgtype.Bool `json:"is_visible"`
+	Priority        int32       `json:"priority"`
 	Description     string      `json:"description"`
 	Tags            []string    `json:"tags"`
 	Notes           [][]byte    `json:"notes"`
@@ -791,6 +833,8 @@ func (q *Queries) GetExperiencesByUserId(ctx context.Context, userID uuid.UUID) 
 			&i.StartDate,
 			&i.OptionalEndDate,
 			&i.IsCurrent,
+			&i.IsVisible,
+			&i.Priority,
 			&i.Description,
 			&i.Tags,
 			&i.Notes,
@@ -815,6 +859,7 @@ SELECT
     is_current,
     description,
     priority,
+    is_visible,
     tags,
     notes,
     metadata,
@@ -840,6 +885,7 @@ type GetProjectByIdRow struct {
 	IsCurrent               pgtype.Bool        `json:"is_current"`
 	Description             string             `json:"description"`
 	Priority                int32              `json:"priority"`
+	IsVisible               pgtype.Bool        `json:"is_visible"`
 	Tags                    []string           `json:"tags"`
 	Notes                   [][]byte           `json:"notes"`
 	Metadata                []byte             `json:"metadata"`
@@ -859,6 +905,7 @@ func (q *Queries) GetProjectById(ctx context.Context, arg GetProjectByIdParams) 
 		&i.IsCurrent,
 		&i.Description,
 		&i.Priority,
+		&i.IsVisible,
 		&i.Tags,
 		&i.Notes,
 		&i.Metadata,
@@ -878,12 +925,13 @@ SELECT
     is_current,
     description,
     priority,
+    is_visible,
     tags,
     notes
 FROM public.projects
 WHERE user_id = $1::uuid
 ORDER BY 
-    COALESCE(priority, 999999) ASC,
+    COALESCE(priority, 0) DESC,
     COALESCE(optional_end_date, '9999-12-31'::date) DESC,
     COALESCE(optional_start_date, '9999-12-31'::date) DESC,
     project_title ASC
@@ -898,6 +946,7 @@ type GetProjectsByUserIdRow struct {
 	IsCurrent               pgtype.Bool `json:"is_current"`
 	Description             string      `json:"description"`
 	Priority                int32       `json:"priority"`
+	IsVisible               pgtype.Bool `json:"is_visible"`
 	Tags                    []string    `json:"tags"`
 	Notes                   [][]byte    `json:"notes"`
 }
@@ -920,6 +969,7 @@ func (q *Queries) GetProjectsByUserId(ctx context.Context, userID uuid.UUID) ([]
 			&i.IsCurrent,
 			&i.Description,
 			&i.Priority,
+			&i.IsVisible,
 			&i.Tags,
 			&i.Notes,
 		); err != nil {
@@ -941,6 +991,7 @@ SELECT
     optional_skill_level,
     description,
     priority,
+    is_visible,
     tags,
     notes,
     metadata,
@@ -964,6 +1015,7 @@ type GetSkillByIdRow struct {
 	OptionalSkillLevel NullSkillLevel     `json:"optional_skill_level"`
 	Description        string             `json:"description"`
 	Priority           int32              `json:"priority"`
+	IsVisible          pgtype.Bool        `json:"is_visible"`
 	Tags               []string           `json:"tags"`
 	Notes              [][]byte           `json:"notes"`
 	Metadata           []byte             `json:"metadata"`
@@ -981,6 +1033,7 @@ func (q *Queries) GetSkillById(ctx context.Context, arg GetSkillByIdParams) (Get
 		&i.OptionalSkillLevel,
 		&i.Description,
 		&i.Priority,
+		&i.IsVisible,
 		&i.Tags,
 		&i.Notes,
 		&i.Metadata,
@@ -988,70 +1041,6 @@ func (q *Queries) GetSkillById(ctx context.Context, arg GetSkillByIdParams) (Get
 		&i.UpdatedAt,
 	)
 	return i, err
-}
-
-const getSkillsByType = `-- name: GetSkillsByType :many
-SELECT 
-    skill_id,
-    skill_name,
-    optional_skill_type,
-    optional_skill_level,
-    description,
-    priority,
-    tags,
-    notes
-FROM public.skills
-WHERE 
-    user_id = $1::uuid
-    AND optional_skill_type = $2::skill_type
-ORDER BY 
-    COALESCE(priority, 999999) ASC,
-    skill_name ASC
-`
-
-type GetSkillsByTypeParams struct {
-	UserID    uuid.UUID `json:"user_id"`
-	SkillType SkillType `json:"skill_type"`
-}
-
-type GetSkillsByTypeRow struct {
-	SkillID            int64          `json:"skill_id"`
-	SkillName          string         `json:"skill_name"`
-	OptionalSkillType  NullSkillType  `json:"optional_skill_type"`
-	OptionalSkillLevel NullSkillLevel `json:"optional_skill_level"`
-	Description        string         `json:"description"`
-	Priority           int32          `json:"priority"`
-	Tags               []string       `json:"tags"`
-	Notes              [][]byte       `json:"notes"`
-}
-
-func (q *Queries) GetSkillsByType(ctx context.Context, arg GetSkillsByTypeParams) ([]GetSkillsByTypeRow, error) {
-	rows, err := q.db.Query(ctx, getSkillsByType, arg.UserID, arg.SkillType)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []GetSkillsByTypeRow{}
-	for rows.Next() {
-		var i GetSkillsByTypeRow
-		if err := rows.Scan(
-			&i.SkillID,
-			&i.SkillName,
-			&i.OptionalSkillType,
-			&i.OptionalSkillLevel,
-			&i.Description,
-			&i.Priority,
-			&i.Tags,
-			&i.Notes,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
 }
 
 const getSkillsByUserId = `-- name: GetSkillsByUserId :many
@@ -1062,12 +1051,13 @@ SELECT
     optional_skill_level,
     description,
     priority,
+    is_visible,
     tags,
     notes
 FROM public.skills
 WHERE user_id = $1::uuid
 ORDER BY 
-    COALESCE(priority, 999999) ASC,
+    COALESCE(priority, 0) DESC,
     skill_name ASC
 `
 
@@ -1078,6 +1068,7 @@ type GetSkillsByUserIdRow struct {
 	OptionalSkillLevel NullSkillLevel `json:"optional_skill_level"`
 	Description        string         `json:"description"`
 	Priority           int32          `json:"priority"`
+	IsVisible          pgtype.Bool    `json:"is_visible"`
 	Tags               []string       `json:"tags"`
 	Notes              [][]byte       `json:"notes"`
 }
@@ -1098,6 +1089,7 @@ func (q *Queries) GetSkillsByUserId(ctx context.Context, userID uuid.UUID) ([]Ge
 			&i.OptionalSkillLevel,
 			&i.Description,
 			&i.Priority,
+			&i.IsVisible,
 			&i.Tags,
 			&i.Notes,
 		); err != nil {
@@ -1111,6 +1103,392 @@ func (q *Queries) GetSkillsByUserId(ctx context.Context, userID uuid.UUID) ([]Ge
 	return items, nil
 }
 
+const reorderCertificate = `-- name: ReorderCertificate :exec
+WITH moved_certificate AS (
+    -- Get the current priority of the certificate being moved
+    SELECT priority as old_priority
+    FROM public.certificates 
+    WHERE certificate_id = $1::bigint
+    AND user_id = $2::uuid
+),
+target AS (
+    -- Get the priority of the certificate we're moving after
+    SELECT priority as after_priority
+    FROM public.certificates
+    WHERE certificate_id = $3::bigint
+    AND user_id = $2::uuid
+),
+updates AS (
+    -- Update priorities of certificates between old and new position
+    UPDATE public.certificates
+    SET priority = 
+        CASE 
+            -- Moving down (current priority < target priority)
+            WHEN (SELECT old_priority FROM moved_certificate) < (SELECT after_priority FROM target)
+            THEN priority - 1
+            -- Moving up (current priority > target priority)
+            ELSE priority + 1
+        END
+    WHERE user_id = $2::uuid
+    AND CASE 
+        -- Moving up: affect items between old position (exclusive) and target position (inclusive)
+        WHEN (SELECT old_priority FROM moved_certificate) < (SELECT after_priority FROM target)
+        THEN priority > (SELECT old_priority FROM moved_certificate) 
+            AND priority <= (SELECT after_priority FROM target)
+        -- Moving down: affect items between target position (inclusive) and old position (exclusive)
+        ELSE priority >= (SELECT after_priority FROM target)
+            AND priority < (SELECT old_priority FROM moved_certificate)
+    END
+    RETURNING priority
+)
+UPDATE public.certificates
+SET priority = (SELECT after_priority FROM target) 
+WHERE certificate_id = $1::bigint
+AND user_id = $2::uuid
+`
+
+type ReorderCertificateParams struct {
+	CertificateID int64     `json:"certificate_id"`
+	UserID        uuid.UUID `json:"user_id"`
+	AfterID       int64     `json:"after_id"`
+}
+
+func (q *Queries) ReorderCertificate(ctx context.Context, arg ReorderCertificateParams) error {
+	_, err := q.db.Exec(ctx, reorderCertificate, arg.CertificateID, arg.UserID, arg.AfterID)
+	return err
+}
+
+const reorderEducation = `-- name: ReorderEducation :exec
+WITH moved_education AS (
+    -- Get the current priority of the education being moved
+    SELECT priority as old_priority
+    FROM public.educations 
+    WHERE education_id = $1::bigint
+    AND user_id = $2::uuid
+),
+target AS (
+    -- Get the priority of the education we're moving after
+    SELECT priority as after_priority
+    FROM public.educations
+    WHERE education_id = $3::bigint
+    AND user_id = $2::uuid
+),
+updates AS (
+    -- Update priorities of educations between old and new position
+    UPDATE public.educations
+    SET priority = 
+        CASE 
+            -- Moving down (current priority < target priority)
+            WHEN (SELECT old_priority FROM moved_education) < (SELECT after_priority FROM target)
+            THEN priority - 1
+            -- Moving up (current priority > target priority)
+            ELSE priority + 1
+        END
+    WHERE user_id = $2::uuid
+    AND CASE 
+        -- Moving up: affect items between old position (exclusive) and target position (inclusive)
+        WHEN (SELECT old_priority FROM moved_education) < (SELECT after_priority FROM target)
+        THEN priority > (SELECT old_priority FROM moved_education) 
+            AND priority <= (SELECT after_priority FROM target)
+        -- Moving down: affect items between target position (inclusive) and old position (exclusive)
+        ELSE priority >= (SELECT after_priority FROM target)
+            AND priority < (SELECT old_priority FROM moved_education)
+    END
+    RETURNING priority
+)
+UPDATE public.educations
+SET priority = (SELECT after_priority FROM target) 
+WHERE education_id = $1::bigint
+AND user_id = $2::uuid
+`
+
+type ReorderEducationParams struct {
+	EducationID int64     `json:"education_id"`
+	UserID      uuid.UUID `json:"user_id"`
+	AfterID     int64     `json:"after_id"`
+}
+
+func (q *Queries) ReorderEducation(ctx context.Context, arg ReorderEducationParams) error {
+	_, err := q.db.Exec(ctx, reorderEducation, arg.EducationID, arg.UserID, arg.AfterID)
+	return err
+}
+
+const reorderExperience = `-- name: ReorderExperience :exec
+WITH moved_experience AS (
+    -- Get the current priority of the experience being moved
+    SELECT priority as old_priority
+    FROM public.experiences 
+    WHERE experience_id = $1::bigint
+    AND user_id = $2::uuid
+),
+target AS (
+    -- Get the priority of the experience we're moving after
+    SELECT priority as after_priority
+    FROM public.experiences
+    WHERE experience_id = $3::bigint
+    AND user_id = $2::uuid
+),
+updates AS (
+    -- Update priorities of experiences between old and new position
+    UPDATE public.experiences
+    SET priority = 
+        CASE 
+            -- Moving down (current priority < target priority)
+            WHEN (SELECT old_priority FROM moved_experience) < (SELECT after_priority FROM target)
+            THEN priority - 1
+            -- Moving up (current priority > target priority)
+            ELSE priority + 1
+        END
+    WHERE user_id = $2::uuid
+    AND CASE 
+        -- Moving up: affect items between old position (exclusive) and target position (inclusive)
+        WHEN (SELECT old_priority FROM moved_experience) < (SELECT after_priority FROM target)
+        THEN priority > (SELECT old_priority FROM moved_experience) 
+            AND priority <= (SELECT after_priority FROM target)
+        -- Moving down: affect items between target position (inclusive) and old position (exclusive)
+        ELSE priority >= (SELECT after_priority FROM target)
+            AND priority < (SELECT old_priority FROM moved_experience)
+    END
+    RETURNING priority
+)
+UPDATE public.experiences
+SET priority = (SELECT after_priority FROM target) 
+WHERE experience_id = $1::bigint
+AND user_id = $2::uuid
+`
+
+type ReorderExperienceParams struct {
+	ExperienceID int64     `json:"experience_id"`
+	UserID       uuid.UUID `json:"user_id"`
+	AfterID      int64     `json:"after_id"`
+}
+
+// Finally, update the priority of the moved experience
+func (q *Queries) ReorderExperience(ctx context.Context, arg ReorderExperienceParams) error {
+	_, err := q.db.Exec(ctx, reorderExperience, arg.ExperienceID, arg.UserID, arg.AfterID)
+	return err
+}
+
+const reorderProject = `-- name: ReorderProject :exec
+WITH moved_project AS (
+    -- Get the current priority of the project being moved
+    SELECT priority as old_priority
+    FROM public.projects 
+    WHERE project_id = $1::bigint
+    AND user_id = $2::uuid
+),
+target AS (
+    -- Get the priority of the project we're moving after
+    SELECT priority as after_priority
+    FROM public.projects
+    WHERE project_id = $3::bigint
+    AND user_id = $2::uuid
+),
+updates AS (
+    -- Update priorities of projects between old and new position
+    UPDATE public.projects
+    SET priority = 
+        CASE 
+            -- Moving down (current priority < target priority)
+            WHEN (SELECT old_priority FROM moved_project) < (SELECT after_priority FROM target)
+            THEN priority - 1
+            -- Moving up (current priority > target priority)
+            ELSE priority + 1
+        END
+    WHERE user_id = $2::uuid
+    AND CASE 
+        -- Moving up: affect items between old position (exclusive) and target position (inclusive)
+        WHEN (SELECT old_priority FROM moved_project) < (SELECT after_priority FROM target)
+        THEN priority > (SELECT old_priority FROM moved_project) 
+            AND priority <= (SELECT after_priority FROM target)
+        -- Moving down: affect items between target position (inclusive) and old position (exclusive)
+        ELSE priority >= (SELECT after_priority FROM target)
+            AND priority < (SELECT old_priority FROM moved_project)
+    END
+    RETURNING priority
+)
+UPDATE public.projects
+SET priority = (SELECT after_priority FROM target) 
+WHERE project_id = $1::bigint
+AND user_id = $2::uuid
+`
+
+type ReorderProjectParams struct {
+	ProjectID int64     `json:"project_id"`
+	UserID    uuid.UUID `json:"user_id"`
+	AfterID   int64     `json:"after_id"`
+}
+
+func (q *Queries) ReorderProject(ctx context.Context, arg ReorderProjectParams) error {
+	_, err := q.db.Exec(ctx, reorderProject, arg.ProjectID, arg.UserID, arg.AfterID)
+	return err
+}
+
+const reorderSkill = `-- name: ReorderSkill :exec
+WITH moved_skill AS (
+    -- Get the current priority of the skill being moved
+    SELECT priority as old_priority
+    FROM public.skills 
+    WHERE skill_id = $1::bigint
+    AND user_id = $2::uuid
+),
+target AS (
+    -- Get the priority of the skill we're moving after
+    SELECT priority as after_priority
+    FROM public.skills
+    WHERE skill_id = $3::bigint
+    AND user_id = $2::uuid
+),
+updates AS (
+    -- Update priorities of skills between old and new position
+    UPDATE public.skills
+    SET priority = 
+        CASE 
+            -- Moving down (current priority < target priority)
+            WHEN (SELECT old_priority FROM moved_skill) < (SELECT after_priority FROM target)
+            THEN priority - 1
+            -- Moving up (current priority > target priority)
+            ELSE priority + 1
+        END
+    WHERE user_id = $2::uuid
+    AND CASE 
+        -- Moving up: affect items between old position (exclusive) and target position (inclusive)
+        WHEN (SELECT old_priority FROM moved_skill) < (SELECT after_priority FROM target)
+        THEN priority > (SELECT old_priority FROM moved_skill) 
+            AND priority <= (SELECT after_priority FROM target)
+        -- Moving down: affect items between target position (inclusive) and old position (exclusive)
+        ELSE priority >= (SELECT after_priority FROM target)
+            AND priority < (SELECT old_priority FROM moved_skill)
+    END
+    RETURNING priority
+)
+UPDATE public.skills
+SET priority = (SELECT after_priority FROM target) 
+WHERE skill_id = $1::bigint
+AND user_id = $2::uuid
+`
+
+type ReorderSkillParams struct {
+	SkillID int64     `json:"skill_id"`
+	UserID  uuid.UUID `json:"user_id"`
+	AfterID int64     `json:"after_id"`
+}
+
+func (q *Queries) ReorderSkill(ctx context.Context, arg ReorderSkillParams) error {
+	_, err := q.db.Exec(ctx, reorderSkill, arg.SkillID, arg.UserID, arg.AfterID)
+	return err
+}
+
+const toggleCertificateVisibility = `-- name: ToggleCertificateVisibility :one
+UPDATE public.certificates
+SET
+    is_visible = NOT is_visible
+WHERE 
+    certificate_id = $1::bigint 
+    AND user_id = $2::uuid
+RETURNING is_visible
+`
+
+type ToggleCertificateVisibilityParams struct {
+	CertificateID int64     `json:"certificate_id"`
+	UserID        uuid.UUID `json:"user_id"`
+}
+
+func (q *Queries) ToggleCertificateVisibility(ctx context.Context, arg ToggleCertificateVisibilityParams) (pgtype.Bool, error) {
+	row := q.db.QueryRow(ctx, toggleCertificateVisibility, arg.CertificateID, arg.UserID)
+	var is_visible pgtype.Bool
+	err := row.Scan(&is_visible)
+	return is_visible, err
+}
+
+const toggleEducationVisibility = `-- name: ToggleEducationVisibility :one
+UPDATE public.educations
+SET
+    is_visible = NOT is_visible
+WHERE 
+    education_id = $1::bigint 
+    AND user_id = $2::uuid
+RETURNING is_visible
+`
+
+type ToggleEducationVisibilityParams struct {
+	EducationID int64     `json:"education_id"`
+	UserID      uuid.UUID `json:"user_id"`
+}
+
+func (q *Queries) ToggleEducationVisibility(ctx context.Context, arg ToggleEducationVisibilityParams) (pgtype.Bool, error) {
+	row := q.db.QueryRow(ctx, toggleEducationVisibility, arg.EducationID, arg.UserID)
+	var is_visible pgtype.Bool
+	err := row.Scan(&is_visible)
+	return is_visible, err
+}
+
+const toggleExperienceVisibility = `-- name: ToggleExperienceVisibility :one
+UPDATE public.experiences
+SET
+    is_visible = NOT is_visible
+WHERE 
+    experience_id = $1::bigint 
+    AND user_id = $2::uuid
+RETURNING is_visible
+`
+
+type ToggleExperienceVisibilityParams struct {
+	ExperienceID int64     `json:"experience_id"`
+	UserID       uuid.UUID `json:"user_id"`
+}
+
+func (q *Queries) ToggleExperienceVisibility(ctx context.Context, arg ToggleExperienceVisibilityParams) (pgtype.Bool, error) {
+	row := q.db.QueryRow(ctx, toggleExperienceVisibility, arg.ExperienceID, arg.UserID)
+	var is_visible pgtype.Bool
+	err := row.Scan(&is_visible)
+	return is_visible, err
+}
+
+const toggleProjectVisibility = `-- name: ToggleProjectVisibility :one
+UPDATE public.projects
+SET
+    is_visible = NOT is_visible
+WHERE 
+    project_id = $1::bigint 
+    AND user_id = $2::uuid
+RETURNING is_visible
+`
+
+type ToggleProjectVisibilityParams struct {
+	ProjectID int64     `json:"project_id"`
+	UserID    uuid.UUID `json:"user_id"`
+}
+
+func (q *Queries) ToggleProjectVisibility(ctx context.Context, arg ToggleProjectVisibilityParams) (pgtype.Bool, error) {
+	row := q.db.QueryRow(ctx, toggleProjectVisibility, arg.ProjectID, arg.UserID)
+	var is_visible pgtype.Bool
+	err := row.Scan(&is_visible)
+	return is_visible, err
+}
+
+const toggleSkillVisibility = `-- name: ToggleSkillVisibility :one
+UPDATE public.skills
+SET
+    is_visible = NOT is_visible
+WHERE 
+    skill_id = $1::bigint 
+    AND user_id = $2::uuid
+RETURNING is_visible
+`
+
+type ToggleSkillVisibilityParams struct {
+	SkillID int64     `json:"skill_id"`
+	UserID  uuid.UUID `json:"user_id"`
+}
+
+func (q *Queries) ToggleSkillVisibility(ctx context.Context, arg ToggleSkillVisibilityParams) (pgtype.Bool, error) {
+	row := q.db.QueryRow(ctx, toggleSkillVisibility, arg.SkillID, arg.UserID)
+	var is_visible pgtype.Bool
+	err := row.Scan(&is_visible)
+	return is_visible, err
+}
+
 const updateCertificate = `-- name: UpdateCertificate :exec
 UPDATE public.certificates
 SET
@@ -1120,12 +1498,13 @@ SET
     optional_granted_date = COALESCE($4::date, optional_granted_date),
     description = COALESCE($5::text, description),
     priority = COALESCE($6::integer, priority),
-    tags = COALESCE($7::text[], tags),
-    notes = COALESCE($8::jsonb[], notes),
-    metadata = COALESCE($9::jsonb, metadata)
+    is_visible = COALESCE($7::boolean, priority),
+    tags = COALESCE($8::text[], tags),
+    notes = COALESCE($9::jsonb[], notes),
+    metadata = COALESCE($10::jsonb, metadata)
 WHERE 
-    certificate_id = $10::bigint 
-    AND user_id = $11::uuid
+    certificate_id = $11::bigint 
+    AND user_id = $12::uuid
 `
 
 type UpdateCertificateParams struct {
@@ -1135,6 +1514,7 @@ type UpdateCertificateParams struct {
 	OptionalGrantedDate pgtype.Date `json:"optional_granted_date"`
 	Description         string      `json:"description"`
 	Priority            int32       `json:"priority"`
+	IsVisible           bool        `json:"is_visible"`
 	Tags                []string    `json:"tags"`
 	Notes               [][]byte    `json:"notes"`
 	Metadata            []byte      `json:"metadata"`
@@ -1150,6 +1530,7 @@ func (q *Queries) UpdateCertificate(ctx context.Context, arg UpdateCertificatePa
 		arg.OptionalGrantedDate,
 		arg.Description,
 		arg.Priority,
+		arg.IsVisible,
 		arg.Tags,
 		arg.Notes,
 		arg.Metadata,
@@ -1173,12 +1554,13 @@ SET
     END,
     description = COALESCE($8::text, description),
     priority = COALESCE($9::integer, priority),
-    tags = COALESCE($10::text[], tags),
-    notes = COALESCE($11::jsonb[], notes),
-    metadata = COALESCE($12::jsonb, metadata)
+    is_visible = COALESCE($10::boolean, priority),
+    tags = COALESCE($11::text[], tags),
+    notes = COALESCE($12::jsonb[], notes),
+    metadata = COALESCE($13::jsonb, metadata)
 WHERE 
-    education_id = $13::bigint 
-    AND user_id = $14::uuid
+    education_id = $14::bigint 
+    AND user_id = $15::uuid
 `
 
 type UpdateEducationParams struct {
@@ -1191,6 +1573,7 @@ type UpdateEducationParams struct {
 	IsCurrent       bool        `json:"is_current"`
 	Description     string      `json:"description"`
 	Priority        int32       `json:"priority"`
+	IsVisible       bool        `json:"is_visible"`
 	Tags            []string    `json:"tags"`
 	Notes           [][]byte    `json:"notes"`
 	Metadata        []byte      `json:"metadata"`
@@ -1209,6 +1592,7 @@ func (q *Queries) UpdateEducation(ctx context.Context, arg UpdateEducationParams
 		arg.IsCurrent,
 		arg.Description,
 		arg.Priority,
+		arg.IsVisible,
 		arg.Tags,
 		arg.Notes,
 		arg.Metadata,
@@ -1232,12 +1616,13 @@ SET
     END,
     description = COALESCE($7::text, description),
     priority = COALESCE($8::integer, priority),
-    tags = COALESCE($9::text[], tags),
-    notes = COALESCE($10::jsonb[], notes),
-    metadata = COALESCE($11::jsonb, metadata)
+    is_visible = COALESCE($9::boolean, priority),
+    tags = COALESCE($10::text[], tags),
+    notes = COALESCE($11::jsonb[], notes),
+    metadata = COALESCE($12::jsonb, metadata)
 WHERE 
-    experience_id = $12::bigint 
-    AND user_id = $13::uuid
+    experience_id = $13::bigint 
+    AND user_id = $14::uuid
 `
 
 type UpdateExperienceParams struct {
@@ -1249,6 +1634,7 @@ type UpdateExperienceParams struct {
 	IsCurrent       bool        `json:"is_current"`
 	Description     string      `json:"description"`
 	Priority        int32       `json:"priority"`
+	IsVisible       bool        `json:"is_visible"`
 	Tags            []string    `json:"tags"`
 	Notes           [][]byte    `json:"notes"`
 	Metadata        []byte      `json:"metadata"`
@@ -1266,6 +1652,7 @@ func (q *Queries) UpdateExperience(ctx context.Context, arg UpdateExperiencePara
 		arg.IsCurrent,
 		arg.Description,
 		arg.Priority,
+		arg.IsVisible,
 		arg.Tags,
 		arg.Notes,
 		arg.Metadata,
@@ -1288,12 +1675,13 @@ SET
     END,
     description = COALESCE($7::text, description),
     priority = COALESCE($8::integer, priority),
-    tags = COALESCE($9::text[], tags),
-    notes = COALESCE($10::jsonb[], notes),
-    metadata = COALESCE($11::jsonb, metadata)
+    is_visible = COALESCE($9::boolean, priority),
+    tags = COALESCE($10::text[], tags),
+    notes = COALESCE($11::jsonb[], notes),
+    metadata = COALESCE($12::jsonb, metadata)
 WHERE 
-    project_id = $12::bigint 
-    AND user_id = $13::uuid
+    project_id = $13::bigint 
+    AND user_id = $14::uuid
 `
 
 type UpdateProjectParams struct {
@@ -1305,6 +1693,7 @@ type UpdateProjectParams struct {
 	IsCurrent               bool        `json:"is_current"`
 	Description             string      `json:"description"`
 	Priority                int32       `json:"priority"`
+	IsVisible               bool        `json:"is_visible"`
 	Tags                    []string    `json:"tags"`
 	Notes                   [][]byte    `json:"notes"`
 	Metadata                []byte      `json:"metadata"`
@@ -1322,6 +1711,7 @@ func (q *Queries) UpdateProject(ctx context.Context, arg UpdateProjectParams) er
 		arg.IsCurrent,
 		arg.Description,
 		arg.Priority,
+		arg.IsVisible,
 		arg.Tags,
 		arg.Notes,
 		arg.Metadata,
@@ -1339,12 +1729,13 @@ SET
     optional_skill_level = COALESCE($3::skill_level, optional_skill_level),
     description = COALESCE($4::text, description),
     priority = COALESCE($5::integer, priority),
-    tags = COALESCE($6::text[], tags),
-    notes = COALESCE($7::jsonb[], notes),
-    metadata = COALESCE($8::jsonb, metadata)
+    is_visible = COALESCE($6::boolean, priority),
+    tags = COALESCE($7::text[], tags),
+    notes = COALESCE($8::jsonb[], notes),
+    metadata = COALESCE($9::jsonb, metadata)
 WHERE 
-    skill_id = $9::bigint 
-    AND user_id = $10::uuid
+    skill_id = $10::bigint 
+    AND user_id = $11::uuid
 `
 
 type UpdateSkillParams struct {
@@ -1353,6 +1744,7 @@ type UpdateSkillParams struct {
 	OptionalSkillLevel SkillLevel `json:"optional_skill_level"`
 	Description        string     `json:"description"`
 	Priority           int32      `json:"priority"`
+	IsVisible          bool       `json:"is_visible"`
 	Tags               []string   `json:"tags"`
 	Notes              [][]byte   `json:"notes"`
 	Metadata           []byte     `json:"metadata"`
@@ -1367,6 +1759,7 @@ func (q *Queries) UpdateSkill(ctx context.Context, arg UpdateSkillParams) error 
 		arg.OptionalSkillLevel,
 		arg.Description,
 		arg.Priority,
+		arg.IsVisible,
 		arg.Tags,
 		arg.Notes,
 		arg.Metadata,

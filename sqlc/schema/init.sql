@@ -161,12 +161,32 @@ create table public.experiences (
   is_current boolean default false,
   description text not null default '',
   priority integer not null default 0,
+  is_visible boolean default true,
   tags text[] not null default ARRAY[]::text[],
   notes jsonb[] not null default ARRAY[]::jsonb[],
   metadata jsonb not null default '{}'::jsonb,
   created_at timestamp with time zone default current_timestamp,
   updated_at timestamp with time zone default current_timestamp
 );
+
+-- create a function to handle the priority per user
+create or replace function set_experience_priority()
+returns trigger as $$
+begin
+    if new.priority = 0 then
+        select coalesce(max(priority), 0) + 1 into new.priority
+        from public.experiences
+        where user_id = new.user_id;
+    end if;
+    return new;
+end;
+$$ language plpgsql;
+
+-- create the trigger
+create trigger set_experience_priority
+before insert on public.experiences
+for each row
+execute function set_experience_priority();
 
 CREATE TRIGGER update_experiences_updated_at
     BEFORE UPDATE ON public.experiences
@@ -190,12 +210,30 @@ create table public.educations (
   is_current boolean default false,
   description text not null default '',
   priority integer not null default 0,
+  is_visible boolean default true,
   tags text[] not null default ARRAY[]::text[],
   notes jsonb[] not null default ARRAY[]::jsonb[],
   metadata jsonb not null default '{}'::jsonb,
   created_at timestamp with time zone default current_timestamp,
   updated_at timestamp with time zone default current_timestamp
 );
+
+create or replace function set_education_priority()
+returns trigger as $$
+begin
+    if new.priority = 0 then
+        select coalesce(max(priority), 0) + 1 into new.priority
+        from public.educations
+        where user_id = new.user_id;
+    end if;
+    return new;
+end;
+$$ language plpgsql;
+
+create trigger set_education_priority
+before insert on public.educations
+for each row
+execute function set_education_priority();
 
 CREATE TRIGGER update_educations_updated_at
     BEFORE UPDATE ON public.educations
@@ -219,12 +257,30 @@ create table public.skills (
   optional_skill_level skill_level,
   description text not null default '',
   priority integer not null default 0,
+  is_visible boolean default true,
   tags text[] not null default ARRAY[]::text[],
   notes jsonb[] not null default ARRAY[]::jsonb[],
   metadata jsonb not null default '{}'::jsonb,
   created_at timestamp with time zone default current_timestamp,
   updated_at timestamp with time zone default current_timestamp
 );
+
+create or replace function set_skill_priority()
+returns trigger as $$
+begin
+    if new.priority = 0 then
+        select coalesce(max(priority), 0) + 1 into new.priority
+        from public.skills
+        where user_id = new.user_id;
+    end if;
+    return new;
+end;
+$$ language plpgsql;
+
+create trigger set_skill_priority
+before insert on public.skills
+for each row
+execute function set_skill_priority();
 
 CREATE TRIGGER update_skills_updated_at
     BEFORE UPDATE ON public.skills
@@ -247,12 +303,30 @@ create table public.certificates (
   optional_granted_date date not null default current_date,
   description text not null default '',
   priority integer not null default 0,
+  is_visible boolean default true,
   tags text[] not null default ARRAY[]::text[],
   notes jsonb[] not null default ARRAY[]::jsonb[],
   metadata jsonb not null default '{}'::jsonb,
   created_at timestamp with time zone default current_timestamp,
   updated_at timestamp with time zone default current_timestamp
 );
+
+create or replace function set_certificates_priority()
+returns trigger as $$
+begin
+    if new.priority = 0 then
+        select coalesce(max(priority), 0) + 1 into new.priority
+        from public.certificates
+        where user_id = new.user_id;
+    end if;
+    return new;
+end;
+$$ language plpgsql;
+
+create trigger set_certificates_priority
+before insert on public.certificates
+for each row
+execute function set_certificates_priority();
 
 CREATE TRIGGER update_certificates_updated_at
     BEFORE UPDATE ON public.certificates
@@ -275,12 +349,30 @@ create table public.projects (
   is_current boolean default false,
   description text not null default '',
   priority integer not null default 0,
+  is_visible boolean default true,
   tags text[] not null default ARRAY[]::text[],
   notes jsonb[] not null default ARRAY[]::jsonb[],
   metadata jsonb not null default '{}'::jsonb,
   created_at timestamp with time zone default current_timestamp,
   updated_at timestamp with time zone default current_timestamp
 );
+
+create or replace function set_projects_priority()
+returns trigger as $$
+begin
+    if new.priority = 0 then
+        select coalesce(max(priority), 0) + 1 into new.priority
+        from public.projects
+        where user_id = new.user_id;
+    end if;
+    return new;
+end;
+$$ language plpgsql;
+
+create trigger set_projects_priority
+before insert on public.projects
+for each row
+execute function set_projects_priority();
 
 CREATE TRIGGER update_projects_updated_at
     BEFORE UPDATE ON public.projects
