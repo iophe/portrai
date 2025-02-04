@@ -1,33 +1,131 @@
 import { useFault } from "@components/fault";
-import { createSignal, For } from "solid-js";
+import { api } from "@utils/api";
+import { AxiosError } from "axios";
+import { createSignal, For, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 
-interface ExperienceFormProps {
-	experience?: Experience;
-	onSubmit: (data: Omit<Experience, "experience_id">) => void;
+interface EducationViewProps {
+	education: Education;
+	edit: (education_id: number) => void;
+	delete: (education_id: number) => void;
+}
+
+export function EducationView(props: EducationViewProps) {
+	return (
+		<article class="p-4 border border-gray-200 rounded-lg flex flex-col gap-2">
+			<header class="flex flex-col justify-between items-start mb-2">
+				<h3 class="text-lg font-medium text-gray-900">
+					{props.education.degree}
+				</h3>
+				<h4 class="text-gray-700">{props.education.school}</h4>
+			</header>
+			<p class="text-gray-600 text-sm">{props.education.location}</p>
+			<span class="flex flex-row">
+				<p class="text-gray-600 text-sm">
+					{props.education.start_date}
+				</p>
+				-
+				<Show
+					when={props.education.optional_end_date}
+					fallback={<p class="text-gray-600 text-sm">present</p>}
+				>
+					<p class="text-gray-600 text-sm">
+						{props.education.optional_end_date}
+					</p>
+				</Show>
+			</span>
+			<p class="text-gray-700">{props.education.description}</p>
+			<footer class="mt-2">
+				<ul class="flex gap-2 flex-wrap">
+					<For each={props.education.tags}>
+						{(tag) => (
+							<li class="px-2 py-1 bg-gray-100 text-gray-700 text-sm rounded">
+								{tag}
+							</li>
+						)}
+					</For>
+				</ul>
+			</footer>
+			<div class="self-end flex flex-row gap-4">
+				<button
+					title="Edit this education"
+					class="self-end w-fit px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded"
+					onclick={() => {
+						props.edit(props.education.education_id);
+					}}
+				>
+					Edit
+				</button>
+				<button
+					title="Delete this education"
+					class="self-end w-fit px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded"
+					onclick={() => {
+						props.delete(props.education.education_id);
+					}}
+				>
+					Delete
+				</button>
+			</div>
+		</article>
+	);
+}
+
+interface EducationFormProps {
+	education?: Education;
+	is_new?: boolean;
+	onSubmit: (education_id: number) => void;
 	onCancel: () => void;
 }
 
-function ExperienceForm(props: ExperienceFormProps) {
+export function EducationForm(props: EducationFormProps) {
 	const fault = useFault();
 	const [form_data, setFormData] = createStore({
-		company_name: props.experience?.company_name || "",
-		job_title: props.experience?.job_title || "",
-		location: props.experience?.location || "",
-		start_date: props.experience?.start_date || "",
-		end_date: props.experience?.end_date || "",
-		is_current: props.experience?.is_current || false,
-		description: props.experience?.description || "",
-		priority: props.experience?.priority || 0,
-		tags: props.experience?.tags || [],
-		notes: props.experience?.notes || [],
+		school: props.education?.school || "",
+		degree: props.education?.degree || "",
+		location: props.education?.location || "",
+		start_date: props.education?.start_date || "",
+		optional_end_date: props.education?.optional_end_date || "",
+		is_current: props.education?.is_current || false,
+		description: props.education?.description || "",
+		priority: props.education?.priority || 0,
+		tags: props.education?.tags || [],
+		notes: props.education?.notes || [],
 	});
-
 	const [new_tag, setNewTag] = createSignal("");
 
-	function handleSubmit(e: Event) {
+	async function handleSubmit(e: Event) {
 		e.preventDefault();
-		props.onSubmit(form_data);
+		if (!props.is_new) {
+			if (!props.education) return;
+			try {
+				await api.post("/resume/education/update", {
+					...form_data,
+					education_id: props.education.education_id,
+				});
+				props.onSubmit(props.education.education_id);
+			} catch (error) {
+				fault.minor({
+					message:
+						((error as AxiosError).response?.data as any).error ??
+						(error as AxiosError).message,
+				});
+			}
+		} else {
+			try {
+				const res = await api.post(
+					"/resume/education/create",
+					form_data
+				);
+				const education_id = res.data.education_id;
+				props.onSubmit(education_id);
+			} catch (error) {
+				fault.minor({
+					message:
+						((error as AxiosError).response?.data as any).error ??
+						(error as AxiosError).message,
+				});
+			}
+		}
 	}
 
 	function addTag(e: KeyboardEvent) {
@@ -39,16 +137,16 @@ function ExperienceForm(props: ExperienceFormProps) {
 	}
 
 	return (
-		<form onSubmit={handleSubmit} class="space-y-4 max-w-2xl mx-auto">
+		<form onSubmit={handleSubmit} class="">
 			<div class="space-y-2">
 				<label class="block text-sm font-medium text-gray-700">
-					Job Title
+					Degree
 				</label>
 				<input
 					type="text"
-					value={form_data.job_title}
+					value={form_data.degree}
 					onInput={(e) =>
-						setFormData("job_title", e.currentTarget.value)
+						setFormData("degree", e.currentTarget.value)
 					}
 					class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-gray-500"
 					required
@@ -57,13 +155,13 @@ function ExperienceForm(props: ExperienceFormProps) {
 
 			<div class="space-y-2">
 				<label class="block text-sm font-medium text-gray-700">
-					Company
+					School
 				</label>
 				<input
 					type="text"
-					value={form_data.company_name}
+					value={form_data.school}
 					onInput={(e) =>
-						setFormData("company_name", e.currentTarget.value)
+						setFormData("school", e.currentTarget.value)
 					}
 					class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-gray-500"
 					required
@@ -106,9 +204,12 @@ function ExperienceForm(props: ExperienceFormProps) {
 					</label>
 					<input
 						type="date"
-						value={form_data.end_date}
+						value={form_data.optional_end_date}
 						onInput={(e) =>
-							setFormData("end_date", e.currentTarget.value)
+							setFormData(
+								"optional_end_date",
+								e.currentTarget.value
+							)
 						}
 						disabled={form_data.is_current}
 						class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-gray-500"
@@ -125,7 +226,7 @@ function ExperienceForm(props: ExperienceFormProps) {
 					}
 					class="rounded border-gray-300 text-gray-600 focus:ring-gray-500"
 				/>
-				<label class="text-sm text-gray-700">Current Position</label>
+				<label class="text-sm text-gray-700">Currently Studying</label>
 			</div>
 
 			<div class="space-y-2">
@@ -188,11 +289,9 @@ function ExperienceForm(props: ExperienceFormProps) {
 					type="submit"
 					class="px-4 py-2 bg-gray-900 text-white rounded hover:bg-gray-800"
 				>
-					Save Experience
+					Save Education
 				</button>
 			</div>
 		</form>
 	);
 }
-
-export default ExperienceForm;

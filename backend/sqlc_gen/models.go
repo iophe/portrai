@@ -98,6 +98,94 @@ func (ns NullPricingType) Value() (driver.Value, error) {
 	return string(ns.PricingType), nil
 }
 
+type SkillLevel string
+
+const (
+	SkillLevelBeginner   SkillLevel = "beginner"
+	SkillLevelAmateur    SkillLevel = "amateur"
+	SkillLevelCompetent  SkillLevel = "competent"
+	SkillLevelProficient SkillLevel = "proficient"
+	SkillLevelExpert     SkillLevel = "expert"
+)
+
+func (e *SkillLevel) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = SkillLevel(s)
+	case string:
+		*e = SkillLevel(s)
+	default:
+		return fmt.Errorf("unsupported scan type for SkillLevel: %T", src)
+	}
+	return nil
+}
+
+type NullSkillLevel struct {
+	SkillLevel SkillLevel `json:"skill_level"`
+	Valid      bool       `json:"valid"` // Valid is true if SkillLevel is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullSkillLevel) Scan(value interface{}) error {
+	if value == nil {
+		ns.SkillLevel, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.SkillLevel.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullSkillLevel) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.SkillLevel), nil
+}
+
+type SkillType string
+
+const (
+	SkillTypeSoft      SkillType = "soft"
+	SkillTypeTechnical SkillType = "technical"
+	SkillTypeLanguage  SkillType = "language"
+)
+
+func (e *SkillType) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = SkillType(s)
+	case string:
+		*e = SkillType(s)
+	default:
+		return fmt.Errorf("unsupported scan type for SkillType: %T", src)
+	}
+	return nil
+}
+
+type NullSkillType struct {
+	SkillType SkillType `json:"skill_type"`
+	Valid     bool      `json:"valid"` // Valid is true if SkillType is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullSkillType) Scan(value interface{}) error {
+	if value == nil {
+		ns.SkillType, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.SkillType.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullSkillType) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.SkillType), nil
+}
+
 type SubscriptionStatus string
 
 const (
@@ -146,22 +234,59 @@ func (ns NullSubscriptionStatus) Value() (driver.Value, error) {
 	return string(ns.SubscriptionStatus), nil
 }
 
+type Certificate struct {
+	CertificateID       int64              `json:"certificate_id"`
+	UserID              uuid.UUID          `json:"user_id"`
+	CertificateName     string             `json:"certificate_name"`
+	OptionalIssuer      pgtype.Text        `json:"optional_issuer"`
+	OptionalLocation    pgtype.Text        `json:"optional_location"`
+	OptionalGrantedDate pgtype.Date        `json:"optional_granted_date"`
+	Description         string             `json:"description"`
+	Priority            int32              `json:"priority"`
+	IsVisible           pgtype.Bool        `json:"is_visible"`
+	Tags                []string           `json:"tags"`
+	Notes               [][]byte           `json:"notes"`
+	Metadata            []byte             `json:"metadata"`
+	CreatedAt           pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
+}
+
+type Education struct {
+	EducationID     int64              `json:"education_id"`
+	UserID          uuid.UUID          `json:"user_id"`
+	School          string             `json:"school"`
+	Degree          string             `json:"degree"`
+	Location        string             `json:"location"`
+	StartDate       pgtype.Date        `json:"start_date"`
+	OptionalEndDate pgtype.Date        `json:"optional_end_date"`
+	IsCurrent       pgtype.Bool        `json:"is_current"`
+	Description     string             `json:"description"`
+	Priority        int32              `json:"priority"`
+	IsVisible       pgtype.Bool        `json:"is_visible"`
+	Tags            []string           `json:"tags"`
+	Notes           [][]byte           `json:"notes"`
+	Metadata        []byte             `json:"metadata"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
+}
+
 type Experience struct {
-	ExperienceID int64              `json:"experience_id"`
-	UserID       uuid.UUID          `json:"user_id"`
-	CompanyName  string             `json:"company_name"`
-	JobTitle     string             `json:"job_title"`
-	Location     string             `json:"location"`
-	StartDate    pgtype.Date        `json:"start_date"`
-	EndDate      pgtype.Date        `json:"end_date"`
-	IsCurrent    pgtype.Bool        `json:"is_current"`
-	Description  pgtype.Text        `json:"description"`
-	Priority     pgtype.Int4        `json:"priority"`
-	Tags         []string           `json:"tags"`
-	Notes        [][]byte           `json:"notes"`
-	Metadata     []byte             `json:"metadata"`
-	CreatedAt    pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+	ExperienceID    int64              `json:"experience_id"`
+	UserID          uuid.UUID          `json:"user_id"`
+	CompanyName     string             `json:"company_name"`
+	JobTitle        string             `json:"job_title"`
+	Location        string             `json:"location"`
+	StartDate       pgtype.Date        `json:"start_date"`
+	OptionalEndDate pgtype.Date        `json:"optional_end_date"`
+	IsCurrent       pgtype.Bool        `json:"is_current"`
+	Description     string             `json:"description"`
+	Priority        int32              `json:"priority"`
+	IsVisible       pgtype.Bool        `json:"is_visible"`
+	Tags            []string           `json:"tags"`
+	Notes           [][]byte           `json:"notes"`
+	Metadata        []byte             `json:"metadata"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
 }
 
 type PaymentCustomer struct {
@@ -208,6 +333,40 @@ type PaymentSubscription struct {
 	CanceledAt         pgtype.Timestamptz     `json:"canceled_at"`
 	TrialStart         pgtype.Timestamptz     `json:"trial_start"`
 	TrialEnd           pgtype.Timestamptz     `json:"trial_end"`
+}
+
+type Project struct {
+	ProjectID               int64              `json:"project_id"`
+	UserID                  uuid.UUID          `json:"user_id"`
+	ProjectTitle            string             `json:"project_title"`
+	OptionalProjectSubtitle pgtype.Text        `json:"optional_project_subtitle"`
+	OptionalStartDate       pgtype.Date        `json:"optional_start_date"`
+	OptionalEndDate         pgtype.Date        `json:"optional_end_date"`
+	IsCurrent               pgtype.Bool        `json:"is_current"`
+	Description             string             `json:"description"`
+	Priority                int32              `json:"priority"`
+	IsVisible               pgtype.Bool        `json:"is_visible"`
+	Tags                    []string           `json:"tags"`
+	Notes                   [][]byte           `json:"notes"`
+	Metadata                []byte             `json:"metadata"`
+	CreatedAt               pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt               pgtype.Timestamptz `json:"updated_at"`
+}
+
+type Skill struct {
+	SkillID            int64              `json:"skill_id"`
+	UserID             uuid.UUID          `json:"user_id"`
+	SkillName          string             `json:"skill_name"`
+	OptionalSkillType  NullSkillType      `json:"optional_skill_type"`
+	OptionalSkillLevel NullSkillLevel     `json:"optional_skill_level"`
+	Description        string             `json:"description"`
+	Priority           int32              `json:"priority"`
+	IsVisible          pgtype.Bool        `json:"is_visible"`
+	Tags               []string           `json:"tags"`
+	Notes              [][]byte           `json:"notes"`
+	Metadata           []byte             `json:"metadata"`
+	CreatedAt          pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt          pgtype.Timestamptz `json:"updated_at"`
 }
 
 type User struct {

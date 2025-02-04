@@ -156,17 +156,37 @@ create table public.experiences (
   company_name text not null default '',
   job_title text not null default '',
   location text not null default '',
-  start_date date not null,
-  end_date date,
+  start_date date not null default current_date,
+  optional_end_date date,
   is_current boolean default false,
-  description text,
-  priority integer,
-  tags text[],
-  notes jsonb[],
-  metadata jsonb,
+  description text not null default '',
+  priority integer not null default 0,
+  is_visible boolean default true,
+  tags text[] not null default ARRAY[]::text[],
+  notes jsonb[] not null default ARRAY[]::jsonb[],
+  metadata jsonb not null default '{}'::jsonb,
   created_at timestamp with time zone default current_timestamp,
   updated_at timestamp with time zone default current_timestamp
 );
+
+-- create a function to handle the priority per user
+create or replace function set_experience_priority()
+returns trigger as $$
+begin
+    if new.priority = 0 then
+        select coalesce(max(priority), 0) + 1 into new.priority
+        from public.experiences
+        where user_id = new.user_id;
+    end if;
+    return new;
+end;
+$$ language plpgsql;
+
+-- create the trigger
+create trigger set_experience_priority
+before insert on public.experiences
+for each row
+execute function set_experience_priority();
 
 CREATE TRIGGER update_experiences_updated_at
     BEFORE UPDATE ON public.experiences
@@ -174,3 +194,189 @@ CREATE TRIGGER update_experiences_updated_at
     EXECUTE FUNCTION update_updated_at_column();
 
 CREATE INDEX experiences_user_idx ON public.experiences(user_id);
+
+/**
+* Educations
+* 
+*/
+create table public.educations (
+  education_id bigint primary key generated always as identity,
+  user_id uuid not null references auth.users on delete cascade,
+  school text not null default '',
+  degree text not null default '',
+  location text not null default '',
+  start_date date not null default current_date,
+  optional_end_date date,
+  is_current boolean default false,
+  description text not null default '',
+  priority integer not null default 0,
+  is_visible boolean default true,
+  tags text[] not null default ARRAY[]::text[],
+  notes jsonb[] not null default ARRAY[]::jsonb[],
+  metadata jsonb not null default '{}'::jsonb,
+  created_at timestamp with time zone default current_timestamp,
+  updated_at timestamp with time zone default current_timestamp
+);
+
+create or replace function set_education_priority()
+returns trigger as $$
+begin
+    if new.priority = 0 then
+        select coalesce(max(priority), 0) + 1 into new.priority
+        from public.educations
+        where user_id = new.user_id;
+    end if;
+    return new;
+end;
+$$ language plpgsql;
+
+create trigger set_education_priority
+before insert on public.educations
+for each row
+execute function set_education_priority();
+
+CREATE TRIGGER update_educations_updated_at
+    BEFORE UPDATE ON public.educations
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE INDEX educations_user_idx ON public.educations(user_id);
+
+/**
+* Skills
+* 
+*/
+CREATE TYPE skill_type AS ENUM ('soft', 'technical', 'language');
+CREATE TYPE skill_level AS ENUM ('beginner', 'amateur', 'competent', 'proficient', 'expert');
+
+create table public.skills (
+  skill_id bigint primary key generated always as identity,
+  user_id uuid not null references auth.users on delete cascade,
+  skill_name text not null default '',
+  optional_skill_type skill_type,
+  optional_skill_level skill_level,
+  description text not null default '',
+  priority integer not null default 0,
+  is_visible boolean default true,
+  tags text[] not null default ARRAY[]::text[],
+  notes jsonb[] not null default ARRAY[]::jsonb[],
+  metadata jsonb not null default '{}'::jsonb,
+  created_at timestamp with time zone default current_timestamp,
+  updated_at timestamp with time zone default current_timestamp
+);
+
+create or replace function set_skill_priority()
+returns trigger as $$
+begin
+    if new.priority = 0 then
+        select coalesce(max(priority), 0) + 1 into new.priority
+        from public.skills
+        where user_id = new.user_id;
+    end if;
+    return new;
+end;
+$$ language plpgsql;
+
+create trigger set_skill_priority
+before insert on public.skills
+for each row
+execute function set_skill_priority();
+
+CREATE TRIGGER update_skills_updated_at
+    BEFORE UPDATE ON public.skills
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE INDEX skills_user_idx ON public.skills(user_id);
+
+
+/**
+* Certificates
+* 
+*/
+create table public.certificates (
+  certificate_id bigint primary key generated always as identity,
+  user_id uuid not null references auth.users on delete cascade,
+  certificate_name text not null default '',
+  optional_issuer text,
+  optional_location text,
+  optional_granted_date date not null default current_date,
+  description text not null default '',
+  priority integer not null default 0,
+  is_visible boolean default true,
+  tags text[] not null default ARRAY[]::text[],
+  notes jsonb[] not null default ARRAY[]::jsonb[],
+  metadata jsonb not null default '{}'::jsonb,
+  created_at timestamp with time zone default current_timestamp,
+  updated_at timestamp with time zone default current_timestamp
+);
+
+create or replace function set_certificates_priority()
+returns trigger as $$
+begin
+    if new.priority = 0 then
+        select coalesce(max(priority), 0) + 1 into new.priority
+        from public.certificates
+        where user_id = new.user_id;
+    end if;
+    return new;
+end;
+$$ language plpgsql;
+
+create trigger set_certificates_priority
+before insert on public.certificates
+for each row
+execute function set_certificates_priority();
+
+CREATE TRIGGER update_certificates_updated_at
+    BEFORE UPDATE ON public.certificates
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE INDEX certificates_user_idx ON public.certificates(user_id);
+
+/**
+* Projects
+* 
+*/
+create table public.projects (
+  project_id bigint primary key generated always as identity,
+  user_id uuid not null references auth.users on delete cascade,
+  project_title text not null default '',
+  optional_project_subtitle text,
+  optional_start_date date,
+  optional_end_date date,
+  is_current boolean default false,
+  description text not null default '',
+  priority integer not null default 0,
+  is_visible boolean default true,
+  tags text[] not null default ARRAY[]::text[],
+  notes jsonb[] not null default ARRAY[]::jsonb[],
+  metadata jsonb not null default '{}'::jsonb,
+  created_at timestamp with time zone default current_timestamp,
+  updated_at timestamp with time zone default current_timestamp
+);
+
+create or replace function set_projects_priority()
+returns trigger as $$
+begin
+    if new.priority = 0 then
+        select coalesce(max(priority), 0) + 1 into new.priority
+        from public.projects
+        where user_id = new.user_id;
+    end if;
+    return new;
+end;
+$$ language plpgsql;
+
+create trigger set_projects_priority
+before insert on public.projects
+for each row
+execute function set_projects_priority();
+
+CREATE TRIGGER update_projects_updated_at
+    BEFORE UPDATE ON public.projects
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE INDEX projects_user_idx ON public.projects(user_id);
