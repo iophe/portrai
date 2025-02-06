@@ -3,6 +3,7 @@ import { api } from "@utils/api";
 import { AxiosError } from "axios";
 import { createSignal, For, Show } from "solid-js";
 import { createStore } from "solid-js/store";
+import { AddNote, NoteList } from "../notes.util";
 
 interface ExperienceViewProps {
 	experience: Experience;
@@ -66,6 +67,11 @@ export function ExperienceView(props: ExperienceViewProps) {
 					Delete
 				</button>
 			</div>
+			<NoteList notes={props.experience.notes} />
+			<AddNote
+				id={props.experience.experience_id}
+				section_type="experience"
+			/>
 		</article>
 	);
 }

@@ -163,12 +163,10 @@ create table public.experiences (
   priority integer not null default 0,
   is_visible boolean default true,
   tags text[] not null default ARRAY[]::text[],
-  notes jsonb[] not null default ARRAY[]::jsonb[],
   metadata jsonb not null default '{}'::jsonb,
   created_at timestamp with time zone default current_timestamp,
   updated_at timestamp with time zone default current_timestamp
 );
-
 -- create a function to handle the priority per user
 create or replace function set_experience_priority()
 returns trigger as $$
@@ -195,6 +193,21 @@ CREATE TRIGGER update_experiences_updated_at
 
 CREATE INDEX experiences_user_idx ON public.experiences(user_id);
 
+
+CREATE TABLE public.experience_notes (
+    note_id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    experience_id bigint NOT NULL REFERENCES public.experiences ON DELETE CASCADE,
+    user_id uuid NOT NULL REFERENCES auth.users ON DELETE CASCADE,
+    note_type text NOT NULL,
+    content text NOT NULL,
+    created_at timestamp with time zone DEFAULT current_timestamp,
+    updated_at timestamp with time zone DEFAULT current_timestamp
+);
+CREATE TRIGGER update_experience_notes_updated_at
+    BEFORE UPDATE ON public.experience_notes
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
 /**
 * Educations
 * 
@@ -212,7 +225,6 @@ create table public.educations (
   priority integer not null default 0,
   is_visible boolean default true,
   tags text[] not null default ARRAY[]::text[],
-  notes jsonb[] not null default ARRAY[]::jsonb[],
   metadata jsonb not null default '{}'::jsonb,
   created_at timestamp with time zone default current_timestamp,
   updated_at timestamp with time zone default current_timestamp
@@ -242,24 +254,35 @@ CREATE TRIGGER update_educations_updated_at
 
 CREATE INDEX educations_user_idx ON public.educations(user_id);
 
+CREATE TABLE public.education_notes (
+    note_id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    education_id bigint NOT NULL REFERENCES public.educations ON DELETE CASCADE,
+    user_id uuid NOT NULL REFERENCES auth.users ON DELETE CASCADE,
+    note_type text NOT NULL,
+    content text NOT NULL,
+    created_at timestamp with time zone DEFAULT current_timestamp,
+    updated_at timestamp with time zone DEFAULT current_timestamp
+);
+CREATE TRIGGER update_education_notes_updated_at
+    BEFORE UPDATE ON public.education_notes
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
 /**
 * Skills
 * 
 */
-CREATE TYPE skill_type AS ENUM ('soft', 'technical', 'language');
 CREATE TYPE skill_level AS ENUM ('beginner', 'amateur', 'competent', 'proficient', 'expert');
 
 create table public.skills (
   skill_id bigint primary key generated always as identity,
   user_id uuid not null references auth.users on delete cascade,
   skill_name text not null default '',
-  optional_skill_type skill_type,
+  optional_skill_type text,
   optional_skill_level skill_level,
   description text not null default '',
   priority integer not null default 0,
   is_visible boolean default true,
   tags text[] not null default ARRAY[]::text[],
-  notes jsonb[] not null default ARRAY[]::jsonb[],
   metadata jsonb not null default '{}'::jsonb,
   created_at timestamp with time zone default current_timestamp,
   updated_at timestamp with time zone default current_timestamp
@@ -290,6 +313,19 @@ CREATE TRIGGER update_skills_updated_at
 CREATE INDEX skills_user_idx ON public.skills(user_id);
 
 
+CREATE TABLE public.skill_notes (
+    note_id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    skill_id bigint NOT NULL REFERENCES public.skills ON DELETE CASCADE,
+    user_id uuid NOT NULL REFERENCES auth.users ON DELETE CASCADE,
+    note_type text NOT NULL,
+    content text NOT NULL,
+    created_at timestamp with time zone DEFAULT current_timestamp,
+    updated_at timestamp with time zone DEFAULT current_timestamp
+);
+CREATE TRIGGER update_skill_notes_updated_at
+    BEFORE UPDATE ON public.skill_notes
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
 /**
 * Certificates
 * 
@@ -300,12 +336,11 @@ create table public.certificates (
   certificate_name text not null default '',
   optional_issuer text,
   optional_location text,
-  optional_granted_date date not null default current_date,
+  optional_granted_date date,
   description text not null default '',
   priority integer not null default 0,
   is_visible boolean default true,
   tags text[] not null default ARRAY[]::text[],
-  notes jsonb[] not null default ARRAY[]::jsonb[],
   metadata jsonb not null default '{}'::jsonb,
   created_at timestamp with time zone default current_timestamp,
   updated_at timestamp with time zone default current_timestamp
@@ -335,6 +370,19 @@ CREATE TRIGGER update_certificates_updated_at
 
 CREATE INDEX certificates_user_idx ON public.certificates(user_id);
 
+CREATE TABLE public.certificate_notes (
+    note_id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    certificate_id bigint NOT NULL REFERENCES public.certificates ON DELETE CASCADE,
+    user_id uuid NOT NULL REFERENCES auth.users ON DELETE CASCADE,
+    note_type text NOT NULL,
+    content text NOT NULL,
+    created_at timestamp with time zone DEFAULT current_timestamp,
+    updated_at timestamp with time zone DEFAULT current_timestamp
+);
+CREATE TRIGGER update_certificate_notes_updated_at
+    BEFORE UPDATE ON public.certificate_notes
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
 /**
 * Projects
 * 
@@ -351,7 +399,6 @@ create table public.projects (
   priority integer not null default 0,
   is_visible boolean default true,
   tags text[] not null default ARRAY[]::text[],
-  notes jsonb[] not null default ARRAY[]::jsonb[],
   metadata jsonb not null default '{}'::jsonb,
   created_at timestamp with time zone default current_timestamp,
   updated_at timestamp with time zone default current_timestamp
@@ -380,3 +427,17 @@ CREATE TRIGGER update_projects_updated_at
     EXECUTE FUNCTION update_updated_at_column();
 
 CREATE INDEX projects_user_idx ON public.projects(user_id);
+
+CREATE TABLE public.project_notes (
+    note_id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    project_id bigint NOT NULL REFERENCES public.projects ON DELETE CASCADE,
+    user_id uuid NOT NULL REFERENCES auth.users ON DELETE CASCADE,
+    note_type text NOT NULL,
+    content text NOT NULL,
+    created_at timestamp with time zone DEFAULT current_timestamp,
+    updated_at timestamp with time zone DEFAULT current_timestamp
+);
+CREATE TRIGGER update_project_notes_updated_at
+    BEFORE UPDATE ON public.project_notes
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();

@@ -16,11 +16,21 @@ type Querier interface {
 	CreateCustomer(ctx context.Context, arg CreateCustomerParams) error
 	CreateEducation(ctx context.Context, arg CreateEducationParams) (int64, error)
 	CreateExperience(ctx context.Context, arg CreateExperienceParams) (int64, error)
+	CreateNoteOnCertificate(ctx context.Context, arg CreateNoteOnCertificateParams) error
+	CreateNoteOnEducation(ctx context.Context, arg CreateNoteOnEducationParams) error
+	CreateNoteOnExperience(ctx context.Context, arg CreateNoteOnExperienceParams) error
+	CreateNoteOnProject(ctx context.Context, arg CreateNoteOnProjectParams) error
+	CreateNoteOnSkill(ctx context.Context, arg CreateNoteOnSkillParams) error
 	CreateProject(ctx context.Context, arg CreateProjectParams) (int64, error)
 	CreateSkill(ctx context.Context, arg CreateSkillParams) (int64, error)
 	DeleteCertificate(ctx context.Context, arg DeleteCertificateParams) error
 	DeleteEducation(ctx context.Context, arg DeleteEducationParams) error
 	DeleteExperience(ctx context.Context, arg DeleteExperienceParams) error
+	DeleteNoteOnCertificate(ctx context.Context, arg DeleteNoteOnCertificateParams) error
+	DeleteNoteOnEducation(ctx context.Context, arg DeleteNoteOnEducationParams) error
+	DeleteNoteOnExperience(ctx context.Context, arg DeleteNoteOnExperienceParams) error
+	DeleteNoteOnProject(ctx context.Context, arg DeleteNoteOnProjectParams) error
+	DeleteNoteOnSkill(ctx context.Context, arg DeleteNoteOnSkillParams) error
 	DeleteProject(ctx context.Context, arg DeleteProjectParams) error
 	DeleteSkill(ctx context.Context, arg DeleteSkillParams) error
 	DeleteSubscription(ctx context.Context, subscriptionID string) error
@@ -36,6 +46,7 @@ type Querier interface {
 	GetPriceByID(ctx context.Context, priceID string) (GetPriceByIDRow, error)
 	GetProjectById(ctx context.Context, arg GetProjectByIdParams) (GetProjectByIdRow, error)
 	GetProjectsByUserId(ctx context.Context, userID uuid.UUID) ([]GetProjectsByUserIdRow, error)
+	GetResumeData(ctx context.Context, userID uuid.UUID) ([]byte, error)
 	GetSkillById(ctx context.Context, arg GetSkillByIdParams) (GetSkillByIdRow, error)
 	GetSkillsByUserId(ctx context.Context, userID uuid.UUID) ([]GetSkillsByUserIdRow, error)
 	GetSubscriptionByID(ctx context.Context, subscriptionID string) (GetSubscriptionByIDRow, error)
@@ -53,6 +64,11 @@ type Querier interface {
 	UpdateCertificate(ctx context.Context, arg UpdateCertificateParams) error
 	UpdateEducation(ctx context.Context, arg UpdateEducationParams) error
 	UpdateExperience(ctx context.Context, arg UpdateExperienceParams) error
+	UpdateNoteOnCertificate(ctx context.Context, arg UpdateNoteOnCertificateParams) error
+	UpdateNoteOnEducation(ctx context.Context, arg UpdateNoteOnEducationParams) error
+	UpdateNoteOnExperience(ctx context.Context, arg UpdateNoteOnExperienceParams) error
+	UpdateNoteOnProject(ctx context.Context, arg UpdateNoteOnProjectParams) error
+	UpdateNoteOnSkill(ctx context.Context, arg UpdateNoteOnSkillParams) error
 	UpdateProject(ctx context.Context, arg UpdateProjectParams) error
 	UpdateSkill(ctx context.Context, arg UpdateSkillParams) error
 	UpdateSubscriptionStatus(ctx context.Context, arg UpdateSubscriptionStatusParams) error

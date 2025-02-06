@@ -19,28 +19,75 @@ function ResumePreview(props: ResumePreviewProps) {
 	// Fetch resume data
 	const [resume_data] = createResource<TemplateData>(async () => {
 		try {
-			const [
-				experiencesRes,
-				educationsRes,
-				skillsRes,
-				certificatesRes,
-				projectsRes,
-				// profileRes,
-			] = await Promise.all([
-				api.get("/resume/experience/all"),
-				api.get("/resume/education/all"),
-				api.get("/resume/skill/all"),
-				api.get("/resume/certificate/all"),
-				api.get("/resume/project/all"),
-				// api.get("/profile"),
-			]);
+			const res = await api.get("/resume/data");
+
+			//             const test = await api.post("/ai/session/start", {
+			//                 job_description:`
+			// About The Job
+			// Scaleway is looking for a Backend Developer to join the team in charge of the Identity and Access Management (IAM) product and also the internal API Gateway.
+
+			// Identity and Access Management
+			// The Identity and Access Management (IAM) product is at the heart of securing access to Scaleway’s resources. It enables seamless management of both human and machine access across your organization. IAM also empowers you to define precise access controls through policies ensuring that users, applications, and groups have the right level of access to each product. Our service authenticates over 7,000 requests per second.
+
+			// API Gateway
+			// The internal API Gateway is a cornerstone of Scaleway’s cloud ecosystem and a key project within our team. It serves as the central hub for all public and internal API requests at Scaleway. Key features of the API Gateway include cross-region and cross-zone routing, rate limiting, authentication, support for both gRPC and REST protocols, and efficient load balancing. These capabilities ensure seamless, secure, and high-performance interactions across our platform. For a deeper dive into the API Gateway, check out this presentation from 2019 (still generally up-to-date).
+
+			// Team’s Philosophy
+
+			//      Code review is an essential part of our team’s work. Every code base modification will be reviewed by peers
+			//      We strongly believe in automated tests and the confidence they bring when pressing the "Deploy to production" button
+			//      DevOps good practices are part of the team’s DNA
+			//      Peer-programming is encouraged to enable knowledge sharing and to make sure everyone is comfortable with every part of the codebase
+			//      We are a tech team and, as such, your manager will be a developer
+			//      When solving a problem, we value pragmatic solutions while clearly identifying potential future issues
+			//      We value positive thinking and see each new challenge as an opportunity to improve our team as a whole
+
+			// Minimum Qualifications
+
+			//     At least 4 years of experience in back-end development
+			//     Ability to write well-tested code
+			//     Good understanding of the HTTP protocol and REST APIs
+			//     Capable of making a deep dive into a large code base
+			//     Experience in SQL no matter how many JOINs are involved
+			//     Git fluency
+			//     Eager to learn new things every day
+			//     Very good command in English and French
+			//     Experience with monitoring systems (Prometheus, AlertManager, OpenSearch)
+			//     Familiar with common DevOps tooling like Docker / CI-CD / Ansible
+
+			// Preferred Qualifications
+
+			//     Experience with distributed micro-service ecosystems
+			//     Knowledge of gRPC and Protobuf
+			//     Fluent with databases, SQL queries optimization, transactions
+			//     Fluent in Golang
+
+			// Responsibilities
+
+			//     Design, develop and maintain new features on services owned by the team
+			//     Write simple, clean, coherent and well-tested code
+			//     Take every opportunity to fight technical debt
+			//     Carefully review the team's merge requests
+			//     Actively participate in all team agile rituals (daily, retrospectives, etc.)
+
+			// Our technical stack
+
+			//     Golang
+			//     PostgreSQL
+			//     Redis
+			//     gRPC / Protobuf
+			//     Envoy
+			//     Docker
+			//     Ansible and Terraform
+			//     Prometheus (with Alertmanager, Opsgenie)
+			//     Gitlab CI
+			// `
+			//             });
+
+			// console.log(test);
 
 			return {
-				projects: projectsRes.data.projects,
-				experiences: experiencesRes.data.experiences,
-				educations: educationsRes.data.educations,
-				skills: skillsRes.data.skills,
-				certificates: certificatesRes.data.certificates,
+				resume_data: res.data.resume_data as ResumeData,
 				contact: {
 					name: "Test",
 					email: "test@test.com",
@@ -57,11 +104,13 @@ function ResumePreview(props: ResumePreviewProps) {
 					name: "Test",
 					email: "test@test.com",
 				},
-				experiences: [],
-				educations: [],
-				skills: [],
-				certificates: [],
-				projects: [],
+				resume_data: {
+					experiences: [],
+					educations: [],
+					skills: [],
+					certificates: [],
+					projects: [],
+				},
 			};
 		}
 	});

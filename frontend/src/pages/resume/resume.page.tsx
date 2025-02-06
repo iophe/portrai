@@ -4,6 +4,7 @@ import { CertificateList } from "@components/resume/certificate/certificate.list
 import { EducationList } from "@components/resume/education/education.list";
 import { ExperienceList } from "@components/resume/experience/experience.list";
 import ResumePreview from "@components/resume/generators/preview";
+import ResumeAIPreview from "@components/resume/generators/preview_from_ai";
 import { ProjectList } from "@components/resume/project/project.list";
 import { SkillList } from "@components/resume/skill/skill.list";
 import { api } from "@utils/api";
@@ -24,6 +25,7 @@ function Resume(props: ResumeProps) {
 					<ProjectList />
 
 					<ResumePreview />
+					<ResumeAIPreview />
 				</section>
 			</section>
 		</main>

@@ -25,9 +25,7 @@ INSERT INTO public.certificates (
     optional_granted_date,
     description,
     priority,
-    is_visible,
     tags,
-    notes,
     metadata
 ) VALUES (
     $1::uuid,
@@ -37,10 +35,8 @@ INSERT INTO public.certificates (
     $5::date,
     $6::text,
     $7::integer,
-    $8::boolean,
-    COALESCE($9::text[], ARRAY[]::text[]),
-    COALESCE($10::jsonb[], ARRAY[]::jsonb[]),
-    COALESCE($11::jsonb, '{}'::jsonb)
+    COALESCE($8::text[], ARRAY[]::text[]),
+    COALESCE($9::jsonb, '{}'::jsonb)
 )
 RETURNING certificate_id
 `
@@ -53,9 +49,7 @@ type CreateCertificateParams struct {
 	OptionalGrantedDate pgtype.Date `json:"optional_granted_date"`
 	Description         string      `json:"description"`
 	Priority            int32       `json:"priority"`
-	IsVisible           bool        `json:"is_visible"`
 	Tags                []string    `json:"tags"`
-	Notes               [][]byte    `json:"notes"`
 	Metadata            []byte      `json:"metadata"`
 }
 
@@ -68,9 +62,7 @@ func (q *Queries) CreateCertificate(ctx context.Context, arg CreateCertificatePa
 		arg.OptionalGrantedDate,
 		arg.Description,
 		arg.Priority,
-		arg.IsVisible,
 		arg.Tags,
-		arg.Notes,
 		arg.Metadata,
 	)
 	var certificate_id int64
@@ -93,9 +85,7 @@ INSERT INTO public.educations (
     is_current,
     description,
     priority,
-    is_visible,
     tags,
-    notes,
     metadata
 ) VALUES (
     $1::uuid,
@@ -107,10 +97,8 @@ INSERT INTO public.educations (
     $7::boolean,
     $8::text,
     $9::integer,
-    $10::boolean,
-    COALESCE($11::text[], ARRAY[]::text[]),
-    COALESCE($12::jsonb[], ARRAY[]::jsonb[]),
-    COALESCE($13::jsonb, '{}'::jsonb)
+    COALESCE($10::text[], ARRAY[]::text[]),
+    COALESCE($11::jsonb, '{}'::jsonb)
 )
 RETURNING education_id
 `
@@ -125,9 +113,7 @@ type CreateEducationParams struct {
 	IsCurrent       bool        `json:"is_current"`
 	Description     string      `json:"description"`
 	Priority        int32       `json:"priority"`
-	IsVisible       bool        `json:"is_visible"`
 	Tags            []string    `json:"tags"`
-	Notes           [][]byte    `json:"notes"`
 	Metadata        []byte      `json:"metadata"`
 }
 
@@ -142,9 +128,7 @@ func (q *Queries) CreateEducation(ctx context.Context, arg CreateEducationParams
 		arg.IsCurrent,
 		arg.Description,
 		arg.Priority,
-		arg.IsVisible,
 		arg.Tags,
-		arg.Notes,
 		arg.Metadata,
 	)
 	var education_id int64
@@ -168,9 +152,7 @@ INSERT INTO public.experiences (
     is_current,
     description,
     priority,
-    is_visible,
     tags,
-    notes,
     metadata
 ) VALUES (
     $1::uuid,
@@ -182,10 +164,8 @@ INSERT INTO public.experiences (
     $7::boolean,
     $8::text,
     $9::integer,
-    $10::boolean,
-    COALESCE($11::text[], ARRAY[]::text[]),
-    COALESCE($12::jsonb[], ARRAY[]::jsonb[]),
-    COALESCE($13::jsonb, '{}'::jsonb)
+    COALESCE($10::text[], ARRAY[]::text[]),
+    COALESCE($11::jsonb, '{}'::jsonb)
 )
 RETURNING experience_id
 `
@@ -200,9 +180,7 @@ type CreateExperienceParams struct {
 	IsCurrent       bool        `json:"is_current"`
 	Description     string      `json:"description"`
 	Priority        int32       `json:"priority"`
-	IsVisible       bool        `json:"is_visible"`
 	Tags            []string    `json:"tags"`
-	Notes           [][]byte    `json:"notes"`
 	Metadata        []byte      `json:"metadata"`
 }
 
@@ -217,14 +195,167 @@ func (q *Queries) CreateExperience(ctx context.Context, arg CreateExperiencePara
 		arg.IsCurrent,
 		arg.Description,
 		arg.Priority,
-		arg.IsVisible,
 		arg.Tags,
-		arg.Notes,
 		arg.Metadata,
 	)
 	var experience_id int64
 	err := row.Scan(&experience_id)
 	return experience_id, err
+}
+
+const createNoteOnCertificate = `-- name: CreateNoteOnCertificate :exec
+INSERT INTO public.certificate_notes (
+    note_type,
+    content,
+    certificate_id,
+    user_id
+) VALUES (
+    $1::text,
+    $2::text,
+    $3::bigint,
+    $4::uuid
+)
+`
+
+type CreateNoteOnCertificateParams struct {
+	NoteType      string    `json:"note_type"`
+	Content       string    `json:"content"`
+	CertificateID int64     `json:"certificate_id"`
+	UserID        uuid.UUID `json:"user_id"`
+}
+
+func (q *Queries) CreateNoteOnCertificate(ctx context.Context, arg CreateNoteOnCertificateParams) error {
+	_, err := q.db.Exec(ctx, createNoteOnCertificate,
+		arg.NoteType,
+		arg.Content,
+		arg.CertificateID,
+		arg.UserID,
+	)
+	return err
+}
+
+const createNoteOnEducation = `-- name: CreateNoteOnEducation :exec
+INSERT INTO public.education_notes (
+    note_type,
+    content,
+    education_id,
+    user_id
+) VALUES (
+    $1::text,
+    $2::text,
+    $3::bigint,
+    $4::uuid
+)
+`
+
+type CreateNoteOnEducationParams struct {
+	NoteType    string    `json:"note_type"`
+	Content     string    `json:"content"`
+	EducationID int64     `json:"education_id"`
+	UserID      uuid.UUID `json:"user_id"`
+}
+
+func (q *Queries) CreateNoteOnEducation(ctx context.Context, arg CreateNoteOnEducationParams) error {
+	_, err := q.db.Exec(ctx, createNoteOnEducation,
+		arg.NoteType,
+		arg.Content,
+		arg.EducationID,
+		arg.UserID,
+	)
+	return err
+}
+
+const createNoteOnExperience = `-- name: CreateNoteOnExperience :exec
+INSERT INTO public.experience_notes (
+    note_type,
+    content,
+    experience_id,
+    user_id
+) VALUES (
+    $1::text,
+    $2::text,
+    $3::bigint,
+    $4::uuid
+)
+`
+
+type CreateNoteOnExperienceParams struct {
+	NoteType     string    `json:"note_type"`
+	Content      string    `json:"content"`
+	ExperienceID int64     `json:"experience_id"`
+	UserID       uuid.UUID `json:"user_id"`
+}
+
+func (q *Queries) CreateNoteOnExperience(ctx context.Context, arg CreateNoteOnExperienceParams) error {
+	_, err := q.db.Exec(ctx, createNoteOnExperience,
+		arg.NoteType,
+		arg.Content,
+		arg.ExperienceID,
+		arg.UserID,
+	)
+	return err
+}
+
+const createNoteOnProject = `-- name: CreateNoteOnProject :exec
+INSERT INTO public.project_notes (
+    note_type,
+    content,
+    project_id,
+    user_id
+) VALUES (
+    $1::text,
+    $2::text,
+    $3::bigint,
+    $4::uuid
+)
+`
+
+type CreateNoteOnProjectParams struct {
+	NoteType  string    `json:"note_type"`
+	Content   string    `json:"content"`
+	ProjectID int64     `json:"project_id"`
+	UserID    uuid.UUID `json:"user_id"`
+}
+
+func (q *Queries) CreateNoteOnProject(ctx context.Context, arg CreateNoteOnProjectParams) error {
+	_, err := q.db.Exec(ctx, createNoteOnProject,
+		arg.NoteType,
+		arg.Content,
+		arg.ProjectID,
+		arg.UserID,
+	)
+	return err
+}
+
+const createNoteOnSkill = `-- name: CreateNoteOnSkill :exec
+INSERT INTO public.skill_notes (
+    note_type,
+    content,
+    skill_id,
+    user_id
+) VALUES (
+    $1::text,
+    $2::text,
+    $3::bigint,
+    $4::uuid
+)
+`
+
+type CreateNoteOnSkillParams struct {
+	NoteType string    `json:"note_type"`
+	Content  string    `json:"content"`
+	SkillID  int64     `json:"skill_id"`
+	UserID   uuid.UUID `json:"user_id"`
+}
+
+func (q *Queries) CreateNoteOnSkill(ctx context.Context, arg CreateNoteOnSkillParams) error {
+	_, err := q.db.Exec(ctx, createNoteOnSkill,
+		arg.NoteType,
+		arg.Content,
+		arg.SkillID,
+		arg.UserID,
+	)
+	return err
 }
 
 const createProject = `-- name: CreateProject :one
@@ -241,9 +372,7 @@ INSERT INTO public.projects (
     is_current,
     description,
     priority,
-    is_visible,
     tags,
-    notes,
     metadata
 ) VALUES (
     $1::uuid,
@@ -254,10 +383,8 @@ INSERT INTO public.projects (
     $6::boolean,
     $7::text,
     $8::integer,
-    $9::boolean,
-    COALESCE($10::text[], ARRAY[]::text[]),
-    COALESCE($11::jsonb[], ARRAY[]::jsonb[]),
-    COALESCE($12::jsonb, '{}'::jsonb)
+    COALESCE($9::text[], ARRAY[]::text[]),
+    COALESCE($10::jsonb, '{}'::jsonb)
 )
 RETURNING project_id
 `
@@ -271,9 +398,7 @@ type CreateProjectParams struct {
 	IsCurrent               bool        `json:"is_current"`
 	Description             string      `json:"description"`
 	Priority                int32       `json:"priority"`
-	IsVisible               bool        `json:"is_visible"`
 	Tags                    []string    `json:"tags"`
-	Notes                   [][]byte    `json:"notes"`
 	Metadata                []byte      `json:"metadata"`
 }
 
@@ -287,9 +412,7 @@ func (q *Queries) CreateProject(ctx context.Context, arg CreateProjectParams) (i
 		arg.IsCurrent,
 		arg.Description,
 		arg.Priority,
-		arg.IsVisible,
 		arg.Tags,
-		arg.Notes,
 		arg.Metadata,
 	)
 	var project_id int64
@@ -309,21 +432,17 @@ INSERT INTO public.skills (
     optional_skill_level,
     description,
     priority,
-    is_visible,
     tags,
-    notes,
     metadata
 ) VALUES (
     $1::uuid,
     $2::text,
-    $3::skill_type,
+    $3::text,
     $4::skill_level,
     $5::text,
     $6::integer,
-    $7::boolean,
-    COALESCE($8::text[], ARRAY[]::text[]),
-    COALESCE($9::jsonb[], ARRAY[]::jsonb[]),
-    COALESCE($10::jsonb, '{}'::jsonb)
+    COALESCE($7::text[], ARRAY[]::text[]),
+    COALESCE($8::jsonb, '{}'::jsonb)
 )
 RETURNING skill_id
 `
@@ -331,13 +450,11 @@ RETURNING skill_id
 type CreateSkillParams struct {
 	UserID             uuid.UUID  `json:"user_id"`
 	SkillName          string     `json:"skill_name"`
-	OptionalSkillType  SkillType  `json:"optional_skill_type"`
+	OptionalSkillType  string     `json:"optional_skill_type"`
 	OptionalSkillLevel SkillLevel `json:"optional_skill_level"`
 	Description        string     `json:"description"`
 	Priority           int32      `json:"priority"`
-	IsVisible          bool       `json:"is_visible"`
 	Tags               []string   `json:"tags"`
-	Notes              [][]byte   `json:"notes"`
 	Metadata           []byte     `json:"metadata"`
 }
 
@@ -349,9 +466,7 @@ func (q *Queries) CreateSkill(ctx context.Context, arg CreateSkillParams) (int64
 		arg.OptionalSkillLevel,
 		arg.Description,
 		arg.Priority,
-		arg.IsVisible,
 		arg.Tags,
-		arg.Notes,
 		arg.Metadata,
 	)
 	var skill_id int64
@@ -410,6 +525,101 @@ func (q *Queries) DeleteExperience(ctx context.Context, arg DeleteExperiencePara
 	return err
 }
 
+const deleteNoteOnCertificate = `-- name: DeleteNoteOnCertificate :exec
+DELETE FROM public.certificate_notes
+WHERE 
+    note_id = $1::bigint
+    AND certificate_id = $2::bigint 
+    AND user_id = $3::uuid
+`
+
+type DeleteNoteOnCertificateParams struct {
+	NoteID        int64     `json:"note_id"`
+	CertificateID int64     `json:"certificate_id"`
+	UserID        uuid.UUID `json:"user_id"`
+}
+
+func (q *Queries) DeleteNoteOnCertificate(ctx context.Context, arg DeleteNoteOnCertificateParams) error {
+	_, err := q.db.Exec(ctx, deleteNoteOnCertificate, arg.NoteID, arg.CertificateID, arg.UserID)
+	return err
+}
+
+const deleteNoteOnEducation = `-- name: DeleteNoteOnEducation :exec
+DELETE FROM public.Education_notes
+WHERE 
+    note_id = $1::bigint
+    AND education_id = $2::bigint 
+    AND user_id = $3::uuid
+`
+
+type DeleteNoteOnEducationParams struct {
+	NoteID      int64     `json:"note_id"`
+	EducationID int64     `json:"education_id"`
+	UserID      uuid.UUID `json:"user_id"`
+}
+
+func (q *Queries) DeleteNoteOnEducation(ctx context.Context, arg DeleteNoteOnEducationParams) error {
+	_, err := q.db.Exec(ctx, deleteNoteOnEducation, arg.NoteID, arg.EducationID, arg.UserID)
+	return err
+}
+
+const deleteNoteOnExperience = `-- name: DeleteNoteOnExperience :exec
+DELETE FROM public.experience_notes
+WHERE 
+    note_id = $1::bigint
+    AND experience_id = $2::bigint 
+    AND user_id = $3::uuid
+`
+
+type DeleteNoteOnExperienceParams struct {
+	NoteID       int64     `json:"note_id"`
+	ExperienceID int64     `json:"experience_id"`
+	UserID       uuid.UUID `json:"user_id"`
+}
+
+func (q *Queries) DeleteNoteOnExperience(ctx context.Context, arg DeleteNoteOnExperienceParams) error {
+	_, err := q.db.Exec(ctx, deleteNoteOnExperience, arg.NoteID, arg.ExperienceID, arg.UserID)
+	return err
+}
+
+const deleteNoteOnProject = `-- name: DeleteNoteOnProject :exec
+DELETE FROM public.project_notes
+WHERE 
+    note_id = $1::bigint
+    AND project_id = $2::bigint 
+    AND user_id = $3::uuid
+`
+
+type DeleteNoteOnProjectParams struct {
+	NoteID    int64     `json:"note_id"`
+	ProjectID int64     `json:"project_id"`
+	UserID    uuid.UUID `json:"user_id"`
+}
+
+func (q *Queries) DeleteNoteOnProject(ctx context.Context, arg DeleteNoteOnProjectParams) error {
+	_, err := q.db.Exec(ctx, deleteNoteOnProject, arg.NoteID, arg.ProjectID, arg.UserID)
+	return err
+}
+
+const deleteNoteOnSkill = `-- name: DeleteNoteOnSkill :exec
+DELETE FROM public.skill_notes
+WHERE 
+    note_id = $1::bigint
+    AND skill_id = $2::bigint 
+    AND user_id = $3::uuid
+`
+
+type DeleteNoteOnSkillParams struct {
+	NoteID  int64     `json:"note_id"`
+	SkillID int64     `json:"skill_id"`
+	UserID  uuid.UUID `json:"user_id"`
+}
+
+func (q *Queries) DeleteNoteOnSkill(ctx context.Context, arg DeleteNoteOnSkillParams) error {
+	_, err := q.db.Exec(ctx, deleteNoteOnSkill, arg.NoteID, arg.SkillID, arg.UserID)
+	return err
+}
+
 const deleteProject = `-- name: DeleteProject :exec
 DELETE FROM public.projects
 WHERE 
@@ -455,7 +665,17 @@ SELECT
     priority,
     is_visible,
     tags,
-    notes,
+    (
+        SELECT array_agg(json_build_object(
+                'note_id', note_id,
+                'note_type', note_type,
+                'content', content,
+                'created_at', created_at,
+                'updated_at', updated_at
+            ) ORDER BY created_at DESC)
+        FROM public.certificate_notes
+        WHERE certificate_notes.certificate_id = certificates.certificate_id
+    ) as notes,
     metadata,
     created_at,
     updated_at
@@ -480,7 +700,7 @@ type GetCertificateByIdRow struct {
 	Priority            int32              `json:"priority"`
 	IsVisible           pgtype.Bool        `json:"is_visible"`
 	Tags                []string           `json:"tags"`
-	Notes               [][]byte           `json:"notes"`
+	Notes               interface{}        `json:"notes"`
 	Metadata            []byte             `json:"metadata"`
 	CreatedAt           pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
@@ -518,7 +738,18 @@ SELECT
     priority,
     is_visible,
     tags,
-    notes
+
+    (
+        SELECT array_agg(json_build_object(
+                'note_id', note_id,
+                'note_type', note_type,
+                'content', content,
+                'created_at', created_at,
+                'updated_at', updated_at
+            ) ORDER BY created_at DESC)
+        FROM public.certificate_notes
+        WHERE certificate_notes.certificate_id = certificates.certificate_id
+    ) as notes
 FROM public.certificates
 WHERE user_id = $1::uuid
 ORDER BY 
@@ -537,7 +768,7 @@ type GetCertificatesByUserIdRow struct {
 	Priority            int32       `json:"priority"`
 	IsVisible           pgtype.Bool `json:"is_visible"`
 	Tags                []string    `json:"tags"`
-	Notes               [][]byte    `json:"notes"`
+	Notes               interface{} `json:"notes"`
 }
 
 func (q *Queries) GetCertificatesByUserId(ctx context.Context, userID uuid.UUID) ([]GetCertificatesByUserIdRow, error) {
@@ -584,7 +815,17 @@ SELECT
     priority,
     is_visible,
     tags,
-    notes,
+    (
+        SELECT array_agg(json_build_object(
+                'note_id', note_id,
+                'note_type', note_type,
+                'content', content,
+                'created_at', created_at,
+                'updated_at', updated_at
+            ) ORDER BY created_at DESC)
+        FROM public.education_notes
+        WHERE education_notes.education_id = educations.education_id
+    ) as notes,
     metadata,
     created_at,
     updated_at
@@ -611,7 +852,7 @@ type GetEducationByIdRow struct {
 	Priority        int32              `json:"priority"`
 	IsVisible       pgtype.Bool        `json:"is_visible"`
 	Tags            []string           `json:"tags"`
-	Notes           [][]byte           `json:"notes"`
+	Notes           interface{}        `json:"notes"`
 	Metadata        []byte             `json:"metadata"`
 	CreatedAt       pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
@@ -653,7 +894,17 @@ SELECT
     is_visible,
     description,
     tags,
-    notes
+    (
+        SELECT array_agg(json_build_object(
+                'note_id', note_id,
+                'note_type', note_type,
+                'content', content,
+                'created_at', created_at,
+                'updated_at', updated_at
+            ) ORDER BY created_at DESC)
+        FROM public.education_notes
+        WHERE education_notes.education_id = educations.education_id
+    ) as notes
 FROM public.educations
 WHERE user_id = $1::uuid
 ORDER BY 
@@ -674,7 +925,7 @@ type GetEducationsByUserIdRow struct {
 	IsVisible       pgtype.Bool `json:"is_visible"`
 	Description     string      `json:"description"`
 	Tags            []string    `json:"tags"`
-	Notes           [][]byte    `json:"notes"`
+	Notes           interface{} `json:"notes"`
 }
 
 func (q *Queries) GetEducationsByUserId(ctx context.Context, userID uuid.UUID) ([]GetEducationsByUserIdRow, error) {
@@ -723,7 +974,17 @@ SELECT
     priority,
     is_visible,
     tags,
-    notes,
+    (
+        SELECT array_agg(json_build_object(
+                'note_id', note_id,
+                'note_type', note_type,
+                'content', content,
+                'created_at', created_at,
+                'updated_at', updated_at
+            ) ORDER BY created_at DESC)
+        FROM public.experience_notes
+        WHERE experience_notes.experience_id = experiences.experience_id
+    ) as notes,
     metadata,
     created_at,
     updated_at
@@ -750,7 +1011,7 @@ type GetExperienceByIdRow struct {
 	Priority        int32              `json:"priority"`
 	IsVisible       pgtype.Bool        `json:"is_visible"`
 	Tags            []string           `json:"tags"`
-	Notes           [][]byte           `json:"notes"`
+	Notes           interface{}        `json:"notes"`
 	Metadata        []byte             `json:"metadata"`
 	CreatedAt       pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
@@ -792,7 +1053,17 @@ SELECT
     priority,
     description,
     tags,
-    notes
+    (
+        SELECT array_agg(json_build_object(
+                'note_id', note_id,
+                'note_type', note_type,
+                'content', content,
+                'created_at', created_at,
+                'updated_at', updated_at
+            ) ORDER BY created_at DESC)
+        FROM public.experience_notes
+        WHERE experience_notes.experience_id = experiences.experience_id
+    ) as notes
 FROM public.experiences
 WHERE user_id = $1::uuid
 ORDER BY 
@@ -813,7 +1084,7 @@ type GetExperiencesByUserIdRow struct {
 	Priority        int32       `json:"priority"`
 	Description     string      `json:"description"`
 	Tags            []string    `json:"tags"`
-	Notes           [][]byte    `json:"notes"`
+	Notes           interface{} `json:"notes"`
 }
 
 func (q *Queries) GetExperiencesByUserId(ctx context.Context, userID uuid.UUID) ([]GetExperiencesByUserIdRow, error) {
@@ -861,7 +1132,17 @@ SELECT
     priority,
     is_visible,
     tags,
-    notes,
+    (
+        SELECT array_agg(json_build_object(
+                'note_id', note_id,
+                'note_type', note_type,
+                'content', content,
+                'created_at', created_at,
+                'updated_at', updated_at
+            ) ORDER BY created_at DESC)
+        FROM public.project_notes
+        WHERE project_notes.project_id = projects.project_id
+    ) as notes,
     metadata,
     created_at,
     updated_at
@@ -887,7 +1168,7 @@ type GetProjectByIdRow struct {
 	Priority                int32              `json:"priority"`
 	IsVisible               pgtype.Bool        `json:"is_visible"`
 	Tags                    []string           `json:"tags"`
-	Notes                   [][]byte           `json:"notes"`
+	Notes                   interface{}        `json:"notes"`
 	Metadata                []byte             `json:"metadata"`
 	CreatedAt               pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt               pgtype.Timestamptz `json:"updated_at"`
@@ -927,7 +1208,18 @@ SELECT
     priority,
     is_visible,
     tags,
-    notes
+
+    (
+        SELECT array_agg(json_build_object(
+                'note_id', note_id,
+                'note_type', note_type,
+                'content', content,
+                'created_at', created_at,
+                'updated_at', updated_at
+            ) ORDER BY created_at DESC)
+        FROM public.project_notes
+        WHERE project_notes.project_id = projects.project_id
+    ) as notes
 FROM public.projects
 WHERE user_id = $1::uuid
 ORDER BY 
@@ -948,7 +1240,7 @@ type GetProjectsByUserIdRow struct {
 	Priority                int32       `json:"priority"`
 	IsVisible               pgtype.Bool `json:"is_visible"`
 	Tags                    []string    `json:"tags"`
-	Notes                   [][]byte    `json:"notes"`
+	Notes                   interface{} `json:"notes"`
 }
 
 func (q *Queries) GetProjectsByUserId(ctx context.Context, userID uuid.UUID) ([]GetProjectsByUserIdRow, error) {
@@ -983,17 +1275,203 @@ func (q *Queries) GetProjectsByUserId(ctx context.Context, userID uuid.UUID) ([]
 	return items, nil
 }
 
+const getResumeData = `-- name: GetResumeData :one
+WITH resume_data AS (
+    -- Experiences
+    SELECT 
+        'experiences' as type,
+        jsonb_build_object(
+            'experience_id', e.experience_id,
+            'company_name', e.company_name,
+            'job_title', e.job_title,
+            'location', e.location,
+            'start_date', e.start_date,
+            'optional_end_date', e.optional_end_date,
+            'is_current', e.is_current,
+            'description', e.description,
+            'priority', e.priority,
+            'is_visible', e.is_visible,
+            'tags', e.tags,
+            'notes', COALESCE((
+                SELECT array_agg(json_build_object(
+                    'note_id', note_id,
+                    'note_type', note_type,
+                    'content', content,
+                    'created_at', created_at,
+                    'updated_at', updated_at
+                ) ORDER BY created_at DESC)
+                FROM public.experience_notes
+                WHERE experience_notes.experience_id = e.experience_id
+            ), '{}')
+        ) as data
+    FROM experiences e
+    WHERE e.user_id = $1::uuid 
+    AND e.is_visible = true
+
+    UNION ALL
+
+    -- Educations
+    SELECT 
+        'educations' as type,
+        jsonb_build_object(
+            'education_id', ed.education_id,
+            'school', ed.school,
+            'degree', ed.degree,
+            'location', ed.location,
+            'start_date', ed.start_date,
+            'optional_end_date', ed.optional_end_date,
+            'is_current', ed.is_current,
+            'description', ed.description,
+            'priority', ed.priority,
+            'is_visible', ed.is_visible,
+            'tags', ed.tags,
+            'notes', COALESCE((
+                SELECT array_agg(json_build_object(
+                    'note_id', note_id,
+                    'note_type', note_type,
+                    'content', content,
+                    'created_at', created_at,
+                    'updated_at', updated_at
+                ) ORDER BY created_at DESC)
+                FROM public.education_notes
+                WHERE education_notes.education_id = ed.education_id
+            ), '{}')
+        ) as data
+    FROM educations ed
+    WHERE ed.user_id = $1::uuid 
+    AND ed.is_visible = true
+
+    UNION ALL
+
+    -- Skills
+    SELECT 
+        'skills' as type,
+        jsonb_build_object(
+            'skill_id', s.skill_id,
+            'skill_name', s.skill_name,
+            'optional_skill_type', s.optional_skill_type,
+            'optional_skill_level', s.optional_skill_level,
+            'description', s.description,
+            'priority', s.priority,
+            'is_visible', s.is_visible,
+            'tags', s.tags,
+            'notes', COALESCE((
+                SELECT array_agg(json_build_object(
+                    'note_id', note_id,
+                    'note_type', note_type,
+                    'content', content,
+                    'created_at', created_at,
+                    'updated_at', updated_at
+                ) ORDER BY created_at DESC)
+                FROM public.skill_notes
+                WHERE skill_notes.skill_id = s.skill_id
+            ), '{}')
+        ) as data
+    FROM skills s
+    WHERE s.user_id = $1::uuid 
+    AND s.is_visible = true
+
+    UNION ALL
+
+    -- Certificates
+    SELECT 
+        'certificates' as type,
+        jsonb_build_object(
+            'certificate_id', c.certificate_id,
+            'certificate_name', c.certificate_name,
+            'optional_issuer', c.optional_issuer,
+            'optional_location', c.optional_location,
+            'optional_granted_date', c.optional_granted_date,
+            'description', c.description,
+            'priority', c.priority,
+            'is_visible', c.is_visible,
+            'tags', c.tags,
+            'notes', COALESCE((
+                SELECT array_agg(json_build_object(
+                    'note_id', note_id,
+                    'note_type', note_type,
+                    'content', content,
+                    'created_at', created_at,
+                    'updated_at', updated_at
+                ) ORDER BY created_at DESC)
+                FROM public.certificate_notes
+                WHERE certificate_notes.certificate_id = c.certificate_id
+            ), '{}')
+        ) as data
+    FROM certificates c
+    WHERE c.user_id = $1::uuid 
+    AND c.is_visible = true
+
+    UNION ALL
+
+    -- Projects
+    SELECT 
+        'projects' as type,
+        jsonb_build_object(
+            'project_id', p.project_id,
+            'project_title', p.project_title,
+            'optional_project_subtitle', p.optional_project_subtitle,
+            'optional_start_date', p.optional_start_date,
+            'optional_end_date', p.optional_end_date,
+            'is_current', p.is_current,
+            'description', p.description,
+            'priority', p.priority,
+            'is_visible', p.is_visible,
+            'tags', p.tags,
+            'notes', COALESCE((
+                SELECT array_agg(json_build_object(
+                    'note_id', note_id,
+                    'note_type', note_type,
+                    'content', content,
+                    'created_at', created_at,
+                    'updated_at', updated_at
+                ) ORDER BY created_at DESC)
+                FROM public.project_notes
+                WHERE project_notes.project_id = p.project_id
+            ), '{}')
+        ) as data
+    FROM projects p
+    WHERE p.user_id = $1::uuid 
+    AND p.is_visible = true
+)
+SELECT 
+    (SELECT jsonb_build_object(
+        'experiences', COALESCE(jsonb_agg(data ORDER BY (data->>'priority')::int) FILTER (WHERE type = 'experiences'), '[]'),
+        'educations', COALESCE(jsonb_agg(data ORDER BY (data->>'priority')::int) FILTER (WHERE type = 'educations'), '[]'),
+        'skills', COALESCE(jsonb_agg(data ORDER BY (data->>'priority')::int) FILTER (WHERE type = 'skills'), '[]'),
+        'certificates', COALESCE(jsonb_agg(data ORDER BY (data->>'priority')::int) FILTER (WHERE type = 'certificates'), '[]'),
+        'projects', COALESCE(jsonb_agg(data ORDER BY (data->>'priority')::int) FILTER (WHERE type = 'projects'), '[]')
+    ) FROM resume_data) as resume_data
+`
+
+func (q *Queries) GetResumeData(ctx context.Context, userID uuid.UUID) ([]byte, error) {
+	row := q.db.QueryRow(ctx, getResumeData, userID)
+	var resume_data []byte
+	err := row.Scan(&resume_data)
+	return resume_data, err
+}
+
 const getSkillById = `-- name: GetSkillById :one
 SELECT 
     skill_id,
     skill_name,
     optional_skill_type,
-    optional_skill_level,
+    COALESCE(optional_skill_level, 'amateur'),
     description,
     priority,
     is_visible,
     tags,
-    notes,
+    (
+        SELECT array_agg(json_build_object(
+                'note_id', note_id,
+                'note_type', note_type,
+                'content', content,
+                'created_at', created_at,
+                'updated_at', updated_at
+            ) ORDER BY created_at DESC)
+        FROM public.skill_notes
+        WHERE skill_notes.skill_id = skills.skill_id
+    ) as notes,
     metadata,
     created_at,
     updated_at
@@ -1011,13 +1489,13 @@ type GetSkillByIdParams struct {
 type GetSkillByIdRow struct {
 	SkillID            int64              `json:"skill_id"`
 	SkillName          string             `json:"skill_name"`
-	OptionalSkillType  NullSkillType      `json:"optional_skill_type"`
-	OptionalSkillLevel NullSkillLevel     `json:"optional_skill_level"`
+	OptionalSkillType  pgtype.Text        `json:"optional_skill_type"`
+	OptionalSkillLevel SkillLevel         `json:"optional_skill_level"`
 	Description        string             `json:"description"`
 	Priority           int32              `json:"priority"`
 	IsVisible          pgtype.Bool        `json:"is_visible"`
 	Tags               []string           `json:"tags"`
-	Notes              [][]byte           `json:"notes"`
+	Notes              interface{}        `json:"notes"`
 	Metadata           []byte             `json:"metadata"`
 	CreatedAt          pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt          pgtype.Timestamptz `json:"updated_at"`
@@ -1048,12 +1526,22 @@ SELECT
     skill_id,
     skill_name,
     optional_skill_type,
-    optional_skill_level,
+    COALESCE(optional_skill_level, 'amateur'),
     description,
     priority,
     is_visible,
     tags,
-    notes
+    (
+        SELECT array_agg(json_build_object(
+                'note_id', note_id,
+                'note_type', note_type,
+                'content', content,
+                'created_at', created_at,
+                'updated_at', updated_at
+            ) ORDER BY created_at DESC)
+        FROM public.skill_notes
+        WHERE skill_notes.skill_id = skills.skill_id
+    ) as notes
 FROM public.skills
 WHERE user_id = $1::uuid
 ORDER BY 
@@ -1062,15 +1550,15 @@ ORDER BY
 `
 
 type GetSkillsByUserIdRow struct {
-	SkillID            int64          `json:"skill_id"`
-	SkillName          string         `json:"skill_name"`
-	OptionalSkillType  NullSkillType  `json:"optional_skill_type"`
-	OptionalSkillLevel NullSkillLevel `json:"optional_skill_level"`
-	Description        string         `json:"description"`
-	Priority           int32          `json:"priority"`
-	IsVisible          pgtype.Bool    `json:"is_visible"`
-	Tags               []string       `json:"tags"`
-	Notes              [][]byte       `json:"notes"`
+	SkillID            int64       `json:"skill_id"`
+	SkillName          string      `json:"skill_name"`
+	OptionalSkillType  pgtype.Text `json:"optional_skill_type"`
+	OptionalSkillLevel SkillLevel  `json:"optional_skill_level"`
+	Description        string      `json:"description"`
+	Priority           int32       `json:"priority"`
+	IsVisible          pgtype.Bool `json:"is_visible"`
+	Tags               []string    `json:"tags"`
+	Notes              interface{} `json:"notes"`
 }
 
 func (q *Queries) GetSkillsByUserId(ctx context.Context, userID uuid.UUID) ([]GetSkillsByUserIdRow, error) {
@@ -1498,13 +1986,11 @@ SET
     optional_granted_date = COALESCE($4::date, optional_granted_date),
     description = COALESCE($5::text, description),
     priority = COALESCE($6::integer, priority),
-    is_visible = COALESCE($7::boolean, priority),
-    tags = COALESCE($8::text[], tags),
-    notes = COALESCE($9::jsonb[], notes),
-    metadata = COALESCE($10::jsonb, metadata)
+    tags = COALESCE($7::text[], tags),
+    metadata = COALESCE($8::jsonb, metadata)
 WHERE 
-    certificate_id = $11::bigint 
-    AND user_id = $12::uuid
+    certificate_id = $9::bigint 
+    AND user_id = $10::uuid
 `
 
 type UpdateCertificateParams struct {
@@ -1514,9 +2000,7 @@ type UpdateCertificateParams struct {
 	OptionalGrantedDate pgtype.Date `json:"optional_granted_date"`
 	Description         string      `json:"description"`
 	Priority            int32       `json:"priority"`
-	IsVisible           bool        `json:"is_visible"`
 	Tags                []string    `json:"tags"`
-	Notes               [][]byte    `json:"notes"`
 	Metadata            []byte      `json:"metadata"`
 	CertificateID       int64       `json:"certificate_id"`
 	UserID              uuid.UUID   `json:"user_id"`
@@ -1530,9 +2014,7 @@ func (q *Queries) UpdateCertificate(ctx context.Context, arg UpdateCertificatePa
 		arg.OptionalGrantedDate,
 		arg.Description,
 		arg.Priority,
-		arg.IsVisible,
 		arg.Tags,
-		arg.Notes,
 		arg.Metadata,
 		arg.CertificateID,
 		arg.UserID,
@@ -1554,13 +2036,11 @@ SET
     END,
     description = COALESCE($8::text, description),
     priority = COALESCE($9::integer, priority),
-    is_visible = COALESCE($10::boolean, priority),
-    tags = COALESCE($11::text[], tags),
-    notes = COALESCE($12::jsonb[], notes),
-    metadata = COALESCE($13::jsonb, metadata)
+    tags = COALESCE($10::text[], tags),
+    metadata = COALESCE($11::jsonb, metadata)
 WHERE 
-    education_id = $14::bigint 
-    AND user_id = $15::uuid
+    education_id = $12::bigint 
+    AND user_id = $13::uuid
 `
 
 type UpdateEducationParams struct {
@@ -1573,9 +2053,7 @@ type UpdateEducationParams struct {
 	IsCurrent       bool        `json:"is_current"`
 	Description     string      `json:"description"`
 	Priority        int32       `json:"priority"`
-	IsVisible       bool        `json:"is_visible"`
 	Tags            []string    `json:"tags"`
-	Notes           [][]byte    `json:"notes"`
 	Metadata        []byte      `json:"metadata"`
 	EducationID     int64       `json:"education_id"`
 	UserID          uuid.UUID   `json:"user_id"`
@@ -1592,9 +2070,7 @@ func (q *Queries) UpdateEducation(ctx context.Context, arg UpdateEducationParams
 		arg.IsCurrent,
 		arg.Description,
 		arg.Priority,
-		arg.IsVisible,
 		arg.Tags,
-		arg.Notes,
 		arg.Metadata,
 		arg.EducationID,
 		arg.UserID,
@@ -1616,13 +2092,11 @@ SET
     END,
     description = COALESCE($7::text, description),
     priority = COALESCE($8::integer, priority),
-    is_visible = COALESCE($9::boolean, priority),
-    tags = COALESCE($10::text[], tags),
-    notes = COALESCE($11::jsonb[], notes),
-    metadata = COALESCE($12::jsonb, metadata)
+    tags = COALESCE($9::text[], tags),
+    metadata = COALESCE($10::jsonb, metadata)
 WHERE 
-    experience_id = $13::bigint 
-    AND user_id = $14::uuid
+    experience_id = $11::bigint 
+    AND user_id = $12::uuid
 `
 
 type UpdateExperienceParams struct {
@@ -1634,9 +2108,7 @@ type UpdateExperienceParams struct {
 	IsCurrent       bool        `json:"is_current"`
 	Description     string      `json:"description"`
 	Priority        int32       `json:"priority"`
-	IsVisible       bool        `json:"is_visible"`
 	Tags            []string    `json:"tags"`
-	Notes           [][]byte    `json:"notes"`
 	Metadata        []byte      `json:"metadata"`
 	ExperienceID    int64       `json:"experience_id"`
 	UserID          uuid.UUID   `json:"user_id"`
@@ -1652,11 +2124,159 @@ func (q *Queries) UpdateExperience(ctx context.Context, arg UpdateExperiencePara
 		arg.IsCurrent,
 		arg.Description,
 		arg.Priority,
-		arg.IsVisible,
 		arg.Tags,
-		arg.Notes,
 		arg.Metadata,
 		arg.ExperienceID,
+		arg.UserID,
+	)
+	return err
+}
+
+const updateNoteOnCertificate = `-- name: UpdateNoteOnCertificate :exec
+UPDATE public.certificate_notes 
+SET
+    note_type = COALESCE($1::text, note_type),
+    content = COALESCE($2::text, content)
+WHERE
+    note_id = $3::bigint
+    AND certificate_id = $4::bigint 
+    AND user_id = $5::uuid
+`
+
+type UpdateNoteOnCertificateParams struct {
+	NoteType      string    `json:"note_type"`
+	Content       string    `json:"content"`
+	NoteID        int64     `json:"note_id"`
+	CertificateID int64     `json:"certificate_id"`
+	UserID        uuid.UUID `json:"user_id"`
+}
+
+func (q *Queries) UpdateNoteOnCertificate(ctx context.Context, arg UpdateNoteOnCertificateParams) error {
+	_, err := q.db.Exec(ctx, updateNoteOnCertificate,
+		arg.NoteType,
+		arg.Content,
+		arg.NoteID,
+		arg.CertificateID,
+		arg.UserID,
+	)
+	return err
+}
+
+const updateNoteOnEducation = `-- name: UpdateNoteOnEducation :exec
+UPDATE public.education_notes 
+SET
+    note_type = COALESCE($1::text, note_type),
+    content = COALESCE($2::text, content)
+WHERE
+    note_id = $3::bigint
+    AND education_id = $4::bigint 
+    AND user_id = $5::uuid
+`
+
+type UpdateNoteOnEducationParams struct {
+	NoteType    string    `json:"note_type"`
+	Content     string    `json:"content"`
+	NoteID      int64     `json:"note_id"`
+	EducationID int64     `json:"education_id"`
+	UserID      uuid.UUID `json:"user_id"`
+}
+
+func (q *Queries) UpdateNoteOnEducation(ctx context.Context, arg UpdateNoteOnEducationParams) error {
+	_, err := q.db.Exec(ctx, updateNoteOnEducation,
+		arg.NoteType,
+		arg.Content,
+		arg.NoteID,
+		arg.EducationID,
+		arg.UserID,
+	)
+	return err
+}
+
+const updateNoteOnExperience = `-- name: UpdateNoteOnExperience :exec
+UPDATE public.experience_notes 
+SET
+    note_type = COALESCE($1::text, note_type),
+    content = COALESCE($2::text, content)
+WHERE
+    note_id = $3::bigint
+    AND experience_id = $4::bigint 
+    AND user_id = $5::uuid
+`
+
+type UpdateNoteOnExperienceParams struct {
+	NoteType     string    `json:"note_type"`
+	Content      string    `json:"content"`
+	NoteID       int64     `json:"note_id"`
+	ExperienceID int64     `json:"experience_id"`
+	UserID       uuid.UUID `json:"user_id"`
+}
+
+func (q *Queries) UpdateNoteOnExperience(ctx context.Context, arg UpdateNoteOnExperienceParams) error {
+	_, err := q.db.Exec(ctx, updateNoteOnExperience,
+		arg.NoteType,
+		arg.Content,
+		arg.NoteID,
+		arg.ExperienceID,
+		arg.UserID,
+	)
+	return err
+}
+
+const updateNoteOnProject = `-- name: UpdateNoteOnProject :exec
+UPDATE public.project_notes 
+SET
+    note_type = COALESCE($1::text, note_type),
+    content = COALESCE($2::text, content)
+WHERE
+    note_id = $3::bigint
+    AND project_id = $4::bigint 
+    AND user_id = $5::uuid
+`
+
+type UpdateNoteOnProjectParams struct {
+	NoteType  string    `json:"note_type"`
+	Content   string    `json:"content"`
+	NoteID    int64     `json:"note_id"`
+	ProjectID int64     `json:"project_id"`
+	UserID    uuid.UUID `json:"user_id"`
+}
+
+func (q *Queries) UpdateNoteOnProject(ctx context.Context, arg UpdateNoteOnProjectParams) error {
+	_, err := q.db.Exec(ctx, updateNoteOnProject,
+		arg.NoteType,
+		arg.Content,
+		arg.NoteID,
+		arg.ProjectID,
+		arg.UserID,
+	)
+	return err
+}
+
+const updateNoteOnSkill = `-- name: UpdateNoteOnSkill :exec
+UPDATE public.skill_notes 
+SET
+    note_type = COALESCE($1::text, note_type),
+    content = COALESCE($2::text, content)
+WHERE
+    note_id = $3::bigint
+    AND skill_id = $4::bigint 
+    AND user_id = $5::uuid
+`
+
+type UpdateNoteOnSkillParams struct {
+	NoteType string    `json:"note_type"`
+	Content  string    `json:"content"`
+	NoteID   int64     `json:"note_id"`
+	SkillID  int64     `json:"skill_id"`
+	UserID   uuid.UUID `json:"user_id"`
+}
+
+func (q *Queries) UpdateNoteOnSkill(ctx context.Context, arg UpdateNoteOnSkillParams) error {
+	_, err := q.db.Exec(ctx, updateNoteOnSkill,
+		arg.NoteType,
+		arg.Content,
+		arg.NoteID,
+		arg.SkillID,
 		arg.UserID,
 	)
 	return err
@@ -1675,13 +2295,11 @@ SET
     END,
     description = COALESCE($7::text, description),
     priority = COALESCE($8::integer, priority),
-    is_visible = COALESCE($9::boolean, priority),
-    tags = COALESCE($10::text[], tags),
-    notes = COALESCE($11::jsonb[], notes),
-    metadata = COALESCE($12::jsonb, metadata)
+    tags = COALESCE($9::text[], tags),
+    metadata = COALESCE($10::jsonb, metadata)
 WHERE 
-    project_id = $13::bigint 
-    AND user_id = $14::uuid
+    project_id = $11::bigint 
+    AND user_id = $12::uuid
 `
 
 type UpdateProjectParams struct {
@@ -1693,9 +2311,7 @@ type UpdateProjectParams struct {
 	IsCurrent               bool        `json:"is_current"`
 	Description             string      `json:"description"`
 	Priority                int32       `json:"priority"`
-	IsVisible               bool        `json:"is_visible"`
 	Tags                    []string    `json:"tags"`
-	Notes                   [][]byte    `json:"notes"`
 	Metadata                []byte      `json:"metadata"`
 	ProjectID               int64       `json:"project_id"`
 	UserID                  uuid.UUID   `json:"user_id"`
@@ -1711,9 +2327,7 @@ func (q *Queries) UpdateProject(ctx context.Context, arg UpdateProjectParams) er
 		arg.IsCurrent,
 		arg.Description,
 		arg.Priority,
-		arg.IsVisible,
 		arg.Tags,
-		arg.Notes,
 		arg.Metadata,
 		arg.ProjectID,
 		arg.UserID,
@@ -1729,27 +2343,23 @@ SET
     optional_skill_level = COALESCE($3::skill_level, optional_skill_level),
     description = COALESCE($4::text, description),
     priority = COALESCE($5::integer, priority),
-    is_visible = COALESCE($6::boolean, priority),
-    tags = COALESCE($7::text[], tags),
-    notes = COALESCE($8::jsonb[], notes),
-    metadata = COALESCE($9::jsonb, metadata)
+    tags = COALESCE($6::text[], tags),
+    metadata = COALESCE($7::jsonb, metadata)
 WHERE 
-    skill_id = $10::bigint 
-    AND user_id = $11::uuid
+    skill_id = $8::bigint 
+    AND user_id = $9::uuid
 `
 
 type UpdateSkillParams struct {
-	SkillName          string     `json:"skill_name"`
-	OptionalSkillType  SkillType  `json:"optional_skill_type"`
-	OptionalSkillLevel SkillLevel `json:"optional_skill_level"`
-	Description        string     `json:"description"`
-	Priority           int32      `json:"priority"`
-	IsVisible          bool       `json:"is_visible"`
-	Tags               []string   `json:"tags"`
-	Notes              [][]byte   `json:"notes"`
-	Metadata           []byte     `json:"metadata"`
-	SkillID            int64      `json:"skill_id"`
-	UserID             uuid.UUID  `json:"user_id"`
+	SkillName          string      `json:"skill_name"`
+	OptionalSkillType  interface{} `json:"optional_skill_type"`
+	OptionalSkillLevel SkillLevel  `json:"optional_skill_level"`
+	Description        string      `json:"description"`
+	Priority           int32       `json:"priority"`
+	Tags               []string    `json:"tags"`
+	Metadata           []byte      `json:"metadata"`
+	SkillID            int64       `json:"skill_id"`
+	UserID             uuid.UUID   `json:"user_id"`
 }
 
 func (q *Queries) UpdateSkill(ctx context.Context, arg UpdateSkillParams) error {
@@ -1759,9 +2369,7 @@ func (q *Queries) UpdateSkill(ctx context.Context, arg UpdateSkillParams) error 
 		arg.OptionalSkillLevel,
 		arg.Description,
 		arg.Priority,
-		arg.IsVisible,
 		arg.Tags,
-		arg.Notes,
 		arg.Metadata,
 		arg.SkillID,
 		arg.UserID,

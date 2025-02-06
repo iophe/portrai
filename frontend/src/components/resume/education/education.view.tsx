@@ -3,6 +3,7 @@ import { api } from "@utils/api";
 import { AxiosError } from "axios";
 import { createSignal, For, Show } from "solid-js";
 import { createStore } from "solid-js/store";
+import { AddNote, NoteList } from "../notes.util";
 
 interface EducationViewProps {
 	education: Education;
@@ -66,6 +67,11 @@ export function EducationView(props: EducationViewProps) {
 					Delete
 				</button>
 			</div>
+			<NoteList notes={props.education.notes} />
+			<AddNote
+				id={props.education.education_id}
+				section_type="education"
+			/>
 		</article>
 	);
 }

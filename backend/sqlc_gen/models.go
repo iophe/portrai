@@ -143,49 +143,6 @@ func (ns NullSkillLevel) Value() (driver.Value, error) {
 	return string(ns.SkillLevel), nil
 }
 
-type SkillType string
-
-const (
-	SkillTypeSoft      SkillType = "soft"
-	SkillTypeTechnical SkillType = "technical"
-	SkillTypeLanguage  SkillType = "language"
-)
-
-func (e *SkillType) Scan(src interface{}) error {
-	switch s := src.(type) {
-	case []byte:
-		*e = SkillType(s)
-	case string:
-		*e = SkillType(s)
-	default:
-		return fmt.Errorf("unsupported scan type for SkillType: %T", src)
-	}
-	return nil
-}
-
-type NullSkillType struct {
-	SkillType SkillType `json:"skill_type"`
-	Valid     bool      `json:"valid"` // Valid is true if SkillType is not NULL
-}
-
-// Scan implements the Scanner interface.
-func (ns *NullSkillType) Scan(value interface{}) error {
-	if value == nil {
-		ns.SkillType, ns.Valid = "", false
-		return nil
-	}
-	ns.Valid = true
-	return ns.SkillType.Scan(value)
-}
-
-// Value implements the driver Valuer interface.
-func (ns NullSkillType) Value() (driver.Value, error) {
-	if !ns.Valid {
-		return nil, nil
-	}
-	return string(ns.SkillType), nil
-}
-
 type SubscriptionStatus string
 
 const (
@@ -245,10 +202,19 @@ type Certificate struct {
 	Priority            int32              `json:"priority"`
 	IsVisible           pgtype.Bool        `json:"is_visible"`
 	Tags                []string           `json:"tags"`
-	Notes               [][]byte           `json:"notes"`
 	Metadata            []byte             `json:"metadata"`
 	CreatedAt           pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
+}
+
+type CertificateNote struct {
+	NoteID        int64              `json:"note_id"`
+	CertificateID int64              `json:"certificate_id"`
+	UserID        uuid.UUID          `json:"user_id"`
+	NoteType      string             `json:"note_type"`
+	Content       string             `json:"content"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
 }
 
 type Education struct {
@@ -264,10 +230,19 @@ type Education struct {
 	Priority        int32              `json:"priority"`
 	IsVisible       pgtype.Bool        `json:"is_visible"`
 	Tags            []string           `json:"tags"`
-	Notes           [][]byte           `json:"notes"`
 	Metadata        []byte             `json:"metadata"`
 	CreatedAt       pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
+}
+
+type EducationNote struct {
+	NoteID      int64              `json:"note_id"`
+	EducationID int64              `json:"education_id"`
+	UserID      uuid.UUID          `json:"user_id"`
+	NoteType    string             `json:"note_type"`
+	Content     string             `json:"content"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
 }
 
 type Experience struct {
@@ -283,10 +258,19 @@ type Experience struct {
 	Priority        int32              `json:"priority"`
 	IsVisible       pgtype.Bool        `json:"is_visible"`
 	Tags            []string           `json:"tags"`
-	Notes           [][]byte           `json:"notes"`
 	Metadata        []byte             `json:"metadata"`
 	CreatedAt       pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
+}
+
+type ExperienceNote struct {
+	NoteID       int64              `json:"note_id"`
+	ExperienceID int64              `json:"experience_id"`
+	UserID       uuid.UUID          `json:"user_id"`
+	NoteType     string             `json:"note_type"`
+	Content      string             `json:"content"`
+	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
 }
 
 type PaymentCustomer struct {
@@ -347,26 +331,44 @@ type Project struct {
 	Priority                int32              `json:"priority"`
 	IsVisible               pgtype.Bool        `json:"is_visible"`
 	Tags                    []string           `json:"tags"`
-	Notes                   [][]byte           `json:"notes"`
 	Metadata                []byte             `json:"metadata"`
 	CreatedAt               pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt               pgtype.Timestamptz `json:"updated_at"`
+}
+
+type ProjectNote struct {
+	NoteID    int64              `json:"note_id"`
+	ProjectID int64              `json:"project_id"`
+	UserID    uuid.UUID          `json:"user_id"`
+	NoteType  string             `json:"note_type"`
+	Content   string             `json:"content"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
 }
 
 type Skill struct {
 	SkillID            int64              `json:"skill_id"`
 	UserID             uuid.UUID          `json:"user_id"`
 	SkillName          string             `json:"skill_name"`
-	OptionalSkillType  NullSkillType      `json:"optional_skill_type"`
+	OptionalSkillType  pgtype.Text        `json:"optional_skill_type"`
 	OptionalSkillLevel NullSkillLevel     `json:"optional_skill_level"`
 	Description        string             `json:"description"`
 	Priority           int32              `json:"priority"`
 	IsVisible          pgtype.Bool        `json:"is_visible"`
 	Tags               []string           `json:"tags"`
-	Notes              [][]byte           `json:"notes"`
 	Metadata           []byte             `json:"metadata"`
 	CreatedAt          pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt          pgtype.Timestamptz `json:"updated_at"`
+}
+
+type SkillNote struct {
+	NoteID    int64              `json:"note_id"`
+	SkillID   int64              `json:"skill_id"`
+	UserID    uuid.UUID          `json:"user_id"`
+	NoteType  string             `json:"note_type"`
+	Content   string             `json:"content"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
 }
 
 type User struct {

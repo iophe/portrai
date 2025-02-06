@@ -12,6 +12,30 @@ func RegisterResumeRoutes(group fiber.Router) {
 	resume_group := group.Group("/resume")
 
 	resume_group.Use(middlewares.Protected())
+	resume_group.Get("/data", func(c *fiber.Ctx) error {
+		return handlers.HandleGetResumeData(c, &db.DB)
+	})
+
+	// Notes Routes
+	notes_group := resume_group.Group("/notes")
+	notes_group.Post("/create", func(c *fiber.Ctx) error {
+		var data handlers.NoteCreationData
+		if err := c.BodyParser(&data); err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Invalid request body",
+			})
+		}
+		return handlers.HandleCreateNote(data, c, &db.DB)
+	})
+	notes_group.Post("/delete", func(c *fiber.Ctx) error {
+		var data handlers.NoteDeletionData
+		if err := c.BodyParser(&data); err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Invalid request body",
+			})
+		}
+		return handlers.HandleDeleteNote(data, c, &db.DB)
+	})
 
 	// Experience Routes
 	experience_group := resume_group.Group("/experience")

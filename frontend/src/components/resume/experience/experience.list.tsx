@@ -122,6 +122,7 @@ export function ExperienceList(props: ExperienceListProps) {
 															experience_id,
 														}
 													);
+													refetch();
 												} catch (error) {
 													fault.minor({
 														message:

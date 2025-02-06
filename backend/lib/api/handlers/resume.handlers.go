@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"backend/lib/api/middlewares"
+	"backend/lib/services/cache"
 	"backend/lib/services/db"
 	database "backend/lib/services/db"
 	"backend/sqlc_gen"
@@ -15,16 +16,213 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+func HandleGetResumeData(c *fiber.Ctx, db *database.Database) error {
+	user_id, err := middlewares.GetUserID(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized access",
+		})
+	}
+	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	queries := sqlc_gen.New(db.Pool)
+	resume_data_bytes, err := queries.GetResumeData(query_ctx, user_id)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to retrieve resume data",
+		})
+	}
+	var resume_data cache.ResumeCachedData
+	if err := json.Unmarshal(resume_data_bytes, &resume_data); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to parse resume data",
+			"info":  err.Error(),
+		})
+	}
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"resume_data": resume_data,
+	})
+}
+
+type NoteCreationData struct {
+	Content string `json:"content"`
+	Section string `json:"section"`
+	Type    string `json:"type"`
+	OnId    int64  `json:"on_id"`
+}
+
+func HandleCreateNote(data NoteCreationData, c *fiber.Ctx, db *database.Database) error {
+	user_id, err := middlewares.GetUserID(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized access",
+		})
+	}
+	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	queries := sqlc_gen.New(db.Pool)
+	switch data.Section {
+	case "experience":
+		err = queries.CreateNoteOnExperience(query_ctx, sqlc_gen.CreateNoteOnExperienceParams{
+			UserID:       user_id,
+			Content:      data.Content,
+			NoteType:     data.Type,
+			ExperienceID: data.OnId,
+		})
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "could not create this note",
+				"info":  err.Error(),
+			})
+		}
+	case "certificate":
+		err = queries.CreateNoteOnCertificate(query_ctx, sqlc_gen.CreateNoteOnCertificateParams{
+			UserID:        user_id,
+			Content:       data.Content,
+			NoteType:      data.Type,
+			CertificateID: data.OnId,
+		})
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "could not create this note",
+				"info":  err.Error(),
+			})
+		}
+	case "project":
+		err = queries.CreateNoteOnProject(query_ctx, sqlc_gen.CreateNoteOnProjectParams{
+			UserID:    user_id,
+			Content:   data.Content,
+			NoteType:  data.Type,
+			ProjectID: data.OnId,
+		})
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "could not create this note",
+				"info":  err.Error(),
+			})
+		}
+	case "skill":
+		err = queries.CreateNoteOnSkill(query_ctx, sqlc_gen.CreateNoteOnSkillParams{
+			UserID:   user_id,
+			Content:  data.Content,
+			NoteType: data.Type,
+			SkillID:  data.OnId,
+		})
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "could not create this note",
+				"info":  err.Error(),
+			})
+		}
+	case "education":
+		err = queries.CreateNoteOnEducation(query_ctx, sqlc_gen.CreateNoteOnEducationParams{
+			UserID:      user_id,
+			Content:     data.Content,
+			NoteType:    data.Type,
+			EducationID: data.OnId,
+		})
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "could not create this note",
+				"info":  err.Error(),
+			})
+		}
+
+	}
+	return c.SendStatus(fiber.StatusOK)
+}
+
+type NoteDeletionData struct {
+	NoteId  int64  `json:"note_id"`
+	Section string `json:"section"`
+	OnId    int64  `json:"on_id"`
+}
+
+func HandleDeleteNote(data NoteDeletionData, c *fiber.Ctx, db *database.Database) error {
+	user_id, err := middlewares.GetUserID(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized access",
+		})
+	}
+	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	queries := sqlc_gen.New(db.Pool)
+	switch data.Section {
+	case "experience":
+		err = queries.DeleteNoteOnExperience(query_ctx, sqlc_gen.DeleteNoteOnExperienceParams{
+			UserID:       user_id,
+			NoteID:       data.NoteId,
+			ExperienceID: data.OnId,
+		})
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "could not Delete this note",
+				"info":  err.Error(),
+			})
+		}
+	case "certificate":
+		err = queries.DeleteNoteOnCertificate(query_ctx, sqlc_gen.DeleteNoteOnCertificateParams{
+			UserID:        user_id,
+			NoteID:        data.NoteId,
+			CertificateID: data.OnId,
+		})
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "could not Delete this note",
+				"info":  err.Error(),
+			})
+		}
+	case "project":
+		err = queries.DeleteNoteOnProject(query_ctx, sqlc_gen.DeleteNoteOnProjectParams{
+			UserID:    user_id,
+			NoteID:    data.NoteId,
+			ProjectID: data.OnId,
+		})
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "could not Delete this note",
+				"info":  err.Error(),
+			})
+		}
+	case "skill":
+		err = queries.DeleteNoteOnSkill(query_ctx, sqlc_gen.DeleteNoteOnSkillParams{
+			UserID:  user_id,
+			NoteID:  data.NoteId,
+			SkillID: data.OnId,
+		})
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "could not Delete this note",
+				"info":  err.Error(),
+			})
+		}
+	case "education":
+		err = queries.DeleteNoteOnEducation(query_ctx, sqlc_gen.DeleteNoteOnEducationParams{
+			UserID:      user_id,
+			NoteID:      data.NoteId,
+			EducationID: data.OnId,
+		})
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "could not Delete this note",
+				"info":  err.Error(),
+			})
+		}
+
+	}
+	return c.SendStatus(fiber.StatusOK)
+}
+
 type ExperienceCreationData struct {
-	CompanyName string      `json:"company_name"`
-	JobTitle    string      `json:"job_title"`
-	Location    string      `json:"location"`
-	StartDate   string      `json:"start_date"`
-	EndDate     string      `json:"end_date"`
-	IsCurrent   bool        `json:"is_current"`
-	Description string      `json:"description"`
-	Tags        []string    `json:"tags"`
-	Notes       []fiber.Map `json:"notes"`
+	CompanyName string   `json:"company_name"`
+	JobTitle    string   `json:"job_title"`
+	Location    string   `json:"location"`
+	StartDate   string   `json:"start_date"`
+	EndDate     string   `json:"optional_end_date"`
+	IsCurrent   bool     `json:"is_current"`
+	Description string   `json:"description"`
+	Tags        []string `json:"tags"`
 }
 
 func HandleExperienceCreation(data ExperienceCreationData, c *fiber.Ctx, db *database.Database) error {
@@ -38,18 +236,6 @@ func HandleExperienceCreation(data ExperienceCreationData, c *fiber.Ctx, db *dat
 	defer cancel()
 	queries := sqlc_gen.New(db.Pool)
 
-	notes := make([][]byte, len(data.Notes))
-	if len(data.Notes) > 0 {
-		for i, note := range data.Notes {
-			bytes_note, err := json.Marshal(note)
-			if err != nil {
-				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-					"error": "could not understand the notes",
-				})
-			}
-			notes[i] = bytes_note
-		}
-	}
 	start_date, err := database.StringToDate(data.StartDate)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -57,6 +243,7 @@ func HandleExperienceCreation(data ExperienceCreationData, c *fiber.Ctx, db *dat
 		})
 	}
 	var end_date pgtype.Date
+	slog.Info("data end date", "", data.EndDate)
 	if len(data.EndDate) > 0 {
 		end_date, err = database.StringToDate(data.EndDate)
 		if err != nil {
@@ -76,12 +263,11 @@ func HandleExperienceCreation(data ExperienceCreationData, c *fiber.Ctx, db *dat
 		IsCurrent:       data.IsCurrent,
 		Description:     data.Description,
 		Tags:            data.Tags,
-		Notes:           notes,
 	})
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "could not create this experience",
-			"info":  err,
+			"info":  err.Error(),
 		})
 	}
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
@@ -90,17 +276,16 @@ func HandleExperienceCreation(data ExperienceCreationData, c *fiber.Ctx, db *dat
 }
 
 type ExperienceUpdateData struct {
-	ExperienceId int64       `json:"experience_id"`
-	CompanyName  string      `json:"company_name"`
-	JobTitle     string      `json:"job_title"`
-	Location     string      `json:"location"`
-	StartDate    string      `json:"start_date"`
-	EndDate      string      `json:"optional_end_date"`
-	IsCurrent    bool        `json:"is_current"`
-	Description  string      `json:"description"`
-	Priority     int32       `json:"priority"`
-	Tags         []string    `json:"tags"`
-	Notes        []fiber.Map `json:"notes"`
+	ExperienceId int64    `json:"experience_id"`
+	CompanyName  string   `json:"company_name"`
+	JobTitle     string   `json:"job_title"`
+	Location     string   `json:"location"`
+	StartDate    string   `json:"start_date"`
+	EndDate      string   `json:"optional_end_date"`
+	IsCurrent    bool     `json:"is_current"`
+	Description  string   `json:"description"`
+	Priority     int32    `json:"priority"`
+	Tags         []string `json:"tags"`
 }
 
 func HandleExperienceUpdate(data ExperienceUpdateData, c *fiber.Ctx, db *db.Database) error {
@@ -113,19 +298,6 @@ func HandleExperienceUpdate(data ExperienceUpdateData, c *fiber.Ctx, db *db.Data
 	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	queries := sqlc_gen.New(db.Pool)
-
-	notes := make([][]byte, len(data.Notes))
-	if len(data.Notes) > 0 {
-		for i, note := range data.Notes {
-			bytes_note, err := json.Marshal(note)
-			if err != nil {
-				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-					"error": "could not understand the notes",
-				})
-			}
-			notes[i] = bytes_note
-		}
-	}
 
 	start_date, err := database.StringToDate(data.StartDate)
 	if err != nil {
@@ -155,7 +327,6 @@ func HandleExperienceUpdate(data ExperienceUpdateData, c *fiber.Ctx, db *db.Data
 		Description:     data.Description,
 		Priority:        data.Priority,
 		Tags:            data.Tags,
-		Notes:           notes,
 	})
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -178,6 +349,7 @@ func HandleGetAllExperiences(c *fiber.Ctx, db *db.Database) error {
 
 	experiences, err := queries.GetExperiencesByUserId(query_ctx, user_id)
 	if err != nil {
+		slog.Error(err.Error())
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "could not get your experiences",
 		})
@@ -309,15 +481,14 @@ func HandleReorderExperience(data ReorderExperienceData, c *fiber.Ctx, db *db.Da
 // Education Handlers
 
 type EducationCreationData struct {
-	School      string      `json:"school"`
-	Degree      string      `json:"degree"`
-	Location    string      `json:"location"`
-	StartDate   string      `json:"start_date"`
-	EndDate     string      `json:"end_date"`
-	IsCurrent   bool        `json:"is_current"`
-	Description string      `json:"description"`
-	Tags        []string    `json:"tags"`
-	Notes       []fiber.Map `json:"notes"`
+	School      string   `json:"school"`
+	Degree      string   `json:"degree"`
+	Location    string   `json:"location"`
+	StartDate   string   `json:"start_date"`
+	EndDate     string   `json:"optional_end_date"`
+	IsCurrent   bool     `json:"is_current"`
+	Description string   `json:"description"`
+	Tags        []string `json:"tags"`
 }
 
 func HandleEducationCreation(data EducationCreationData, c *fiber.Ctx, db *database.Database) error {
@@ -330,19 +501,6 @@ func HandleEducationCreation(data EducationCreationData, c *fiber.Ctx, db *datab
 	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	queries := sqlc_gen.New(db.Pool)
-
-	notes := make([][]byte, len(data.Notes))
-	if len(data.Notes) > 0 {
-		for i, note := range data.Notes {
-			bytes_note, err := json.Marshal(note)
-			if err != nil {
-				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-					"error": "could not understand the notes",
-				})
-			}
-			notes[i] = bytes_note
-		}
-	}
 
 	start_date, err := database.StringToDate(data.StartDate)
 	if err != nil {
@@ -370,7 +528,6 @@ func HandleEducationCreation(data EducationCreationData, c *fiber.Ctx, db *datab
 		IsCurrent:       data.IsCurrent,
 		Description:     data.Description,
 		Tags:            data.Tags,
-		Notes:           notes,
 	})
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -383,17 +540,16 @@ func HandleEducationCreation(data EducationCreationData, c *fiber.Ctx, db *datab
 }
 
 type EducationUpdateData struct {
-	EducationId int64       `json:"education_id"`
-	School      string      `json:"school"`
-	Degree      string      `json:"degree"`
-	Location    string      `json:"location"`
-	StartDate   string      `json:"start_date"`
-	EndDate     string      `json:"end_date"`
-	IsCurrent   bool        `json:"is_current"`
-	Description string      `json:"description"`
-	Priority    int32       `json:"priority"`
-	Tags        []string    `json:"tags"`
-	Notes       []fiber.Map `json:"notes"`
+	EducationId int64    `json:"education_id"`
+	School      string   `json:"school"`
+	Degree      string   `json:"degree"`
+	Location    string   `json:"location"`
+	StartDate   string   `json:"start_date"`
+	EndDate     string   `json:"optional_end_date"`
+	IsCurrent   bool     `json:"is_current"`
+	Description string   `json:"description"`
+	Priority    int32    `json:"priority"`
+	Tags        []string `json:"tags"`
 }
 
 func HandleEducationUpdate(data EducationUpdateData, c *fiber.Ctx, db *db.Database) error {
@@ -406,19 +562,6 @@ func HandleEducationUpdate(data EducationUpdateData, c *fiber.Ctx, db *db.Databa
 	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	queries := sqlc_gen.New(db.Pool)
-
-	notes := make([][]byte, len(data.Notes))
-	if len(data.Notes) > 0 {
-		for i, note := range data.Notes {
-			bytes_note, err := json.Marshal(note)
-			if err != nil {
-				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-					"error": "could not understand the notes",
-				})
-			}
-			notes[i] = bytes_note
-		}
-	}
 
 	start_date, err := database.StringToDate(data.StartDate)
 	if err != nil {
@@ -448,7 +591,6 @@ func HandleEducationUpdate(data EducationUpdateData, c *fiber.Ctx, db *db.Databa
 		Description:     data.Description,
 		Priority:        data.Priority,
 		Tags:            data.Tags,
-		Notes:           notes,
 	})
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -602,12 +744,11 @@ func HandleReorderEducation(data ReorderEducationData, c *fiber.Ctx, db *db.Data
 // Skills Handlers
 
 type SkillCreationData struct {
-	SkillName          string      `json:"skill_name"`
-	OptionalSkillType  string      `json:"optional_skill_type"`
-	OptionalSkillLevel string      `json:"optional_skill_level"`
-	Description        string      `json:"description"`
-	Tags               []string    `json:"tags"`
-	Notes              []fiber.Map `json:"notes"`
+	SkillName          string   `json:"skill_name"`
+	OptionalSkillType  string   `json:"optional_skill_type"`
+	OptionalSkillLevel string   `json:"optional_skill_level"`
+	Description        string   `json:"description"`
+	Tags               []string `json:"tags"`
 }
 
 func HandleSkillCreation(data SkillCreationData, c *fiber.Ctx, db *database.Database) error {
@@ -621,27 +762,13 @@ func HandleSkillCreation(data SkillCreationData, c *fiber.Ctx, db *database.Data
 	defer cancel()
 	queries := sqlc_gen.New(db.Pool)
 
-	notes := make([][]byte, len(data.Notes))
-	if len(data.Notes) > 0 {
-		for i, note := range data.Notes {
-			bytes_note, err := json.Marshal(note)
-			if err != nil {
-				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-					"error": "could not understand the notes",
-				})
-			}
-			notes[i] = bytes_note
-		}
-	}
-
 	skill_id, err := queries.CreateSkill(query_ctx, sqlc_gen.CreateSkillParams{
 		UserID:             user_id,
 		SkillName:          data.SkillName,
-		OptionalSkillType:  sqlc_gen.SkillType(data.OptionalSkillType),
+		OptionalSkillType:  data.OptionalSkillType,
 		OptionalSkillLevel: sqlc_gen.SkillLevel(data.OptionalSkillLevel),
 		Description:        data.Description,
 		Tags:               data.Tags,
-		Notes:              notes,
 	})
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -654,14 +781,13 @@ func HandleSkillCreation(data SkillCreationData, c *fiber.Ctx, db *database.Data
 }
 
 type SkillUpdateData struct {
-	SkillId            int64       `json:"skill_id"`
-	SkillName          string      `json:"skill_name"`
-	OptionalSkillType  string      `json:"optional_skill_type"`
-	OptionalSkillLevel string      `json:"optional_skill_level"`
-	Description        string      `json:"description"`
-	Priority           int32       `json:"priority"`
-	Tags               []string    `json:"tags"`
-	Notes              []fiber.Map `json:"notes"`
+	SkillId            int64    `json:"skill_id"`
+	SkillName          string   `json:"skill_name"`
+	OptionalSkillType  string   `json:"optional_skill_type"`
+	OptionalSkillLevel string   `json:"optional_skill_level"`
+	Description        string   `json:"description"`
+	Priority           int32    `json:"priority"`
+	Tags               []string `json:"tags"`
 }
 
 func HandleSkillUpdate(data SkillUpdateData, c *fiber.Ctx, db *db.Database) error {
@@ -675,29 +801,15 @@ func HandleSkillUpdate(data SkillUpdateData, c *fiber.Ctx, db *db.Database) erro
 	defer cancel()
 	queries := sqlc_gen.New(db.Pool)
 
-	notes := make([][]byte, len(data.Notes))
-	if len(data.Notes) > 0 {
-		for i, note := range data.Notes {
-			bytes_note, err := json.Marshal(note)
-			if err != nil {
-				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-					"error": "could not understand the notes",
-				})
-			}
-			notes[i] = bytes_note
-		}
-	}
-
 	err = queries.UpdateSkill(query_ctx, sqlc_gen.UpdateSkillParams{
 		SkillID:            data.SkillId,
 		UserID:             user_id,
 		SkillName:          data.SkillName,
-		OptionalSkillType:  sqlc_gen.SkillType(data.OptionalSkillType),
+		OptionalSkillType:  data.OptionalSkillType,
 		OptionalSkillLevel: sqlc_gen.SkillLevel(data.OptionalSkillLevel),
 		Description:        data.Description,
 		Priority:           data.Priority,
 		Tags:               data.Tags,
-		Notes:              notes,
 	})
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -851,13 +963,12 @@ func HandleReorderSkill(data ReorderSkillData, c *fiber.Ctx, db *db.Database) er
 // Certificate Handlers
 
 type CertificateCreationData struct {
-	CertificateName     string      `json:"certificate_name"`
-	OptionalIssuer      string      `json:"optional_issuer"`
-	OptionalLocation    string      `json:"optional_location"`
-	OptionalGrantedDate string      `json:"optional_granted_date"`
-	Description         string      `json:"description"`
-	Tags                []string    `json:"tags"`
-	Notes               []fiber.Map `json:"notes"`
+	CertificateName     string   `json:"certificate_name"`
+	OptionalIssuer      string   `json:"optional_issuer"`
+	OptionalLocation    string   `json:"optional_location"`
+	OptionalGrantedDate string   `json:"optional_granted_date"`
+	Description         string   `json:"description"`
+	Tags                []string `json:"tags"`
 }
 
 func HandleCertificateCreation(data CertificateCreationData, c *fiber.Ctx, db *database.Database) error {
@@ -870,19 +981,6 @@ func HandleCertificateCreation(data CertificateCreationData, c *fiber.Ctx, db *d
 	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	queries := sqlc_gen.New(db.Pool)
-
-	notes := make([][]byte, len(data.Notes))
-	if len(data.Notes) > 0 {
-		for i, note := range data.Notes {
-			bytes_note, err := json.Marshal(note)
-			if err != nil {
-				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-					"error": "could not understand the notes",
-				})
-			}
-			notes[i] = bytes_note
-		}
-	}
 
 	granted_date, err := database.StringToDate(data.OptionalGrantedDate)
 	if err != nil {
@@ -899,7 +997,6 @@ func HandleCertificateCreation(data CertificateCreationData, c *fiber.Ctx, db *d
 		OptionalGrantedDate: granted_date,
 		Description:         data.Description,
 		Tags:                data.Tags,
-		Notes:               notes,
 	})
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -912,15 +1009,14 @@ func HandleCertificateCreation(data CertificateCreationData, c *fiber.Ctx, db *d
 }
 
 type CertificateUpdateData struct {
-	CertificateId       int64       `json:"certificate_id"`
-	CertificateName     string      `json:"certificate_name"`
-	OptionalIssuer      string      `json:"optional_issuer"`
-	OptionalLocation    string      `json:"optional_location"`
-	OptionalGrantedDate string      `json:"optional_granted_date"`
-	Description         string      `json:"description"`
-	Priority            int32       `json:"priority"`
-	Tags                []string    `json:"tags"`
-	Notes               []fiber.Map `json:"notes"`
+	CertificateId       int64    `json:"certificate_id"`
+	CertificateName     string   `json:"certificate_name"`
+	OptionalIssuer      string   `json:"optional_issuer"`
+	OptionalLocation    string   `json:"optional_location"`
+	OptionalGrantedDate string   `json:"optional_granted_date"`
+	Description         string   `json:"description"`
+	Priority            int32    `json:"priority"`
+	Tags                []string `json:"tags"`
 }
 
 func HandleCertificateUpdate(data CertificateUpdateData, c *fiber.Ctx, db *db.Database) error {
@@ -933,19 +1029,6 @@ func HandleCertificateUpdate(data CertificateUpdateData, c *fiber.Ctx, db *db.Da
 	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	queries := sqlc_gen.New(db.Pool)
-
-	notes := make([][]byte, len(data.Notes))
-	if len(data.Notes) > 0 {
-		for i, note := range data.Notes {
-			bytes_note, err := json.Marshal(note)
-			if err != nil {
-				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-					"error": "could not understand the notes",
-				})
-			}
-			notes[i] = bytes_note
-		}
-	}
 
 	granted_date, err := database.StringToDate(data.OptionalGrantedDate)
 	if err != nil {
@@ -964,7 +1047,6 @@ func HandleCertificateUpdate(data CertificateUpdateData, c *fiber.Ctx, db *db.Da
 		Description:         data.Description,
 		Priority:            data.Priority,
 		Tags:                data.Tags,
-		Notes:               notes,
 	})
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -1118,14 +1200,13 @@ func HandleReorderCertificate(data ReorderCertificateData, c *fiber.Ctx, db *db.
 // Project Handlers
 
 type ProjectCreationData struct {
-	ProjectTitle            string      `json:"project_title"`
-	OptionalProjectSubtitle string      `json:"optional_project_subtitle"`
-	StartDate               string      `json:"start_date"`
-	EndDate                 string      `json:"end_date"`
-	IsCurrent               bool        `json:"is_current"`
-	Description             string      `json:"description"`
-	Tags                    []string    `json:"tags"`
-	Notes                   []fiber.Map `json:"notes"`
+	ProjectTitle            string   `json:"project_title"`
+	OptionalProjectSubtitle string   `json:"optional_project_subtitle"`
+	StartDate               string   `json:"start_date"`
+	EndDate                 string   `json:"optional_end_date"`
+	IsCurrent               bool     `json:"is_current"`
+	Description             string   `json:"description"`
+	Tags                    []string `json:"tags"`
 }
 
 func HandleProjectCreation(data ProjectCreationData, c *fiber.Ctx, db *database.Database) error {
@@ -1138,19 +1219,6 @@ func HandleProjectCreation(data ProjectCreationData, c *fiber.Ctx, db *database.
 	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	queries := sqlc_gen.New(db.Pool)
-
-	notes := make([][]byte, len(data.Notes))
-	if len(data.Notes) > 0 {
-		for i, note := range data.Notes {
-			bytes_note, err := json.Marshal(note)
-			if err != nil {
-				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-					"error": "could not understand the notes",
-				})
-			}
-			notes[i] = bytes_note
-		}
-	}
 
 	var start_date pgtype.Date
 	if len(data.StartDate) > 0 {
@@ -1181,7 +1249,6 @@ func HandleProjectCreation(data ProjectCreationData, c *fiber.Ctx, db *database.
 		IsCurrent:               data.IsCurrent,
 		Description:             data.Description,
 		Tags:                    data.Tags,
-		Notes:                   notes,
 	})
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -1194,16 +1261,15 @@ func HandleProjectCreation(data ProjectCreationData, c *fiber.Ctx, db *database.
 }
 
 type ProjectUpdateData struct {
-	ProjectId               int64       `json:"project_id"`
-	ProjectTitle            string      `json:"project_title"`
-	OptionalProjectSubtitle string      `json:"optional_project_subtitle"`
-	StartDate               string      `json:"start_date"`
-	EndDate                 string      `json:"end_date"`
-	IsCurrent               bool        `json:"is_current"`
-	Description             string      `json:"description"`
-	Priority                int32       `json:"priority"`
-	Tags                    []string    `json:"tags"`
-	Notes                   []fiber.Map `json:"notes"`
+	ProjectId               int64    `json:"project_id"`
+	ProjectTitle            string   `json:"project_title"`
+	OptionalProjectSubtitle string   `json:"optional_project_subtitle"`
+	StartDate               string   `json:"start_date"`
+	EndDate                 string   `json:"optional_end_date"`
+	IsCurrent               bool     `json:"is_current"`
+	Description             string   `json:"description"`
+	Priority                int32    `json:"priority"`
+	Tags                    []string `json:"tags"`
 }
 
 func HandleProjectUpdate(data ProjectUpdateData, c *fiber.Ctx, db *db.Database) error {
@@ -1216,19 +1282,6 @@ func HandleProjectUpdate(data ProjectUpdateData, c *fiber.Ctx, db *db.Database) 
 	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	queries := sqlc_gen.New(db.Pool)
-
-	notes := make([][]byte, len(data.Notes))
-	if len(data.Notes) > 0 {
-		for i, note := range data.Notes {
-			bytes_note, err := json.Marshal(note)
-			if err != nil {
-				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-					"error": "could not understand the notes",
-				})
-			}
-			notes[i] = bytes_note
-		}
-	}
 
 	var start_date pgtype.Date
 	if len(data.StartDate) > 0 {
@@ -1261,7 +1314,6 @@ func HandleProjectUpdate(data ProjectUpdateData, c *fiber.Ctx, db *db.Database) 
 		Description:             data.Description,
 		Priority:                data.Priority,
 		Tags:                    data.Tags,
-		Notes:                   notes,
 	})
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{

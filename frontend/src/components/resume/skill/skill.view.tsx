@@ -3,6 +3,7 @@ import { api } from "@utils/api";
 import { AxiosError } from "axios";
 import { createSignal, For, Show } from "solid-js";
 import { createStore } from "solid-js/store";
+import { AddNote, NoteList } from "../notes.util";
 
 interface SkillViewProps {
 	skill: Skill;
@@ -62,6 +63,8 @@ export function SkillView(props: SkillViewProps) {
 					Delete
 				</button>
 			</div>
+			<NoteList notes={props.skill.notes} />
+			<AddNote id={props.skill.skill_id} section_type="skill" />
 		</article>
 	);
 }
@@ -184,9 +187,10 @@ export function SkillForm(props: SkillFormProps) {
 						class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-gray-500"
 					>
 						<option value="">Select Level</option>
-						<option value="Beginner">Beginner</option>
-						<option value="Intermediate">Intermediate</option>
-						<option value="Advanced">Advanced</option>
+						<option value="beginner">Beginner</option>
+						<option value="amateur">Amateur</option>
+						<option value="competent">Competent</option>
+						<option value="proficient">Proficient</option>
 						<option value="Expert">Expert</option>
 					</select>
 				</div>
