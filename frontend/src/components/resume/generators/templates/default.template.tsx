@@ -102,7 +102,7 @@ export function ExecutiveTemplate(props: TemplateProps) {
 			<Show
 				when={
 					settings.show_sections.experience &&
-					props.data.experiences.length > 0
+					props.data.resume_data.experiences.length > 0
 				}
 			>
 				<section class="mb-6">
@@ -114,7 +114,7 @@ export function ExecutiveTemplate(props: TemplateProps) {
 					>
 						Professional Experience
 					</h2>
-					<For each={props.data.experiences}>
+					<For each={props.data.resume_data.experiences}>
 						{(experience) => (
 							<div class="mb-4">
 								<div class="flex justify-between items-baseline">
@@ -161,7 +161,7 @@ export function ExecutiveTemplate(props: TemplateProps) {
 			<Show
 				when={
 					settings.show_sections.education &&
-					props.data.educations.length > 0
+					props.data.resume_data.educations.length > 0
 				}
 			>
 				<section class="mb-6">
@@ -173,7 +173,7 @@ export function ExecutiveTemplate(props: TemplateProps) {
 					>
 						Education
 					</h2>
-					<For each={props.data.educations}>
+					<For each={props.data.resume_data.educations}>
 						{(education) => (
 							<div class="mb-4">
 								<div class="flex justify-between items-baseline">
@@ -221,7 +221,7 @@ export function ExecutiveTemplate(props: TemplateProps) {
 			<Show
 				when={
 					settings.show_sections.skills &&
-					props.data.skills.length > 0
+					props.data.resume_data.skills.length > 0
 				}
 			>
 				<section class="mb-6">
@@ -234,8 +234,8 @@ export function ExecutiveTemplate(props: TemplateProps) {
 						Skills & Expertise
 					</h2>
 					<div class="grid grid-cols-1 gap-4">
-						<For each={groupSkillsByType(props.data.skills)}>
-							{([type, skills]) => (
+						<For each={props.data.resume_data.skills}>
+							{(skill) => (
 								<div>
 									<h3
 										class="font-bold mb-2"
@@ -245,7 +245,7 @@ export function ExecutiveTemplate(props: TemplateProps) {
 													.subsection_title,
 										}}
 									>
-										{type}
+										{skill.skill_name}
 									</h3>
 									<p
 										style={{
@@ -253,9 +253,7 @@ export function ExecutiveTemplate(props: TemplateProps) {
 												settings.font_size.body,
 										}}
 									>
-										{skills
-											.map((s) => s.skill_name)
-											.join(" • ")}
+										{skill.description}
 									</p>
 								</div>
 							)}
@@ -268,7 +266,7 @@ export function ExecutiveTemplate(props: TemplateProps) {
 			<Show
 				when={
 					settings.show_sections.projects &&
-					props.data.projects.length > 0
+					props.data.resume_data.projects.length > 0
 				}
 			>
 				<section class="mb-6">
@@ -280,7 +278,7 @@ export function ExecutiveTemplate(props: TemplateProps) {
 					>
 						Notable Projects
 					</h2>
-					<For each={props.data.projects}>
+					<For each={props.data.resume_data.projects}>
 						{(project) => (
 							<div class="mb-4">
 								<div class="flex justify-between items-baseline">
@@ -331,7 +329,7 @@ export function ExecutiveTemplate(props: TemplateProps) {
 			<Show
 				when={
 					settings.show_sections.certificates &&
-					props.data.certificates.length > 0
+					props.data.resume_data.certificates.length > 0
 				}
 			>
 				<section class="mb-6">
@@ -343,7 +341,7 @@ export function ExecutiveTemplate(props: TemplateProps) {
 					>
 						Certifications
 					</h2>
-					<For each={props.data.certificates}>
+					<For each={props.data.resume_data.certificates}>
 						{(certificate) => (
 							<div class="mb-4">
 								<div class="flex justify-between items-baseline">

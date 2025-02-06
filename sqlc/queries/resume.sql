@@ -15,9 +15,7 @@ INSERT INTO public.experiences (
     is_current,
     description,
     priority,
-    is_visible,
     tags,
-    notes,
     metadata
 ) VALUES (
     @user_id::uuid,
@@ -29,9 +27,7 @@ INSERT INTO public.experiences (
     @is_current::boolean,
     @description::text,
     @priority::integer,
-    @is_visible::boolean,
     COALESCE(@tags::text[], ARRAY[]::text[]),
-    COALESCE(@notes::jsonb[], ARRAY[]::jsonb[]),
     COALESCE(@metadata::jsonb, '{}'::jsonb)
 )
 RETURNING experience_id;
@@ -50,9 +46,7 @@ SET
     END,
     description = COALESCE(@description::text, description),
     priority = COALESCE(@priority::integer, priority),
-    is_visible = COALESCE(@is_visible::boolean, priority),
     tags = COALESCE(@tags::text[], tags),
-    notes = COALESCE(@notes::jsonb[], notes),
     metadata = COALESCE(@metadata::jsonb, metadata)
 WHERE 
     experience_id = @experience_id::bigint 
@@ -77,7 +71,17 @@ SELECT
     priority,
     description,
     tags,
-    notes
+    (
+        SELECT array_agg(json_build_object(
+                'note_id', note_id,
+                'note_type', note_type,
+                'content', content,
+                'created_at', created_at,
+                'updated_at', updated_at
+            ) ORDER BY created_at DESC)
+        FROM public.experience_notes
+        WHERE experience_notes.experience_id = experiences.experience_id
+    ) as notes
 FROM public.experiences
 WHERE user_id = @user_id::uuid
 ORDER BY 
@@ -98,7 +102,17 @@ SELECT
     priority,
     is_visible,
     tags,
-    notes,
+    (
+        SELECT array_agg(json_build_object(
+                'note_id', note_id,
+                'note_type', note_type,
+                'content', content,
+                'created_at', created_at,
+                'updated_at', updated_at
+            ) ORDER BY created_at DESC)
+        FROM public.experience_notes
+        WHERE experience_notes.experience_id = experiences.experience_id
+    ) as notes,
     metadata,
     created_at,
     updated_at
@@ -176,9 +190,7 @@ INSERT INTO public.educations (
     is_current,
     description,
     priority,
-    is_visible,
     tags,
-    notes,
     metadata
 ) VALUES (
     @user_id::uuid,
@@ -190,9 +202,7 @@ INSERT INTO public.educations (
     @is_current::boolean,
     @description::text,
     @priority::integer,
-    @is_visible::boolean,
     COALESCE(@tags::text[], ARRAY[]::text[]),
-    COALESCE(@notes::jsonb[], ARRAY[]::jsonb[]),
     COALESCE(@metadata::jsonb, '{}'::jsonb)
 )
 RETURNING education_id;
@@ -211,9 +221,7 @@ SET
     END,
     description = COALESCE(@description::text, description),
     priority = COALESCE(@priority::integer, priority),
-    is_visible = COALESCE(@is_visible::boolean, priority),
     tags = COALESCE(@tags::text[], tags),
-    notes = COALESCE(@notes::jsonb[], notes),
     metadata = COALESCE(@metadata::jsonb, metadata)
 WHERE 
     education_id = @education_id::bigint 
@@ -238,7 +246,17 @@ SELECT
     is_visible,
     description,
     tags,
-    notes
+    (
+        SELECT array_agg(json_build_object(
+                'note_id', note_id,
+                'note_type', note_type,
+                'content', content,
+                'created_at', created_at,
+                'updated_at', updated_at
+            ) ORDER BY created_at DESC)
+        FROM public.education_notes
+        WHERE education_notes.education_id = educations.education_id
+    ) as notes
 FROM public.educations
 WHERE user_id = @user_id::uuid
 ORDER BY 
@@ -259,7 +277,17 @@ SELECT
     priority,
     is_visible,
     tags,
-    notes,
+    (
+        SELECT array_agg(json_build_object(
+                'note_id', note_id,
+                'note_type', note_type,
+                'content', content,
+                'created_at', created_at,
+                'updated_at', updated_at
+            ) ORDER BY created_at DESC)
+        FROM public.education_notes
+        WHERE education_notes.education_id = educations.education_id
+    ) as notes,
     metadata,
     created_at,
     updated_at
@@ -333,20 +361,16 @@ INSERT INTO public.skills (
     optional_skill_level,
     description,
     priority,
-    is_visible,
     tags,
-    notes,
     metadata
 ) VALUES (
     @user_id::uuid,
     @skill_name::text,
-    @optional_skill_type::skill_type,
+    @optional_skill_type::text,
     @optional_skill_level::skill_level,
     @description::text,
     @priority::integer,
-    @is_visible::boolean,
     COALESCE(@tags::text[], ARRAY[]::text[]),
-    COALESCE(@notes::jsonb[], ARRAY[]::jsonb[]),
     COALESCE(@metadata::jsonb, '{}'::jsonb)
 )
 RETURNING skill_id;
@@ -359,9 +383,7 @@ SET
     optional_skill_level = COALESCE(@optional_skill_level::skill_level, optional_skill_level),
     description = COALESCE(@description::text, description),
     priority = COALESCE(@priority::integer, priority),
-    is_visible = COALESCE(@is_visible::boolean, priority),
     tags = COALESCE(@tags::text[], tags),
-    notes = COALESCE(@notes::jsonb[], notes),
     metadata = COALESCE(@metadata::jsonb, metadata)
 WHERE 
     skill_id = @skill_id::bigint 
@@ -378,12 +400,22 @@ SELECT
     skill_id,
     skill_name,
     optional_skill_type,
-    optional_skill_level,
+    COALESCE(optional_skill_level, 'amateur'),
     description,
     priority,
     is_visible,
     tags,
-    notes
+    (
+        SELECT array_agg(json_build_object(
+                'note_id', note_id,
+                'note_type', note_type,
+                'content', content,
+                'created_at', created_at,
+                'updated_at', updated_at
+            ) ORDER BY created_at DESC)
+        FROM public.skill_notes
+        WHERE skill_notes.skill_id = skills.skill_id
+    ) as notes
 FROM public.skills
 WHERE user_id = @user_id::uuid
 ORDER BY 
@@ -395,12 +427,22 @@ SELECT
     skill_id,
     skill_name,
     optional_skill_type,
-    optional_skill_level,
+    COALESCE(optional_skill_level, 'amateur'),
     description,
     priority,
     is_visible,
     tags,
-    notes,
+    (
+        SELECT array_agg(json_build_object(
+                'note_id', note_id,
+                'note_type', note_type,
+                'content', content,
+                'created_at', created_at,
+                'updated_at', updated_at
+            ) ORDER BY created_at DESC)
+        FROM public.skill_notes
+        WHERE skill_notes.skill_id = skills.skill_id
+    ) as notes,
     metadata,
     created_at,
     updated_at
@@ -475,9 +517,7 @@ INSERT INTO public.certificates (
     optional_granted_date,
     description,
     priority,
-    is_visible,
     tags,
-    notes,
     metadata
 ) VALUES (
     @user_id::uuid,
@@ -487,9 +527,7 @@ INSERT INTO public.certificates (
     @optional_granted_date::date,
     @description::text,
     @priority::integer,
-    @is_visible::boolean,
     COALESCE(@tags::text[], ARRAY[]::text[]),
-    COALESCE(@notes::jsonb[], ARRAY[]::jsonb[]),
     COALESCE(@metadata::jsonb, '{}'::jsonb)
 )
 RETURNING certificate_id;
@@ -503,9 +541,7 @@ SET
     optional_granted_date = COALESCE(@optional_granted_date::date, optional_granted_date),
     description = COALESCE(@description::text, description),
     priority = COALESCE(@priority::integer, priority),
-    is_visible = COALESCE(@is_visible::boolean, priority),
     tags = COALESCE(@tags::text[], tags),
-    notes = COALESCE(@notes::jsonb[], notes),
     metadata = COALESCE(@metadata::jsonb, metadata)
 WHERE 
     certificate_id = @certificate_id::bigint 
@@ -528,7 +564,18 @@ SELECT
     priority,
     is_visible,
     tags,
-    notes
+
+    (
+        SELECT array_agg(json_build_object(
+                'note_id', note_id,
+                'note_type', note_type,
+                'content', content,
+                'created_at', created_at,
+                'updated_at', updated_at
+            ) ORDER BY created_at DESC)
+        FROM public.certificate_notes
+        WHERE certificate_notes.certificate_id = certificates.certificate_id
+    ) as notes
 FROM public.certificates
 WHERE user_id = @user_id::uuid
 ORDER BY 
@@ -547,7 +594,17 @@ SELECT
     priority,
     is_visible,
     tags,
-    notes,
+    (
+        SELECT array_agg(json_build_object(
+                'note_id', note_id,
+                'note_type', note_type,
+                'content', content,
+                'created_at', created_at,
+                'updated_at', updated_at
+            ) ORDER BY created_at DESC)
+        FROM public.certificate_notes
+        WHERE certificate_notes.certificate_id = certificates.certificate_id
+    ) as notes,
     metadata,
     created_at,
     updated_at
@@ -623,9 +680,7 @@ INSERT INTO public.projects (
     is_current,
     description,
     priority,
-    is_visible,
     tags,
-    notes,
     metadata
 ) VALUES (
     @user_id::uuid,
@@ -636,9 +691,7 @@ INSERT INTO public.projects (
     @is_current::boolean,
     @description::text,
     @priority::integer,
-    @is_visible::boolean,
     COALESCE(@tags::text[], ARRAY[]::text[]),
-    COALESCE(@notes::jsonb[], ARRAY[]::jsonb[]),
     COALESCE(@metadata::jsonb, '{}'::jsonb)
 )
 RETURNING project_id;
@@ -656,9 +709,7 @@ SET
     END,
     description = COALESCE(@description::text, description),
     priority = COALESCE(@priority::integer, priority),
-    is_visible = COALESCE(@is_visible::boolean, priority),
     tags = COALESCE(@tags::text[], tags),
-    notes = COALESCE(@notes::jsonb[], notes),
     metadata = COALESCE(@metadata::jsonb, metadata)
 WHERE 
     project_id = @project_id::bigint 
@@ -682,7 +733,18 @@ SELECT
     priority,
     is_visible,
     tags,
-    notes
+
+    (
+        SELECT array_agg(json_build_object(
+                'note_id', note_id,
+                'note_type', note_type,
+                'content', content,
+                'created_at', created_at,
+                'updated_at', updated_at
+            ) ORDER BY created_at DESC)
+        FROM public.project_notes
+        WHERE project_notes.project_id = projects.project_id
+    ) as notes
 FROM public.projects
 WHERE user_id = @user_id::uuid
 ORDER BY 
@@ -703,7 +765,17 @@ SELECT
     priority,
     is_visible,
     tags,
-    notes,
+    (
+        SELECT array_agg(json_build_object(
+                'note_id', note_id,
+                'note_type', note_type,
+                'content', content,
+                'created_at', created_at,
+                'updated_at', updated_at
+            ) ORDER BY created_at DESC)
+        FROM public.project_notes
+        WHERE project_notes.project_id = projects.project_id
+    ) as notes,
     metadata,
     created_at,
     updated_at
@@ -764,3 +836,320 @@ UPDATE public.projects
 SET priority = (SELECT after_priority FROM target) 
 WHERE project_id = @project_id::bigint
 AND user_id = @user_id::uuid;
+
+-- name: GetResumeData :one
+WITH resume_data AS (
+    -- Experiences
+    SELECT 
+        'experiences' as type,
+        jsonb_build_object(
+            'experience_id', e.experience_id,
+            'company_name', e.company_name,
+            'job_title', e.job_title,
+            'location', e.location,
+            'start_date', e.start_date,
+            'optional_end_date', e.optional_end_date,
+            'is_current', e.is_current,
+            'description', e.description,
+            'priority', e.priority,
+            'is_visible', e.is_visible,
+            'tags', e.tags,
+            'notes', COALESCE((
+                SELECT array_agg(json_build_object(
+                    'note_id', note_id,
+                    'note_type', note_type,
+                    'content', content,
+                    'created_at', created_at,
+                    'updated_at', updated_at
+                ) ORDER BY created_at DESC)
+                FROM public.experience_notes
+                WHERE experience_notes.experience_id = e.experience_id
+            ), '{}')
+        ) as data
+    FROM experiences e
+    WHERE e.user_id = @user_id::uuid 
+    AND e.is_visible = true
+
+    UNION ALL
+
+    -- Educations
+    SELECT 
+        'educations' as type,
+        jsonb_build_object(
+            'education_id', ed.education_id,
+            'school', ed.school,
+            'degree', ed.degree,
+            'location', ed.location,
+            'start_date', ed.start_date,
+            'optional_end_date', ed.optional_end_date,
+            'is_current', ed.is_current,
+            'description', ed.description,
+            'priority', ed.priority,
+            'is_visible', ed.is_visible,
+            'tags', ed.tags,
+            'notes', COALESCE((
+                SELECT array_agg(json_build_object(
+                    'note_id', note_id,
+                    'note_type', note_type,
+                    'content', content,
+                    'created_at', created_at,
+                    'updated_at', updated_at
+                ) ORDER BY created_at DESC)
+                FROM public.education_notes
+                WHERE education_notes.education_id = ed.education_id
+            ), '{}')
+        ) as data
+    FROM educations ed
+    WHERE ed.user_id = @user_id::uuid 
+    AND ed.is_visible = true
+
+    UNION ALL
+
+    -- Skills
+    SELECT 
+        'skills' as type,
+        jsonb_build_object(
+            'skill_id', s.skill_id,
+            'skill_name', s.skill_name,
+            'optional_skill_type', s.optional_skill_type,
+            'optional_skill_level', s.optional_skill_level,
+            'description', s.description,
+            'priority', s.priority,
+            'is_visible', s.is_visible,
+            'tags', s.tags,
+            'notes', COALESCE((
+                SELECT array_agg(json_build_object(
+                    'note_id', note_id,
+                    'note_type', note_type,
+                    'content', content,
+                    'created_at', created_at,
+                    'updated_at', updated_at
+                ) ORDER BY created_at DESC)
+                FROM public.skill_notes
+                WHERE skill_notes.skill_id = s.skill_id
+            ), '{}')
+        ) as data
+    FROM skills s
+    WHERE s.user_id = @user_id::uuid 
+    AND s.is_visible = true
+
+    UNION ALL
+
+    -- Certificates
+    SELECT 
+        'certificates' as type,
+        jsonb_build_object(
+            'certificate_id', c.certificate_id,
+            'certificate_name', c.certificate_name,
+            'optional_issuer', c.optional_issuer,
+            'optional_location', c.optional_location,
+            'optional_granted_date', c.optional_granted_date,
+            'description', c.description,
+            'priority', c.priority,
+            'is_visible', c.is_visible,
+            'tags', c.tags,
+            'notes', COALESCE((
+                SELECT array_agg(json_build_object(
+                    'note_id', note_id,
+                    'note_type', note_type,
+                    'content', content,
+                    'created_at', created_at,
+                    'updated_at', updated_at
+                ) ORDER BY created_at DESC)
+                FROM public.certificate_notes
+                WHERE certificate_notes.certificate_id = c.certificate_id
+            ), '{}')
+        ) as data
+    FROM certificates c
+    WHERE c.user_id = @user_id::uuid 
+    AND c.is_visible = true
+
+    UNION ALL
+
+    -- Projects
+    SELECT 
+        'projects' as type,
+        jsonb_build_object(
+            'project_id', p.project_id,
+            'project_title', p.project_title,
+            'optional_project_subtitle', p.optional_project_subtitle,
+            'optional_start_date', p.optional_start_date,
+            'optional_end_date', p.optional_end_date,
+            'is_current', p.is_current,
+            'description', p.description,
+            'priority', p.priority,
+            'is_visible', p.is_visible,
+            'tags', p.tags,
+            'notes', COALESCE((
+                SELECT array_agg(json_build_object(
+                    'note_id', note_id,
+                    'note_type', note_type,
+                    'content', content,
+                    'created_at', created_at,
+                    'updated_at', updated_at
+                ) ORDER BY created_at DESC)
+                FROM public.project_notes
+                WHERE project_notes.project_id = p.project_id
+            ), '{}')
+        ) as data
+    FROM projects p
+    WHERE p.user_id = @user_id::uuid 
+    AND p.is_visible = true
+)
+SELECT 
+    (SELECT jsonb_build_object(
+        'experiences', COALESCE(jsonb_agg(data ORDER BY (data->>'priority')::int) FILTER (WHERE type = 'experiences'), '[]'),
+        'educations', COALESCE(jsonb_agg(data ORDER BY (data->>'priority')::int) FILTER (WHERE type = 'educations'), '[]'),
+        'skills', COALESCE(jsonb_agg(data ORDER BY (data->>'priority')::int) FILTER (WHERE type = 'skills'), '[]'),
+        'certificates', COALESCE(jsonb_agg(data ORDER BY (data->>'priority')::int) FILTER (WHERE type = 'certificates'), '[]'),
+        'projects', COALESCE(jsonb_agg(data ORDER BY (data->>'priority')::int) FILTER (WHERE type = 'projects'), '[]')
+    ) FROM resume_data) as resume_data;
+
+
+-- name: CreateNoteOnExperience :exec
+INSERT INTO public.experience_notes (
+    note_type,
+    content,
+    experience_id,
+    user_id
+) VALUES (
+    @note_type::text,
+    @content::text,
+    @experience_id::bigint,
+    @user_id::uuid
+);
+
+-- name: UpdateNoteOnExperience :exec
+UPDATE public.experience_notes 
+SET
+    note_type = COALESCE(@note_type::text, note_type),
+    content = COALESCE(@content::text, content)
+WHERE
+    note_id = @note_id::bigint
+    AND experience_id = @experience_id::bigint 
+    AND user_id = @user_id::uuid;
+
+-- name: DeleteNoteOnExperience :exec
+DELETE FROM public.experience_notes
+WHERE 
+    note_id = @note_id::bigint
+    AND experience_id = @experience_id::bigint 
+    AND user_id = @user_id::uuid;
+
+-- name: CreateNoteOnCertificate :exec
+INSERT INTO public.certificate_notes (
+    note_type,
+    content,
+    certificate_id,
+    user_id
+) VALUES (
+    @note_type::text,
+    @content::text,
+    @certificate_id::bigint,
+    @user_id::uuid
+);
+
+-- name: UpdateNoteOnCertificate :exec
+UPDATE public.certificate_notes 
+SET
+    note_type = COALESCE(@note_type::text, note_type),
+    content = COALESCE(@content::text, content)
+WHERE
+    note_id = @note_id::bigint
+    AND certificate_id = @certificate_id::bigint 
+    AND user_id = @user_id::uuid;
+
+-- name: DeleteNoteOnCertificate :exec
+DELETE FROM public.certificate_notes
+WHERE 
+    note_id = @note_id::bigint
+    AND certificate_id = @certificate_id::bigint 
+    AND user_id = @user_id::uuid;
+
+-- name: CreateNoteOnSkill :exec
+INSERT INTO public.skill_notes (
+    note_type,
+    content,
+    skill_id,
+    user_id
+) VALUES (
+    @note_type::text,
+    @content::text,
+    @skill_id::bigint,
+    @user_id::uuid
+);
+
+-- name: UpdateNoteOnSkill :exec
+UPDATE public.skill_notes 
+SET
+    note_type = COALESCE(@note_type::text, note_type),
+    content = COALESCE(@content::text, content)
+WHERE
+    note_id = @note_id::bigint
+    AND skill_id = @skill_id::bigint 
+    AND user_id = @user_id::uuid;
+
+-- name: DeleteNoteOnSkill :exec
+DELETE FROM public.skill_notes
+WHERE 
+    note_id = @note_id::bigint
+    AND skill_id = @skill_id::bigint 
+    AND user_id = @user_id::uuid;
+
+-- name: CreateNoteOnProject :exec
+INSERT INTO public.project_notes (
+    note_type,
+    content,
+    project_id,
+    user_id
+) VALUES (
+    @note_type::text,
+    @content::text,
+    @project_id::bigint,
+    @user_id::uuid
+);
+-- name: UpdateNoteOnProject :exec
+UPDATE public.project_notes 
+SET
+    note_type = COALESCE(@note_type::text, note_type),
+    content = COALESCE(@content::text, content)
+WHERE
+    note_id = @note_id::bigint
+    AND project_id = @project_id::bigint 
+    AND user_id = @user_id::uuid;
+
+-- name: DeleteNoteOnProject :exec
+DELETE FROM public.project_notes
+WHERE 
+    note_id = @note_id::bigint
+    AND project_id = @project_id::bigint 
+    AND user_id = @user_id::uuid;
+
+-- name: CreateNoteOnEducation :exec
+INSERT INTO public.education_notes (
+    note_type,
+    content,
+    education_id,
+    user_id
+) VALUES (
+    @note_type::text,
+    @content::text,
+    @education_id::bigint,
+    @user_id::uuid
+);
+-- name: UpdateNoteOnEducation :exec
+UPDATE public.education_notes 
+SET
+    note_type = COALESCE(@note_type::text, note_type),
+    content = COALESCE(@content::text, content)
+WHERE
+    note_id = @note_id::bigint
+    AND education_id = @education_id::bigint 
+    AND user_id = @user_id::uuid;
+
+-- name: DeleteNoteOnEducation :exec
+DELETE FROM public.Education_notes
+WHERE 
+    note_id = @note_id::bigint
+    AND education_id = @education_id::bigint 
+    AND user_id = @user_id::uuid;

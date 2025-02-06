@@ -10,11 +10,7 @@ export interface ContactInfo {
 export interface TemplateData {
 	contact: ContactInfo;
 	professional_summary?: string;
-	experiences: Experience[];
-	educations: Education[];
-	skills: Skill[];
-	certificates: Certificate[];
-	projects: Project[];
+	resume_data: ResumeData;
 }
 
 // Optional settings for template customization

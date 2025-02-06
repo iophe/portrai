@@ -3,6 +3,7 @@ import { api } from "@utils/api";
 import { AxiosError } from "axios";
 import { createSignal, For, Show } from "solid-js";
 import { createStore } from "solid-js/store";
+import { AddNote, NoteList } from "../notes.util";
 
 interface ProjectViewProps {
 	project: Project;
@@ -82,7 +83,9 @@ export function ProjectView(props: ProjectViewProps) {
 				>
 					Delete
 				</button>
-			</div>
+			</div>{" "}
+			<NoteList notes={props.project.notes} />
+			<AddNote id={props.project.project_id} section_type="project" />
 		</article>
 	);
 }

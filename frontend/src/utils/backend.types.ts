@@ -9,6 +9,7 @@ interface Experience {
 	is_current: boolean;
 	description: string;
 	priority: number;
+	is_visible: boolean;
 	tags: string[];
 	notes: Record<string, any>[];
 }
@@ -23,6 +24,7 @@ interface Education {
 	is_current: boolean;
 	description: string;
 	priority: number;
+	is_visible: boolean;
 	tags: string[];
 	notes: Record<string, any>[];
 }
@@ -34,6 +36,7 @@ interface Skill {
 	optional_skill_level: string;
 	description: string;
 	priority: number;
+	is_visible: boolean;
 	tags: string[];
 	notes: Record<string, any>[];
 }
@@ -46,6 +49,7 @@ interface Certificate {
 	optional_granted_date: string;
 	description: string;
 	priority: number;
+	is_visible: boolean;
 	tags: string[];
 	notes: Record<string, any>[];
 }
@@ -59,10 +63,18 @@ interface Project {
 	is_current: boolean;
 	description: string;
 	priority: number;
+	is_visible: boolean;
 	tags: string[];
 	notes: Record<string, any>[];
 }
 
+interface ResumeData {
+	experiences: Experience[];
+	educations: Education[];
+	skills: Skill[];
+	certificates: Certificate[];
+	projects: Project[];
+}
 // Response interfaces for single items
 interface ExperienceResponse {
 	experience: Experience;
