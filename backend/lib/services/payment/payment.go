@@ -26,7 +26,7 @@ func CreateCheckoutSession(price_id string, customer_id string) (string, error) 
 	stripe.Key = utils.STRIPE_SECRET_KEY
 
 	params := &stripe.CheckoutSessionParams{
-		Mode: stripe.String(string(stripe.CheckoutSessionModeSubscription)),
+		Mode: stripe.String(string(stripe.CheckoutSessionModePayment)),
 		LineItems: []*stripe.CheckoutSessionLineItemParams{
 			{
 				Price:    stripe.String(price_id),
