@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stripe/stripe-go/v81"
 	"github.com/stripe/stripe-go/v81/webhook"
@@ -161,7 +162,7 @@ func HandleWebhook(c *fiber.Ctx, DB *db.Database) error {
 
 	switch event.Type {
 	case "checkout.session.completed":
-		if err := handleCheckoutSessionCompleted(queryCtx, queries, event); err != nil {
+		if err := handleCheckoutSessionCompleted(c, queries, event); err != nil {
 			slog.Error("Error handling completed checkout", "err", err)
 			return c.Status(fiber.StatusInternalServerError).Send([]byte(err.Error()))
 		}
@@ -176,7 +177,7 @@ func HandleWebhook(c *fiber.Ctx, DB *db.Database) error {
 	return c.SendString("Webhook processed successfully")
 }
 
-func handleCheckoutSessionCompleted(ctx context.Context, queries *sqlc_gen.Queries, event stripe.Event) error {
+func handleCheckoutSessionCompleted(ctx *fiber.Ctx, queries *sqlc_gen.Queries, event stripe.Event) error {
 	var session stripe.CheckoutSession
 	if err := json.Unmarshal(event.Data.Raw, &session); err != nil {
 		slog.Error("Failed to unmarshal session",
@@ -204,7 +205,9 @@ func handleCheckoutSessionCompleted(ctx context.Context, queries *sqlc_gen.Queri
 	}
 
 	// Get customer UUID
-	customer, err := queries.GetCustomerByStripeID(ctx, session.Customer.ID)
+
+	c := ctx.Context()
+	customer, err := queries.GetCustomerByStripeID(c, session.Customer.ID)
 	if err != nil {
 		return fmt.Errorf("error getting customer: %w", err)
 	}
@@ -219,7 +222,8 @@ func handleCheckoutSessionCompleted(ctx context.Context, queries *sqlc_gen.Queri
 	}
 
 	// Upsert payment record
-	err = queries.UpsertPayment(ctx, sqlc_gen.UpsertPaymentParams{
+
+	err = queries.UpsertPayment(c, sqlc_gen.UpsertPaymentParams{
 		PaymentID: session.PaymentIntent.ID, // Changed from session.PaymentIntent.ID
 		UserID:    customer.ID,
 		Status:    sqlc_gen.PaymentStatusCompleted,
@@ -313,4 +317,58 @@ func handlePaymentFailure(ctx context.Context, queries *sqlc_gen.Queries, event 
 	}
 
 	return nil
+}
+
+func HandlePaymentSuccess(c *fiber.Ctx, DB *db.Database) error {
+	// Récupérer l'utilisateur depuis le contexte (mis par votre middleware d'auth)
+
+	// Créer le token de paiement avec l'ID de l'utilisateur
+	paymentToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"paid": true,
+		"exp":  time.Now().Add(time.Hour * 24 * 365).Unix(), // expire dans 1 an
+	})
+
+	signedToken, err := paymentToken.SignedString([]byte(utils.JWT_SECRET))
+	if err != nil {
+		return fmt.Errorf("error signing payment token: %w", err)
+	}
+
+	// Définir le cookie
+	cookie := fiber.Cookie{
+		Name:     "payment_status",
+		Value:    signedToken,
+		Path:     "/",
+		HTTPOnly: true,
+		Secure:   true,
+		SameSite: "Strict",
+		MaxAge:   60 * 60 * 24 * 365, // 1 an
+	}
+	c.Cookie(&cookie)
+
+	return nil
+}
+
+func HandleCheckPaymentSatus(c *fiber.Ctx, DB *db.Database) error {
+
+	paymentCookie := c.Cookies("payment_status")
+	if paymentCookie == "" {
+		return c.JSON(fiber.Map{
+			"paid": false,
+		})
+	}
+
+	// Vérifier le JWT
+	token, err := jwt.Parse(paymentCookie, func(token *jwt.Token) (interface{}, error) {
+		return []byte(utils.JWT_SECRET), nil
+	})
+
+	if err != nil || !token.Valid {
+		return c.JSON(fiber.Map{
+			"paid": false,
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"paid": true,
+	})
 }

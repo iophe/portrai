@@ -1,4 +1,4 @@
-import { createSignal, For, Match, Show, Switch } from "solid-js";
+import { createEffect, createResource, createSignal, For, Match, Show, Switch } from "solid-js";
 import Header from "../../components/header.default";
 import { api } from "@utils/api";
 import { AxiosError } from "axios";
@@ -56,6 +56,13 @@ function Pricing(props: PricingProps) {
 	const [loading, setLoading] = createSignal<string | null>(null);
 	const [error, setError] = createSignal<string | null>(null);
 
+	// Vérifier le statut du paiement
+	const [paymentStatus] = createResource(async () => {
+		const response = await api.get('/payment/check-payment-status');
+		return response.data.paid;
+	});
+
+
 	const handleSubscribe = async (plan_type: string, price_id: string) => {
 		try {
 			setLoading(plan_type);
@@ -84,7 +91,23 @@ function Pricing(props: PricingProps) {
 	};
 
 	return (
-		<main class="p-4 flex flex-col gap-4 bg-gray-50 min-h-screen">
+
+		<Show
+            when={!paymentStatus}
+            fallback={
+				<>  
+				<Header/>
+				<main>
+				<div class="text-center p-8">
+				<h2 class="text-2xl font-bold">You already have an active subscription</h2>
+				<p class="mt-4">Thank you for being a subscriber!</p>
+			</div>
+			</main>
+			</>	
+              
+            }
+        >
+            <main class="p-4 flex flex-col gap-4 bg-gray-50 min-h-screen">
 			<Header />
 			<section class="flex flex-col gap-4 grow justify-center md:items-center text-gray-900">
 				<article class="max-w-7xl mx-auto">
@@ -242,6 +265,8 @@ function Pricing(props: PricingProps) {
 				</article>
 			</section>
 		</main>
+        </Show>
+		
 	);
 }
 

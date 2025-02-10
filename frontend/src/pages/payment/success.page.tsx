@@ -1,18 +1,33 @@
-// SuccessPage.jsx
-import { createEffect } from 'solid-js';
-import { useNavigate } from '@solidjs/router';
+import { createEffect, createResource } from 'solid-js';
+import { useNavigate, useSearchParams } from '@solidjs/router';
+import { api } from '@utils/api';
 
 const SuccessPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
-  createEffect(() => {
-    // Redirect after 3 seconds
-    const timer = setTimeout(() => {
-      navigate('/resume');
-    }, 5000);
 
-    // Cleanup timeout if component unmounts
-    return () => clearTimeout(timer);
+
+  createEffect(async () => {
+    try {
+      // Récupérer le session_id de l'URL
+      const sessionId = searchParams.session_id;
+      
+      // Appeler l'endpoint success
+      await api.post('/payment/success', {
+        session_id: sessionId
+      });
+
+      // Redirection après 5 secondes
+      const timer = setTimeout(() => {
+        navigate('/resume');
+      }, 5000);
+
+      return () => clearTimeout(timer);
+    } catch (error) {
+      console.error('Payment verification failed:', error);
+      navigate('/');
+    }
   });
 
   return (

@@ -15,6 +15,10 @@ func RegisterPaymentRoutes(group fiber.Router) {
 		return handlers.HandleWebhook(c, &db.DB)
 	})
 
+	payment_group.Post("/success", func(c *fiber.Ctx) error {
+		return handlers.HandlePaymentSuccess(c, &db.DB)
+	})
+
 	payment_group.Post("/create-checkout-session",
 		middlewares.Protected(),
 		func(c *fiber.Ctx) error {
@@ -27,5 +31,9 @@ func RegisterPaymentRoutes(group fiber.Router) {
 			return handlers.HandleCreateCheckoutSession(c, data, &db.DB)
 		},
 	)
+
+	payment_group.Get("/check-payment-status", func(c *fiber.Ctx) error {
+		return handlers.HandleCheckPaymentSatus(c, &db.DB)
+	})
 
 }
