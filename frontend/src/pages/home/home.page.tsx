@@ -8,6 +8,9 @@ function Home(props: HomeProps) {
 	const navigate = useNavigate();
 
 	return (
+		<>
+		<Header />
+
 		<main class="p-4 flex flex-col gap-4 bg-gray-50 min-h-screen">
 			<section class="flex flex-col gap-4 grow justify-center md:items-center text-gray-900">
 				<button
@@ -40,6 +43,7 @@ function Home(props: HomeProps) {
 				</button>
 			</section>
 		</main>
+		</>
 	);
 }
 
