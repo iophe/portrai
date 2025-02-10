@@ -158,6 +158,26 @@ func (q *Queries) GetPaymentByID(ctx context.Context, paymentID string) (GetPaym
 	return i, err
 }
 
+const getPriceByAmount = `-- name: GetPriceByAmount :one
+SELECT id 
+FROM payment.prices 
+WHERE unit_amount = $1::int
+AND currency = $2::text
+LIMIT 1
+`
+
+type GetPriceByAmountParams struct {
+	UnitAmount int32  `json:"unit_amount"`
+	Currency   string `json:"currency"`
+}
+
+func (q *Queries) GetPriceByAmount(ctx context.Context, arg GetPriceByAmountParams) (string, error) {
+	row := q.db.QueryRow(ctx, getPriceByAmount, arg.UnitAmount, arg.Currency)
+	var id string
+	err := row.Scan(&id)
+	return id, err
+}
+
 const getPriceByID = `-- name: GetPriceByID :one
 SELECT 
     id,

@@ -44,6 +44,7 @@ type Querier interface {
 	GetExperiencesByUserId(ctx context.Context, userID uuid.UUID) ([]GetExperiencesByUserIdRow, error)
 	GetLatestPaymentByUserID(ctx context.Context, userID uuid.UUID) (GetLatestPaymentByUserIDRow, error)
 	GetPaymentByID(ctx context.Context, paymentID string) (GetPaymentByIDRow, error)
+	GetPriceByAmount(ctx context.Context, arg GetPriceByAmountParams) (string, error)
 	GetPriceByID(ctx context.Context, priceID string) (GetPriceByIDRow, error)
 	GetProjectById(ctx context.Context, arg GetProjectByIdParams) (GetProjectByIdRow, error)
 	GetProjectsByUserId(ctx context.Context, userID uuid.UUID) ([]GetProjectsByUserIdRow, error)

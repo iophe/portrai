@@ -1,4 +1,5 @@
 CREATE SCHEMA IF NOT EXISTS public;
+CREATE SCHEMA IF NOT EXISTS payment;
 
 -- Add triggers for updated_at timestamps
 CREATE OR REPLACE FUNCTION update_updated_at_column()

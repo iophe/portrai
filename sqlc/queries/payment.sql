@@ -9,6 +9,13 @@ SELECT
 FROM payment.prices 
 WHERE id = @price_id::text;
 
+-- name: GetPriceByAmount :one
+SELECT id 
+FROM payment.prices 
+WHERE unit_amount = @unit_amount::int
+AND currency = @currency::text
+LIMIT 1;
+
 -- name: GetCustomerByUserID :one
 SELECT 
     id,
