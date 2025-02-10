@@ -101,111 +101,140 @@ func HandleCreateCheckoutSession(c *fiber.Ctx, data CreateCheckoutData, db *db.D
 	})
 }
 
-// HandleWebhook processes Stripe webhook events
 func HandleWebhook(c *fiber.Ctx, DB *db.Database) error {
 	stripe.Key = utils.STRIPE_SECRET_KEY
 	webhook_secret := utils.STRIPE_WEBHOOK_SECRET
 
-	webhook_payload := c.Body()
-	signature := c.Get("Stripe-Signature")
+	// 1. Debug tous les headers
+	slog.Info("ALL HEADERS:", "headers", c.GetReqHeaders())
 
-	event, err := webhook.ConstructEvent(webhook_payload, signature, webhook_secret)
-	if err != nil {
-		slog.Error("Error verifying webhook signature", "err", err)
-		return c.Status(fiber.StatusBadRequest).Send([]byte("Webhook signature verification failed"))
+	// 2. Vérifier que le body est bien reçu et non altéré
+	payload := c.BodyRaw()
+	slog.Info("Payload received",
+		"size", len(payload),
+		"start", string(payload)[:100],
+	)
+
+	// 3. Vérifier que la bonne clé webhook est utilisée
+	slog.Info("Webhook secret check",
+		"starts_with", webhook_secret[:6],
+		"length", len(webhook_secret),
+	)
+
+	// 4. Rechercher la signature dans différents formats de header
+	sig := c.Get("Stripe-Signature")
+	if sig == "" {
+		sig = c.Get("stripe-signature")
+	}
+	if sig == "" {
+		sig = string(c.Request().Header.Peek("Stripe-Signature"))
 	}
 
+	slog.Info("Signature found", "signature", sig)
+
+	event, err := webhook.ConstructEvent(payload, sig, webhook_secret)
+	if err != nil {
+		slog.Error("Signature verification failed",
+			"error", err,
+			"has_signature", sig != "",
+			"payload_size", len(payload),
+		)
+		return c.Status(fiber.StatusBadRequest).Send([]byte(err.Error()))
+	}
 	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	queries := sqlc_gen.New(DB.Pool)
 
 	switch event.Type {
-	case "customer.subscription.created", "customer.subscription.updated":
-		var subscription_obj stripe.Subscription
-		err := json.Unmarshal(event.Data.Raw, &subscription_obj)
+	case "checkout.session.completed":
+		var session stripe.CheckoutSession
+		err := json.Unmarshal(event.Data.Raw, &session)
 		if err != nil {
+			slog.Error("Error parsing webhook payload", "err", err)
 			return c.Status(fiber.StatusBadRequest).Send([]byte("Error parsing webhook payload"))
 		}
 
-		customer, err := queries.GetCustomerByStripeID(query_ctx, subscription_obj.Customer.ID)
+		// Récupérer le customer pour avoir son UUID
+		customer, err := queries.GetCustomerByStripeID(query_ctx, session.Customer.ID)
 		if err != nil {
 			slog.Error("Error getting customer", "err", err)
-			return c.Status(fiber.StatusInternalServerError).Send([]byte("Error processing webhook"))
+			return c.Status(fiber.StatusInternalServerError).Send([]byte("Error getting customer"))
 		}
 
-		err = queries.UpsertSubscription(query_ctx, sqlc_gen.UpsertSubscriptionParams{
-			SubscriptionID:     subscription_obj.ID,
-			UserID:             customer.ID,
-			Status:             sqlc_gen.SubscriptionStatus(subscription_obj.Status),
-			PriceID:            subscription_obj.Items.Data[0].Price.ID,
-			Quantity:           int32(subscription_obj.Items.Data[0].Quantity),
-			CancelAtPeriodEnd:  subscription_obj.CancelAtPeriodEnd,
-			CurrentPeriodStart: db.Int64ToTimestamptz(subscription_obj.CurrentPeriodStart),
-			CurrentPeriodEnd:   db.Int64ToTimestamptz(subscription_obj.CurrentPeriodEnd),
-			CreatedAt:          db.Int64ToTimestamptz(subscription_obj.Created),
-			EndedAt:            db.Int64ToTimestamptz(subscription_obj.EndedAt),
-			CancelAt:           db.Int64ToTimestamptz(subscription_obj.CancelAt),
-			CanceledAt:         db.Int64ToTimestamptz(subscription_obj.CanceledAt),
-			TrialStart:         db.Int64ToTimestamptz(subscription_obj.TrialStart),
-			TrialEnd:           db.Int64ToTimestamptz(subscription_obj.TrialEnd),
+		metadata := map[string]interface{}{
+			"checkout_session_id": session.ID,
+		}
+		metadataJSON, err := json.Marshal(metadata)
+		if err != nil {
+			slog.Error("Error marshaling metadata", "err", err)
+			return c.Status(fiber.StatusInternalServerError).Send([]byte("Error processing metadata"))
+		}
+
+		err = queries.UpsertPayment(query_ctx, sqlc_gen.UpsertPaymentParams{
+			PaymentID: session.PaymentIntent.ID,
+			UserID:    customer.ID, // Utilisation de l'UUID du customer
+			Status:    sqlc_gen.PaymentStatusCompleted,
+			PriceID:   session.LineItems.Data[0].Price.ID,
+			Amount:    int32(session.AmountTotal),
+			Currency:  string(session.Currency),
+			Metadata:  metadataJSON,
+			CreatedAt: db.Int64ToTimestamptz(session.Created),
+			UpdatedAt: db.Int64ToTimestamptz(time.Now().Unix()),
 		})
 		if err != nil {
-			slog.Error("Error upserting subscription", "err", err)
-			return c.Status(fiber.StatusInternalServerError).Send([]byte("Error updating subscription"))
+			slog.Error("Error upserting payment", "err", err)
+			return c.Status(fiber.StatusInternalServerError).Send([]byte("Error recording payment"))
 		}
 
-	case "customer.subscription.deleted":
-		var subscription_obj stripe.Subscription
-		err := json.Unmarshal(event.Data.Raw, &subscription_obj)
-		if err != nil {
-			return c.Status(fiber.StatusBadRequest).Send([]byte("Error parsing webhook payload"))
+	case "checkout.session.expired", "payment_intent.payment_failed":
+		var paymentIntent stripe.PaymentIntent
+		if event.Type == "checkout.session.expired" {
+			var session stripe.CheckoutSession
+			err := json.Unmarshal(event.Data.Raw, &session)
+			if err != nil {
+				return c.Status(fiber.StatusBadRequest).Send([]byte("Error parsing webhook payload"))
+			}
+			paymentIntent = *session.PaymentIntent
+		} else {
+			err := json.Unmarshal(event.Data.Raw, &paymentIntent)
+			if err != nil {
+				return c.Status(fiber.StatusBadRequest).Send([]byte("Error parsing webhook payload"))
+			}
 		}
 
-		err = queries.DeleteSubscription(query_ctx, subscription_obj.ID)
+		// Récupérer le customer pour avoir son UUID
+		customer, err := queries.GetCustomerByStripeID(query_ctx, paymentIntent.Customer.ID)
 		if err != nil {
-			slog.Error("Error deleting subscription", "err", err)
-			return c.Status(fiber.StatusInternalServerError).Send([]byte("Error deleting subscription"))
+			slog.Error("Error getting customer", "err", err)
+			return c.Status(fiber.StatusInternalServerError).Send([]byte("Error getting customer"))
+		}
+
+		metadata := map[string]interface{}{
+			"failure_reason": paymentIntent.LastPaymentError.Msg,
+			"failure_code":   paymentIntent.LastPaymentError.Code,
+		}
+		metadataJSON, err := json.Marshal(metadata)
+		if err != nil {
+			slog.Error("Error marshaling failure metadata", "err", err)
+			return c.Status(fiber.StatusInternalServerError).Send([]byte("Error processing failure metadata"))
+		}
+
+		err = queries.UpsertPayment(query_ctx, sqlc_gen.UpsertPaymentParams{
+			PaymentID: paymentIntent.ID,
+			UserID:    customer.ID, // Utilisation de l'UUID du customer
+			Status:    sqlc_gen.PaymentStatusFailed,
+			PriceID:   paymentIntent.Metadata["price_id"],
+			Amount:    int32(paymentIntent.Amount),
+			Currency:  string(paymentIntent.Currency),
+			Metadata:  metadataJSON,
+			CreatedAt: db.Int64ToTimestamptz(paymentIntent.Created),
+			UpdatedAt: db.Int64ToTimestamptz(time.Now().Unix()),
+		})
+		if err != nil {
+			slog.Error("Error upserting failed payment", "err", err)
+			return c.Status(fiber.StatusInternalServerError).Send([]byte("Error recording failed payment"))
 		}
 	}
 
 	return c.SendString("Webhook processed successfully")
-}
-
-// HandleCancelSubscription cancels a subscription
-func HandleCancelSubscription(c *fiber.Ctx, params CancelSubscriptionParams, db *db.Database) error {
-	user_id, err := middlewares.GetUserID(c)
-	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Unauthorized access",
-		})
-	}
-
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	queries := sqlc_gen.New(db.Pool)
-
-	subscription, err := queries.GetSubscriptionByID(query_ctx, params.SubscriptionID)
-	if err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-			"error": "Subscription not found",
-		})
-	}
-
-	if subscription.UserID != user_id {
-		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
-			"error": "Not authorized to cancel this subscription",
-		})
-	}
-
-	err = payment.CancelStripeSubscription(params.SubscriptionID)
-	if err != nil {
-		slog.Error("Error canceling subscription", "err", err)
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to cancel subscription",
-		})
-	}
-
-	return c.JSON(fiber.Map{
-		"message": "Subscription cancelled successfully",
-	})
 }

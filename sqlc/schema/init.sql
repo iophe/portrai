@@ -105,40 +105,29 @@ create table payment.prices (
 
 
 /**
-* SUBSCRIPTIONS
-* Note: subscriptions are created and managed in Stripe and synced to our DB via Stripe webhooks.
-*/
-create type subscription_status as enum ('trialing', 'active', 'canceled', 'incomplete', 'incomplete_expired', 'past_due', 'unpaid', 'paused');
-create table payment.subscriptions (
-  -- Subscription ID from Stripe, e.g. sub_1234.
-  id text primary key,
-  user_id uuid not null references auth.users on delete cascade,
-  -- The status of the subscription object, one of subscription_status type above.
-  status subscription_status,
-  -- Set of key-value pairs, used to store additional information about the object in a structured format.
-  metadata jsonb,
-  -- ID of the price that created this subscription.
-  price_id text references payment.prices,
-  -- Quantity multiplied by the unit amount of the price creates the amount of the subscription. Can be used to charge multiple seats.
-  quantity integer,
-  -- If true the subscription has been canceled by the user and will be deleted at the end of the billing period.
-  cancel_at_period_end boolean,
-  -- Time at which the subscription was created.
-  created timestamp with time zone default timezone('utc'::text, now()) not null,
-  -- Start of the current period that the subscription has been invoiced for.
-  current_period_start timestamp with time zone default timezone('utc'::text, now()) not null,
-  -- End of the current period that the subscription has been invoiced for. At the end of this period, a new invoice will be created.
-  current_period_end timestamp with time zone default timezone('utc'::text, now()) not null,
-  -- If the subscription has ended, the timestamp of the date the subscription ended.
-  ended_at timestamp with time zone default timezone('utc'::text, now()),
-  -- A date in the future at which the subscription will automatically get canceled.
-  cancel_at timestamp with time zone default timezone('utc'::text, now()),
-  -- If the subscription has been canceled, the date of that cancellation. If the subscription was canceled with `cancel_at_period_end`, `canceled_at` will still reflect the date of the initial cancellation request, not the end of the subscription period when the subscription is automatically moved to a canceled state.
-  canceled_at timestamp with time zone default timezone('utc'::text, now()),
-  -- If the subscription has a trial, the beginning of that trial.
-  trial_start timestamp with time zone default timezone('utc'::text, now()),
-  -- If the subscription has a trial, the end of that trial.
-  trial_end timestamp with time zone default timezone('utc'::text, now())
+ * PAYMENTS
+ * Note: payments are created and managed in Stripe and synced to our DB via Stripe webhooks.
+ */
+create type payment_status as enum ('completed', 'failed', 'pending');
+
+create table payment.payments (
+    -- Payment ID from Stripe, e.g. pi_1234.
+    id text primary key,
+    user_id uuid not null references auth.users on delete cascade,
+    -- The status of the payment object, one of payment_status type above.
+    status payment_status,
+    -- Set of key-value pairs, used to store additional information about the object in a structured format.
+    metadata jsonb,
+    -- ID of the price that created this payment.
+    price_id text references payment.prices,
+    -- Amount paid in cents/pence
+    amount integer,
+    -- Currency of the payment
+    currency text not null,
+    -- Time at which the payment was created.
+    created timestamp with time zone default timezone('utc'::text, now()) not null,
+    -- Time at which the payment was last updated.
+    updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
 /******************************************************************************************/
