@@ -145,7 +145,7 @@ function FaultPopup(props: FaultProps) {
 				class="p-4 cursor-pointer text-gray-50 font-semibold"
 				onclick={() => {
 					ref.classList.replace("show", "hide");
-
+					
 					ref.onanimationend = () => {
 						props.remove();
 					};

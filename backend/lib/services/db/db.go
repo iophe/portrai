@@ -67,8 +67,11 @@ func StringToUUID(s string) (uuid.UUID, error) {
 	return parsedUUID, nil
 }
 
-func UUIDToString(id uuid.UUID) string {
-	return id.String()
+func UUIDToString(id pgtype.UUID) string {
+	if !id.Valid {
+		return ""
+	}
+	return uuid.UUID(id.Bytes).String()
 }
 
 func StringToTimestampz(s string) (pgtype.Timestamptz, error) {

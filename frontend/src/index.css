@@ -1,14 +1,12 @@
-@import url("https://fonts.googleapis.com/css2?family=Alegreya+Sans+SC:ital,wght@0,100;0,300;0,400;0,500;0,700;0,800;0,900;1,100;1,300;1,400;1,500;1,700;1,800;1,900&family=Alice&display=swap");
 @import "tailwindcss";
 
-@config "../tailwind.config.js";
 @tailwind utilities;
 
 body {
 	margin: 0;
-	font-family: "Alegreya Sans SC", serif;
-	font-weight: 400;
-	font-style: normal;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+		"Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
+		"Helvetica Neue", sans-serif;
 	line-height: 1.5;
 	font-weight: 400;
 	-webkit-font-smoothing: antialiased;
@@ -109,95 +107,5 @@ code {
 	/* Handle on hover */
 	::-webkit-scrollbar-thumb:hover {
 		background: #5c5c5c;
-	}
-
-	.alice-regular {
-		font-family: "Alice", serif;
-		font-weight: 400;
-		font-style: normal;
-	}
-
-	.alegreya-sans-sc-thin {
-		font-family: "Alegreya Sans SC", serif;
-		font-weight: 100;
-		font-style: normal;
-	}
-
-	.alegreya-sans-sc-light {
-		font-family: "Alegreya Sans SC", serif;
-		font-weight: 300;
-		font-style: normal;
-	}
-
-	.alegreya-sans-sc-regular {
-		font-family: "Alegreya Sans SC", serif;
-		font-weight: 400;
-		font-style: normal;
-	}
-
-	.alegreya-sans-sc-medium {
-		font-family: "Alegreya Sans SC", serif;
-		font-weight: 500;
-		font-style: normal;
-	}
-
-	.alegreya-sans-sc-bold {
-		font-family: "Alegreya Sans SC", serif;
-		font-weight: 700;
-		font-style: normal;
-	}
-
-	.alegreya-sans-sc-extrabold {
-		font-family: "Alegreya Sans SC", serif;
-		font-weight: 800;
-		font-style: normal;
-	}
-
-	.alegreya-sans-sc-black {
-		font-family: "Alegreya Sans SC", serif;
-		font-weight: 900;
-		font-style: normal;
-	}
-
-	.alegreya-sans-sc-thin-italic {
-		font-family: "Alegreya Sans SC", serif;
-		font-weight: 100;
-		font-style: italic;
-	}
-
-	.alegreya-sans-sc-light-italic {
-		font-family: "Alegreya Sans SC", serif;
-		font-weight: 300;
-		font-style: italic;
-	}
-
-	.alegreya-sans-sc-regular-italic {
-		font-family: "Alegreya Sans SC", serif;
-		font-weight: 400;
-		font-style: italic;
-	}
-
-	.alegreya-sans-sc-medium-italic {
-		font-family: "Alegreya Sans SC", serif;
-		font-weight: 500;
-		font-style: italic;
-	}
-
-	.alegreya-sans-sc-bold-italic {
-		font-family: "Alegreya Sans SC", serif;
-		font-weight: 700;
-		font-style: italic;
-	}
-
-	.alegreya-sans-sc-extrabold-italic {
-		font-family: "Alegreya Sans SC", serif;
-		font-weight: 800;
-		font-style: italic;
-	}
-
-	.alegreya-sans-sc-black-italic {
-		font-family: "Alegreya Sans SC", serif;
-		font-weight: 900;
-		font-style: italic;
 	}
 }

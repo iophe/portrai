@@ -86,11 +86,11 @@ function Pricing(props: PricingProps) {
 	return (
 		<main class="p-4 flex flex-col gap-4 bg-gray-50 min-h-screen">
 			<Header />
-			<section class="flex flex-col gap-4 grow justify-center md:items-center text-night-900">
+			<section class="flex flex-col gap-4 grow justify-center md:items-center text-gray-900">
 				<article class="max-w-7xl mx-auto">
 					{/* Header */}
 					<header class="text-center">
-						<h1 class="text-3xl font-extrabold text-night-900 sm:text-4xl">
+						<h1 class="text-3xl font-extrabold text-gray-900 sm:text-4xl">
 							Simple, Transparent Pricing
 						</h1>
 						<p class="mt-4 text-xl text-gray-600">
@@ -160,11 +160,11 @@ function Pricing(props: PricingProps) {
 									}}
 								>
 									<section class="p-6">
-										<h2 class="text-xl font-semibold text-night-900">
+										<h2 class="text-xl font-semibold text-gray-900">
 											{plan.name}
 										</h2>
 										<p class="mt-8">
-											<strong class="text-4xl font-extrabold text-night-900">
+											<strong class="text-4xl font-extrabold text-gray-900">
 												{plan.price}
 											</strong>
 											<span class="text-base font-medium text-gray-500">

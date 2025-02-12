@@ -30,7 +30,7 @@ function SignupPage(props: SignupPageProps) {
 		<main class="p-4 flex flex-col gap-4 bg-gray-50 min-h-screen items-center">
 			<Header with_home />
 			<section class="max-w-md w-full space-y-8">
-				<h2 class="text-center text-3xl text-night-900">
+				<h2 class="text-center text-3xl text-gray-900">
 					Create your account
 				</h2>
 
@@ -76,7 +76,7 @@ function SignupPage(props: SignupPageProps) {
 								required
 								value={email_signup_data.name}
 								onInput={handle_input}
-								class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-night-900 rounded-t-md focus:outline-none focus:ring-gray-500 focus:border-gray-500 focus:z-10 sm:text-sm"
+								class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-gray-500 focus:border-gray-500 focus:z-10 sm:text-sm"
 								placeholder="Full name"
 							/>
 						</div>
@@ -91,7 +91,7 @@ function SignupPage(props: SignupPageProps) {
 								required
 								value={email_signup_data.email}
 								onInput={handle_input}
-								class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-night-900 focus:outline-none focus:ring-gray-500 focus:border-gray-500 focus:z-10 sm:text-sm"
+								class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-gray-500 focus:border-gray-500 focus:z-10 sm:text-sm"
 								placeholder="Email address"
 							/>
 						</div>
@@ -106,7 +106,7 @@ function SignupPage(props: SignupPageProps) {
 								required
 								value={email_signup_data.password}
 								onInput={handle_input}
-								class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-night-900 focus:outline-none focus:ring-gray-500 focus:border-gray-500 focus:z-10 sm:text-sm"
+								class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-gray-500 focus:border-gray-500 focus:z-10 sm:text-sm"
 								placeholder="Password"
 							/>
 						</div>
@@ -121,7 +121,7 @@ function SignupPage(props: SignupPageProps) {
 								required
 								value={email_signup_data.confirm_password}
 								onInput={handle_input}
-								class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-night-900 rounded-b-md focus:outline-none focus:ring-gray-500 focus:border-gray-500 focus:z-10 sm:text-sm"
+								class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-gray-500 focus:border-gray-500 focus:z-10 sm:text-sm"
 								placeholder="Confirm password"
 							/>
 						</div>
