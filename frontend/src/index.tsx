@@ -33,6 +33,7 @@ render(
 		<FaultProvider>
 			<Router>
 				<Route path={["/", "/home"]} component={Home} />
+				<Route path={"/welcolm"} component={Landing} />
 				<Route path={"/signin"} component={Signin} />
 				<Route path={"/signup"} component={Signup} />
 				<Route path={"/products"} component={Products} />

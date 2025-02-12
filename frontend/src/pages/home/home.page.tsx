@@ -120,7 +120,6 @@ function Home(props: HomeProps) {
 				</section>
 			</section>
 		</main>
-		</>
 	);
 }
 
