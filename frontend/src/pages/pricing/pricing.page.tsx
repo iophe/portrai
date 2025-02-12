@@ -93,7 +93,7 @@ function Pricing(props: PricingProps) {
 	return (
 
 		<Show
-            when={!paymentStatus}
+            when={paymentStatus}
             fallback={
 				<>  
 				<Header/>

@@ -48,24 +48,27 @@ func RegisterAuthRoutes(group fiber.Router) {
 		},
 	)
 
-	auth_group.Get("/check",
+	// Protected routes (auth + CSRF)
+	protected_routes := auth_group.Group("")
+	protected_routes.Use(
 		middlewares.Protected(),
-		func(c *fiber.Ctx) error {
-			return c.SendStatus(fiber.StatusOK)
-		},
+		middlewares.CSRFMiddleware(middlewares.CSRFConfig{
+			ExemptRoutes: []string{"/api/auth/signin/email", "/api/auth/signup/email"},
+		}),
 	)
 
-	auth_group.Post("/logout",
-		middlewares.Protected(),
-		func(c *fiber.Ctx) error {
-			return handlers.HandleLogout(c)
-		},
-	)
+	protected_routes.Get("/check", func(c *fiber.Ctx) error {
+		return c.SendStatus(fiber.StatusOK)
+	})
 
-	auth_group.Post("/delete",
-		middlewares.Protected(),
-		func(c *fiber.Ctx) error {
-			return handlers.HandleDeleteAccount(c)
-		},
-	)
+	protected_routes.Post("/logout", func(c *fiber.Ctx) error {
+		return handlers.HandleLogout(c)
+	})
+
+	protected_routes.Post("/delete", func(c *fiber.Ctx) error {
+		return handlers.HandleDeleteAccount(c)
+	})
+
+	// CSRF token endpoint
+	protected_routes.Get("/api/csrf-token", middlewares.GenerateCSRFToken)
 }

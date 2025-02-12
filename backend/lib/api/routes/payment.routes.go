@@ -11,29 +11,28 @@ import (
 func RegisterPaymentRoutes(group fiber.Router) {
 	payment_group := group.Group("/payment")
 
+	// Public route (webhook from Stripe)
 	payment_group.Post("/webhook", func(c *fiber.Ctx) error {
 		return handlers.HandleWebhook(c, &db.DB)
 	})
 
-	payment_group.Post("/success", func(c *fiber.Ctx) error {
-		return handlers.HandlePaymentSuccess(c, &db.DB)
-	})
-
-	payment_group.Post("/create-checkout-session",
+	// Protected routes (auth + CSRF)
+	protected_routes := payment_group.Group("")
+	protected_routes.Use(
 		middlewares.Protected(),
-		func(c *fiber.Ctx) error {
-			var data handlers.CreateCheckoutData
-			if err := c.BodyParser(&data); err != nil {
-				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-					"error": err,
-				})
-			}
-			return handlers.HandleCreateCheckoutSession(c, data, &db.DB)
-		},
+		middlewares.CSRFMiddleware(middlewares.CSRFConfig{
+			ExemptRoutes: []string{"/api/payment/webhook"},
+		}),
 	)
 
-	payment_group.Get("/check-payment-status", func(c *fiber.Ctx) error {
-		return handlers.HandleCheckPaymentSatus(c, &db.DB)
+	protected_routes.Post("/create-checkout-session", func(c *fiber.Ctx) error {
+		var data handlers.CreateCheckoutData
+		if err := c.BodyParser(&data); err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": err,
+			})
+		}
+		return handlers.HandleCreateCheckoutSession(c, data, &db.DB)
 	})
 
 }
