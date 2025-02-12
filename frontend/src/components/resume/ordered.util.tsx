@@ -14,25 +14,6 @@ interface OrderedProps<T> {
 export function Ordered<T>(props: OrderedProps<T>) {
 	return (
 		<div
-			draggable={!props.draggable(props.id)}
-			onDragStart={(e: DragEvent) => {
-				props.set_dragged_id(props.id);
-				console.log("drag start", props.id);
-
-				if (e.dataTransfer) {
-					e.dataTransfer.effectAllowed = "move";
-					if (e.target instanceof HTMLElement) {
-						e.target.classList.add("opacity-50");
-					}
-				}
-			}}
-			onDragEnd={(e: DragEvent) => {
-				console.log("drag end", props.id);
-				props.set_dragged_id(null);
-				if (e.target instanceof HTMLElement) {
-					e.target.classList.remove("opacity-50");
-				}
-			}}
 			onDragOver={(e: DragEvent) => {
 				console.log("drag over", props.id);
 				e.preventDefault();
@@ -67,7 +48,6 @@ export function Ordered<T>(props: OrderedProps<T>) {
 					props.onSubmit(new_list, source_id, props.id);
 				}
 			}}
-			class="cursor-move"
 		>
 			{props.children}
 		</div>

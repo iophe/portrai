@@ -1,84 +1,84 @@
 import { useFault } from "@components/fault";
 import { api } from "@utils/api";
 import { AxiosError } from "axios";
-import { createSignal, For, Show } from "solid-js";
+import { createSignal, For, Setter, Show } from "solid-js";
 import { createStore } from "solid-js/store";
-import { AddNote, NoteList } from "../notes.util";
+import { NoteList } from "../notes.util";
+import ItemArticle from "../utils/item.article";
+import { FormTags, Tags } from "../utils/tags";
+import { ItemDateRange, ItemInfo, ItemText } from "../utils/item.content";
+import FormArticle from "../utils/form.article";
+import {
+	FormCancelButton,
+	FormCheckbox,
+	FormDeleteButton,
+	FormInputDate,
+	FormInputText,
+	FormLabeledInput,
+	FormSubmitButton,
+	FormTextArea,
+} from "../utils/form.input";
 
 interface ExperienceViewProps {
 	experience: Experience;
 	edit: (experience_id: number) => void;
-	delete: (experience_id: number) => void;
+	refetch: () => void;
+	set_dragged_id: Setter<number | null>;
+	draggable: (id: number) => boolean;
 }
 
 export function ExperienceView(props: ExperienceViewProps) {
+	const fault = useFault();
 	return (
-		<article class="p-4 border border-gray-200 rounded-lg flex flex-col gap-2">
-			<header class="flex flex-col justify-between items-start mb-2">
-				<h3 class="text-lg font-medium text-gray-900">
-					{props.experience.job_title}
-				</h3>
-				<h4 class="text-gray-700">{props.experience.company_name}</h4>
-			</header>
-			<p class="text-gray-600 text-sm">{props.experience.location}</p>
-			<span class="flex flex-row">
-				<p class="text-gray-600 text-sm">
-					{props.experience.start_date}
-				</p>
-				-
-				<Show
-					when={props.experience.optional_end_date}
-					fallback={<p class="text-gray-600 text-sm">present</p>}
-				>
-					<p class="text-gray-600 text-sm">
-						{props.experience.optional_end_date}
-					</p>
-				</Show>
-			</span>
-			<p class="text-gray-700">{props.experience.description}</p>
-			<footer class="mt-2">
-				<ul class="flex gap-2 flex-wrap">
-					<For each={props.experience.tags}>
-						{(tag) => (
-							<li class="px-2 py-1 bg-gray-100 text-gray-700 text-sm rounded">
-								{tag}
-							</li>
-						)}
-					</For>
-				</ul>
-			</footer>
-			<div class="self-end flex flex-row gap-4">
-				<button
-					title="Edit this professional experience"
-					class="self-end w-fit px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded"
-					onclick={() => {
-						props.edit(props.experience.experience_id);
-					}}
-				>
-					Edit
-				</button>
-				<button
-					title="Edit this professional experience"
-					class="self-end w-fit px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded"
-					onclick={() => {
-						props.delete(props.experience.experience_id);
-					}}
-				>
-					Delete
-				</button>
-			</div>
-			<NoteList notes={props.experience.notes} />
-			<AddNote
+		<ItemArticle
+			edit={props.edit}
+			item_id={props.experience.experience_id}
+			title={props.experience.job_title}
+			subtitle={props.experience.company_name}
+			set_dragged_id={props.set_dragged_id}
+			draggable={props.draggable}
+			is_visible={props.experience?.is_visible ?? true}
+			toggle_visibility={async () => {
+				if (!props.experience) return;
+				try {
+					await api.post("/resume/experience/toggle", {
+						experience_id: props.experience.experience_id,
+					});
+					props.refetch();
+				} catch (error) {
+					fault.minor({
+						message:
+							((error as AxiosError).response?.data as any)
+								.error ?? (error as AxiosError).message,
+					});
+				}
+			}}
+		>
+			<ItemInfo>{props.experience.location}</ItemInfo>
+			<ItemDateRange
+				start={new Date(props.experience.start_date)}
+				end={
+					props.experience.optional_end_date
+						? new Date(props.experience.optional_end_date)
+						: undefined
+				}
+			/>
+			<ItemText>{props.experience.description}</ItemText>
+			<Tags values={props.experience.tags} />
+			<NoteList
+				notes={props.experience.notes}
 				id={props.experience.experience_id}
 				section_type="experience"
+				refetch={props.refetch}
 			/>
-		</article>
+		</ItemArticle>
 	);
 }
 
 interface ExperienceFormProps {
 	experience?: Experience;
 	is_new?: boolean;
+	delete: () => void;
 	onSubmit: (experience_id: number) => void;
 	onCancel: () => void;
 }
@@ -97,13 +97,10 @@ export function ExperienceForm(props: ExperienceFormProps) {
 		tags: props.experience?.tags || [],
 		notes: props.experience?.notes || [],
 	});
-	const [new_tag, setNewTag] = createSignal("");
 
-	async function handleSubmit(e: Event) {
-		e.preventDefault();
+	async function handleSubmit() {
 		if (!props.is_new) {
 			if (!props.experience) return;
-			// update existing experience
 			try {
 				console.log({ ...form_data });
 
@@ -142,170 +139,86 @@ export function ExperienceForm(props: ExperienceFormProps) {
 		}
 	}
 
-	function addTag(e: KeyboardEvent) {
-		if (e.key === "Enter" && new_tag()) {
-			e.preventDefault();
-			setFormData("tags", [...form_data.tags, new_tag()]);
-			setNewTag("");
-		}
-	}
-
 	return (
-		<form onSubmit={handleSubmit} class="">
-			<div class="space-y-2">
-				<label class="block text-sm font-medium text-gray-700">
-					Job Title
-				</label>
-				<input
-					type="text"
+		<FormArticle on_submit={handleSubmit}>
+			<FormDeleteButton delete={props.delete} />
+			<FormLabeledInput label="Job Title">
+				<FormInputText
 					value={form_data.job_title}
-					onInput={(e) =>
-						setFormData("job_title", e.currentTarget.value)
-					}
-					class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-gray-500"
+					on_input={(value) => setFormData("job_title", value)}
+					placeholder="Write the job title"
 					required
 				/>
-			</div>
+			</FormLabeledInput>
 
-			<div class="space-y-2">
-				<label class="block text-sm font-medium text-gray-700">
-					Company
-				</label>
-				<input
-					type="text"
+			<FormLabeledInput label="Company">
+				<FormInputText
 					value={form_data.company_name}
-					onInput={(e) =>
-						setFormData("company_name", e.currentTarget.value)
-					}
-					class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-gray-500"
+					on_input={(value) => setFormData("company_name", value)}
+					placeholder="Write the company name"
 					required
 				/>
-			</div>
+			</FormLabeledInput>
 
-			<div class="space-y-2">
-				<label class="block text-sm font-medium text-gray-700">
-					Location
-				</label>
-				<input
-					type="text"
+			<FormLabeledInput label="Location">
+				<FormInputText
 					value={form_data.location}
-					onInput={(e) =>
-						setFormData("location", e.currentTarget.value)
-					}
-					class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-gray-500"
+					on_input={(value) => setFormData("location", value)}
+					placeholder="Write the location"
+					required
 				/>
-			</div>
+			</FormLabeledInput>
 
 			<div class="grid grid-cols-2 gap-4">
-				<div class="space-y-2">
-					<label class="block text-sm font-medium text-gray-700">
-						Start Date
-					</label>
-					<input
-						type="date"
+				<FormLabeledInput label="Start Date">
+					<FormInputDate
 						value={form_data.start_date}
-						onInput={(e) =>
-							setFormData("start_date", e.currentTarget.value)
-						}
-						class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-gray-500"
+						on_input={(value) => setFormData("start_date", value)}
+						placeholder="select start date"
 						required
 					/>
-				</div>
+				</FormLabeledInput>
 
-				<div class="space-y-2">
-					<label class="block text-sm font-medium text-gray-700">
-						End Date
-					</label>
-					<input
-						type="date"
+				<FormLabeledInput label="End Date" optional>
+					<FormInputDate
 						value={form_data.optional_end_date}
-						onInput={(e) =>
-							setFormData(
-								"optional_end_date",
-								e.currentTarget.value
-							)
+						on_input={(value) =>
+							setFormData("optional_end_date", value)
 						}
 						disabled={form_data.is_current}
-						class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-gray-500"
+						placeholder="select end date"
 					/>
-				</div>
+				</FormLabeledInput>
 			</div>
+			<FormCheckbox
+				label="Current Position"
+				on_input={(value) => setFormData("is_current", value)}
+				value={form_data.is_current}
+			/>
 
-			<div class="flex items-center gap-2">
-				<input
-					type="checkbox"
-					checked={form_data.is_current}
-					onChange={(e) =>
-						setFormData("is_current", e.currentTarget.checked)
-					}
-					class="rounded border-gray-300 text-gray-600 focus:ring-gray-500"
-				/>
-				<label class="text-sm text-gray-700">Current Position</label>
-			</div>
-
-			<div class="space-y-2">
-				<label class="block text-sm font-medium text-gray-700">
-					Description
-				</label>
-				<textarea
+			<FormLabeledInput label="Description">
+				<FormTextArea
+					placeholder="write the description of this experience"
 					value={form_data.description}
-					onInput={(e) =>
-						setFormData("description", e.currentTarget.value)
-					}
-					class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-gray-500"
-					rows="4"
+					on_input={(value) => setFormData("description", value)}
+					rows={4}
 				/>
-			</div>
+			</FormLabeledInput>
 
-			<div class="space-y-2">
-				<label class="block text-sm font-medium text-gray-700">
-					Tags
-				</label>
-				<input
-					type="text"
-					value={new_tag()}
-					onInput={(e) => setNewTag(e.currentTarget.value)}
-					onKeyPress={addTag}
-					placeholder="Press Enter to add tag"
-					class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-gray-500"
-				/>
-				<ul class="flex gap-2 flex-wrap">
-					<For each={form_data.tags}>
-						{(tag, index) => (
-							<li class="px-2 py-1 bg-gray-100 text-gray-700 text-sm rounded flex items-center gap-1">
-								{tag}
-								<button
-									type="button"
-									onClick={() =>
-										setFormData("tags", (t) =>
-											t.filter((_, i) => i !== index())
-										)
-									}
-									class="text-gray-500 hover:text-gray-700"
-								>
-									×
-								</button>
-							</li>
-						)}
-					</For>
-				</ul>
-			</div>
+			<FormTags
+				add={(tag) => {
+					setFormData("tags", [...form_data.tags, tag]);
+				}}
+				delete={(idx) => {
+					setFormData("tags", (t) => t.filter((_, i) => i !== idx));
+				}}
+				tags={form_data.tags}
+			/>
 
 			<div class="flex justify-end gap-4">
-				<button
-					type="button"
-					onClick={props.onCancel}
-					class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded"
-				>
-					Cancel
-				</button>
-				<button
-					type="submit"
-					class="px-4 py-2 bg-gray-900 text-white rounded hover:bg-gray-800"
-				>
-					Save Experience
-				</button>
+				<FormCancelButton cancel={props.onCancel} />
+				<FormSubmitButton />
 			</div>
-		</form>
+		</FormArticle>
 	);
 }
