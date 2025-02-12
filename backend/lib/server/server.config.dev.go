@@ -40,4 +40,5 @@ func ConfigureServer(app *fiber.App, cfg *ServerCfg) {
 		AllowCredentials: true,
 		AllowMethods:     "GET,POST",
 	}))
+
 }
