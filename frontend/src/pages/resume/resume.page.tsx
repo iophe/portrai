@@ -16,7 +16,7 @@ function Resume(props: ResumeProps) {
 	return (
 		<main class="p-4 flex flex-col gap-4 bg-gray-50 min-h-screen">
 			<Header />
-			<section class="w-full flex flex-col gap-4 items-center">
+			<section class="w-3/4 flex dbg-1 flex-col gap-4 items-center">
 				<section class="w-3/4  flex flex-col gap-4 items-center">
 					<ExperienceList />
 					<EducationList />
