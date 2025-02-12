@@ -22,7 +22,7 @@ function Pricing(props: PricingProps) {
 			price: billingInterval() === "monthly" ? "10€" : "100€",
 			price_id:
 				billingInterval() === "monthly"
-					? "price_1QlvR609qwIgCJScHRHHQWGR"
+					? "price_1QqfeSP4tfRx9aTCF9XZeCLx"
 					: import.meta.env.STRIPE_YEARLY_PRICE_ID,
 			interval: billingInterval() === "monthly" ? "/month" : "/year",
 			features: [
@@ -33,7 +33,7 @@ function Pricing(props: PricingProps) {
 				"Cancel anytime",
 			],
 			buttonText: "Subscribe Now",
-			type: "subscription",
+			type: "onetime",
 		},
 		{
 			name: "Lifetime Access",

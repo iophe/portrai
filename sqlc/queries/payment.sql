@@ -9,6 +9,13 @@ SELECT
 FROM payment.prices 
 WHERE id = @price_id::text;
 
+-- name: GetPriceByAmount :one
+SELECT id 
+FROM payment.prices 
+WHERE unit_amount = @unit_amount::int
+AND currency = @currency::text
+LIMIT 1;
+
 -- name: GetCustomerByUserID :one
 SELECT 
     id,
@@ -32,86 +39,69 @@ INSERT INTO payment.customers (
     @stripe_customer_id::text
 );
 
--- name: UpsertSubscription :exec
-INSERT INTO payment.subscriptions (
-    id,
-    user_id,
-    status,
-    price_id,
-    quantity,
-    cancel_at_period_end,
-    current_period_start,
-    current_period_end,
-    created,
-    ended_at,
-    cancel_at,
-    canceled_at,
-    trial_start,
-    trial_end
+-- name: UpsertPayment :exec
+INSERT INTO payment.payments (
+   id,
+   user_id,
+   status,
+   price_id,
+   amount,
+   currency,
+   metadata,
+   created,
+   updated_at
 ) VALUES (
-    @subscription_id::text,
-    @user_id::uuid,
-    @status::subscription_status,
-    @price_id::text,
-    @quantity::integer,
-    @cancel_at_period_end::boolean,
-    @current_period_start::timestamp with time zone,
-    @current_period_end::timestamp with time zone,
-    @created_at::timestamp with time zone,
-    NULLIF(@ended_at::timestamp with time zone, '1970-01-01T00:00:00Z'),
-    NULLIF(@cancel_at::timestamp with time zone, '1970-01-01T00:00:00Z'),
-    NULLIF(@canceled_at::timestamp with time zone, '1970-01-01T00:00:00Z'),
-    NULLIF(@trial_start::timestamp with time zone, '1970-01-01T00:00:00Z'),
-    NULLIF(@trial_end::timestamp with time zone, '1970-01-01T00:00:00Z')
+   @payment_id::text,
+   @user_id::uuid,
+   @status::payment_status,
+   @price_id::text,
+   @amount::integer,
+   @currency::text,
+   @metadata::jsonb,
+   @created_at::timestamp with time zone,
+   @updated_at::timestamp with time zone
 ) ON CONFLICT (id) DO UPDATE SET
-    status = EXCLUDED.status,
-    quantity = EXCLUDED.quantity,
-    cancel_at_period_end = EXCLUDED.cancel_at_period_end,
-    current_period_start = EXCLUDED.current_period_start,
-    current_period_end = EXCLUDED.current_period_end,
-    ended_at = EXCLUDED.ended_at,
-    cancel_at = EXCLUDED.cancel_at,
-    canceled_at = EXCLUDED.canceled_at,
-    trial_start = EXCLUDED.trial_start,
-    trial_end = EXCLUDED.trial_end;
+   status = EXCLUDED.status,
+   amount = EXCLUDED.amount,
+   metadata = EXCLUDED.metadata,
+   updated_at = CURRENT_TIMESTAMP;
 
--- name: DeleteSubscription :exec
-DELETE FROM payment.subscriptions 
-WHERE id = @subscription_id::text;
-
--- name: GetSubscriptionByID :one
+-- name: GetPaymentByID :one
 SELECT 
-    id,
-    user_id,
-    status,
-    price_id,
-    cancel_at_period_end
-FROM payment.subscriptions 
-WHERE id = @subscription_id::text;
+   id,
+   user_id,
+   status,
+   price_id,
+   amount,
+   currency,
+   created
+FROM payment.payments
+WHERE id = @payment_id::text;
 
--- name: GetActiveSubscriptionByUserID :one
+-- name: GetLatestPaymentByUserID :one
 SELECT 
-    s.id,
-    s.status,
-    s.price_id,
-    s.current_period_end,
-    p.unit_amount,
-    p.currency,
-    p.interval,
-    p.interval_count
-FROM payment.subscriptions s
-JOIN payment.prices p ON s.price_id = p.id
-WHERE s.user_id = @user_id::uuid 
-AND s.status IN ('active', 'trialing')
-ORDER BY s.created DESC
+   p.id,
+   p.status,
+   p.price_id,
+   p.amount,
+   p.currency,
+   p.created,
+   pr.unit_amount,
+   pr.interval,
+   pr.interval_count
+FROM payment.payments p
+JOIN payment.prices pr ON p.price_id = pr.id
+WHERE p.user_id = @user_id::uuid
+AND p.status = 'completed'
+ORDER BY p.created DESC
 LIMIT 1;
 
--- name: UpdateSubscriptionStatus :exec
-UPDATE payment.subscriptions
-SET 
-    status = @status::subscription_status,
-    canceled_at = CASE 
-        WHEN @status::subscription_status = 'canceled' THEN CURRENT_TIMESTAMP
-        ELSE canceled_at
-    END
-WHERE id = @subscription_id::text;
+-- name: UpdatePaymentStatus :exec
+UPDATE payment.payments SET
+   status = @status::payment_status,
+   updated_at = CURRENT_TIMESTAMP
+WHERE id = @payment_id::text;
+
+-- name: DeletePayment :exec
+DELETE FROM payment.payments 
+WHERE id = @payment_id::text;

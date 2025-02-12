@@ -1,39 +1,106 @@
+import { Component, Show } from "solid-js";
 import { A } from "@solidjs/router";
-import { Show } from "solid-js";
-import HomeIcon from "@assets/icons/home.svg?component-solid";
+import { api } from "@utils/api";
 
-interface HeaderProps {
-	with_home?: boolean;
-}
+const Header: Component = () => {
 
-function Header(props: HeaderProps) {
-	return (
-		<header
-			class="
-            /fixed /top-4 
-            /md:right-4
-            /right-1/2 /translate-x-1/2 /md:translate-x-0
+  const handleLogout = async () => {
+    try {
+      await api.post("/auth/logout");
+      localStorage.clear();
+      window.location.reload();
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
-			md:self-end self-center
-            bg-gray-100 rounded shadow-md shadow-gray-300
-            w-fit h-fit
-            flex flex-row items-center
-        "
-		>
-			<div class="flex flex-row gap-8 items-center py-2 px-4 text-nowrap">
-				<A href="/products">Products</A>
-				<A href="/pricing">Pricing</A>
-			</div>
-			<div class="bg-gray-700 w-full md:w-auto px-4 py-2 text-nowrap rounded-r gap-8 text-gray-100 flex flex-row items-center justify-center">
-				<Show
-					when={props.with_home}
-					fallback={<A href="/signin">Sign in</A>}
-				>
-					<A href="/home">Home</A>
-				</Show>
-			</div>
-		</header>
-	);
-}
+  const handleDeleteAccount = async () => {
+    try {
+      await api.post("/auth/delete");
+      localStorage.clear();
+      window.location.reload();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  return (
+    <header class="bg-white shadow-sm">
+      <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex h-16 justify-between items-center">
+          {/* Left side - Navigation links */}
+          <div class="flex gap-4">
+            <A 
+              href="/" 
+              class="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md"
+              activeClass="text-blue-600"
+            >
+              Home
+            </A>
+            <A 
+              href="/products" 
+              class="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md"
+              activeClass="text-blue-600"
+            >
+              Products
+            </A>
+            <A 
+              href="/pricing" 
+              class="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md"
+              activeClass="text-blue-600"
+            >
+              Pricing
+            </A>
+            <Show when={localStorage.getItem("IS_AUTHENTICATED")}>
+              <A 
+                href="/resume" 
+                class="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md"
+                activeClass="text-blue-600"
+              >
+                Resume
+              </A>
+            </Show>
+          </div>
+
+          {/* Right side - Auth buttons */}
+          <div class="flex gap-4">
+            <Show 
+              when={localStorage.getItem("IS_AUTHENTICATED")}
+              fallback={
+                <>
+                  <A 
+                    href="/signin" 
+                    class="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md"
+                  >
+                    Sign In
+                  </A>
+                  <A 
+                    href="/signup" 
+                    class="bg-blue-600 text-white hover:bg-blue-700 px-3 py-2 rounded-md"
+                  >
+                    Sign Up
+                  </A>
+                </>
+              }
+            >
+              <button
+                onclick={handleLogout}
+                class="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md"
+              >
+                Log Out
+              </button>
+              <button
+                onclick={handleDeleteAccount}
+                class="text-red-600 hover:text-red-700 px-3 py-2 rounded-md"
+              >
+                Delete Account
+              </button>
+            </Show>
+          </div>
+        </div>
+      </nav>
+    </header>
+  );
+};
 
 export default Header;

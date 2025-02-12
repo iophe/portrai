@@ -28,17 +28,4 @@ func RegisterPaymentRoutes(group fiber.Router) {
 		},
 	)
 
-	payment_group.Post("/cancel-subscription/:subscription_id",
-		middlewares.Protected(),
-		func(c *fiber.Ctx) error {
-			var params handlers.CancelSubscriptionParams
-			if err := c.ParamsParser(&params); err != nil {
-				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-					"error": err,
-				})
-			}
-			return handlers.HandleCancelSubscription(c, params, &db.DB)
-		},
-	)
-
 }
