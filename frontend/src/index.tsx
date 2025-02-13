@@ -12,17 +12,15 @@ const root = document.getElementById("root");
 const Landing = lazy(() => import("./pages/home/landing.page"));
 const Signin = lazy(() => import("./pages/auth/signin.page"));
 const Signup = lazy(() => import("./pages/auth/signup.page"));
-const Products = lazy(() => import("./pages/products/products.page"));
 const Pricing = lazy(() => import("./pages/pricing/pricing.page"));
 
 // Protected Pages
 const Home = Protected({ fallback: Landing })(
 	lazy(() => import("./pages/home/home.page"))
 );
-const Resume = Protected({ redirect: "/" })(
-	lazy(() => import("./pages/resume/resume.page"))
+const Account = Protected({ redirect: "/" })(
+	lazy(() => import("./pages/auth/account.page"))
 );
-
 const Success = Protected({ redirect: "/" })(
 	lazy(() => import("./pages/payment/success.page"))
 );
@@ -35,10 +33,9 @@ render(
 				<Route path={"/welcolm"} component={Landing} />
 				<Route path={"/signin"} component={Signin} />
 				<Route path={"/signup"} component={Signup} />
-				<Route path={"/products"} component={Products} />
 				<Route path={"/pricing"} component={Pricing} />
-				<Route path={"/resume"} component={Resume} />
 				<Route path={"/success"} component={Success} />
+				<Route path={"/account"} component={Account} />
 			</Router>
 		</FaultProvider>
 	),
