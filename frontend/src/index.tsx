@@ -15,7 +15,6 @@ const Signup = lazy(() => import("./pages/auth/signup.page"));
 const Products = lazy(() => import("./pages/products/products.page"));
 const Pricing = lazy(() => import("./pages/pricing/pricing.page"));
 
-
 // Protected Pages
 const Home = Protected({ fallback: Landing })(
 	lazy(() => import("./pages/home/home.page"))
@@ -39,7 +38,7 @@ render(
 				<Route path={"/products"} component={Products} />
 				<Route path={"/pricing"} component={Pricing} />
 				<Route path={"/resume"} component={Resume} />
-				<Route path={"/success"} component={Success} />				
+				<Route path={"/success"} component={Success} />
 			</Router>
 		</FaultProvider>
 	),

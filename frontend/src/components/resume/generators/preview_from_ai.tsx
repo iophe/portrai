@@ -28,7 +28,7 @@ function ResumeAIPreview(props: ResumePreviewProps) {
 				oninput={(e) => {
 					set_job_description(e.target.value);
 				}}
-				class="w-full rounded border border-lapis-50 p-4 outline-none"
+				class="w-full bg-gradient-to-br from-lapis-10 to-white rounded border border-lapis-50 p-4 outline-none hover:shadow-md transition-all"
 				rows={4}
 				placeholder="paste the job description"
 			/>
