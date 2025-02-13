@@ -23,10 +23,10 @@ function Home(props: HomeProps) {
 	const [section, set_section] = createSignal("experience");
 
 	return (
-		<main class="w-4/5 mx-auto justify-items-center  p-4 flex flex-col gap-4 max-h-screen">
+		<main class="md:px-48 px-8 mx-auto justify-items-center  p-4 flex flex-col gap-4 h-screen max-h-screen">
 			<Header />
 			<section
-				class="grid grid-cols-2 gap-4 justify-start overflow-hidden
+				class="grid grid-cols-2 gap-4 justify-start h-full overflow-hidden
 			 items-start text-night-900"
 			>
 				<section class="overflow-y-auto pr-4 h-full">
