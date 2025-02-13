@@ -1,6 +1,14 @@
 import { Motion, Presence } from "solid-motionone";
 import Header from "../../components/header.default";
-import { For, Show, createEffect, createSignal, onCleanup, onMount } from "solid-js";
+import {
+	For,
+	Show,
+	createEffect,
+	createSignal,
+	onCleanup,
+	onMount,
+} from "solid-js";
+import { A } from "@solidjs/router";
 
 interface LandingProps {}
 
@@ -140,7 +148,7 @@ export function JobMatchingSection() {
 										</ul>
 									</article>
 								</section>
-								
+
 								<Show when={analysing()}>
 									<Motion.section
 										initial={{ opacity: 0, y: 20 }}
@@ -173,7 +181,7 @@ export function JobMatchingSection() {
 										</article>
 									</Motion.section>
 								</Show>
-								
+
 								<Show when={showing_preview()}>
 									<Motion.section
 										initial={{ opacity: 0, y: 20 }}
@@ -275,12 +283,15 @@ function Landing(props: LandingProps) {
 							</li>
 						</ol>
 
-						<button class="bg-night-900 text-white px-8 py-4 rounded-lg text-lg font-medium inline-flex items-center gap-3 hover:shadow-lg transition-all group">
+						<A
+							href="/pricing"
+							class="bg-night-900 text-white px-8 py-4 rounded-lg text-lg font-medium inline-flex items-center gap-3 hover:shadow-lg transition-all group"
+						>
 							Try it now
 							<span class="group-hover:translate-x-2 transition-transform">
 								→
 							</span>
-						</button>
+						</A>
 					</article>
 
 					<figure class="flex-1">
@@ -404,7 +415,7 @@ function Landing(props: LandingProps) {
 						</header>
 
 						<ul class="flex flex-col md:flex-row gap-8">
-							<For each={[1,2,3]}>
+							<For each={[1, 2, 3]}>
 								{(template) => (
 									<li class="bg-white rounded-xl shadow-lg shadow-lapis-50 p-8 border border-gray-100 group hover:shadow-xl transition-all">
 										<figure class="aspect-[3/4] bg-gradient-to-br from-lapis-10 to-white rounded-lg pb-6 group-hover:shadow-md transition-all" />
@@ -412,8 +423,8 @@ function Landing(props: LandingProps) {
 											Modern Professional
 										</h4>
 										<p class="text-gray-600 pt-2">
-											Clean and contemporary design for tech
-											and creative roles
+											Clean and contemporary design for
+											tech and creative roles
 										</p>
 									</li>
 								)}
