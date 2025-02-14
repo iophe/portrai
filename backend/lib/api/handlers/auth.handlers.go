@@ -173,7 +173,7 @@ func HandleLogout(c *fiber.Ctx) error {
 
 	// Clear auth cookies regardless of Supabase response
 	c.Cookie(&fiber.Cookie{
-		Name:     "payment_refresh",
+		Name:     "payment_token",
 		Value:    "",
 		Expires:  time.Now().Add(-24 * time.Hour),
 		Secure:   true,

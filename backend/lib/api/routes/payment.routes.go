@@ -16,7 +16,8 @@ func RegisterPaymentRoutes(group fiber.Router) {
 		return handlers.HandleWebhook(c, &db.DB)
 	})
 
-	payment_group.Use(
+	payment_group.Post(
+		"/create-checkout-session",
 		middlewares.Protected(),
 		func(c *fiber.Ctx) error {
 			var data handlers.CreateCheckoutData

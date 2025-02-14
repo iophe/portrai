@@ -54,27 +54,20 @@ func PayingFeature() fiber.Handler {
 
 		if err != nil {
 			if err == jwt.ErrTokenExpired {
-				// Try to refresh using refresh token
-				refresh_token := c.Cookies("refresh_token")
-				if refresh_token != "" {
-					user_id, err := GetUserID(c)
-					if err != nil {
-						return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-							"error": "Unauthorized access",
-						})
-					}
-					token, err := RefreshPaymentToken(user_id, &db.DB)
-					if err != nil {
-						return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-							"error": "failed to create payment token",
-						})
-					}
-					SetPaymentCookies(c, token)
-				} else {
+				user_id, err := GetUserID(c)
+				if err != nil {
 					return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-						"error": "token expired",
+						"error": "Unauthorized access",
 					})
 				}
+				token, err := RefreshPaymentToken(user_id, &db.DB)
+				if err != nil {
+					return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+						"error": "failed to create payment token",
+					})
+				}
+				SetPaymentCookies(c, token)
+
 			} else {
 				return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 					"error": fmt.Sprintf("invalid token: %v", err),
@@ -102,7 +95,6 @@ func SetPaymentCookies(c *fiber.Ctx, token string) {
 }
 
 func RefreshPaymentToken(user_id uuid.UUID, DB *db.Database) (string, error) {
-
 	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	queries := sqlc_gen.New(DB.Pool)
