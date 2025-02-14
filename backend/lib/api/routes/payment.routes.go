@@ -16,23 +16,36 @@ func RegisterPaymentRoutes(group fiber.Router) {
 		return handlers.HandleWebhook(c, &db.DB)
 	})
 
-	// Protected routes (auth + CSRF)
-	protected_routes := payment_group.Group("")
-	protected_routes.Use(
+	payment_group.Use(
 		middlewares.Protected(),
-		middlewares.CSRFMiddleware(middlewares.CSRFConfig{
-			ExemptRoutes: []string{"/api/payment/webhook"},
-		}),
+		func(c *fiber.Ctx) error {
+			var data handlers.CreateCheckoutData
+			if err := c.BodyParser(&data); err != nil {
+				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+					"error": err,
+				})
+			}
+			return handlers.HandleCreateCheckoutSession(c, data, &db.DB)
+		},
 	)
 
-	protected_routes.Post("/create-checkout-session", func(c *fiber.Ctx) error {
-		var data handlers.CreateCheckoutData
-		if err := c.BodyParser(&data); err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": err,
-			})
-		}
-		return handlers.HandleCreateCheckoutSession(c, data, &db.DB)
-	})
-
+	payment_group.Get("/refresh",
+		middlewares.Protected(),
+		func(c *fiber.Ctx) error {
+			user_id, err := middlewares.GetUserID(c)
+			if err != nil {
+				return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+					"error": "Unauthorized access",
+				})
+			}
+			token, err := middlewares.RefreshPaymentToken(user_id, &db.DB)
+			if err != nil {
+				return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+					"error": "failed to create payment token",
+				})
+			}
+			middlewares.SetPaymentCookies(c, token)
+			return c.SendStatus(fiber.StatusOK)
+		},
+	)
 }

@@ -1,7 +1,9 @@
 import { createStore } from "solid-js/store";
 import Header from "../../components/header.default";
 import { api } from "@utils/api";
-import { useNavigate } from "@solidjs/router";
+import { A, useLocation, useNavigate, useParams } from "@solidjs/router";
+import { Pay } from "@utils/payment";
+import { Match, Switch } from "solid-js";
 
 interface SigninPageProps {}
 
@@ -11,6 +13,8 @@ interface EmailSigninData {
 }
 
 function SigninPage(props: SigninPageProps) {
+	const location = useLocation();
+	
 	const navigate = useNavigate();
 	const [email_signup_data, set_email_signup_data] =
 		createStore<EmailSigninData>({
@@ -23,7 +27,7 @@ function SigninPage(props: SigninPageProps) {
 	};
 	return (
 		<main class="p-4 flex flex-col gap-4 bg-gray-50 min-h-screen items-center">
-			<Header with_home />
+			<Header />
 			<section class="max-w-md w-full space-y-8 grow">
 				<h2 class="text-center text-3xl text-gray-900">
 					Sign in to your account
@@ -44,54 +48,63 @@ function SigninPage(props: SigninPageProps) {
 					</div>
 				</div>
 
-				<form
-					onSubmit={async (e) => {
-						e.preventDefault();
-						try {
-							const response = await api.post(
-								"/auth/signin/email",
-								email_signup_data
-							);
-							localStorage.setItem("IS_AUTHENTICATED", "true");
-							navigate("/", { replace: true });
-						} catch (error) {
-							console.error("Signin error:", error);
-						}
-					}}
-					class="mt-8 space-y-6"
-				>
-					<div class="rounded shadow-sm -space-y-px">
-						<div>
-							<label for="email" class="sr-only">
-								Email address
-							</label>
-							<input
-								id="email"
-								name="email"
-								type="email"
-								required
-								value={email_signup_data.email}
-								onInput={handle_input}
-								class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-gray-500 focus:border-gray-500 focus:z-10 sm:text-sm"
-								placeholder="Email address"
-							/>
+					<form
+						onSubmit={async (e) => {
+							e.preventDefault();
+							try {
+								const response = await api.post(
+									"/auth/signin/email",
+									email_signup_data
+								);
+								localStorage.setItem(
+									"IS_AUTHENTICATED",
+									"true"
+								);
+								if (location.query.payment) {
+									Pay({
+										plan:location.query.payment as string
+									})
+								} else {
+									navigate("/", { replace: true });
+								}
+							} catch (error) {
+								console.error("Signin error:", error);
+							}
+						}}
+						class="mt-8 space-y-6"
+					>
+						<div class="rounded shadow-sm -space-y-px">
+							<div>
+								<label for="email" class="sr-only">
+									Email address
+								</label>
+								<input
+									id="email"
+									name="email"
+									type="email"
+									required
+									value={email_signup_data.email}
+									onInput={handle_input}
+									class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-night-900 focus:outline-none focus:ring-gray-500 focus:border-gray-500 focus:z-10 sm:text-sm"
+									placeholder="Email address"
+								/>
+							</div>
+							<div>
+								<label for="password" class="sr-only">
+									Password
+								</label>
+								<input
+									id="password"
+									name="password"
+									type="password"
+									required
+									value={email_signup_data.password}
+									onInput={handle_input}
+									class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-night-900 focus:outline-none focus:ring-gray-500 focus:border-gray-500 focus:z-10 sm:text-sm"
+									placeholder="Password"
+								/>
+							</div>
 						</div>
-						<div>
-							<label for="password" class="sr-only">
-								Password
-							</label>
-							<input
-								id="password"
-								name="password"
-								type="password"
-								required
-								value={email_signup_data.password}
-								onInput={handle_input}
-								class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-gray-500 focus:border-gray-500 focus:z-10 sm:text-sm"
-								placeholder="Password"
-							/>
-						</div>
-					</div>
 
 					<button
 						type="submit"
@@ -101,21 +114,33 @@ function SigninPage(props: SigninPageProps) {
 					</button>
 				</form>
 
-				<div class="flex items-center justify-between">
-					<a
-						href="/forgot-password"
-						class="text-sm font-medium text-gray-600 hover:text-gray-500"
-					>
-						Forgot your password?
-					</a>
-					<a
-						href="/signup"
-						class="text-sm font-medium text-gray-600 hover:text-gray-500"
-					>
-						No account? Sign up
-					</a>
-				</div>
-			</section>
+					<div class="flex items-center justify-between">
+						<A
+							href="/forgot-password"
+							class="text-sm font-medium text-gray-600 hover:text-gray-500"
+						>
+							Forgot your password?
+						</A>
+						<Switch>
+							<Match when={location.query.payment}>
+								<A
+									href={`/signup?payment=${location.query.payment}`}
+									class="text-sm font-medium text-gray-600 hover:text-gray-500"
+								>
+									No account? Sign up
+								</A>
+							</Match>
+							<Match when={!location.query.payment}>
+								<A
+									href="/signup"
+									class="text-sm font-medium text-gray-600 hover:text-gray-500"
+								>
+									No account? Sign up
+								</A>
+							</Match>
+						</Switch>
+					</div>
+				</section>
 		</main>
 	);
 }

@@ -11,13 +11,7 @@ import (
 func RegisterResumeRoutes(group fiber.Router) {
 	resume_group := group.Group("/resume")
 
-	// Protection complète : auth + CSRF + payment
-	resume_group.Use(
-		middlewares.Protected(),
-		middlewares.CSRFMiddleware(middlewares.CSRFConfig{}),
-		middlewares.PaymentAuthMiddleware(&db.DB),
-	)
-
+	resume_group.Use(middlewares.Protected(), middlewares.PayingFeature())
 	resume_group.Get("/data", func(c *fiber.Ctx) error {
 		return handlers.HandleGetResumeData(c, &db.DB)
 	})

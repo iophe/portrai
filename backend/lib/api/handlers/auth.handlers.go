@@ -68,11 +68,6 @@ func HandleEmailSignup(c *fiber.Ctx, data EmailSignupData) (AuthResponse, error)
 		return AuthResponse{}, err
 	}
 
-	// Création du CSRF token après l'inscription
-	if err := middlewares.GenerateCSRFToken(c); err != nil {
-		return AuthResponse{}, fmt.Errorf("failed to generate CSRF token: %w", err)
-	}
-
 	middlewares.SetAuthCookies(c, &middlewares.RefreshResponse{
 		AccessToken:  auth_response.AccessToken,
 		RefreshToken: auth_response.RefreshToken,
@@ -94,15 +89,6 @@ func HandleEmailSignin(c *fiber.Ctx, data EmailSigninData) (AuthResponse, error)
 		return AuthResponse{}, fmt.Errorf("email and password are required")
 	}
 
-	// Vérification de l'existence d'un token CSRF, s'il n'existe pas, on le génère.
-	cookieToken := c.Cookies("csrf_token")
-	if cookieToken == "" {
-		if err := middlewares.GenerateCSRFToken(c); err != nil {
-			return AuthResponse{}, fmt.Errorf("failed to generate CSRF token: %w", err)
-		}
-	}
-
-	// Demande à Supabase
 	response, err := makeSupabaseRequest("POST", "token?grant_type=password", data)
 	if err != nil {
 		return AuthResponse{}, fmt.Errorf("failed to communicate with auth service: %w", err)
@@ -113,7 +99,6 @@ func HandleEmailSignin(c *fiber.Ctx, data EmailSigninData) (AuthResponse, error)
 		return AuthResponse{}, err
 	}
 
-	// On configure les cookies d'authentification
 	middlewares.SetAuthCookies(c, &middlewares.RefreshResponse{
 		AccessToken:  auth_response.AccessToken,
 		RefreshToken: auth_response.RefreshToken,

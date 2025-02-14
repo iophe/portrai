@@ -21,7 +21,7 @@ func CreateStripeCustomer(email string, name string) (*stripe.Customer, error) {
 }
 
 // CreateCheckoutSession creates a new Stripe checkout session
-func CreateCheckoutSession(price_id string, customer_id string) (string, error) {
+func CreateCheckoutSession(product_id string, price_id string, customer_id string) (string, error) {
 	stripe.Key = utils.STRIPE_SECRET_KEY
 
 	params := &stripe.CheckoutSessionParams{
@@ -36,7 +36,8 @@ func CreateCheckoutSession(price_id string, customer_id string) (string, error) 
 		SuccessURL: stripe.String(utils.STRIPE_SUCCESS_URL),
 		CancelURL:  stripe.String(utils.STRIPE_CANCEL_URL),
 		Metadata: map[string]string{
-			"price_id": price_id, // Save the price here
+			"price_id":   price_id,
+			"product_id": product_id,
 		},
 	}
 

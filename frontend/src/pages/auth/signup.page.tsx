@@ -1,7 +1,8 @@
 import { createStore } from "solid-js/store";
 import Header from "../../components/header.default";
 import { api } from "@utils/api";
-import { useNavigate } from "@solidjs/router";
+import { useLocation, useNavigate } from "@solidjs/router";
+import { Pay } from "@utils/payment";
 
 interface SignupPageProps {}
 
@@ -14,6 +15,7 @@ interface EmailSignupData {
 
 function SignupPage(props: SignupPageProps) {
 	const navigate = useNavigate();
+	const location = useLocation();
 
 	const [email_signup_data, set_email_signup_data] =
 		createStore<EmailSignupData>({
@@ -38,101 +40,110 @@ function SignupPage(props: SignupPageProps) {
 					Sign up with Google
 				</button>
 
-				<div class="relative my-6">
-					<div class="absolute inset-0 flex items-center">
-						<div class="w-full border-t border-gray-300"></div>
-					</div>
-					<div class="relative flex justify-center text-sm">
-						<span class="px-2 bg-gray-50 text-gray-500">
-							Or continue with
-						</span>
-					</div>
-				</div>
-				<form
-					onSubmit={async (e) => {
-						e.preventDefault();
-						try {
-							const response = await api.post(
-								"/auth/signup/email",
-								email_signup_data
-							);
-							localStorage.setItem("IS_AUTHENTICATED", "true");
-							navigate("/", { replace: true });
-						} catch (error) {
-							console.error("Signup error:", error);
-						}
-					}}
-					class="mt-8 space-y-6"
-				>
-					<div class="rounded shadow-sm -space-y-px">
-						<div>
-							<label for="name" class="sr-only">
-								Full name
-							</label>
-							<input
-								id="name"
-								name="name"
-								type="text"
-								required
-								value={email_signup_data.name}
-								onInput={handle_input}
-								class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-gray-500 focus:border-gray-500 focus:z-10 sm:text-sm"
-								placeholder="Full name"
-							/>
+					<div class="relative my-6">
+						<div class="absolute inset-0 flex items-center">
+							<div class="w-full border-t border-gray-300"></div>
 						</div>
-						<div>
-							<label for="email" class="sr-only">
-								Email address
-							</label>
-							<input
-								id="email"
-								name="email"
-								type="email"
-								required
-								value={email_signup_data.email}
-								onInput={handle_input}
-								class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-gray-500 focus:border-gray-500 focus:z-10 sm:text-sm"
-								placeholder="Email address"
-							/>
-						</div>
-						<div>
-							<label for="password" class="sr-only">
-								Password
-							</label>
-							<input
-								id="password"
-								name="password"
-								type="password"
-								required
-								value={email_signup_data.password}
-								onInput={handle_input}
-								class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-gray-500 focus:border-gray-500 focus:z-10 sm:text-sm"
-								placeholder="Password"
-							/>
-						</div>
-						<div>
-							<label for="confirm_password" class="sr-only">
-								Confirm password
-							</label>
-							<input
-								id="confirm_password"
-								name="confirm_password"
-								type="password"
-								required
-								value={email_signup_data.confirm_password}
-								onInput={handle_input}
-								class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-gray-500 focus:border-gray-500 focus:z-10 sm:text-sm"
-								placeholder="Confirm password"
-							/>
+						<div class="relative flex justify-center text-sm">
+							<span class="px-2 bg-gray-50 text-gray-500">
+								Or continue with
+							</span>
 						</div>
 					</div>
-					<button
-						type="submit"
-						class="w-full flex justify-center py-2 px-4 border border-transparent rounded shadow-sm text-sm font-medium text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+					<form
+						onSubmit={async (e) => {
+							e.preventDefault();
+							try {
+								const response = await api.post(
+									"/auth/signup/email",
+									email_signup_data
+								);
+								localStorage.setItem(
+									"IS_AUTHENTICATED",
+									"true"
+								);
+								if (location.query.payment) {
+									Pay({
+										plan:location.query.payment as string
+									})
+								} else {
+									navigate("/", { replace: true });
+								}
+							} catch (error) {
+								console.error("Signup error:", error);
+							}
+						}}
+						class="mt-8 space-y-6"
 					>
-						Create account
-					</button>
-				</form>
+						<div class="rounded shadow-sm -space-y-px">
+							<div>
+								<label for="name" class="sr-only">
+									Full name
+								</label>
+								<input
+									id="name"
+									name="name"
+									type="text"
+									required
+									value={email_signup_data.name}
+									onInput={handle_input}
+									class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-night-900 rounded-t-md focus:outline-none focus:ring-gray-500 focus:border-gray-500 focus:z-10 sm:text-sm"
+									placeholder="Full name"
+								/>
+							</div>
+							<div>
+								<label for="email" class="sr-only">
+									Email address
+								</label>
+								<input
+									id="email"
+									name="email"
+									type="email"
+									required
+									value={email_signup_data.email}
+									onInput={handle_input}
+									class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-night-900 focus:outline-none focus:ring-gray-500 focus:border-gray-500 focus:z-10 sm:text-sm"
+									placeholder="Email address"
+								/>
+							</div>
+							<div>
+								<label for="password" class="sr-only">
+									Password
+								</label>
+								<input
+									id="password"
+									name="password"
+									type="password"
+									required
+									value={email_signup_data.password}
+									onInput={handle_input}
+									class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-night-900 focus:outline-none focus:ring-gray-500 focus:border-gray-500 focus:z-10 sm:text-sm"
+									placeholder="Password"
+								/>
+							</div>
+							<div>
+								<label for="confirm_password" class="sr-only">
+									Confirm password
+								</label>
+								<input
+									id="confirm_password"
+									name="confirm_password"
+									type="password"
+									required
+									value={email_signup_data.confirm_password}
+									onInput={handle_input}
+									class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-night-900 rounded-b-md focus:outline-none focus:ring-gray-500 focus:border-gray-500 focus:z-10 sm:text-sm"
+									placeholder="Confirm password"
+								/>
+							</div>
+						</div>
+						<button
+							type="submit"
+							class="w-full flex justify-center py-2 px-4 border border-transparent rounded shadow-sm text-sm font-medium text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+						>
+							Create account
+						</button>
+					</form>
 
 				<div class="flex justify-center">
 					<a

@@ -64,6 +64,7 @@ create table payment.products (
   active boolean,
   -- The product's name, meant to be displayable to the customer. Whenever this product is sold via a subscription, name will show up on associated invoice line item descriptions.
   name text,
+  validity_period interval,
   -- The product's description, meant to be displayable to the customer. Use this field to optionally store a long form explanation of the product being sold for your own rendering purposes.
   description text,
   -- A URL of the product image in Stripe, meant to be displayable to the customer.
@@ -86,6 +87,8 @@ create table payment.prices (
   product_id text references payment.products,
   -- Whether the price can be used for new purchases.
   active boolean,
+  -- Plan type.
+  plan text,
   -- A brief description of the price.
   description text,
   -- The unit amount as a positive integer in the smallest currency unit (e.g., 100 cents for US$1.00 or 100 for ¥100, a zero-decimal currency).
@@ -109,14 +112,26 @@ create table payment.prices (
  * PAYMENTS
  * Note: payments are created and managed in Stripe and synced to our DB via Stripe webhooks.
  */
-create type payment_status as enum ('completed', 'failed', 'pending');
+ create table payment.validity (
+    user_id uuid not null references auth.users on delete cascade unique,
+    -- Payment ID from Stripe, e.g. pi_1234.
+    payment_id text primary key,
+    -- ID of the price that created this payment.
+    price_id text references payment.prices,
+    -- Time at which the payment was created.
+    created_at timestamp with time zone default current_timestamp,
+    -- User payment validity, once expired the user loses access to paying features
+    expired_at timestamp with time zone,
+    -- Set of key-value pairs, used to store additional information about the object in a structured format.
+    metadata jsonb
+);
 
 create table payment.payments (
     -- Payment ID from Stripe, e.g. pi_1234.
-    id text primary key,
+    payment_id text primary key,
+
     user_id uuid not null references auth.users on delete cascade,
-    -- The status of the payment object, one of payment_status type above.
-    status payment_status,
+
     -- Set of key-value pairs, used to store additional information about the object in a structured format.
     metadata jsonb,
     -- ID of the price that created this payment.
@@ -126,9 +141,7 @@ create table payment.payments (
     -- Currency of the payment
     currency text not null,
     -- Time at which the payment was created.
-    created timestamp with time zone default timezone('utc'::text, now()) not null,
-    -- Time at which the payment was last updated.
-    updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+    created_at timestamp with time zone default current_timestamp
 );
 
 /******************************************************************************************/

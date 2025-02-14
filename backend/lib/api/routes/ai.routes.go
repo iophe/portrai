@@ -16,8 +16,7 @@ func RegisterAIRoutes(group fiber.Router) {
 	// Protection complète : auth + CSRF + payment
 	ai_group.Use(
 		middlewares.Protected(),
-		middlewares.CSRFMiddleware(middlewares.CSRFConfig{}),
-		middlewares.PaymentAuthMiddleware(&db.DB),
+		middlewares.PayingFeature(),
 	)
 
 	session_group := ai_group.Group("/session")
