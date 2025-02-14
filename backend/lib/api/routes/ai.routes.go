@@ -12,7 +12,12 @@ import (
 
 func RegisterAIRoutes(group fiber.Router) {
 	ai_group := group.Group("/ai")
-	ai_group.Use(middlewares.Protected())
+
+	// Protection complète : auth + CSRF + payment
+	ai_group.Use(
+		middlewares.Protected(),
+		middlewares.PayingFeature(),
+	)
 
 	session_group := ai_group.Group("/session")
 

@@ -115,3 +115,10 @@ func Int64ToTimestamptz(unix_timestamp int64) pgtype.Timestamptz {
 		Valid: true,
 	}
 }
+
+func IntervalToDuration(interval pgtype.Interval) time.Duration {
+	days := interval.Days + (interval.Months * 30)
+	duration := time.Duration(days)*24*time.Hour +
+		time.Duration(interval.Microseconds)*time.Microsecond
+	return duration
+}

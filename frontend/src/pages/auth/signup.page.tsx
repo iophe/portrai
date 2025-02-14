@@ -1,7 +1,8 @@
 import { createStore } from "solid-js/store";
 import Header from "../../components/header.default";
 import { api } from "@utils/api";
-import { useNavigate } from "@solidjs/router";
+import { useLocation, useNavigate } from "@solidjs/router";
+import { Pay } from "@utils/payment";
 
 interface SignupPageProps {}
 
@@ -14,6 +15,7 @@ interface EmailSignupData {
 
 function SignupPage(props: SignupPageProps) {
 	const navigate = useNavigate();
+	const location = useLocation();
 
 	const [email_signup_data, set_email_signup_data] =
 		createStore<EmailSignupData>({
@@ -61,7 +63,13 @@ function SignupPage(props: SignupPageProps) {
 									"IS_AUTHENTICATED",
 									"true"
 								);
-								navigate("/", { replace: true });
+								if (location.query.payment) {
+									Pay({
+										plan: location.query.payment as string,
+									});
+								} else {
+									navigate("/", { replace: true });
+								}
 							} catch (error) {
 								console.error("Signup error:", error);
 							}

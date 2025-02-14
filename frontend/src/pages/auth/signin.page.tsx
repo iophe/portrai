@@ -1,7 +1,9 @@
 import { createStore } from "solid-js/store";
 import Header from "../../components/header.default";
 import { api } from "@utils/api";
-import { useNavigate } from "@solidjs/router";
+import { A, useLocation, useNavigate, useParams } from "@solidjs/router";
+import { Pay } from "@utils/payment";
+import { Match, Switch } from "solid-js";
 
 interface SigninPageProps {}
 
@@ -11,6 +13,8 @@ interface EmailSigninData {
 }
 
 function SigninPage(props: SigninPageProps) {
+	const location = useLocation();
+
 	const navigate = useNavigate();
 	const [email_signup_data, set_email_signup_data] =
 		createStore<EmailSigninData>({
@@ -57,7 +61,13 @@ function SigninPage(props: SigninPageProps) {
 									"IS_AUTHENTICATED",
 									"true"
 								);
-								navigate("/", { replace: true });
+								if (location.query.payment) {
+									Pay({
+										plan: location.query.payment as string,
+									});
+								} else {
+									navigate("/", { replace: true });
+								}
 							} catch (error) {
 								console.error("Signin error:", error);
 							}
@@ -106,18 +116,30 @@ function SigninPage(props: SigninPageProps) {
 					</form>
 
 					<div class="flex items-center justify-between">
-						<a
+						<A
 							href="/forgot-password"
 							class="text-sm font-medium text-gray-600 hover:text-gray-500"
 						>
 							Forgot your password?
-						</a>
-						<a
-							href="/signup"
-							class="text-sm font-medium text-gray-600 hover:text-gray-500"
-						>
-							No account? Sign up
-						</a>
+						</A>
+						<Switch>
+							<Match when={location.query.payment}>
+								<A
+									href={`/signup?payment=${location.query.payment}`}
+									class="text-sm font-medium text-gray-600 hover:text-gray-500"
+								>
+									No account? Sign up
+								</A>
+							</Match>
+							<Match when={!location.query.payment}>
+								<A
+									href="/signup"
+									class="text-sm font-medium text-gray-600 hover:text-gray-500"
+								>
+									No account? Sign up
+								</A>
+							</Match>
+						</Switch>
 					</div>
 				</section>
 			</section>

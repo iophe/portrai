@@ -52,20 +52,17 @@ func RegisterAuthRoutes(group fiber.Router) {
 		middlewares.Protected(),
 		func(c *fiber.Ctx) error {
 			return c.SendStatus(fiber.StatusOK)
-		},
-	)
+		})
 
 	auth_group.Post("/logout",
 		middlewares.Protected(),
 		func(c *fiber.Ctx) error {
 			return handlers.HandleLogout(c)
-		},
-	)
+		})
 
 	auth_group.Post("/delete",
 		middlewares.Protected(),
 		func(c *fiber.Ctx) error {
 			return handlers.HandleDeleteAccount(c)
-		},
-	)
+		})
 }

@@ -1,4 +1,12 @@
-import { createSignal, For, Match, Show, Switch } from "solid-js";
+import {
+	createEffect,
+	createResource,
+	createSignal,
+	For,
+	Match,
+	Show,
+	Switch,
+} from "solid-js";
 import Header from "../../components/header.default";
 import { api } from "@utils/api";
 import { AxiosError } from "axios";
@@ -11,19 +19,10 @@ function Pricing(props: PricingProps) {
 
 	const [loading, setLoading] = createSignal<boolean>(false);
 
-	const handlePayment = async () => {
+	const handlePayment = async (plan: string) => {
 		try {
 			setLoading(true);
-			navigate("/signin");
-
-			// const response = await api.post("/payment/create-checkout-session");
-
-			// Redirect to Stripe Checkout
-			// if (response.data.checkout_url) {
-			// 	window.location.href = response.data.checkout_url;
-			// } else {
-			// 	throw new Error("No checkout URL received");
-			// }
+			navigate(`/signin?payment=${plan}`);
 		} catch (err) {
 			if ((err as AxiosError).response?.status === 401) {
 				navigate("/signin");
@@ -89,7 +88,7 @@ function Pricing(props: PricingProps) {
 								</li>
 							</ul>
 							<button
-								onClick={() => handlePayment()}
+								onClick={() => handlePayment("3month")}
 								class=" bg-night-600 w-full px-6 py-3 rounded-md text-snow-100 text-center font-medium"
 								classList={{
 									"opacity-75 cursor-not-allowed": loading(),

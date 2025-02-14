@@ -103,10 +103,12 @@ func HandleEmailSignin(c *fiber.Ctx, data EmailSigninData) (AuthResponse, error)
 		AccessToken:  auth_response.AccessToken,
 		RefreshToken: auth_response.RefreshToken,
 	})
+
 	slog.Info("successfully signed in",
 		"email", auth_response.User.Email,
 		"id", auth_response.User.Id,
 	)
+
 	return auth_response, nil
 }
 
@@ -152,6 +154,26 @@ func HandleLogout(c *fiber.Ctx) error {
 	})
 	c.Cookie(&fiber.Cookie{
 		Name:     "refresh_token",
+		Value:    "",
+		Expires:  time.Now().Add(-24 * time.Hour),
+		Secure:   true,
+		HTTPOnly: true,
+		SameSite: "Strict",
+	})
+
+	// Clear auth cookies regardless of Supabase response
+	c.Cookie(&fiber.Cookie{
+		Name:     "payment_status",
+		Value:    "",
+		Expires:  time.Now().Add(-24 * time.Hour),
+		Secure:   true,
+		HTTPOnly: true,
+		SameSite: "Strict",
+	})
+
+	// Clear auth cookies regardless of Supabase response
+	c.Cookie(&fiber.Cookie{
+		Name:     "payment_token",
 		Value:    "",
 		Expires:  time.Now().Add(-24 * time.Hour),
 		Secure:   true,

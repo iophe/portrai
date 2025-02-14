@@ -11,7 +11,7 @@ import (
 func RegisterResumeRoutes(group fiber.Router) {
 	resume_group := group.Group("/resume")
 
-	resume_group.Use(middlewares.Protected())
+	resume_group.Use(middlewares.Protected(), middlewares.PayingFeature())
 	resume_group.Get("/data", func(c *fiber.Ctx) error {
 		return handlers.HandleGetResumeData(c, &db.DB)
 	})
@@ -39,7 +39,6 @@ func RegisterResumeRoutes(group fiber.Router) {
 
 	// Experience Routes
 	experience_group := resume_group.Group("/experience")
-
 	experience_group.Post("/create", func(c *fiber.Ctx) error {
 		var data handlers.ExperienceCreationData
 		if err := c.BodyParser(&data); err != nil {
@@ -165,6 +164,7 @@ func RegisterResumeRoutes(group fiber.Router) {
 		}
 		return handlers.HandleReorderEducation(data, c, &db.DB)
 	})
+
 	// Skill Routes
 	skill_group := resume_group.Group("/skill")
 	skill_group.Post("/create", func(c *fiber.Ctx) error {
@@ -226,6 +226,7 @@ func RegisterResumeRoutes(group fiber.Router) {
 		}
 		return handlers.HandleReorderSkill(data, c, &db.DB)
 	})
+
 	// Certificate Routes
 	certificate_group := resume_group.Group("/certificate")
 	certificate_group.Post("/create", func(c *fiber.Ctx) error {
@@ -287,6 +288,7 @@ func RegisterResumeRoutes(group fiber.Router) {
 		}
 		return handlers.HandleReorderCertificate(data, c, &db.DB)
 	})
+
 	// Project Routes
 	project_group := resume_group.Group("/project")
 	project_group.Post("/create", func(c *fiber.Ctx) error {
