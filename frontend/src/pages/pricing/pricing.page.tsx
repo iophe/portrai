@@ -1,4 +1,12 @@
-import { createEffect, createResource, createSignal, For, Match, Show, Switch } from "solid-js";
+import {
+	createEffect,
+	createResource,
+	createSignal,
+	For,
+	Match,
+	Show,
+	Switch,
+} from "solid-js";
 import Header from "../../components/header.default";
 import { api } from "@utils/api";
 import { AxiosError } from "axios";
@@ -9,11 +17,9 @@ interface PricingProps {}
 function Pricing(props: PricingProps) {
 	const navigate = useNavigate();
 
-	const [billingInterval, setBillingInterval] = createSignal<
-		"monthly" | "yearly"
-	>("monthly");
+	const [loading, setLoading] = createSignal<boolean>(false);
 
-	const handlePayment = async (plan:string) => {
+	const handlePayment = async (plan: string) => {
 		try {
 			setLoading(true);
 			navigate(`/signin?payment=${plan}`);
@@ -22,28 +28,12 @@ function Pricing(props: PricingProps) {
 				navigate("/signin");
 			}
 		} finally {
-			setLoading(null);
+			setLoading(false);
 		}
 	};
 
 	return (
-
-		<Show
-            when={paymentStatus}
-            fallback={
-				<>  
-				<Header/>
-				<main>
-				<div class="text-center p-8">
-				<h2 class="text-2xl font-bold">You already have an active subscription</h2>
-				<p class="mt-4">Thank you for being a subscriber!</p>
-			</div>
-			</main>
-			</>	
-              
-            }
-        >
-            <main class="p-4 flex flex-col gap-4 bg-gray-50 min-h-screen">
+		<main class="md:px-48 px-8 mx-auto justify-items-center  p-4 flex flex-col gap-4 h-screen max-h-screen">
 			<Header />
 			<section class="md:py-16 py-8 flex flex-col gap-16 items-center">
 				{/* Header */}
@@ -137,8 +127,6 @@ function Pricing(props: PricingProps) {
 				</section>
 			</section>
 		</main>
-        </Show>
-		
 	);
 }
 

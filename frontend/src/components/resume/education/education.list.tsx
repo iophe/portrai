@@ -5,6 +5,8 @@ import { createResource, createSignal, For, Show, Suspense } from "solid-js";
 import { createStore } from "solid-js/store";
 import { EducationForm, EducationView } from "./education.view";
 import { Ordered } from "../ordered.util";
+import SectionHeader from "../utils/section.header";
+import LoadingSpinner from "@components/loading.spinner";
 
 interface EducationListProps {}
 
@@ -36,32 +38,26 @@ export function EducationList(props: EducationListProps) {
 
 	return (
 		<section class="w-full flex flex-col gap-4 justify-items-center">
-			<span class="flex flex-row gap-4">
-				<h2 class="text-2xl font-semibold text-gray-900">Education</h2>
-				<button
-					onClick={() => createNew(true)}
-					class="px-4 py-2 bg-gray-900 text-white rounded hover:bg-gray-800"
-				>
-					Add Education
-				</button>
-			</span>
-			<Show when={creating_new()}>
-				<EducationForm
-					onCancel={() => {
-						createNew(false);
-					}}
-					onSubmit={() => {
-						refetch();
-						createNew(false);
-					}}
-					is_new
-				/>
-			</Show>
-			<Suspense
-				fallback={
-					<p class="text-gray-500">Loading education history...</p>
-				}
-			>
+			<SectionHeader
+				add={() => {}}
+				section_title="Educations"
+				section_name="education"
+				form={(props) => (
+					<EducationForm
+						delete={() => {}}
+						onCancel={() => {
+							props.cancel();
+						}}
+						onSubmit={() => {
+							props.submit();
+							refetch();
+						}}
+						is_new
+					/>
+				)}
+			/>
+
+			<Suspense fallback={<LoadingSpinner />}>
 				<For each={educations()}>
 					{(education) => {
 						return (
@@ -106,34 +102,17 @@ export function EducationList(props: EducationListProps) {
 									)}
 									fallback={
 										<EducationView
+											refetch={() => refetch()}
+											set_dragged_id={set_dragged_id}
+											draggable={(id) =>
+												editing_educations.includes(id)
+											}
 											education={education}
 											edit={(education_id) => {
 												updateEditingEducations([
 													...editing_educations,
 													education_id,
 												]);
-											}}
-											delete={async (education_id) => {
-												try {
-													await api.post(
-														"/resume/education/delete",
-														{ education_id }
-													);
-													refetch();
-												} catch (error) {
-													fault.minor({
-														message:
-															(
-																(
-																	error as AxiosError
-																).response
-																	?.data as any
-															).error ??
-															(
-																error as AxiosError
-															).message,
-													});
-												}
 											}}
 										/>
 									}
@@ -148,6 +127,30 @@ export function EducationList(props: EducationListProps) {
 														education.education_id
 												)
 											);
+										}}
+										delete={async () => {
+											try {
+												await api.post(
+													"/resume/education/delete",
+													{
+														education_id:
+															education.education_id,
+													}
+												);
+												refetch();
+											} catch (error) {
+												fault.minor({
+													message:
+														(
+															(
+																error as AxiosError
+															).response
+																?.data as any
+														).error ??
+														(error as AxiosError)
+															.message,
+												});
+											}
 										}}
 										onSubmit={() => {
 											refetch();

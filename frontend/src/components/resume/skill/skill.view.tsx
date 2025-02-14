@@ -1,77 +1,81 @@
 import { useFault } from "@components/fault";
 import { api } from "@utils/api";
 import { AxiosError } from "axios";
-import { createSignal, For, Show } from "solid-js";
+import { createSignal, For, Setter, Show } from "solid-js";
 import { createStore } from "solid-js/store";
-import { AddNote, NoteList } from "../notes.util";
+import { NoteList } from "../notes.util";
+import ItemArticle from "../utils/item.article";
+import { ItemInfo, ItemText } from "../utils/item.content";
+import { FormTags, Tags } from "../utils/tags";
+import FormArticle from "../utils/form.article";
+import {
+	FormCancelButton,
+	FormCheckbox,
+	FormDeleteButton,
+	FormInputDate,
+	FormInputText,
+	FormLabeledInput,
+	FormSelect,
+	FormSubmitButton,
+	FormTextArea,
+} from "../utils/form.input";
 
 interface SkillViewProps {
 	skill: Skill;
 	edit: (skill_id: number) => void;
-	delete: (skill_id: number) => void;
+	refetch: () => void;
+	set_dragged_id: Setter<number | null>;
+	draggable: (id: number) => boolean;
 }
 
 export function SkillView(props: SkillViewProps) {
+	const fault = useFault();
 	return (
-		<article class="p-4 border border-gray-200 rounded-lg flex flex-col gap-2">
-			<header class="flex flex-col justify-between items-start mb-2">
-				<h3 class="text-lg font-medium text-gray-900">
-					{props.skill.skill_name}
-				</h3>
-				<div class="flex flex-row gap-4">
-					<Show when={props.skill.optional_skill_type}>
-						<span class="text-gray-600">
-							Type: {props.skill.optional_skill_type}
-						</span>
-					</Show>
-					<Show when={props.skill.optional_skill_level}>
-						<span class="text-gray-600">
-							Level: {props.skill.optional_skill_level}
-						</span>
-					</Show>
-				</div>
-			</header>
-			<p class="text-gray-700">{props.skill.description}</p>
-			<footer class="mt-2">
-				<ul class="flex gap-2 flex-wrap">
-					<For each={props.skill.tags}>
-						{(tag) => (
-							<li class="px-2 py-1 bg-gray-100 text-gray-700 text-sm rounded">
-								{tag}
-							</li>
-						)}
-					</For>
-				</ul>
-			</footer>
-			<div class="self-end flex flex-row gap-4">
-				<button
-					title="Edit this skill"
-					class="self-end w-fit px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded"
-					onclick={() => {
-						props.edit(props.skill.skill_id);
-					}}
-				>
-					Edit
-				</button>
-				<button
-					title="Delete this skill"
-					class="self-end w-fit px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded"
-					onclick={() => {
-						props.delete(props.skill.skill_id);
-					}}
-				>
-					Delete
-				</button>
-			</div>
-			<NoteList notes={props.skill.notes} />
-			<AddNote id={props.skill.skill_id} section_type="skill" />
-		</article>
+		<ItemArticle
+			edit={props.edit}
+			item_id={props.skill.skill_id}
+			title={props.skill.skill_name}
+			set_dragged_id={props.set_dragged_id}
+			draggable={props.draggable}
+			is_visible={props.skill?.is_visible ?? true}
+			toggle_visibility={async () => {
+				if (!props.skill) return;
+				try {
+					await api.post("/resume/skill/toggle", {
+						skill_id: props.skill.skill_id,
+					});
+					props.refetch();
+				} catch (error) {
+					fault.minor({
+						message:
+							((error as AxiosError).response?.data as any)
+								.error ?? (error as AxiosError).message,
+					});
+				}
+			}}
+		>
+			<Show when={props.skill.optional_skill_type}>
+				<ItemInfo>Type: {props.skill.optional_skill_type}</ItemInfo>
+			</Show>
+			<Show when={props.skill.optional_skill_level}>
+				<ItemInfo>Level: {props.skill.optional_skill_level}</ItemInfo>
+			</Show>
+			<ItemText>{props.skill.description}</ItemText>
+			<Tags values={props.skill.tags} />
+			<NoteList
+				notes={props.skill.notes}
+				id={props.skill.skill_id}
+				section_type="experience"
+				refetch={props.refetch}
+			/>
+		</ItemArticle>
 	);
 }
 
 interface SkillFormProps {
 	skill?: Skill;
 	is_new?: boolean;
+	delete: () => void;
 	onSubmit: (skill_id: number) => void;
 	onCancel: () => void;
 }
@@ -87,10 +91,8 @@ export function SkillForm(props: SkillFormProps) {
 		tags: props.skill?.tags || [],
 		notes: props.skill?.notes || [],
 	});
-	const [new_tag, setNewTag] = createSignal("");
 
-	async function handleSubmit(e: Event) {
-		e.preventDefault();
+	async function handleSubmit() {
 		if (!props.is_new) {
 			if (!props.skill) return;
 			try {
@@ -121,144 +123,76 @@ export function SkillForm(props: SkillFormProps) {
 		}
 	}
 
-	function addTag(e: KeyboardEvent) {
-		if (e.key === "Enter" && new_tag()) {
-			e.preventDefault();
-			setFormData("tags", [...form_data.tags, new_tag()]);
-			setNewTag("");
-		}
-	}
-
 	return (
-		<form onSubmit={handleSubmit} class="">
-			<div class="space-y-2">
-				<label class="block text-sm font-medium text-gray-700">
-					Skill Name
-				</label>
-				<input
-					type="text"
+		<FormArticle on_submit={handleSubmit}>
+			<FormDeleteButton delete={props.delete} />
+
+			<FormLabeledInput label="Skill">
+				<FormInputText
 					value={form_data.skill_name}
-					onInput={(e) =>
-						setFormData("skill_name", e.currentTarget.value)
-					}
-					class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-gray-500"
+					on_input={(value) => setFormData("skill_name", value)}
+					placeholder="Write the skill"
 					required
 				/>
-			</div>
+			</FormLabeledInput>
 
-			<div class="grid grid-cols-2 gap-4">
-				<div class="space-y-2">
-					<label class="block text-sm font-medium text-gray-700">
-						Skill Type
-					</label>
-					<select
-						value={form_data.optional_skill_type}
-						onChange={(e) =>
-							setFormData(
-								"optional_skill_type",
-								e.currentTarget.value
-							)
-						}
-						class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-gray-500"
-					>
-						<option value="">Select Type</option>
-						<option value="Technical">Technical</option>
-						<option value="Soft">Soft</option>
-						<option value="Language">Language</option>
-						<option value="Tool">Tool</option>
-						<option value="Framework">Framework</option>
-						<option value="Platform">Platform</option>
-						<option value="Other">Other</option>
-					</select>
-				</div>
-
-				<div class="space-y-2">
-					<label class="block text-sm font-medium text-gray-700">
-						Skill Level
-					</label>
-					<select
-						value={form_data.optional_skill_level}
-						onChange={(e) =>
-							setFormData(
-								"optional_skill_level",
-								e.currentTarget.value
-							)
-						}
-						class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-gray-500"
-					>
-						<option value="">Select Level</option>
-						<option value="beginner">Beginner</option>
-						<option value="amateur">Amateur</option>
-						<option value="competent">Competent</option>
-						<option value="proficient">Proficient</option>
-						<option value="Expert">Expert</option>
-					</select>
-				</div>
-			</div>
-
-			<div class="space-y-2 mt-4">
-				<label class="block text-sm font-medium text-gray-700">
-					Description
-				</label>
-				<textarea
-					value={form_data.description}
-					onInput={(e) =>
-						setFormData("description", e.currentTarget.value)
+			<FormLabeledInput label="Skill Type" optional>
+				<FormSelect
+					value={form_data.optional_skill_type}
+					on_input={(value) =>
+						setFormData("optional_skill_type", value)
 					}
-					class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-gray-500"
-					rows="4"
+					choices={[
+						"Technical",
+						"Soft",
+						"Language",
+						"Tool",
+						"Framework",
+						"Platform",
+						"Other",
+					]}
+					select_label="Select Type"
 				/>
-			</div>
-
-			<div class="space-y-2">
-				<label class="block text-sm font-medium text-gray-700">
-					Tags
-				</label>
-				<input
-					type="text"
-					value={new_tag()}
-					onInput={(e) => setNewTag(e.currentTarget.value)}
-					onKeyPress={addTag}
-					placeholder="Press Enter to add tag"
-					class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-gray-500"
+			</FormLabeledInput>
+			<FormLabeledInput label="Skill Level" optional>
+				<FormSelect
+					value={form_data.optional_skill_level}
+					on_input={(value) =>
+						setFormData("optional_skill_level", value)
+					}
+					choices={[
+						"Beginner",
+						"Amateur",
+						"Competent",
+						"Proficient",
+						"Expert",
+					]}
+					select_label="Select Level"
 				/>
-				<ul class="flex gap-2 flex-wrap">
-					<For each={form_data.tags}>
-						{(tag, index) => (
-							<li class="px-2 py-1 bg-gray-100 text-gray-700 text-sm rounded flex items-center gap-1">
-								{tag}
-								<button
-									type="button"
-									onClick={() =>
-										setFormData("tags", (t) =>
-											t.filter((_, i) => i !== index())
-										)
-									}
-									class="text-gray-500 hover:text-gray-700"
-								>
-									×
-								</button>
-							</li>
-						)}
-					</For>
-				</ul>
-			</div>
+			</FormLabeledInput>
+			<FormLabeledInput label="Description">
+				<FormTextArea
+					placeholder="write the description of this experience"
+					value={form_data.description}
+					on_input={(value) => setFormData("description", value)}
+					rows={4}
+				/>
+			</FormLabeledInput>
 
-			<div class="flex justify-end gap-4 mt-4">
-				<button
-					type="button"
-					onClick={props.onCancel}
-					class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded"
-				>
-					Cancel
-				</button>
-				<button
-					type="submit"
-					class="px-4 py-2 bg-gray-900 text-white rounded hover:bg-gray-800"
-				>
-					Save Skill
-				</button>
+			<FormTags
+				add={(tag) => {
+					setFormData("tags", [...form_data.tags, tag]);
+				}}
+				delete={(idx) => {
+					setFormData("tags", (t) => t.filter((_, i) => i !== idx));
+				}}
+				tags={form_data.tags}
+			/>
+
+			<div class="flex justify-end gap-4">
+				<FormCancelButton cancel={props.onCancel} />
+				<FormSubmitButton />
 			</div>
-		</form>
+		</FormArticle>
 	);
 }

@@ -1,6 +1,6 @@
 import { useNavigate } from "@solidjs/router";
 import { api } from "@utils/api";
-import { Component, createResource, JSXElement, Show } from "solid-js";
+import { Component, createResource, JSXElement, onMount, Show } from "solid-js";
 
 interface ProtectedProps {
 	fallback?: Component;
@@ -11,15 +11,17 @@ interface ProtectedProps {
 function Protected(props: ProtectedProps) {
 	const navigate = useNavigate();
 
-	if (!localStorage.getItem("IS_AUTHENTICATED")) {
-		if (props.redirect) {
-			navigate(props.redirect ?? "/", { replace: true });
-			return null;
+	onMount(() => {
+		if (!localStorage.getItem("IS_AUTHENTICATED")) {
+			if (props.redirect) {
+				queueMicrotask(() => {
+					navigate(props.redirect ?? "/", { replace: true });
+				});
+				return;
+			}
 		}
-		if (props.fallback) {
-			return props.fallback({});
-		}
-	}
+	});
+
 	const [is_authenticated] = createResource(async () => {
 		try {
 			await api.get("/auth/check");

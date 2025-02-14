@@ -29,16 +29,17 @@ function SignupPage(props: SignupPageProps) {
 		set_email_signup_data({ [name]: value });
 	};
 	return (
-		<main class="p-4 flex flex-col gap-4 bg-gray-50 min-h-screen items-center">
-			<Header with_home />
-			<section class="max-w-md w-full space-y-8">
-				<h2 class="text-center text-3xl text-gray-900">
-					Create your account
-				</h2>
+		<main class="md:px-48 px-8 mx-auto justify-items-center  p-4 flex flex-col gap-4 h-screen max-h-screen">
+			<Header />
+			<section class="md:py-16 py-8 flex flex-col gap-16 items-center">
+				<section class="max-w-md w-full space-y-8 grow">
+					<h2 class="text-center text-3xl text-night-900">
+						Create your account
+					</h2>
 
-				<button class="w-full flex justify-center py-2 px-4 border border-gray-300 rounded shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-					Sign up with Google
-				</button>
+					<button class="w-full flex justify-center py-2 px-4 border border-gray-300 rounded shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+						Sign up with Google
+					</button>
 
 					<div class="relative my-6">
 						<div class="absolute inset-0 flex items-center">
@@ -64,8 +65,8 @@ function SignupPage(props: SignupPageProps) {
 								);
 								if (location.query.payment) {
 									Pay({
-										plan:location.query.payment as string
-									})
+										plan: location.query.payment as string,
+									});
 								} else {
 									navigate("/", { replace: true });
 								}
@@ -145,14 +146,15 @@ function SignupPage(props: SignupPageProps) {
 						</button>
 					</form>
 
-				<div class="flex justify-center">
-					<a
-						href="/signin"
-						class="text-sm font-medium text-gray-600 hover:text-gray-500"
-					>
-						Already have an account? Sign in
-					</a>
-				</div>
+					<div class="flex justify-center">
+						<a
+							href="/signin"
+							class="text-sm font-medium text-gray-600 hover:text-gray-500"
+						>
+							Already have an account? Sign in
+						</a>
+					</div>
+				</section>
 			</section>
 		</main>
 	);
