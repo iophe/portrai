@@ -27,6 +27,13 @@ const Header: Component = () => {
 				</A>
 				<A
 					href="/signin"
+					class="tracking-widest"
+					activeClass="text-night-600"
+				>
+					<h2>Sign In</h2>
+				</A>
+				<A
+					href="/pricing"
 					class="tracking-widest bg-night-800 text-snow-100 py-2 px-4 rounded"
 					activeClass="text-night-600"
 				>

@@ -22,10 +22,10 @@ function Pricing(props: PricingProps) {
 	const handlePayment = async (plan: string) => {
 		try {
 			setLoading(true);
-			navigate(`/signin?payment=${plan}`);
+			navigate(`/signup?payment=${plan}`);
 		} catch (err) {
 			if ((err as AxiosError).response?.status === 401) {
-				navigate("/signin");
+				navigate("/signup");
 			}
 		} finally {
 			setLoading(false);

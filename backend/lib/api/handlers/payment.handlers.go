@@ -150,12 +150,14 @@ func HandleWebhook(c *fiber.Ctx, DB *db.Database) error {
 			slog.Error("error InsertPayment", "err", err)
 			return c.Status(fiber.StatusInternalServerError).Send([]byte("Error processing webhook"))
 		}
-		period, err := queries.GetValidityPeroidByProductID(query_ctx, session_obj.Metadata["product_id"])
-		if err != nil {
-			slog.Error("error GetValidityPeroidByProductID", "err", err)
-			return c.Status(fiber.StatusInternalServerError).Send([]byte("Error processing webhook"))
-		}
-		period_duration := db.IntervalToDuration(period)
+		/* 		period, err := queries.GetValidityPeroidByProductID(query_ctx, session_obj.Metadata["product_id"])
+		   		if err != nil {
+		   			slog.Error("error GetValidityPeroidByProductID", "err", err)
+		   			return c.Status(fiber.StatusInternalServerError).Send([]byte("Error processing webhook"))
+		   		} */
+		/* 		period_duration := db.IntervalToDuration(period) */
+
+		var period_duration time.Duration = 90 * 24 * time.Hour
 
 		err = queries.UpsertPaymentValidity(query_ctx, sqlc_gen.UpsertPaymentValidityParams{
 			PaymentID: session_obj.PaymentIntent.ID,
