@@ -444,3 +444,32 @@ CREATE TRIGGER update_project_notes_updated_at
     BEFORE UPDATE ON public.project_notes
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
+
+
+/**
+* Profile
+* 
+*/
+CREATE TABLE public.profiles (
+    profile_id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    user_id uuid NOT NULL REFERENCES auth.users ON DELETE CASCADE,
+    name text NOT NULL DEFAULT '',
+    email text NOT NULL DEFAULT '',
+    phone text NOT NULL DEFAULT '',
+    location text NOT NULL DEFAULT '',
+    linkedin text NOT NULL DEFAULT '',
+    website text NOT NULL DEFAULT '',
+    cv_photo_path text NOT NULL DEFAULT '',
+    tags text[] NOT NULL DEFAULT ARRAY[]::text[],
+    metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
+    created_at timestamp with time zone DEFAULT current_timestamp,
+    updated_at timestamp with time zone DEFAULT current_timestamp,
+    UNIQUE(user_id)
+);
+
+CREATE TRIGGER update_profiles_updated_at
+    BEFORE UPDATE ON public.profiles
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE INDEX profiles_user_idx ON public.profiles(user_id);
