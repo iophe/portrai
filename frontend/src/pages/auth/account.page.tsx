@@ -294,7 +294,13 @@ interface ProfileUpdateData {
 	profile: Profile;
 	onSave: (profile: Profile) => void;
   }> = (props) => {
-	// Créer un signal local pour gérer les modifications
+	// Mode édition: false = affichage, true = modification
+	const [isEditing, setIsEditing] = createSignal(false);
+	
+	// Statut de sauvegarde
+	const [saveStatus, setSaveStatus] = createSignal<'idle' | 'saving' | 'success' | 'error'>('idle');
+	
+	// Données du formulaire
 	const [formData, setFormData] = createSignal<ProfileUpdateData>({
 	  name: props.profile.name || "",
 	  email: props.profile.email || "",
@@ -305,13 +311,11 @@ interface ProfileUpdateData {
 	  cvPhotoPath: props.profile.avatar_url
 	});
   
-	// Chargement initial des données du profil
+	// Chargement initial des données
 	const [isLoading, setIsLoading] = createSignal(false);
-	const [error, setError] = createSignal<string | null>(null);
 	
 	const loadProfileData = async () => {
 	  setIsLoading(true);
-	  setError(null);
 	  
 	  try {
 		const profileData = await getProfile();
@@ -324,14 +328,13 @@ interface ProfileUpdateData {
 		  website: profileData.website || "",
 		});
 	  } catch (err) {
-		setError("Unable to load profile data");
 		console.error("Failed to load profile data:", err);
 	  } finally {
 		setIsLoading(false);
 	  }
 	};
 	
-	// Charger les données au chargement du composant
+	// Charger les données au montage du composant
 	onMount(() => {
 	  loadProfileData();
 	});
@@ -348,8 +351,9 @@ interface ProfileUpdateData {
 	const handleSubmit = async (e: Event): Promise<void> => {
 	  e.preventDefault();
 	  
+	  setSaveStatus('saving');
+	  
 	  try {
-		// Utiliser la fonction updateProfile au lieu d'appeler directement l'API
 		const success = await updateProfile({
 		  name: formData().name,
 		  email: formData().email,
@@ -361,16 +365,18 @@ interface ProfileUpdateData {
 		
 		if (success) {
 		  try {
-			// Récupérer les données mises à jour du profil depuis l'API
 			const updatedProfileData = await getProfile();
 			props.onSave(updatedProfileData);
+			setSaveStatus('success');
 			
-			// Optionnel: afficher un message de succès
-			console.log("Profile updated successfully");
+			// Désactiver le mode édition après sauvegarde réussie
+			setIsEditing(false);
+			
+			// Réinitialiser le statut après 3 secondes
+			setTimeout(() => setSaveStatus('idle'), 3000);
 		  } catch (fetchError) {
 			console.error("Profile updated but failed to fetch updated data:", fetchError);
 			
-			// Fallback: utiliser les données du formulaire si la récupération échoue
 			const updatedProfile: Profile = {
 			  ...props.profile,
 			  name: formData().name,
@@ -382,144 +388,235 @@ interface ProfileUpdateData {
 			};
 			
 			props.onSave(updatedProfile);
+			setSaveStatus('success');
+			setIsEditing(false);
+			setTimeout(() => setSaveStatus('idle'), 3000);
 		  }
 		}
 	  } catch (error) {
 		console.error("Failed to update profile:", error);
-		setError("Failed to update profile");
+		setSaveStatus('error');
+		setTimeout(() => setSaveStatus('idle'), 3000);
 	  }
 	};
   
 	return (
 	  <section class="bg-white rounded-lg p-6 shadow-sm">
-		<header>
-		  <h2 class="text-sm text-gray-500 uppercase mb-4">Account</h2>
+		<header class="flex justify-between items-center mb-4">
+		  <h2 class="text-sm text-gray-500 uppercase">Account</h2>
+		  
+		  {/* Bouton d'édition/annulation */}
+		  <Show 
+			when={isEditing()}
+			fallback={
+			  <button 
+				type="button"
+				onClick={() => setIsEditing(true)}
+				class="text-blue-500 hover:text-blue-600 text-sm font-medium"
+				disabled={isLoading()}
+			  >
+				Edit
+			  </button>
+			}
+		  >
+			<button 
+			  type="button"
+			  onClick={() => {
+				setIsEditing(false);
+				// Rétablir les données d'origine
+				setFormData({
+				  name: props.profile.name || "",
+				  email: props.profile.email || "",
+				  phone: props.profile.phone || "",
+				  location: props.profile.location || "",
+				  linkedin: props.profile.linkedin || "",
+				  website: props.profile.website || "",
+				  cvPhotoPath: props.profile.avatar_url
+				});
+			  }}
+			  class="text-gray-500 hover:text-gray-600 text-sm font-medium"
+			>
+			  Cancel
+			</button>
+		  </Show>
 		</header>
 		
-		{/* Afficher un message de chargement */}
+		{/* Indicateur de chargement */}
 		<Show when={isLoading()}>
 		  <div class="text-center py-4">
 			<p class="text-gray-500">Loading profile data...</p>
 		  </div>
 		</Show>
 		
-		{/* Afficher un message d'erreur */}
-		<Show when={error()}>
-		  <div class="bg-red-50 text-red-500 p-3 rounded-lg mb-4">
-			<p>{error()}</p>
-			<button 
-			  class="text-sm underline mt-1"
-			  onClick={() => loadProfileData()}
-			>
-			  Try again
-			</button>
-		  </div>
+		{/* Formulaire ou affichage */}
+		<Show
+		  when={isEditing()}
+		  fallback={
+			<div class="space-y-6">
+			  <article class="space-y-1">
+				<h3 class="text-sm text-gray-600 font-medium">Full Name</h3>
+				<p class="text-gray-800">{formData().name || "Not specified"}</p>
+			  </article>
+			  
+			  <article class="space-y-1">
+				<h3 class="text-sm text-gray-600 font-medium">Email</h3>
+				<p class="text-gray-800">{formData().email || "Not specified"}</p>
+			  </article>
+			  
+			  <article class="space-y-1">
+				<h3 class="text-sm text-gray-600 font-medium">Phone</h3>
+				<p class="text-gray-800">{formData().phone || "Not specified"}</p>
+			  </article>
+			  
+			  <article class="space-y-1">
+				<h3 class="text-sm text-gray-600 font-medium">Location</h3>
+				<p class="text-gray-800">{formData().location || "Not specified"}</p>
+			  </article>
+			  
+			  <article class="space-y-1">
+				<h3 class="text-sm text-gray-600 font-medium">LinkedIn Profile</h3>
+				<p class="text-gray-800">
+				  {formData().linkedin ? (
+					<a href={formData().linkedin} target="_blank" rel="noopener" class="text-blue-500 hover:underline">
+					  {formData().linkedin}
+					</a>
+				  ) : (
+					"Not specified"
+				  )}
+				</p>
+			  </article>
+			  
+			  <article class="space-y-1">
+				<h3 class="text-sm text-gray-600 font-medium">Personal Website</h3>
+				<p class="text-gray-800">
+				  {formData().website ? (
+					<a href={formData().website} target="_blank" rel="noopener" class="text-blue-500 hover:underline">
+					  {formData().website}
+					</a>
+				  ) : (
+					"Not specified"
+				  )}
+				</p>
+			  </article>
+			</div>
+		  }
+		>
+		  <form onSubmit={handleSubmit} class="grid grid-cols-1 gap-6">
+			<fieldset>
+			  <legend class="sr-only">Personal Information</legend>
+			  
+			  <article class="space-y-2">
+				<label for="full-name" class="block text-sm text-gray-600 font-medium">
+				  Full Name <span class="text-red-500">*</span>
+				</label>
+				<input
+				  id="full-name"
+				  type="text"
+				  value={formData().name}
+				  onInput={(e: InputEvent) => handleInputChange('name', (e.target as HTMLInputElement).value)}
+				  class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+				  required
+				/>
+			  </article>
+			  
+			  <article class="space-y-2">
+				<label for="email-address" class="block text-sm text-gray-600 font-medium">
+				  Email <span class="text-red-500">*</span>
+				</label>
+				<input
+				  id="email-address"
+				  type="email"
+				  value={formData().email}
+				  onInput={(e: InputEvent) => handleInputChange('email', (e.target as HTMLInputElement).value)}
+				  class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+				  required
+				/>
+				<p class="text-xs text-gray-500">
+				  Use this email to log in to your account and receive notifications.
+				</p>
+			  </article>
+			  
+			  <article class="space-y-2">
+				<label for="phone-number" class="block text-sm text-gray-600 font-medium">
+				  Phone <span class="text-gray-400 text-xs">(optional)</span>
+				</label>
+				<input
+				  id="phone-number"
+				  type="tel"
+				  value={formData().phone}
+				  onInput={(e: InputEvent) => handleInputChange('phone', (e.target as HTMLInputElement).value)}
+				  class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+				  placeholder="+1 (555) 123-4567"
+				/>
+			  </article>
+			  
+			  <article class="space-y-2">
+				<label for="user-location" class="block text-sm text-gray-600 font-medium">
+				  Location <span class="text-gray-400 text-xs">(optional)</span>
+				</label>
+				<input
+				  id="user-location"
+				  type="text"
+				  value={formData().location}
+				  onInput={(e: InputEvent) => handleInputChange('location', (e.target as HTMLInputElement).value)}
+				  class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+				  placeholder="City, Country"
+				/>
+			  </article>
+			  
+			  <article class="space-y-2">
+				<label for="linkedin-profile" class="block text-sm text-gray-600 font-medium">
+				  LinkedIn Profile <span class="text-gray-400 text-xs">(optional)</span>
+				</label>
+				<input
+				  id="linkedin-profile"
+				  type="url"
+				  value={formData().linkedin}
+				  onInput={(e: InputEvent) => handleInputChange('linkedin', (e.target as HTMLInputElement).value)}
+				  class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+				  placeholder="https://linkedin.com/in/..."
+				/>
+			  </article>
+			  
+			  <article class="space-y-2">
+				<label for="personal-website" class="block text-sm text-gray-600 font-medium">
+				  Personal Website <span class="text-gray-400 text-xs">(optional)</span>
+				</label>
+				<input
+				  id="personal-website"
+				  type="url"
+				  value={formData().website}
+				  onInput={(e: InputEvent) => handleInputChange('website', (e.target as HTMLInputElement).value)}
+				  class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+				  placeholder="https://..."
+				/>
+			  </article>
+			</fieldset>
+			
+			<footer class="mt-6 pt-4 border-t border-gray-100 flex justify-end items-center gap-3">
+			  {/* Indicateur de statut */}
+			  <Show when={saveStatus() === 'saving'}>
+				<span class="text-sm text-gray-500">Saving...</span>
+			  </Show>
+			  
+			  <Show when={saveStatus() === 'success'}>
+				<span class="text-sm text-green-500">✓ Saved successfully</span>
+			  </Show>
+			  
+			  <Show when={saveStatus() === 'error'}>
+				<span class="text-sm text-red-500">Failed to save</span>
+			  </Show>
+			  
+			  <button 
+				type="submit"
+				class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-medium"
+				disabled={saveStatus() === 'saving'}
+			  >
+				Save
+			  </button>
+			</footer>
+		  </form>
 		</Show>
-		
-		<form onSubmit={handleSubmit} class="grid grid-cols-1 gap-6">
-		  {/* Contenu du formulaire inchangé */}
-		  <fieldset>
-			<legend class="sr-only">Personal Information</legend>
-			
-			<article class="space-y-2">
-			  <label for="full-name" class="block text-sm text-gray-600 font-medium">
-				Full Name <span class="text-red-500">*</span>
-			  </label>
-			  <input
-				id="full-name"
-				type="text"
-				value={formData().name}
-				onInput={(e: InputEvent) => handleInputChange('name', (e.target as HTMLInputElement).value)}
-				class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-				required
-			  />
-			</article>
-			
-			<article class="space-y-2">
-			  <label for="email-address" class="block text-sm text-gray-600 font-medium">
-				Email <span class="text-red-500">*</span>
-			  </label>
-			  <input
-				id="email-address"
-				type="email"
-				value={formData().email}
-				onInput={(e: InputEvent) => handleInputChange('email', (e.target as HTMLInputElement).value)}
-				class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-				required
-			  />
-			  <p class="text-xs text-gray-500">
-				Use this email to log in to your PORTRAI account and receive notifications.
-			  </p>
-			</article>
-			
-			<article class="space-y-2">
-			  <label for="phone-number" class="block text-sm text-gray-600 font-medium">
-				Phone <span class="text-gray-400 text-xs">(optional)</span>
-			  </label>
-			  <input
-				id="phone-number"
-				type="tel"
-				value={formData().phone}
-				onInput={(e: InputEvent) => handleInputChange('phone', (e.target as HTMLInputElement).value)}
-				class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-				placeholder="+1 (555) 123-4567"
-			  />
-			</article>
-			
-			<article class="space-y-2">
-			  <label for="user-location" class="block text-sm text-gray-600 font-medium">
-				Location <span class="text-gray-400 text-xs">(optional)</span>
-			  </label>
-			  <input
-				id="user-location"
-				type="text"
-				value={formData().location}
-				onInput={(e: InputEvent) => handleInputChange('location', (e.target as HTMLInputElement).value)}
-				class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-				placeholder="City, Country"
-			  />
-			</article>
-			
-			<article class="space-y-2">
-			  <label for="linkedin-profile" class="block text-sm text-gray-600 font-medium">
-				LinkedIn Profile <span class="text-gray-400 text-xs">(optional)</span>
-			  </label>
-			  <input
-				id="linkedin-profile"
-				type="url"
-				value={formData().linkedin}
-				onInput={(e: InputEvent) => handleInputChange('linkedin', (e.target as HTMLInputElement).value)}
-				class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-				placeholder="https://linkedin.com/in/..."
-			  />
-			</article>
-			
-			<article class="space-y-2">
-			  <label for="personal-website" class="block text-sm text-gray-600 font-medium">
-				Personal Website <span class="text-gray-400 text-xs">(optional)</span>
-			  </label>
-			  <input
-				id="personal-website"
-				type="url"
-				value={formData().website}
-				onInput={(e: InputEvent) => handleInputChange('website', (e.target as HTMLInputElement).value)}
-				class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-				placeholder="https://..."
-			  />
-			</article>
-			
-		  </fieldset>
-		  
-		  <footer class="mt-6 pt-4 border-t border-gray-100 flex justify-end">
-			<button 
-			  type="submit"
-			  class="text-blue-500 hover:text-blue-600 font-medium"
-			  disabled={isLoading()}
-			>
-			  Save
-			</button>
-		  </footer>
-		</form>
 	  </section>
 	);
   };
