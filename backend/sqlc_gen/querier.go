@@ -21,7 +21,7 @@ type Querier interface {
 	CreateNoteOnExperience(ctx context.Context, arg CreateNoteOnExperienceParams) error
 	CreateNoteOnProject(ctx context.Context, arg CreateNoteOnProjectParams) error
 	CreateNoteOnSkill(ctx context.Context, arg CreateNoteOnSkillParams) error
-	CreateProfile(ctx context.Context, arg CreateProfileParams) (int64, error)
+	CreateProfile(ctx context.Context, arg CreateProfileParams) error
 	CreateProject(ctx context.Context, arg CreateProjectParams) (int64, error)
 	CreateSkill(ctx context.Context, arg CreateSkillParams) (int64, error)
 	DeleteCertificate(ctx context.Context, arg DeleteCertificateParams) error

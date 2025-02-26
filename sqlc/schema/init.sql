@@ -452,7 +452,7 @@ CREATE TRIGGER update_project_notes_updated_at
 */
 CREATE TABLE public.profiles (
     profile_id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    user_id uuid NOT NULL REFERENCES auth.users ON DELETE CASCADE,
+    user_id uuid not null references auth.users on delete cascade,
     name text NOT NULL DEFAULT '',
     email text NOT NULL DEFAULT '',
     phone text NOT NULL DEFAULT '',
@@ -460,7 +460,6 @@ CREATE TABLE public.profiles (
     linkedin text NOT NULL DEFAULT '',
     website text NOT NULL DEFAULT '',
     cv_photo_path text NOT NULL DEFAULT '',
-    tags text[] NOT NULL DEFAULT ARRAY[]::text[],
     metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
     created_at timestamp with time zone DEFAULT current_timestamp,
     updated_at timestamp with time zone DEFAULT current_timestamp,

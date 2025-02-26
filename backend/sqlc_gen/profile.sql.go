@@ -12,7 +12,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const createProfile = `-- name: CreateProfile :one
+const createProfile = `-- name: CreateProfile :exec
 INSERT INTO public.profiles (
     user_id,
     name,
@@ -20,8 +20,7 @@ INSERT INTO public.profiles (
     phone,
     location,
     linkedin,
-    website,
-    tags
+    website
 ) VALUES (
     $1::uuid,
     $2::text,
@@ -29,10 +28,8 @@ INSERT INTO public.profiles (
     $4::text,
     $5::text,
     $6::text,
-    $7::text,
-    $8::text[]
+    $7::text
 )
-RETURNING profile_id
 `
 
 type CreateProfileParams struct {
@@ -43,11 +40,10 @@ type CreateProfileParams struct {
 	Location string    `json:"location"`
 	Linkedin string    `json:"linkedin"`
 	Website  string    `json:"website"`
-	Tags     []string  `json:"tags"`
 }
 
-func (q *Queries) CreateProfile(ctx context.Context, arg CreateProfileParams) (int64, error) {
-	row := q.db.QueryRow(ctx, createProfile,
+func (q *Queries) CreateProfile(ctx context.Context, arg CreateProfileParams) error {
+	_, err := q.db.Exec(ctx, createProfile,
 		arg.UserID,
 		arg.Name,
 		arg.Email,
@@ -55,11 +51,8 @@ func (q *Queries) CreateProfile(ctx context.Context, arg CreateProfileParams) (i
 		arg.Location,
 		arg.Linkedin,
 		arg.Website,
-		arg.Tags,
 	)
-	var profile_id int64
-	err := row.Scan(&profile_id)
-	return profile_id, err
+	return err
 }
 
 const getProfileByUserId = `-- name: GetProfileByUserId :one
@@ -72,7 +65,6 @@ SELECT
     linkedin,
     website,
     cv_photo_path,
-    tags,
     metadata,
     created_at,
     updated_at
@@ -89,7 +81,6 @@ type GetProfileByUserIdRow struct {
 	Linkedin    string             `json:"linkedin"`
 	Website     string             `json:"website"`
 	CvPhotoPath string             `json:"cv_photo_path"`
-	Tags        []string           `json:"tags"`
 	Metadata    []byte             `json:"metadata"`
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
@@ -107,7 +98,6 @@ func (q *Queries) GetProfileByUserId(ctx context.Context, userID uuid.UUID) (Get
 		&i.Linkedin,
 		&i.Website,
 		&i.CvPhotoPath,
-		&i.Tags,
 		&i.Metadata,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -124,9 +114,8 @@ SET
     location = $4::text,
     linkedin = $5::text,
     website = $6::text,
-    cv_photo_path = $7::text,
-    tags = $8::text[]
-WHERE user_id = $9::uuid
+    cv_photo_path = $7::text
+WHERE user_id = $8::uuid
 `
 
 type UpdateProfileParams struct {
@@ -137,7 +126,6 @@ type UpdateProfileParams struct {
 	Linkedin    string    `json:"linkedin"`
 	Website     string    `json:"website"`
 	CvPhotoPath string    `json:"cv_photo_path"`
-	Tags        []string  `json:"tags"`
 	UserID      uuid.UUID `json:"user_id"`
 }
 
@@ -150,7 +138,6 @@ func (q *Queries) UpdateProfile(ctx context.Context, arg UpdateProfileParams) er
 		arg.Linkedin,
 		arg.Website,
 		arg.CvPhotoPath,
-		arg.Tags,
 		arg.UserID,
 	)
 	return err

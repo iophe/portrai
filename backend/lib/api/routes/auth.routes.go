@@ -3,6 +3,7 @@ package routes
 import (
 	"backend/lib/api/handlers"
 	"backend/lib/api/middlewares"
+	"backend/lib/services/db"
 	"log/slog"
 
 	"github.com/gofiber/fiber/v2"
@@ -19,7 +20,7 @@ func RegisterAuthRoutes(group fiber.Router) {
 					"error": "Invalid request body",
 				})
 			}
-			res, err := handlers.HandleEmailSignup(c, data)
+			res, err := handlers.HandleEmailSignup(c, data, &db.DB)
 			if err != nil {
 				slog.Error("signup failed", "err", err)
 				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{

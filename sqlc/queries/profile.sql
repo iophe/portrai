@@ -8,7 +8,6 @@ SELECT
     linkedin,
     website,
     cv_photo_path,
-    tags,
     metadata,
     created_at,
     updated_at
@@ -24,11 +23,10 @@ SET
     location = @location::text,
     linkedin = @linkedin::text,
     website = @website::text,
-    cv_photo_path = @cv_photo_path::text,
-    tags = @tags::text[]
+    cv_photo_path = @cv_photo_path::text
 WHERE user_id = @user_id::uuid;
 
--- name: CreateProfile :one
+-- name: CreateProfile :exec
 INSERT INTO public.profiles (
     user_id,
     name,
@@ -36,8 +34,7 @@ INSERT INTO public.profiles (
     phone,
     location,
     linkedin,
-    website,
-    tags
+    website
 ) VALUES (
     @user_id::uuid,
     @name::text,
@@ -45,7 +42,5 @@ INSERT INTO public.profiles (
     @phone::text,
     @location::text,
     @linkedin::text,
-    @website::text,
-    @tags::text[]
-)
-RETURNING profile_id;
+    @website::text
+);

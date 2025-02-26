@@ -1,5 +1,6 @@
 import Header, { AccountHeader } from "@components/header.autherized";
-import { Component, For, Show, createSignal } from "solid-js";
+import { getProfile, updateProfile } from "@utils/profile";
+import { Component, For, Show, createSignal, onMount } from "solid-js";
 
 interface AccountPageProps {}
 
@@ -26,6 +27,16 @@ export interface UserPlan {
     website?: string;
     avatar_url?: string;  // Ajout du champ pour l'URL de l'avatar
 }
+
+interface ProfileUpdateData {
+	name: string;
+	email: string;
+	phone: string;
+	location: string;
+	linkedin: string;
+	website: string;
+	cvPhotoPath?: string;
+  }
   
   export interface SocialConnection {
 	platform: 'facebook' | 'linkedin' | 'google';
@@ -283,13 +294,130 @@ export interface UserPlan {
 	profile: Profile;
 	onSave: (profile: Profile) => void;
   }> = (props) => {
+	// Créer un signal local pour gérer les modifications
+	const [formData, setFormData] = createSignal<ProfileUpdateData>({
+	  name: props.profile.name || "",
+	  email: props.profile.email || "",
+	  phone: props.profile.phone || "",
+	  location: props.profile.location || "",
+	  linkedin: props.profile.linkedin || "",
+	  website: props.profile.website || "",
+	  cvPhotoPath: props.profile.avatar_url
+	});
+  
+	// Chargement initial des données du profil
+	const [isLoading, setIsLoading] = createSignal(false);
+	const [error, setError] = createSignal<string | null>(null);
+	
+	const loadProfileData = async () => {
+	  setIsLoading(true);
+	  setError(null);
+	  
+	  try {
+		const profileData = await getProfile();
+		setFormData({
+		  name: profileData.name || "",
+		  email: profileData.email || "",
+		  phone: profileData.phone || "",
+		  location: profileData.location || "",
+		  linkedin: profileData.linkedin || "",
+		  website: profileData.website || "",
+		});
+	  } catch (err) {
+		setError("Unable to load profile data");
+		console.error("Failed to load profile data:", err);
+	  } finally {
+		setIsLoading(false);
+	  }
+	};
+	
+	// Charger les données au chargement du composant
+	onMount(() => {
+	  loadProfileData();
+	});
+  
+	// Gestionnaire pour les changements d'input
+	const handleInputChange = (field: keyof ProfileUpdateData, value: string): void => {
+	  setFormData((prev) => ({
+		...prev,
+		[field]: value
+	  }));
+	};
+  
+	// Fonction pour soumettre les modifications
+	const handleSubmit = async (e: Event): Promise<void> => {
+	  e.preventDefault();
+	  
+	  try {
+		// Utiliser la fonction updateProfile au lieu d'appeler directement l'API
+		const success = await updateProfile({
+		  name: formData().name,
+		  email: formData().email,
+		  phone: formData().phone,
+		  location: formData().location,
+		  linkedin: formData().linkedin,
+		  website: formData().website,
+		});
+		
+		if (success) {
+		  try {
+			// Récupérer les données mises à jour du profil depuis l'API
+			const updatedProfileData = await getProfile();
+			props.onSave(updatedProfileData);
+			
+			// Optionnel: afficher un message de succès
+			console.log("Profile updated successfully");
+		  } catch (fetchError) {
+			console.error("Profile updated but failed to fetch updated data:", fetchError);
+			
+			// Fallback: utiliser les données du formulaire si la récupération échoue
+			const updatedProfile: Profile = {
+			  ...props.profile,
+			  name: formData().name,
+			  email: formData().email,
+			  phone: formData().phone,
+			  location: formData().location,
+			  linkedin: formData().linkedin,
+			  website: formData().website,
+			};
+			
+			props.onSave(updatedProfile);
+		  }
+		}
+	  } catch (error) {
+		console.error("Failed to update profile:", error);
+		setError("Failed to update profile");
+	  }
+	};
+  
 	return (
 	  <section class="bg-white rounded-lg p-6 shadow-sm">
 		<header>
 		  <h2 class="text-sm text-gray-500 uppercase mb-4">Account</h2>
 		</header>
 		
-		<form class="grid grid-cols-1 gap-6">
+		{/* Afficher un message de chargement */}
+		<Show when={isLoading()}>
+		  <div class="text-center py-4">
+			<p class="text-gray-500">Loading profile data...</p>
+		  </div>
+		</Show>
+		
+		{/* Afficher un message d'erreur */}
+		<Show when={error()}>
+		  <div class="bg-red-50 text-red-500 p-3 rounded-lg mb-4">
+			<p>{error()}</p>
+			<button 
+			  class="text-sm underline mt-1"
+			  onClick={() => loadProfileData()}
+			>
+			  Try again
+			</button>
+		  </div>
+		</Show>
+		
+		<form onSubmit={handleSubmit} class="grid grid-cols-1 gap-6">
+		  {/* Contenu du formulaire inchangé */}
 		  <fieldset>
 			<legend class="sr-only">Personal Information</legend>
 			
@@ -300,8 +428,10 @@ export interface UserPlan {
 			  <input
 				id="full-name"
 				type="text"
-				value={props.profile.name}
+				value={formData().name}
+				onInput={(e: InputEvent) => handleInputChange('name', (e.target as HTMLInputElement).value)}
 				class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+				required
 			  />
 			</article>
 			
@@ -312,8 +442,10 @@ export interface UserPlan {
 			  <input
 				id="email-address"
 				type="email"
-				value={props.profile.email}
+				value={formData().email}
+				onInput={(e: InputEvent) => handleInputChange('email', (e.target as HTMLInputElement).value)}
 				class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+				required
 			  />
 			  <p class="text-xs text-gray-500">
 				Use this email to log in to your PORTRAI account and receive notifications.
@@ -327,7 +459,8 @@ export interface UserPlan {
 			  <input
 				id="phone-number"
 				type="tel"
-				value={props.profile.phone}
+				value={formData().phone}
+				onInput={(e: InputEvent) => handleInputChange('phone', (e.target as HTMLInputElement).value)}
 				class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 				placeholder="+1 (555) 123-4567"
 			  />
@@ -340,7 +473,8 @@ export interface UserPlan {
 			  <input
 				id="user-location"
 				type="text"
-				value={props.profile.location}
+				value={formData().location}
+				onInput={(e: InputEvent) => handleInputChange('location', (e.target as HTMLInputElement).value)}
 				class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 				placeholder="City, Country"
 			  />
@@ -353,7 +487,8 @@ export interface UserPlan {
 			  <input
 				id="linkedin-profile"
 				type="url"
-				value={props.profile.linkedin}
+				value={formData().linkedin}
+				onInput={(e: InputEvent) => handleInputChange('linkedin', (e.target as HTMLInputElement).value)}
 				class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 				placeholder="https://linkedin.com/in/..."
 			  />
@@ -366,25 +501,29 @@ export interface UserPlan {
 			  <input
 				id="personal-website"
 				type="url"
-				value={props.profile.website}
+				value={formData().website}
+				onInput={(e: InputEvent) => handleInputChange('website', (e.target as HTMLInputElement).value)}
 				class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 				placeholder="https://..."
 			  />
 			</article>
+			
 		  </fieldset>
+		  
+		  <footer class="mt-6 pt-4 border-t border-gray-100 flex justify-end">
+			<button 
+			  type="submit"
+			  class="text-blue-500 hover:text-blue-600 font-medium"
+			  disabled={isLoading()}
+			>
+			  Save
+			</button>
+		  </footer>
 		</form>
-		
-		<footer class="mt-6 pt-4 border-t border-gray-100 flex justify-end">
-		  <button 
-			onClick={() => props.onSave(props.profile)}
-			class="text-blue-500 hover:text-blue-600 font-medium"
-		  >
-			Save
-		  </button>
-		</footer>
 	  </section>
 	);
   };
+  
 
   function Account(props: AccountPageProps) {
     const [profile, setProfile] = createSignal<Profile>({

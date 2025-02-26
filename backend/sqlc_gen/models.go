@@ -276,7 +276,7 @@ type PaymentValidity struct {
 
 type Profile struct {
 	ProfileID   int64              `json:"profile_id"`
-	UserID      uuid.UUID          `json:"user_id"`
+	UserID      string             `json:"user_id"`
 	Name        string             `json:"name"`
 	Email       string             `json:"email"`
 	Phone       string             `json:"phone"`
@@ -284,7 +284,6 @@ type Profile struct {
 	Linkedin    string             `json:"linkedin"`
 	Website     string             `json:"website"`
 	CvPhotoPath string             `json:"cv_photo_path"`
-	Tags        []string           `json:"tags"`
 	Metadata    []byte             `json:"metadata"`
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`

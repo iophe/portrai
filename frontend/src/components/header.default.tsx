@@ -18,6 +18,14 @@ const Header: Component = () => {
 				>
 					<h2>Blog</h2>
 				</A>
+
+			<A
+					href="/blog"
+					class="tracking-widest"
+					activeClass="text-night-600"
+				>
+					<h2>Templates</h2>
+				</A>
 				<A
 					href="/pricing"
 					class="tracking-widest"

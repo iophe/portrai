@@ -21,6 +21,14 @@ function Header(props: HeaderProps) {
 				>
 					<h2>Blog</h2>
 				</A>
+
+			<A
+					href="/blog"
+					class="tracking-widest"
+					activeClass="text-night-600"
+				>
+					<h2>Templates</h2>
+				</A>
 				<A
 					href="/account"
 					class="tracking-widest bg-night-800 text-snow-100 py-2 px-4 rounded"

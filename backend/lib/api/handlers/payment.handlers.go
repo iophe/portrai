@@ -121,7 +121,9 @@ func HandleWebhook(c *fiber.Ctx, DB *db.Database) error {
 
 	switch event.Type {
 	case "checkout.session.completed":
+
 		var session_obj stripe.CheckoutSession
+
 		err := json.Unmarshal(event.Data.Raw, &session_obj)
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).Send([]byte("Error parsing webhook payload"))
@@ -137,6 +139,23 @@ func HandleWebhook(c *fiber.Ctx, DB *db.Database) error {
 			slog.Error("error marshaling metadata", "err", err)
 			return c.Status(fiber.StatusBadRequest).Send([]byte("Error parsing webhook payload"))
 		}
+
+		err2 := queries.CreateProfile(query_ctx, sqlc_gen.CreateProfileParams{
+			UserID:   customer.ID,
+			Name:     "",
+			Email:    "",
+			Phone:    "",
+			Location: "",
+			Linkedin: "",
+			Website:  "",
+		})
+		if err2 != nil {
+			slog.Error("error CreateProfile", "err", err)
+
+			return c.Status(fiber.StatusInternalServerError).Send([]byte("Error create profile "))
+
+		}
+		slog.Info("Profile successsfully created: ", "good", "ok")
 		err = queries.InsertPayment(query_ctx, sqlc_gen.InsertPaymentParams{
 			PaymentID: session_obj.PaymentIntent.ID,
 			UserID:    customer.ID,

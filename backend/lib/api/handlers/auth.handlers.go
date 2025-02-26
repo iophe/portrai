@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"backend/lib/api/middlewares"
+	"backend/lib/services/db"
 	"backend/lib/utils"
 	"bytes"
 	"encoding/json"
@@ -29,7 +30,7 @@ type EmailSignupData struct {
 	Password string `json:"password"`
 }
 
-func HandleEmailSignup(c *fiber.Ctx, data EmailSignupData) (AuthResponse, error) {
+func HandleEmailSignup(c *fiber.Ctx, data EmailSignupData, db *db.Database) (AuthResponse, error) {
 	// Validate input
 	if data.Email == "" || data.Password == "" {
 		return AuthResponse{}, fmt.Errorf("Email and password are required")
