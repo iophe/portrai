@@ -5,16 +5,20 @@ import (
 	"backend/lib/services/db"
 	database "backend/lib/services/db"
 	"backend/sqlc_gen"
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
+	"image"
+	"image/jpeg"
+	"image/png"
 	"log/slog"
 	"mime/multipart"
+	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/nfnt/resize"
 )
 
 type ProfileUpdateData struct {
@@ -110,106 +114,98 @@ func HandleAvatarUpload(c *fiber.Ctx, file *multipart.FileHeader, db *database.D
 		return AvatarUploadResponse{}, fmt.Errorf("no file provided")
 	}
 
-	userID := c.Locals("userID").(string)
-	if userID == "" {
-		return AvatarUploadResponse{}, fmt.Errorf("user not authenticated")
-	}
-
-	// Valider le fichier
-	if !isValidImageType(file.Header.Get("Content-Type")) {
-		return AvatarUploadResponse{}, fmt.Errorf("invalid file type: only images are allowed")
-	}
-	if file.Size > 5*1024*1024 {
-		return AvatarUploadResponse{}, fmt.Errorf("file too large: maximum size is 5MB")
-	}
-
-	// Lire le fichier
-	src, err := file.Open()
+	userID, err := middlewares.GetUserID(c)
 	if err != nil {
-		return AvatarUploadResponse{}, fmt.Errorf("failed to open file: %w", err)
-	}
-	defer src.Close()
-
-	fileBytes, err := io.ReadAll(src)
-	if err != nil {
-		return AvatarUploadResponse{}, fmt.Errorf("failed to read file: %w", err)
-	}
-
-	// Préparer le fichier pour l'upload
-	fileName := fmt.Sprintf("avatars/%s_%d_%s", userID, time.Now().Unix(), file.Filename)
-
-	// Préparer la requête multipart
-	uploadData := &bytes.Buffer{}
-	writer := multipart.NewWriter(uploadData)
-	part, err := writer.CreateFormFile("file", fileName)
-	if err != nil {
-		return AvatarUploadResponse{}, fmt.Errorf("failed to create form file: %w", err)
-	}
-	if _, err := part.Write(fileBytes); err != nil {
-		return AvatarUploadResponse{}, fmt.Errorf("failed to write file data: %w", err)
-	}
-	writer.Close()
-
-	// Faire la requête à Supabase
-	response, err := makeSupabaseRequest(
-		"POST",
-		fmt.Sprintf("storage/v1/object/%s", fileName),
-		uploadData.Bytes(),
-	)
-	if err != nil {
-		return AvatarUploadResponse{}, fmt.Errorf("failed to communicate with storage service: %w", err)
-	}
-
-	// Gérer la réponse
-	defer response.Body.Close()
-	bodyBytes, err := io.ReadAll(response.Body)
-	if err != nil {
-		return AvatarUploadResponse{}, fmt.Errorf("failed to read response body: %w", err)
-	}
-
-	if response.StatusCode >= 400 {
-		var errorResp SupabaseError
-		if err := json.Unmarshal(bodyBytes, &errorResp); err != nil {
-			return AvatarUploadResponse{}, fmt.Errorf("storage service error (status %d): failed to parse error response",
-				response.StatusCode)
-		}
-		slog.Error("Supabase error while handling the avatar upload", "body", string(bodyBytes))
-		errorMsg := errorResp.Message
-		if errorMsg == "" {
-			errorMsg = errorResp.Error
-		}
-		if errorMsg == "" {
-			errorMsg = "unexpected error"
-		}
-		return AvatarUploadResponse{}, fmt.Errorf("storage service error (status %d): %s",
-			response.StatusCode, errorMsg)
-	}
-
-	// Création du contexte avec timeout
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	queries := sqlc_gen.New(db.Pool)
-
-	// Mise à jour du profil
-	err2 := queries.UpdateProfile(query_ctx, sqlc_gen.UpdateProfileParams{
-		CvPhotoPath: fileName,
-	})
-
-	var result AvatarUploadResponse
-
-	if err2 != nil {
-		return result, c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error":   "Could not update profile",
-			"details": err.Error(),
+		return AvatarUploadResponse{}, c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized access",
 		})
 	}
 
-	slog.Info("successfully uploaded avatar",
-		"user_id", userID,
-		"path", result.Path,
-	)
+	// Valider le type de fichier
+	contentType := file.Header.Get("Content-Type")
+	if !strings.HasPrefix(contentType, "image/") {
+		return AvatarUploadResponse{}, fmt.Errorf("file must be an image")
+	}
 
-	return result, nil
+	// Limiter la taille du fichier
+	if file.Size > 10*1024*1024 {
+		return AvatarUploadResponse{}, fmt.Errorf("file size exceeds 10MB limit")
+	}
+
+	// Ouvrir le fichier uploadé
+	src, err := file.Open()
+	if err != nil {
+		return AvatarUploadResponse{}, fmt.Errorf("failed to open uploaded file: %w", err)
+	}
+	defer src.Close()
+
+	// Décoder l'image
+	img, format, err := image.Decode(src)
+	if err != nil {
+		return AvatarUploadResponse{}, fmt.Errorf("failed to decode image: %w", err)
+	}
+
+	// Redimensionner l'image pour un CV (800x1000 max)
+	resizedImg := resize.Thumbnail(800, 1000, img, resize.Lanczos3)
+
+	// Créer le répertoire de stockage
+	uploadDir := "./static/uploads/profile_photos"
+	if err := os.MkdirAll(uploadDir, 0755); err != nil {
+		return AvatarUploadResponse{}, fmt.Errorf("failed to create upload directory: %w", err)
+	}
+
+	// Créer un nom de fichier unique
+	ext := ".jpg"
+	if format == "png" {
+		ext = ".png"
+	}
+	uniqueFilename := fmt.Sprintf("%s_%d%s", userID, time.Now().UnixNano(), ext)
+	filePath := filepath.Join(uploadDir, uniqueFilename)
+
+	// Créer le fichier de destination
+	dst, err := os.Create(filePath)
+	if err != nil {
+		return AvatarUploadResponse{}, fmt.Errorf("failed to create destination file: %w", err)
+	}
+	defer dst.Close()
+
+	// Encoder et sauvegarder l'image
+	if format == "png" {
+		encoder := png.Encoder{
+			CompressionLevel: png.BestCompression,
+		}
+		if err := encoder.Encode(dst, resizedImg); err != nil {
+			return AvatarUploadResponse{}, fmt.Errorf("failed to encode png image: %w", err)
+		}
+	} else {
+		// Pour CV, utiliser JPEG avec 90% de qualité
+		if err := jpeg.Encode(dst, resizedImg, &jpeg.Options{Quality: 90}); err != nil {
+			return AvatarUploadResponse{}, fmt.Errorf("failed to encode jpeg image: %w", err)
+		}
+	}
+
+	// URL relative pour accéder au fichier
+	photoPath := fmt.Sprintf("/uploads/profile_photos/%s", uniqueFilename)
+
+	// Mettre à jour le profil dans la base de données
+	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	queries := sqlc_gen.New(db.Pool)
+	err = queries.UpdateProfileAvatar(query_ctx, sqlc_gen.UpdateProfileAvatarParams{
+		CvPhotoPath: photoPath,
+		UserID:      userID,
+	})
+
+	if err != nil {
+		return AvatarUploadResponse{}, fmt.Errorf("failed to update profile avatar: %w", err)
+	}
+
+	// Retourner la réponse avec le chemin et l'heure de mise à jour
+	return AvatarUploadResponse{
+		Path:      photoPath,
+		UpdatedAt: time.Now(),
+	}, nil
 }
 
 func isValidImageType(contentType string) bool {

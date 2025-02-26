@@ -233,6 +233,33 @@ export function JobMatchingSection() {
 }
 
 function Landing(props: LandingProps) {
+
+	const skills = [
+        'Product Strategy', 'Agile Methodologies', 
+        'User Research', 'Data Analytics', 
+        'Roadmap Planning', 'UX Design'
+    ];
+
+    const experiences = [
+        {
+            title: "Senior Product Manager",
+            company: "TechInnovate Solutions, San Francisco",
+            period: "Jan 2020 - Present",
+            achievements: [
+                "Led cross-functional team in developing AI-powered analytics platform",
+                "Increased user engagement by 45% through strategic product improvements",
+                "Implemented agile methodologies reducing development cycle by 30%"
+            ]
+        }
+    ];
+
+    const education = [
+        {
+            degree: "MBA in Technology Management",
+            institution: "Stanford Graduate School of Business",
+            period: "Sep 2015 - May 2017"
+        }
+    ];
 	return (
 		<main class="md:px-48 px-8 mx-auto justify-items-center  p-4 flex flex-col gap-4 max-h-screen min-h-screen">
 			<Header />
@@ -295,11 +322,77 @@ function Landing(props: LandingProps) {
 					</article>
 
 					<figure class="flex-1">
-						<div class="relative aspect-square max-w-lg">
-							<div class="w-full h-full bg-gradient-to-br from-gray-50 to-white rounded-2xl shadow-2xl border border-gray-100" />
-							<div class="absolute -bottom-4 -right-4 w-full h-full border-2 border-night-900 rounded-2xl" />
-						</div>
-					</figure>
+            <div class="relative aspect-square max-w-lg">
+                <div class="w-full h-full bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden p-6">
+                    <div class="h-full overflow-auto">
+                        <header class="text-center mb-6">
+                            <h1 class="text-3xl font-bold text-gray-900">Alexandra Rodriguez</h1>
+                            <p class="text-sm text-gray-600">
+                                Senior Product Manager | alexandra.rodriguez@email.com | (415) 555-0123
+                            </p>
+                            <p class="text-xs text-gray-500">San Francisco, CA | LinkedIn: /in/alexandrarodriguez</p>
+                        </header>
+
+                        <section class="mb-5">
+                            <h2 class="text-lg font-semibold border-b-2 border-gray-300 pb-2 mb-3">
+                                Professional Experience
+                            </h2>
+                            <For each={experiences}>
+                                {(exp) => (
+                                    <div class="mb-4">
+                                        <div class="flex justify-between items-baseline">
+                                            <h3 class="font-bold text-gray-800">{exp.title}</h3>
+                                            <span class="text-xs text-gray-600">{exp.period}</span>
+                                        </div>
+                                        <p class="text-sm italic text-gray-700">{exp.company}</p>
+                                        <ul class="list-disc pl-5 text-xs text-gray-700 space-y-1 mt-2">
+                                            <For each={exp.achievements}>
+                                                {(achievement) => (
+                                                    <li>{achievement}</li>
+                                                )}
+                                            </For>
+                                        </ul>
+                                    </div>
+                                )}
+                            </For>
+                        </section>
+
+                        <section class="mb-5">
+                            <h2 class="text-lg font-semibold border-b-2 border-gray-300 pb-2 mb-3">
+                                Education
+                            </h2>
+                            <For each={education}>
+                                {(edu) => (
+                                    <div>
+                                        <div class="flex justify-between items-baseline">
+                                            <h3 class="font-bold text-gray-800">{edu.degree}</h3>
+                                            <span class="text-xs text-gray-600">{edu.period}</span>
+                                        </div>
+                                        <p class="text-sm italic text-gray-700">{edu.institution}</p>
+                                    </div>
+                                )}
+                            </For>
+                        </section>
+
+                        <section>
+                            <h2 class="text-lg font-semibold border-b-2 border-gray-300 pb-2 mb-3">
+                                Skills
+                            </h2>
+                            <div class="flex flex-wrap gap-2">
+                                <For each={skills}>
+                                    {(skill) => (
+                                        <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full">
+                                            {skill}
+                                        </span>
+                                    )}
+                                </For>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+                <div class="absolute -bottom-4 -right-4 w-full h-full border-2 border-night-900 rounded-2xl" />
+            </div>
+        </figure>
 				</section>
 
 				<JobMatchingSection />

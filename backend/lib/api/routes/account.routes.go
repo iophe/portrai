@@ -18,7 +18,6 @@ func RegisterAccountRoutes(group fiber.Router) {
 	// Profile Update
 	account_group.Post("/profile/update", func(c *fiber.Ctx) error {
 		var data handlers.ProfileUpdateData
-
 		if err := c.BodyParser(&data); err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 				"error": "Invalid request body",
@@ -37,7 +36,17 @@ func RegisterAccountRoutes(group fiber.Router) {
 	// Upload Avatar
 	account_group.Post("/avatar/upload", func(c *fiber.Ctx) error {
 		// Gestion des fichiers uploadés via multipart
+
 		file, err := c.FormFile("avatar")
+		if err != nil {
+			slog.Error("Failed to receive file", "error", err)
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
+
+		fmt.Println("file extrait")
+
 		result, err := handlers.HandleAvatarUpload(c, file, &db.DB)
 		if err != nil {
 			slog.Error("Failed to upload avatar", "error", err)

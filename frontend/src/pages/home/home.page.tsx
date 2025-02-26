@@ -6,7 +6,6 @@ import { EducationList } from "@components/resume/education/education.list";
 import { CertificateList } from "@components/resume/certificate/certificate.list";
 import { SkillList } from "@components/resume/skill/skill.list";
 import { ProjectList } from "@components/resume/project/project.list";
-import ResumePreview from "@components/resume/generators/preview";
 import ExperienceIcon from "@assets/icons/briefcase.svg?component-solid";
 import EducationIcon from "@assets/icons/graduation.svg?component-solid";
 import CertificateIcon from "@assets/icons/diploma.svg?component-solid";

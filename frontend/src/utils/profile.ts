@@ -53,3 +53,26 @@ export async function updateProfile(profileData: ProfileData): Promise<boolean> 
       throw error;
     }
   }
+
+  export async function uploadAvatar(file: File): Promise<string> {
+    try {
+      const formData = new FormData();
+      formData.append('avatar', file);
+      
+      const response = await api.post('/account/avatar/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      // Utiliser le champ "path" de la réponse
+      if (response.data && response.data.path) {
+        return response.data.path;
+      } else {
+        throw new Error("Invalid response format");
+      }
+    } catch (error) {
+      console.error('Failed to upload avatar:', error);
+      throw error;
+    }
+  }

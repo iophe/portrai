@@ -1,5 +1,5 @@
 import Header, { AccountHeader } from "@components/header.autherized";
-import { getProfile, updateProfile } from "@utils/profile";
+import { getProfile, updateProfile, uploadAvatar } from "@utils/profile";
 import { Component, For, Show, createSignal, onMount } from "solid-js";
 
 interface AccountPageProps {}
@@ -126,51 +126,7 @@ interface ProfileUpdateData {
 	  </section>
 	);
   };
-  
-  export const NotificationsSection: Component<{
-	settings: NotificationSetting[];
-	onToggle: (id: string) => void;
-	onAction?: (id: string) => void;
-  }> = (props) => {
-	return (
-	  <section class="bg-white rounded-lg p-6 shadow-sm">
-		<header>
-		  <h2 class="text-sm text-gray-500 uppercase mb-4">Email Notifications</h2>
-		</header>
-		<ul class="space-y-6">
-		  <For each={props.settings}>
-			{(setting) => (
-			  <li class="flex items-center justify-between">
-				<article>
-				  <h3 class="font-medium">{setting.title}</h3>
-				  <p class="text-sm text-gray-500">{setting.description}</p>
-				</article>
-				<aside class="flex items-center gap-4">
-				  {setting.hasAction && (
-					<button
-					  onClick={() => props.onAction?.(setting.id)}
-					  class="text-blue-500 text-sm font-medium"
-					>
-					  {setting.actionLabel}
-					</button>
-				  )}
-				  <label class="relative inline-flex items-center cursor-pointer">
-					<input
-					  type="checkbox"
-					  checked={setting.enabled}
-					  class="sr-only peer"
-					  onChange={() => props.onToggle(setting.id)}
-					/>
-					<span class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></span>
-				  </label>
-				</aside>
-			  </li>
-			)}
-		  </For>
-		</ul>
-	  </section>
-	);
-  };
+
   
   export const DangerZone: Component<{
 	onDelete: () => void;
@@ -195,100 +151,155 @@ interface ProfileUpdateData {
 	);
   };
   
-  export const AvatarSection: Component<{
-	profileId: number;
-	currentAvatarUrl?: string;
-	onAvatarUpdate: (newAvatarUrl: string) => void;
-  }> = (props) => {
-	const [isUploading, setIsUploading] = createSignal(false);
-	const [previewUrl, setPreviewUrl] = createSignal(props.currentAvatarUrl);
-  
-	const handleImageUpload = async (e: Event) => {
-	  const input = e.target as HTMLInputElement;
-	  if (!input.files?.length) return;
-  
-	  const file = input.files[0];
-	  if (!file.type.startsWith('image/')) {
-		alert('Please upload an image file');
-		return;
-	  }
-  
-	  const objectUrl = URL.createObjectURL(file);
-	  setPreviewUrl(objectUrl);
-  
-	  const formData = new FormData();
-	  formData.append('avatar', file);
-	  formData.append('profile_id', props.profileId.toString());
-  
-	  setIsUploading(true);
-	  try {
-		/*  const response = await api.post('/resume/profile/upload-avatar', formData, {
-			headers: {
-				'Content-Type': 'multipart/form-data'
-			}
-		}); */
-		/*  props.onAvatarUpdate(response.data.avatar_url); */
-	  } catch (error) {
-		console.error('Failed to upload avatar:', error);
-		setPreviewUrl(props.currentAvatarUrl);
-	  } finally {
-		setIsUploading(false);
-	  }
-	};
-  
+  export const AvatarSection: Component<{ 
+    currentAvatarUrl?: string; 
+    onAvatarUpdate: (newAvatarUrl: string) => void;
+}> = (props) => {
+    // Utiliser une fonction pour construire l'URL complète si elle ne l'est pas déjà
+    const getFullAvatarUrl = (avatarPath?: string) => {
+        if (!avatarPath) return undefined;
+        
+        // Vérifier si l'URL est déjà complète
+        if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
+            return avatarPath;
+        }
+        
+        // Construire l'URL complète
+        return `http://localhost:3000/api/v1${avatarPath}`;
+    };
+
+    // Initialiser avec l'URL complète
+    const [previewUrl, setPreviewUrl] = createSignal(getFullAvatarUrl(props.currentAvatarUrl));
+    
+    const [isUploading, setIsUploading] = createSignal(false);
+    const [uploadError, setUploadError] = createSignal<string | null>(null);
+
+    // Le reste du code reste identique à l'exemple précédent
+    const uploadAvatar = async (file: File): Promise<string> => {
+        const formData = new FormData();
+        formData.append('avatar', file);
+
+        try {
+            const response = await fetch('/api/account_group/avatar/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Upload failed');
+            }
+
+            const data = await response.json();
+            return data.path;
+        } catch (error) {
+            console.error('Avatar upload error:', error);
+            throw error;
+        }
+    };
+
+    const handleImageUpload = async (e: Event) => {
+		const input = e.target as HTMLInputElement;
+        if (!input.files?.length) return;
+
+        const file = input.files[0];
+        
+        // Validation du fichier
+        if (!file.type.startsWith('image/')) {
+            setUploadError('Please upload an image file (JPG, PNG, or GIF)');
+            return;
+        }
+
+        // Vérifier la taille (max 5 MB)
+        if (file.size > 5 * 1024 * 1024) {
+            setUploadError('File size exceeds 5MB limit');
+            return;
+        }
+
+        // Réinitialiser l'erreur
+        setUploadError(null);
+
+        // Créer une preview locale avant l'upload
+        const objectUrl = URL.createObjectURL(file);
+        setPreviewUrl(objectUrl);
+
+        setIsUploading(true);
+        try {
+            const avatarUrl = await uploadAvatar(file);
+            
+            // Construire l'URL complète
+            const backendAvatarUrl = `http://localhost:3000/api/v1${avatarUrl}`;
+            
+            // Notifier le composant parent
+            props.onAvatarUpdate(backendAvatarUrl);
+
+            // Mettre à jour la preview
+            setPreviewUrl(backendAvatarUrl);
+        } catch (error) {
+            // ... (gestion des erreurs comme avant)
+        }
+    };
+
 	return (
-	  <section class="bg-white rounded-lg p-6 shadow-sm">
-		<header>
-		  <h2 class="text-sm text-gray-500 uppercase mb-4">Profile Picture</h2>
-		</header>
-		<article class="flex items-center gap-4">
-		  <figure class="relative group">
-			<div class="w-24 h-24 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
-			  <Show
-				when={previewUrl()}
-				fallback={
-				  <svg class="w-12 h-12 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-					<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-					<circle cx="12" cy="7" r="4" />
-				  </svg>
-				}
-			  >
-				<img 
-				  src={previewUrl()} 
-				  alt="Profile" 
-				  class="w-full h-full object-cover"
-				/>
-			  </Show>
-			  <div class="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-				<span class="text-white text-sm">Change</span>
-			  </div>
-			</div>
-			<input
-			  type="file"
-			  accept="image/*"
-			  class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-			  onChange={handleImageUpload}
-			  disabled={isUploading()}
-			  aria-label="Upload profile picture"
-			/>
-		  </figure>
-		  <aside class="flex-1">
-			<p class="text-sm text-gray-600">
-			  Upload a profile picture. Max file size 5MB.
-			</p>
-			<p class="text-xs text-gray-500 mt-1">
-			  Supported formats: JPG, PNG, GIF
-			</p>
-			<Show when={isUploading()}>
-			  <p class="text-sm text-blue-500 mt-2">
-				Uploading...
-			  </p>
-			</Show>
-		  </aside>
-		</article>
-	  </section>
-	);
-  };
+        <section class="bg-white rounded-lg p-6 shadow-sm">
+            <header>
+                <h2 class="text-sm text-gray-500 uppercase mb-4">Profile Picture</h2>
+            </header>
+            <article class="flex items-center gap-4">
+                <figure class="relative group">
+                    <div class="w-24 h-24 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
+                        <Show
+                            when={previewUrl()}
+                            fallback={
+                                <svg class="w-12 h-12 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                    <circle cx="12" cy="7" r="4" />
+                                </svg>
+                            }
+                        >
+                            <img 
+                                src={previewUrl()} 
+                                alt="Profile" 
+                                class="w-full h-full object-cover" 
+                            />
+                        </Show>
+                        <div class="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <span class="text-white text-sm">Change</span>
+                        </div>
+                    </div>
+                    <input 
+                        type="file"
+                        accept="image/*"
+                        class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        onChange={handleImageUpload}
+                        disabled={isUploading()} 
+                        aria-label="Upload profile picture"
+                    />
+                </figure>
+                <aside class="flex-1">
+                    <p class="text-sm text-gray-600">
+                        Upload a profile picture. Max file size 5MB.
+                    </p>
+                    <p class="text-xs text-gray-500 mt-1">
+                        Supported formats: JPG, PNG, GIF
+                    </p>
+                    
+                    <Show when={isUploading()}>
+                        <p class="text-sm text-blue-500 mt-2">
+                            Uploading...
+                        </p>
+                    </Show>
+                    
+                    <Show when={uploadError()}>
+                        <p class="text-sm text-red-500 mt-2">
+                            {uploadError()}
+                        </p>
+                    </Show>
+                </aside>
+            </article>
+        </section>
+    );
+};
 
   export const AccountSection: Component<{
 	profile: Profile;
@@ -644,13 +655,12 @@ interface ProfileUpdateData {
 			{/* Section Avatar */}
 			<section aria-label="Profile Picture">
                 <AvatarSection 
-                    profileId={profile().profile_id}
                     currentAvatarUrl={profile().avatar_url}
                     onAvatarUpdate={(newAvatarUrl) => {
                         setProfile(prev => ({ ...prev, avatar_url: newAvatarUrl }));
                     }}
                 />
-            </section>
+            </section>	
 		  
 		  {/* Plan Section */}
 		  <section aria-label="Plan Information">
@@ -663,13 +673,6 @@ interface ProfileUpdateData {
                     profile={profile()} 
                     onSave={(updatedProfile) => {
                         setProfile(updatedProfile);
-                        // Ici vous pouvez ajouter la logique pour sauvegarder vers l'API
-                      /*   api.post("/resume/profile/update", {
-                            ...updatedProfile,
-                            profile_id: updatedProfile.profile_id
-                        }).catch(error => {
-                            console.error("Failed to update profile:", error);
-                        }); */
                     }} 
                 />
             </section>

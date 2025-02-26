@@ -74,6 +74,7 @@ type Querier interface {
 	UpdateNoteOnProject(ctx context.Context, arg UpdateNoteOnProjectParams) error
 	UpdateNoteOnSkill(ctx context.Context, arg UpdateNoteOnSkillParams) error
 	UpdateProfile(ctx context.Context, arg UpdateProfileParams) error
+	UpdateProfileAvatar(ctx context.Context, arg UpdateProfileAvatarParams) error
 	UpdateProject(ctx context.Context, arg UpdateProjectParams) error
 	UpdateSkill(ctx context.Context, arg UpdateSkillParams) error
 	UpsertPaymentValidity(ctx context.Context, arg UpsertPaymentValidityParams) error

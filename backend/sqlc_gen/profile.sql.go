@@ -142,3 +142,19 @@ func (q *Queries) UpdateProfile(ctx context.Context, arg UpdateProfileParams) er
 	)
 	return err
 }
+
+const updateProfileAvatar = `-- name: UpdateProfileAvatar :exec
+UPDATE public.profiles
+SET cv_photo_path = $1
+WHERE user_id = $2
+`
+
+type UpdateProfileAvatarParams struct {
+	CvPhotoPath string    `json:"cv_photo_path"`
+	UserID      uuid.UUID `json:"user_id"`
+}
+
+func (q *Queries) UpdateProfileAvatar(ctx context.Context, arg UpdateProfileAvatarParams) error {
+	_, err := q.db.Exec(ctx, updateProfileAvatar, arg.CvPhotoPath, arg.UserID)
+	return err
+}

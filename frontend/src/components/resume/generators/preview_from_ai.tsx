@@ -6,6 +6,7 @@ import { api } from "@utils/api";
 import { AxiosError } from "axios";
 import { ExecutiveTemplate } from "./templates/default.template";
 import DownloadIcon from "@assets/icons/download.svg?component-solid";
+import { getProfile } from "@utils/profile";
 
 interface ResumePreviewProps {
 	template_name?: string;
@@ -69,13 +70,19 @@ function ResumeAIPreview(props: ResumePreviewProps) {
 					onClick={async () => {
 						try {
 							toGenerating(true);
+							            // Récupérer les données de profil
+										const profile = await getProfile();
 							const res = await api.get("/resume/data");
 
 							set_resume_data({
 								resume_data: res.data.resume_data as ResumeData,
 								contact: {
-									name: "Test",
-									email: "test@test.com",
+									name: profile.name,
+									email: profile.email,
+									phone: profile.phone || undefined,
+									location: profile.location || undefined,
+									linkedin: profile.linkedin || undefined,
+									website: profile.website || undefined,
 								},
 							});
 						} catch (error) {

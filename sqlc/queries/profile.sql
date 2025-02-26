@@ -44,3 +44,8 @@ INSERT INTO public.profiles (
     @linkedin::text,
     @website::text
 );
+
+-- name: UpdateProfileAvatar :exec
+UPDATE public.profiles
+SET cv_photo_path = $1
+WHERE user_id = $2;

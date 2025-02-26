@@ -20,7 +20,7 @@ const Header: Component = () => {
 				</A>
 
 			<A
-					href="/blog"
+					href="/template"
 					class="tracking-widest"
 					activeClass="text-night-600"
 				>
