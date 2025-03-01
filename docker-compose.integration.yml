@@ -1,0 +1,60 @@
+version: '3.8'
+
+include:
+  - supabase/docker-compose.supabase.yml
+  - monitoring/docker-compose.monitoring.yml
+  - vault/docker-compose.vault.dev.yml
+  - cache/docker-compose.cache.yml
+
+services:
+  portrai_backend:
+    build:
+      context: ./backend
+      dockerfile: dockerfile.integration
+    container_name: portrai_backend_integration
+    image: portrai_backend:integration
+    ports:
+      - "${BACKEND_PORT:-3000}:3000"
+    environment:
+      PORT: ${BACKEND_PORT}
+      LOG_FILEPATH: ${LOG_FILEPATH}
+      NODE_ENV: integration
+      
+      # DATABASE CONF
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      POSTGRES_USER: ${POSTGRES_USER}
+      
+      # CACHE CONF
+      DRAGONFLY_PASSWORD: ${DRAGONFLY_PASSWORD}
+      DRAGONFLY_ADDR: ${DRAGONFLY_ADDR}
+      DRAGONFLY_PORT: ${DRAGONFLY_PORT}
+      DRAGONFLY_USER: ${DRAGONFLY_USER}
+      
+      # SECRETS
+      SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
+      JWT_SECRET: ${JWT_SECRET}
+      KONG_AUTH_HOST: ${KONG_AUTH_HOST}
+      KONG_AUTH_PORT: ${KONG_AUTH_PORT}
+      GOTRUE_AUTH_HOST: ${GOTRUE_AUTH_HOST}
+      GOTRUE_AUTH_PORT: ${GOTRUE_AUTH_PORT}
+    restart: always
+
+  portrai_frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.integration
+      args:
+        - BACKEND_URL=${BACKEND_URL:-http://localhost:3000}
+    container_name: portrai_frontend_integration
+    image: portrai_frontend:integration
+    ports:
+      - "${FRONTEND_PORT:-5050}:80"
+    environment:
+      - NODE_ENV=production
+      - VITE_API_URL=${BACKEND_URL:-http://localhost:3000}
+    depends_on:
+      - portrai_backend
+    restart: always
