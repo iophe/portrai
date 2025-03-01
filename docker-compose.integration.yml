@@ -3,7 +3,7 @@ version: '3.8'
 include:
   - supabase/docker-compose.supabase.yml
   - monitoring/docker-compose.monitoring.yml
-  - vault/docker-compose.vault.dev.yml
+  - vault/docker-compose.vault.integration.yml
   - cache/docker-compose.cache.yml
 
 services:
@@ -12,6 +12,7 @@ services:
       context: ./backend
       dockerfile: dockerfile.integration
     container_name: portrai_backend_integration
+    profiles: [app]
     image: portrai_backend:integration
     ports:
       - "${BACKEND_PORT:-3000}:3000"
@@ -49,6 +50,7 @@ services:
       args:
         - BACKEND_URL=${BACKEND_URL:-http://localhost:3000}
     container_name: portrai_frontend_integration
+    profiles: [app]
     image: portrai_frontend:integration
     ports:
       - "${FRONTEND_PORT:-5050}:80"
