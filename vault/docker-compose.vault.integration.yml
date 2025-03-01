@@ -3,7 +3,7 @@ version: '3.8'
 services:
   portrai_vault:
     image: hashicorp/vault:latest
-    container_name: portrai_vault_integration
+    container_name: portrai_vault
     profiles: [vault]
     ports:
       - "8200:8200"
