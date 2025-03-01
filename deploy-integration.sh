@@ -23,7 +23,7 @@ if [ ! -f vault/root_tokens.json ]; then
   sudo python3 /home/dev/portrai/vault/vault_setup.py init --dev
 else
   echo "🔓 Déverrouillage de Vault..."
-  sudo python3/home/dev/portrai/vault/vault_setup.py unseal --dev
+  sudo python3 /home/dev/portrai/vault/vault_setup.py unseal --dev
 fi
 
 # Générer les secrets
