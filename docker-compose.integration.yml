@@ -46,7 +46,7 @@ services:
   portrai_frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile.integration
+      dockerfile: dockerfile.integration
       args:
         - BACKEND_URL=${BACKEND_URL:-http://localhost:3000}
     container_name: portrai_frontend_integration
