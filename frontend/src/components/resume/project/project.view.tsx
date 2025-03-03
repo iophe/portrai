@@ -41,8 +41,9 @@ export function ProjectView(props: ProjectViewProps) {
 			toggle_visibility={async () => {
 				if (!props.project) return;
 				try {
-					await api.post("/resume/project/toggle", {
-						project_id: props.project.project_id,
+					await api.post("/resume/items/toggle", {
+						item_id: props.project.project_id,
+						item_type: "project"
 					});
 					props.refetch();
 				} catch (error) {
@@ -100,10 +101,22 @@ export function ProjectForm(props: ProjectFormProps) {
 		if (!props.is_new) {
 			if (!props.project) return;
 			try {
-				await api.post("/resume/project/update", {
-					...form_data,
-					project_id: props.project.project_id,
-				});
+				const itemData = {
+					item_id: props.project.project_id,
+					item_type: "project",
+					title: form_data.project_title,
+					subtitle: form_data.optional_project_subtitle,
+					start_date: form_data.start_date,
+					end_date: form_data.optional_end_date,
+					is_current: form_data.is_current,
+					description: form_data.description,
+					priority: form_data.priority,
+					tags: form_data.tags,
+					// metadata can be used for any project-specific fields
+					metadata: {}
+				};
+
+				await api.post("/resume/items/update", itemData);
 				props.onSubmit(props.project.project_id);
 			} catch (error) {
 				fault.minor({
@@ -114,9 +127,22 @@ export function ProjectForm(props: ProjectFormProps) {
 			}
 		} else {
 			try {
-				const res = await api.post("/resume/project/create", form_data);
-				const project_id = res.data.project_id;
-				props.onSubmit(project_id);
+				const itemData = {
+					item_type: "project",
+					title: form_data.project_title,
+					subtitle: form_data.optional_project_subtitle,
+					start_date: form_data.start_date,
+					end_date: form_data.optional_end_date,
+					is_current: form_data.is_current,
+					description: form_data.description,
+					tags: form_data.tags,
+					// metadata can be used for any project-specific fields
+					metadata: {}
+				};
+
+				const res = await api.post("/resume/items/create", itemData);
+				const item_id = res.data.item_id;
+				props.onSubmit(item_id);
 			} catch (error) {
 				fault.minor({
 					message:

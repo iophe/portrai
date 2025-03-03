@@ -41,8 +41,9 @@ export function SkillView(props: SkillViewProps) {
 			toggle_visibility={async () => {
 				if (!props.skill) return;
 				try {
-					await api.post("/resume/skill/toggle", {
-						skill_id: props.skill.skill_id,
+					await api.post("/resume/items/toggle", {
+						item_id: props.skill.skill_id,
+						item_type: "skill"
 					});
 					props.refetch();
 				} catch (error) {
@@ -65,7 +66,7 @@ export function SkillView(props: SkillViewProps) {
 			<NoteList
 				notes={props.skill.notes}
 				id={props.skill.skill_id}
-				section_type="experience"
+				section_type="skill" // Changed from "experience" to "skill" to fix a bug
 				refetch={props.refetch}
 			/>
 		</ItemArticle>
@@ -96,10 +97,21 @@ export function SkillForm(props: SkillFormProps) {
 		if (!props.is_new) {
 			if (!props.skill) return;
 			try {
-				await api.post("/resume/skill/update", {
-					...form_data,
-					skill_id: props.skill.skill_id,
-				});
+				const itemData = {
+					item_id: props.skill.skill_id,
+					item_type: "skill",
+					title: form_data.skill_name,
+					subtitle: form_data.optional_skill_type,
+					description: form_data.description,
+					priority: form_data.priority,
+					tags: form_data.tags,
+					// Store skill level in metadata
+					metadata: {
+						skill_level: form_data.optional_skill_level
+					}
+				};
+
+				await api.post("/resume/items/update", itemData);
 				props.onSubmit(props.skill.skill_id);
 			} catch (error) {
 				fault.minor({
@@ -110,9 +122,21 @@ export function SkillForm(props: SkillFormProps) {
 			}
 		} else {
 			try {
-				const res = await api.post("/resume/skill/create", form_data);
-				const skill_id = res.data.skill_id;
-				props.onSubmit(skill_id);
+				const itemData = {
+					item_type: "skill",
+					title: form_data.skill_name,
+					subtitle: form_data.optional_skill_type,
+					description: form_data.description,
+					tags: form_data.tags,
+					// Store skill level in metadata
+					metadata: {
+						skill_level: form_data.optional_skill_level
+					}
+				};
+
+				const res = await api.post("/resume/items/create", itemData);
+				const item_id = res.data.item_id;
+				props.onSubmit(item_id);
 			} catch (error) {
 				fault.minor({
 					message:
@@ -172,7 +196,7 @@ export function SkillForm(props: SkillFormProps) {
 			</FormLabeledInput>
 			<FormLabeledInput label="Description">
 				<FormTextArea
-					placeholder="write the description of this experience"
+					placeholder="write the description of this skill"
 					value={form_data.description}
 					on_input={(value) => setFormData("description", value)}
 					rows={4}

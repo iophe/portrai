@@ -27,8 +27,8 @@ export function NoteForm(props: NoteFormProps) {
 						await api.post("/resume/notes/create", {
 							type: note_type(),
 							content: note_content(),
-							on_id: props.id,
-							section: props.section_type,
+							item_id: props.id,
+							item_type: props.section_type
 						});
 					} catch (error) {
 						fault.minor({
@@ -108,8 +108,8 @@ export function NoteView(props: NoteViewProps) {
 						try {
 							await api.post("/resume/notes/delete", {
 								note_id: props.note_id,
-								section: props.section_type,
-								on_id: props.on_id,
+								item_type: props.section_type,
+								item_id: props.on_id
 							});
 							props.refetch();
 						} catch (error) {
@@ -148,7 +148,7 @@ export function NoteList(props: NoteListProps) {
 					onClick={() => {
 						show_note_form(true);
 					}}
-					title="add a new experience"
+					title="add a new note"
 					disabled={showing_note_form()}
 					class="flex flex-row items-center gap-2"
 				>
@@ -162,7 +162,10 @@ export function NoteList(props: NoteListProps) {
 					id={props.id}
 					section_type={props.section_type}
 					cancel={() => show_note_form(false)}
-					submit={() => show_note_form(false)}
+					submit={() => {
+						show_note_form(false);
+						props.refetch();
+					}}
 				/>
 			</Show>
 			<ul class="flex flex-col gap-4">

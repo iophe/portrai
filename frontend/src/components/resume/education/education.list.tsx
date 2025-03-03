@@ -15,10 +15,25 @@ export function EducationList(props: EducationListProps) {
 
 	const [educations, { mutate, refetch }] = createResource(async () => {
 		try {
-			const response = await api.get("/resume/education/all");
-			const result: EducationsResponse =
-				response.data as EducationsResponse;
-			return result.educations;
+			const response = await api.get("/resume/items/by-type?item_type=education");
+			const result = response.data.items as ResumeItem[];
+			
+			const educationItems = result.map(item => ({
+				education_id: item.item_id,
+				degree: item.title,
+				school: item.subtitle,
+				location: item.location,
+				start_date: item.start_date,
+				optional_end_date: item.end_date,
+				is_current: item.is_current,
+				description: item.description,
+				priority: item.priority,
+				is_visible: item.is_visible,
+				tags: item.tags,
+				notes: item.notes
+			}));
+			
+			return educationItems as Education[];
 		} catch (error) {
 			fault.minor({
 				message:
@@ -68,7 +83,7 @@ export function EducationList(props: EducationListProps) {
 									editing_educations.includes(id)
 								}
 								id={education.education_id}
-								getId={(e: Education) => e.education_id}
+								getId={(e) => e.education_id}
 								list={educations}
 								onSubmit={async (
 									new_list,
@@ -78,10 +93,11 @@ export function EducationList(props: EducationListProps) {
 									mutate(new_list);
 									try {
 										await api.post(
-											"/resume/education/reorder",
+											"/resume/items/reorder",
 											{
-												education_id: source_id,
+												item_id: source_id,
 												after_id: target_id,
+												item_type: "education" // Specify the item type
 											}
 										);
 									} catch (error) {
@@ -131,10 +147,10 @@ export function EducationList(props: EducationListProps) {
 										delete={async () => {
 											try {
 												await api.post(
-													"/resume/education/delete",
+													"/resume/items/delete",
 													{
-														education_id:
-															education.education_id,
+														item_id: education.education_id,
+														item_type: "education" // Specify the item type
 													}
 												);
 												refetch();

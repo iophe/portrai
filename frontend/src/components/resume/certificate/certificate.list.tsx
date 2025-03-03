@@ -15,10 +15,23 @@ export function CertificateList(props: CertificateListProps) {
 
 	const [certificates, { mutate, refetch }] = createResource(async () => {
 		try {
-			const response = await api.get("/resume/certificate/all");
-			const result: CertificatesResponse =
-				response.data as CertificatesResponse;
-			return result.certificates;
+			const response = await api.get("/resume/items/by-type?item_type=certificate");
+			const result = response.data.items as ResumeItem[];
+			
+			const certificateItems = result.map(item => ({
+				certificate_id: item.item_id,
+				certificate_name: item.title,
+				optional_issuer: item.subtitle,
+				optional_location: item.location,
+				optional_granted_date: item.start_date,
+				description: item.description,
+				priority: item.priority,
+				is_visible: item.is_visible,
+				tags: item.tags,
+				notes: item.notes
+			}));
+			
+			return certificateItems as Certificate[];
 		} catch (error) {
 			fault.minor({
 				message:
@@ -68,7 +81,7 @@ export function CertificateList(props: CertificateListProps) {
 									editing_certificates.includes(id)
 								}
 								id={certificate.certificate_id}
-								getId={(e: Certificate) => e.certificate_id}
+								getId={(e) => e.certificate_id}
 								list={certificates}
 								onSubmit={async (
 									new_list,
@@ -78,10 +91,11 @@ export function CertificateList(props: CertificateListProps) {
 									mutate(new_list);
 									try {
 										await api.post(
-											"/resume/certificate/reorder",
+											"/resume/items/reorder",
 											{
-												certificate_id: source_id,
+												item_id: source_id,
 												after_id: target_id,
+												item_type: "certificate" // Specify the item type
 											}
 										);
 									} catch (error) {
@@ -124,10 +138,10 @@ export function CertificateList(props: CertificateListProps) {
 										delete={async () => {
 											try {
 												await api.post(
-													"/resume/certificate/delete",
+													"/resume/items/delete",
 													{
-														certificate_id:
-															certificate.certificate_id,
+														item_id: certificate.certificate_id,
+														item_type: "certificate" // Specify the item type
 													}
 												);
 												refetch();

@@ -1,3 +1,20 @@
+interface ResumeItem {
+	item_id: number;
+	item_type: string;
+	title: string;
+	subtitle?: string;
+	location?: string;
+	start_date?: string;
+	end_date?: string;
+	is_current?: boolean;
+	description: string;
+	priority: number;
+	is_visible: boolean;
+	tags: string[];
+	notes: any[];
+	metadata?: Record<string, any>;
+}
+
 // Base interfaces
 interface Experience {
 	experience_id: number;

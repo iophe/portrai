@@ -15,11 +15,23 @@ export function SkillList(props: SkillListProps) {
 
 	const [skills, { mutate, refetch }] = createResource(async () => {
 		try {
-			const response = await api.get("/resume/skill/all");
-			const result: SkillsResponse = response.data as SkillsResponse;
-
-			// Sort skills by priority
-			return result.skills.sort((a, b) => b.priority - a.priority);
+			const response = await api.get("/resume/items/by-type?item_type=skill");
+			const result = response.data.items as ResumeItem[];
+			
+			const skillItems = result.map(item => ({
+				skill_id: item.item_id,
+				skill_name: item.title,
+				optional_skill_type: item.subtitle,
+				// Skill level is stored in metadata in the unified schema
+				optional_skill_level: item.metadata?.skill_level || "",
+				description: item.description,
+				priority: item.priority,
+				is_visible: item.is_visible,
+				tags: item.tags,
+				notes: item.notes
+			}));
+			
+			return skillItems as Skill[];
 		} catch (error) {
 			fault.minor({
 				message:
@@ -63,7 +75,7 @@ export function SkillList(props: SkillListProps) {
 							dragged_id={dragged_id}
 							draggable={(id) => editing_skills.includes(id)}
 							id={skill.skill_id}
-							getId={(e: Skill) => e.skill_id}
+							getId={(e) => e.skill_id}
 							list={skills}
 							onSubmit={async (
 								new_list,
@@ -72,9 +84,10 @@ export function SkillList(props: SkillListProps) {
 							) => {
 								mutate(new_list);
 								try {
-									await api.post("/resume/skill/reorder", {
-										skill_id: source_id,
+									await api.post("/resume/items/reorder", {
+										item_id: source_id,
 										after_id: target_id,
+										item_type: "skill" // Specify the item type
 									});
 								} catch (error) {
 									fault.minor({
@@ -112,8 +125,11 @@ export function SkillList(props: SkillListProps) {
 									delete={async () => {
 										try {
 											await api.post(
-												"/resume/skill/delete",
-												{ skill_id: skill.skill_id }
+												"/resume/items/delete",
+												{ 
+													item_id: skill.skill_id,
+													item_type: "skill" // Specify the item type
+												}
 											);
 											refetch();
 										} catch (error) {

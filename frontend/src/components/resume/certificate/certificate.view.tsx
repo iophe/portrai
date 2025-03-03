@@ -40,8 +40,9 @@ export function CertificateView(props: CertificateViewProps) {
 			toggle_visibility={async () => {
 				if (!props.certificate) return;
 				try {
-					await api.post("/resume/certificate/toggle", {
-						certificate_id: props.certificate.certificate_id,
+					await api.post("/resume/items/toggle", {
+						item_id: props.certificate.certificate_id,
+						item_type: "certificate"
 					});
 					props.refetch();
 				} catch (error) {
@@ -98,10 +99,21 @@ export function CertificateForm(props: CertificateFormProps) {
 		if (!props.is_new) {
 			if (!props.certificate) return;
 			try {
-				await api.post("/resume/certificate/update", {
-					...form_data,
-					certificate_id: props.certificate.certificate_id,
-				});
+				const itemData = {
+					item_id: props.certificate.certificate_id,
+					item_type: "certificate",
+					title: form_data.certificate_name,
+					subtitle: form_data.optional_issuer,
+					location: form_data.optional_location,
+					start_date: form_data.optional_granted_date,
+					description: form_data.description,
+					priority: form_data.priority,
+					tags: form_data.tags,
+					// metadata can be used for any certificate-specific fields
+					metadata: {}
+				};
+
+				await api.post("/resume/items/update", itemData);
 				props.onSubmit(props.certificate.certificate_id);
 			} catch (error) {
 				fault.minor({
@@ -112,12 +124,21 @@ export function CertificateForm(props: CertificateFormProps) {
 			}
 		} else {
 			try {
-				const res = await api.post(
-					"/resume/certificate/create",
-					form_data
-				);
-				const certificate_id = res.data.certificate_id;
-				props.onSubmit(certificate_id);
+				const itemData = {
+					item_type: "certificate",
+					title: form_data.certificate_name,
+					subtitle: form_data.optional_issuer,
+					location: form_data.optional_location,
+					start_date: form_data.optional_granted_date,
+					description: form_data.description,
+					tags: form_data.tags,
+					// metadata can be used for any certificate-specific fields
+					metadata: {}
+				};
+
+				const res = await api.post("/resume/items/create", itemData);
+				const item_id = res.data.item_id;
+				props.onSubmit(item_id);
 			} catch (error) {
 				fault.minor({
 					message:
@@ -157,7 +178,7 @@ export function CertificateForm(props: CertificateFormProps) {
 					placeholder="Write the location"
 				/>
 			</FormLabeledInput>
-			<FormLabeledInput label="Start Date" optional>
+			<FormLabeledInput label="Granted Date" optional>
 				<FormInputDate
 					value={form_data.optional_granted_date}
 					on_input={(value) =>

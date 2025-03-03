@@ -41,8 +41,9 @@ export function ExperienceView(props: ExperienceViewProps) {
 			toggle_visibility={async () => {
 				if (!props.experience) return;
 				try {
-					await api.post("/resume/experience/toggle", {
-						experience_id: props.experience.experience_id,
+					await api.post("/resume/items/toggle", {
+						item_id: props.experience.experience_id,
+						item_type: "experience"
 					});
 					props.refetch();
 				} catch (error) {
@@ -102,17 +103,22 @@ export function ExperienceForm(props: ExperienceFormProps) {
 		if (!props.is_new) {
 			if (!props.experience) return;
 			try {
-				console.log({ ...form_data });
+				const itemData = {
+					item_id: props.experience.experience_id,
+					item_type: "experience",
+					title: form_data.job_title,
+					subtitle: form_data.company_name,
+					location: form_data.location,
+					start_date: form_data.start_date,
+					end_date: form_data.optional_end_date,
+					is_current: form_data.is_current,
+					description: form_data.description,
+					priority: form_data.priority,
+					tags: form_data.tags,
+					metadata: {}
+				};
 
-				await api.post("/resume/experience/update", {
-					...form_data,
-					experience_id: props.experience.experience_id,
-				});
-				console.log({
-					form_data: form_data,
-					experience_id: props.experience.experience_id,
-				});
-
+				await api.post("/resume/items/update", itemData);
 				props.onSubmit(props.experience.experience_id);
 			} catch (error) {
 				fault.minor({
@@ -123,12 +129,23 @@ export function ExperienceForm(props: ExperienceFormProps) {
 			}
 		} else {
 			try {
-				const res = await api.post(
-					"/resume/experience/create",
-					form_data
-				);
-				const experience_id = res.data.experience_id;
-				props.onSubmit(experience_id);
+				const itemData = {
+					item_type: "experience",
+					title: form_data.job_title,
+					subtitle: form_data.company_name,
+					location: form_data.location,
+					start_date: form_data.start_date,
+					end_date: form_data.optional_end_date,
+					is_current: form_data.is_current,
+					description: form_data.description,
+					tags: form_data.tags,
+					// metadata can be used for any experience-specific fields
+					metadata: {}
+				};
+
+				const res = await api.post("/resume/items/create", itemData);
+				const item_id = res.data.item_id;
+				props.onSubmit(item_id);
 			} catch (error) {
 				fault.minor({
 					message:

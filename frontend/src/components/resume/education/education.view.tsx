@@ -41,8 +41,9 @@ export function EducationView(props: EducationViewProps) {
 			toggle_visibility={async () => {
 				if (!props.education) return;
 				try {
-					await api.post("/resume/education/toggle", {
-						education_id: props.education.education_id,
+					await api.post("/resume/items/toggle", {
+						item_id: props.education.education_id,
+						item_type: "education"
 					});
 					props.refetch();
 				} catch (error) {
@@ -102,10 +103,23 @@ export function EducationForm(props: EducationFormProps) {
 		if (!props.is_new) {
 			if (!props.education) return;
 			try {
-				await api.post("/resume/education/update", {
-					...form_data,
-					education_id: props.education.education_id,
-				});
+				const itemData = {
+					item_id: props.education.education_id,
+					item_type: "education",
+					title: form_data.degree,
+					subtitle: form_data.school,
+					location: form_data.location,
+					start_date: form_data.start_date,
+					end_date: form_data.optional_end_date,
+					is_current: form_data.is_current,
+					description: form_data.description,
+					priority: form_data.priority,
+					tags: form_data.tags,
+					// metadata can be used for any education-specific fields
+					metadata: {}
+				};
+
+				await api.post("/resume/items/update", itemData);
 				props.onSubmit(props.education.education_id);
 			} catch (error) {
 				fault.minor({
@@ -116,12 +130,23 @@ export function EducationForm(props: EducationFormProps) {
 			}
 		} else {
 			try {
-				const res = await api.post(
-					"/resume/education/create",
-					form_data
-				);
-				const education_id = res.data.education_id;
-				props.onSubmit(education_id);
+				const itemData = {
+					item_type: "education",
+					title: form_data.degree,
+					subtitle: form_data.school,
+					location: form_data.location,
+					start_date: form_data.start_date,
+					end_date: form_data.optional_end_date,
+					is_current: form_data.is_current,
+					description: form_data.description,
+					tags: form_data.tags,
+					// metadata can be used for any education-specific fields
+					metadata: {}
+				};
+
+				const res = await api.post("/resume/items/create", itemData);
+				const item_id = res.data.item_id;
+				props.onSubmit(item_id);
 			} catch (error) {
 				fault.minor({
 					message:

@@ -15,9 +15,24 @@ export function ProjectList(props: ProjectListProps) {
 
 	const [projects, { mutate, refetch }] = createResource(async () => {
 		try {
-			const response = await api.get("/resume/project/all");
-			const result: ProjectsResponse = response.data as ProjectsResponse;
-			return result.projects;
+			const response = await api.get("/resume/items/by-type?item_type=project");
+			const result = response.data.items as ResumeItem[];
+			
+			const projectItems = result.map(item => ({
+				project_id: item.item_id,
+				project_title: item.title,
+				optional_project_subtitle: item.subtitle,
+				start_date: item.start_date,
+				optional_end_date: item.end_date,
+				is_current: item.is_current,
+				description: item.description,
+				priority: item.priority,
+				is_visible: item.is_visible,
+				tags: item.tags,
+				notes: item.notes
+			}));
+			
+			return projectItems as Project[];
 		} catch (error) {
 			fault.minor({
 				message:
@@ -66,7 +81,7 @@ export function ProjectList(props: ProjectListProps) {
 									editing_projects.includes(id)
 								}
 								id={project.project_id}
-								getId={(e: Project) => e.project_id}
+								getId={(e) => e.project_id}
 								list={projects}
 								onSubmit={async (
 									new_list,
@@ -76,10 +91,11 @@ export function ProjectList(props: ProjectListProps) {
 									mutate(new_list);
 									try {
 										await api.post(
-											"/resume/project/reorder",
+											"/resume/items/reorder",
 											{
-												project_id: source_id,
+												item_id: source_id,
 												after_id: target_id,
+												item_type: "project" // Specify the item type
 											}
 										);
 									} catch (error) {
@@ -120,10 +136,10 @@ export function ProjectList(props: ProjectListProps) {
 										delete={async () => {
 											try {
 												await api.post(
-													"/resume/project/delete",
+													"/resume/items/delete",
 													{
-														project_id:
-															project.project_id,
+														item_id: project.project_id,
+														item_type: "project" // Specify the item type
 													}
 												);
 												refetch();
