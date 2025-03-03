@@ -12,8 +12,10 @@ import EducationIcon from "@assets/icons/graduation.svg?component-solid";
 import CertificateIcon from "@assets/icons/diploma.svg?component-solid";
 import ProjectIcon from "@assets/icons/project.svg?component-solid";
 import SkillIcon from "@assets/icons/skill.svg?component-solid";
+import SettingsIcon from "@assets/icons/settings.svg?component-solid";
 import { createSignal, Match, Switch } from "solid-js";
 import ResumeAIPreview from "@components/resume/generators/preview_from_ai";
+import ResumeSettings from "@components/resume/resume.settings";
 
 interface HomeProps {}
 
@@ -30,12 +32,24 @@ function Home(props: HomeProps) {
 			 items-start text-night-900"
 			>
 				<section class="overflow-y-auto pr-4 h-full">
-					<aside class="flex gap-4 justify-between">
+					<aside class="flex gap-4 justify-between text-sm">
+						<button
+							onclick={() => {
+								set_section("settings");
+							}}
+							class="flex flex-wrap gap-2 items-center rounded"
+							classList={{
+								"bg-lapis-50 px-4 py-2":
+									section() === "settings",
+							}}
+						>
+							<SettingsIcon class="w-8 h-8 [&_path]:stroke-night-900" />
+						</button>
 						<button
 							onclick={() => {
 								set_section("experience");
 							}}
-							class="flex flex-wrap gap-2 items-center"
+							class="flex flex-wrap gap-2 items-center rounded"
 							classList={{
 								"bg-lapis-50 px-4 py-2":
 									section() === "experience",
@@ -48,7 +62,7 @@ function Home(props: HomeProps) {
 							onclick={() => {
 								set_section("education");
 							}}
-							class="flex flex-wrap gap-2 items-center"
+							class="flex flex-wrap gap-2 items-center rounded"
 							classList={{
 								"bg-lapis-50 px-4 py-2":
 									section() === "education",
@@ -61,7 +75,7 @@ function Home(props: HomeProps) {
 							onclick={() => {
 								set_section("certificate");
 							}}
-							class="flex flex-wrap gap-2 items-center"
+							class="flex flex-wrap gap-2 items-center rounded"
 							classList={{
 								"bg-lapis-50 px-4 py-2":
 									section() === "certificate",
@@ -74,7 +88,7 @@ function Home(props: HomeProps) {
 							onclick={() => {
 								set_section("project");
 							}}
-							class="flex flex-wrap gap-2 items-center"
+							class="flex flex-wrap gap-2 items-center rounded"
 							classList={{
 								"bg-lapis-50 px-4 py-2":
 									section() === "project",
@@ -87,7 +101,7 @@ function Home(props: HomeProps) {
 							onclick={() => {
 								set_section("skill");
 							}}
-							class="flex flex-wrap gap-2 items-center"
+							class="flex flex-wrap gap-2 items-center rounded"
 							classList={{
 								"bg-lapis-50 px-4 py-2": section() === "skill",
 							}}
@@ -112,6 +126,9 @@ function Home(props: HomeProps) {
 						</Match>
 						<Match when={section() === "skill"}>
 							<SkillList />
+						</Match>
+						<Match when={section() === "settings"}>
+							<ResumeSettings />
 						</Match>
 					</Switch>
 				</section>

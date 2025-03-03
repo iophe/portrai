@@ -31,6 +31,7 @@ func HandleGetResumeData(c *fiber.Ctx, db *database.Database) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to retrieve resume data",
+			"info":  err.Error(),
 		})
 	}
 	var resume_data cache.ResumeCachedData
@@ -265,7 +266,6 @@ func HandleResumeItemUpdate(data ResumeItemUpdateData, c *fiber.Ctx, db *db.Data
 		metadataJSON = []byte("{}")
 	}
 
-	// Update using the unified UpdateResumeItem function
 	err = queries.UpdateResumeItem(query_ctx, sqlc_gen.UpdateResumeItemParams{
 		ItemID:      data.ItemID,
 		UserID:      user_id,
@@ -457,6 +457,146 @@ func HandleReorderItem(data ReorderItemData, c *fiber.Ctx, db *db.Database) erro
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": fmt.Sprintf("could not reorder this %s", data.ItemType),
+		})
+	}
+
+	return c.SendStatus(fiber.StatusOK)
+}
+
+func HandleGetResumeVersions(c *fiber.Ctx, db *db.Database) error {
+	user_id, err := middlewares.GetUserID(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized access",
+		})
+	}
+
+	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	queries := sqlc_gen.New(db.Pool)
+
+	versions, err := queries.GetUserResumeVersions(query_ctx, user_id)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "could not get all the versions",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(versions)
+}
+
+type ChangeResumeVersionData struct {
+	Version string `json:"version"`
+}
+
+func HandleChangeResumeVersion(data ChangeResumeVersionData, c *fiber.Ctx, db *db.Database) error {
+	user_id, err := middlewares.GetUserID(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized access",
+		})
+	}
+
+	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	queries := sqlc_gen.New(db.Pool)
+
+	err = queries.ChangeResumeVersion(query_ctx, sqlc_gen.ChangeResumeVersionParams{
+		Version: data.Version,
+		UserID:  user_id,
+	})
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "could not get all the versions",
+		})
+	}
+
+	return c.SendStatus(fiber.StatusOK)
+}
+
+type AddResumeVersionData struct {
+	NewVersion string `json:"new_version"`
+}
+
+func HandleAddResumeVersion(data AddResumeVersionData, c *fiber.Ctx, db *db.Database) error {
+	user_id, err := middlewares.GetUserID(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized access",
+		})
+	}
+
+	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	queries := sqlc_gen.New(db.Pool)
+
+	err = queries.AddResumeVersion(query_ctx, sqlc_gen.AddResumeVersionParams{
+		UserID:     user_id,
+		NewVersion: data.NewVersion,
+	})
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "could not get all the versions",
+		})
+	}
+
+	return c.SendStatus(fiber.StatusOK)
+}
+
+type DeleteResumeVersionData struct {
+	Version string `json:"version"`
+}
+
+func HandleDeleteResumeVersion(data DeleteResumeVersionData, c *fiber.Ctx, db *db.Database) error {
+	user_id, err := middlewares.GetUserID(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized access",
+		})
+	}
+
+	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	queries := sqlc_gen.New(db.Pool)
+
+	err = queries.DeleteResumeVersion(query_ctx, sqlc_gen.DeleteResumeVersionParams{
+		UserID:  user_id,
+		Version: data.Version,
+	})
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "could not get all the versions",
+		})
+	}
+
+	return c.SendStatus(fiber.StatusOK)
+}
+
+type RenameResumeVersionData struct {
+	OldName string `json:"old_name"`
+	NewName string `json:"new_name"`
+}
+
+func HandleRenameResumeVersion(data RenameResumeVersionData, c *fiber.Ctx, db *db.Database) error {
+	user_id, err := middlewares.GetUserID(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized access",
+		})
+	}
+
+	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	queries := sqlc_gen.New(db.Pool)
+
+	err = queries.RenameResumeVersion(query_ctx, sqlc_gen.RenameResumeVersionParams{
+		NewName: data.NewName,
+		OldName: data.OldName,
+		UserID:  user_id,
+	})
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "could not get all the versions",
 		})
 	}
 

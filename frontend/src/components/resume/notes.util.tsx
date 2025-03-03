@@ -28,7 +28,7 @@ export function NoteForm(props: NoteFormProps) {
 							type: note_type(),
 							content: note_content(),
 							item_id: props.id,
-							item_type: props.section_type
+							item_type: props.section_type,
 						});
 					} catch (error) {
 						fault.minor({
@@ -109,7 +109,7 @@ export function NoteView(props: NoteViewProps) {
 							await api.post("/resume/notes/delete", {
 								note_id: props.note_id,
 								item_type: props.section_type,
-								item_id: props.on_id
+								item_id: props.on_id,
 							});
 							props.refetch();
 						} catch (error) {

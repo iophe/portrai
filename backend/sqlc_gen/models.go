@@ -177,6 +177,11 @@ type ResumeItemNote struct {
 	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
 }
 
+type ResumeVersion struct {
+	UserID  uuid.UUID `json:"user_id"`
+	Version string    `json:"version"`
+}
+
 type User struct {
 	ID                   uuid.UUID          `json:"id"`
 	FullName             pgtype.Text        `json:"full_name"`

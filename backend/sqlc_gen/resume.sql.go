@@ -12,6 +12,39 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const addResumeVersion = `-- name: AddResumeVersion :exec
+INSERT INTO public.resume_versions (user_id, version)
+VALUES ($1::uuid, $2::text)
+`
+
+type AddResumeVersionParams struct {
+	UserID     uuid.UUID `json:"user_id"`
+	NewVersion string    `json:"new_version"`
+}
+
+func (q *Queries) AddResumeVersion(ctx context.Context, arg AddResumeVersionParams) error {
+	_, err := q.db.Exec(ctx, addResumeVersion, arg.UserID, arg.NewVersion)
+	return err
+}
+
+const changeResumeVersion = `-- name: ChangeResumeVersion :exec
+UPDATE public.users
+SET 
+    current_resume_version = $1::text
+WHERE 
+    id = $2::uuid
+`
+
+type ChangeResumeVersionParams struct {
+	Version string    `json:"version"`
+	UserID  uuid.UUID `json:"user_id"`
+}
+
+func (q *Queries) ChangeResumeVersion(ctx context.Context, arg ChangeResumeVersionParams) error {
+	_, err := q.db.Exec(ctx, changeResumeVersion, arg.Version, arg.UserID)
+	return err
+}
+
 const createNoteOnResumeItem = `-- name: CreateNoteOnResumeItem :exec
 INSERT INTO public.resume_item_notes (
     note_type,
@@ -149,6 +182,54 @@ func (q *Queries) DeleteResumeItem(ctx context.Context, arg DeleteResumeItemPara
 	return err
 }
 
+const deleteResumeVersion = `-- name: DeleteResumeVersion :exec
+WITH delete_version AS (
+    -- First delete the version from resume_versions
+    DELETE FROM public.resume_versions 
+    WHERE 
+        user_id = $1::uuid 
+        AND version = $2::text
+    RETURNING user_id, version
+),
+find_next_version AS (
+    -- Find another version to use if deleting the current version
+    SELECT version 
+    FROM public.resume_versions
+    WHERE 
+        user_id = $1::uuid 
+        AND version != $2::text
+    ORDER BY 
+        CASE WHEN version = 'main' THEN 0 ELSE 1 END, -- Prefer 'main' if available
+        version
+    LIMIT 1
+),
+update_current_version AS (
+    -- If this is the current version, reset to another available version or 'main'
+    UPDATE public.users
+    SET 
+        current_resume_version = COALESCE((SELECT version FROM find_next_version), 'main'),
+        updated_at = current_timestamp
+    WHERE 
+        id = $1::uuid
+        AND current_resume_version = $2::text
+)
+DELETE FROM public.resume_items
+WHERE 
+    user_id = $1::uuid
+    AND version = $2::text
+`
+
+type DeleteResumeVersionParams struct {
+	UserID  uuid.UUID `json:"user_id"`
+	Version string    `json:"version"`
+}
+
+// Delete all resume items with this version
+func (q *Queries) DeleteResumeVersion(ctx context.Context, arg DeleteResumeVersionParams) error {
+	_, err := q.db.Exec(ctx, deleteResumeVersion, arg.UserID, arg.Version)
+	return err
+}
+
 const getResumeData = `-- name: GetResumeData :one
 WITH resume_version AS (
     SELECT current_resume_version
@@ -160,8 +241,8 @@ SELECT jsonb_build_object(
         SELECT COALESCE(jsonb_agg(
             jsonb_build_object(
                 'item_id', item_id,
-                'title', title, -- job_title
-                'subtitle', subtitle, -- company_name
+                'job_title', title,
+                'company_name', subtitle,
                 'location', location,
                 'start_date', start_date,
                 'end_date', end_date,
@@ -184,18 +265,18 @@ SELECT jsonb_build_object(
                 ), '{}')
             ) ORDER BY priority DESC
         ), '[]')
-        FROM resume_items
-        WHERE user_id = $1::uuid 
-        AND item_type = 'experience'
-        AND is_visible = true
-        AND version = resume_version.current_resume_version
+        FROM resume_items, resume_version
+        WHERE resume_items.user_id = $1::uuid 
+        AND resume_items.item_type = 'experience'
+        AND resume_items.is_visible = true
+        AND resume_items.version = resume_version.current_resume_version
     ),
     'educations', (
         SELECT COALESCE(jsonb_agg(
             jsonb_build_object(
                 'item_id', item_id,
-                'title', subtitle, -- school
-                'subtitle', title, -- degree
+                'degree', title,
+                'school', subtitle,
                 'location', location,
                 'start_date', start_date,
                 'end_date', end_date,
@@ -218,11 +299,11 @@ SELECT jsonb_build_object(
                 ), '{}')
             ) ORDER BY priority DESC
         ), '[]')
-        FROM resume_items
-        WHERE user_id = $1::uuid 
-        AND item_type = 'education'
-        AND is_visible = true
-        AND version = resume_version.current_resume_version
+        FROM resume_items, resume_version
+        WHERE resume_items.user_id = $1::uuid 
+        AND resume_items.item_type = 'education'
+        AND resume_items.is_visible = true
+        AND resume_items.version = resume_version.current_resume_version
     ),
     'skills', (
         SELECT COALESCE(jsonb_agg(
@@ -248,11 +329,11 @@ SELECT jsonb_build_object(
                 ), '{}')
             ) ORDER BY priority DESC
         ), '[]')
-        FROM resume_items
-        WHERE user_id = $1::uuid 
-        AND item_type = 'skill'
-        AND is_visible = true
-        AND version = resume_version.current_resume_version
+        FROM resume_items, resume_version
+        WHERE resume_items.user_id = $1::uuid 
+        AND resume_items.item_type = 'skill'
+        AND resume_items.is_visible = true
+        AND resume_items.version = resume_version.current_resume_version
     ),
     'certificates', (
         SELECT COALESCE(jsonb_agg(
@@ -279,11 +360,11 @@ SELECT jsonb_build_object(
                 ), '{}')
             ) ORDER BY priority DESC
         ), '[]')
-        FROM resume_items
-        WHERE user_id = $1::uuid 
-        AND item_type = 'certificate'
-        AND is_visible = true
-        AND version = resume_version.current_resume_version
+        FROM resume_items, resume_version
+        WHERE resume_items.user_id = $1::uuid 
+        AND resume_items.item_type = 'certificate'
+        AND resume_items.is_visible = true
+        AND resume_items.version = resume_version.current_resume_version
     ),
     'projects', (
         SELECT COALESCE(jsonb_agg(
@@ -311,11 +392,11 @@ SELECT jsonb_build_object(
                 ), '{}')
             ) ORDER BY priority DESC
         ), '[]')
-        FROM resume_items
-        WHERE user_id = $1::uuid 
-        AND item_type = 'project'
-        AND is_visible = true
-        AND version = resume_version.current_resume_version
+        FROM resume_items, resume_version
+        WHERE resume_items.user_id = $1::uuid 
+        AND resume_items.item_type = 'project'
+        AND resume_items.is_visible = true
+        AND resume_items.version = resume_version.current_resume_version
     )
 ) as resume_data
 `
@@ -341,7 +422,7 @@ SELECT
     priority,
     is_visible,
     tags,
-    metadata,
+    metadata::json::text as metadata,
     (
         SELECT array_agg(json_build_object(
                 'note_id', note_id,
@@ -379,7 +460,7 @@ type GetResumeItemByIdRow struct {
 	Priority    int32              `json:"priority"`
 	IsVisible   pgtype.Bool        `json:"is_visible"`
 	Tags        []string           `json:"tags"`
-	Metadata    []byte             `json:"metadata"`
+	Metadata    string             `json:"metadata"`
 	Notes       interface{}        `json:"notes"`
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
@@ -423,7 +504,7 @@ SELECT
     priority,
     is_visible,
     tags,
-    metadata,
+    metadata::json::text as metadata,
     (
         SELECT array_agg(json_build_object(
                 'note_id', note_id,
@@ -465,7 +546,7 @@ type GetResumeItemsByTypeRow struct {
 	Priority    int32       `json:"priority"`
 	IsVisible   pgtype.Bool `json:"is_visible"`
 	Tags        []string    `json:"tags"`
-	Metadata    []byte      `json:"metadata"`
+	Metadata    string      `json:"metadata"`
 	Notes       interface{} `json:"notes"`
 }
 
@@ -502,6 +583,75 @@ func (q *Queries) GetResumeItemsByType(ctx context.Context, arg GetResumeItemsBy
 		return nil, err
 	}
 	return items, nil
+}
+
+const getUserResumeVersions = `-- name: GetUserResumeVersions :one
+SELECT
+    u.current_resume_version,
+    ARRAY(
+        SELECT rv.version 
+        FROM public.resume_versions rv 
+        WHERE rv.user_id = u.id
+        ORDER BY rv.version
+    )::text[] AS all_versions
+FROM 
+    public.users u
+WHERE 
+    u.id = $1::uuid
+`
+
+type GetUserResumeVersionsRow struct {
+	CurrentResumeVersion string   `json:"current_resume_version"`
+	AllVersions          []string `json:"all_versions"`
+}
+
+func (q *Queries) GetUserResumeVersions(ctx context.Context, userID uuid.UUID) (GetUserResumeVersionsRow, error) {
+	row := q.db.QueryRow(ctx, getUserResumeVersions, userID)
+	var i GetUserResumeVersionsRow
+	err := row.Scan(&i.CurrentResumeVersion, &i.AllVersions)
+	return i, err
+}
+
+const renameResumeVersion = `-- name: RenameResumeVersion :exec
+WITH rename_version AS (
+    -- Update the version in resume_versions
+    UPDATE public.resume_versions
+    SET 
+        version = $1::text
+    WHERE 
+        user_id = $2::uuid 
+        AND version = $3::text
+    RETURNING user_id, version
+),
+update_current_version AS (
+    -- Update the current_resume_version in users if it matches
+    UPDATE public.users
+    SET 
+        current_resume_version = $1::text,
+        updated_at = current_timestamp
+    WHERE 
+        id = $2::uuid
+        AND current_resume_version = $3::text
+)
+UPDATE public.resume_items
+SET 
+    version = $1::text,
+    updated_at = current_timestamp
+WHERE 
+    user_id = $2::uuid
+    AND version = $3::text
+`
+
+type RenameResumeVersionParams struct {
+	NewName string    `json:"new_name"`
+	UserID  uuid.UUID `json:"user_id"`
+	OldName string    `json:"old_name"`
+}
+
+// Update all resume items with this version
+func (q *Queries) RenameResumeVersion(ctx context.Context, arg RenameResumeVersionParams) error {
+	_, err := q.db.Exec(ctx, renameResumeVersion, arg.NewName, arg.UserID, arg.OldName)
+	return err
 }
 
 const reorderResumeItem = `-- name: ReorderResumeItem :exec

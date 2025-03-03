@@ -15,10 +15,12 @@ export function EducationList(props: EducationListProps) {
 
 	const [educations, { mutate, refetch }] = createResource(async () => {
 		try {
-			const response = await api.get("/resume/items/by-type?item_type=education");
+			const response = await api.get(
+				"/resume/items/by-type?item_type=education"
+			);
 			const result = response.data.items as ResumeItem[];
-			
-			const educationItems = result.map(item => ({
+
+			const educationItems = result.map((item) => ({
 				education_id: item.item_id,
 				degree: item.title,
 				school: item.subtitle,
@@ -30,9 +32,9 @@ export function EducationList(props: EducationListProps) {
 				priority: item.priority,
 				is_visible: item.is_visible,
 				tags: item.tags,
-				notes: item.notes
+				notes: item.notes,
 			}));
-			
+
 			return educationItems as Education[];
 		} catch (error) {
 			fault.minor({
@@ -97,7 +99,7 @@ export function EducationList(props: EducationListProps) {
 											{
 												item_id: source_id,
 												after_id: target_id,
-												item_type: "education" // Specify the item type
+												item_type: "education", // Specify the item type
 											}
 										);
 									} catch (error) {
@@ -149,8 +151,9 @@ export function EducationList(props: EducationListProps) {
 												await api.post(
 													"/resume/items/delete",
 													{
-														item_id: education.education_id,
-														item_type: "education" // Specify the item type
+														item_id:
+															education.education_id,
+														item_type: "education", // Specify the item type
 													}
 												);
 												refetch();

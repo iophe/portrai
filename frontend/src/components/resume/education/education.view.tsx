@@ -43,7 +43,7 @@ export function EducationView(props: EducationViewProps) {
 				try {
 					await api.post("/resume/items/toggle", {
 						item_id: props.education.education_id,
-						item_type: "education"
+						item_type: "education",
 					});
 					props.refetch();
 				} catch (error) {
@@ -116,7 +116,7 @@ export function EducationForm(props: EducationFormProps) {
 					priority: form_data.priority,
 					tags: form_data.tags,
 					// metadata can be used for any education-specific fields
-					metadata: {}
+					metadata: {},
 				};
 
 				await api.post("/resume/items/update", itemData);
@@ -141,7 +141,7 @@ export function EducationForm(props: EducationFormProps) {
 					description: form_data.description,
 					tags: form_data.tags,
 					// metadata can be used for any education-specific fields
-					metadata: {}
+					metadata: {},
 				};
 
 				const res = await api.post("/resume/items/create", itemData);

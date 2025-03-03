@@ -43,7 +43,7 @@ export function SkillView(props: SkillViewProps) {
 				try {
 					await api.post("/resume/items/toggle", {
 						item_id: props.skill.skill_id,
-						item_type: "skill"
+						item_type: "skill",
 					});
 					props.refetch();
 				} catch (error) {
@@ -107,8 +107,8 @@ export function SkillForm(props: SkillFormProps) {
 					tags: form_data.tags,
 					// Store skill level in metadata
 					metadata: {
-						skill_level: form_data.optional_skill_level
-					}
+						skill_level: form_data.optional_skill_level,
+					},
 				};
 
 				await api.post("/resume/items/update", itemData);
@@ -130,8 +130,8 @@ export function SkillForm(props: SkillFormProps) {
 					tags: form_data.tags,
 					// Store skill level in metadata
 					metadata: {
-						skill_level: form_data.optional_skill_level
-					}
+						skill_level: form_data.optional_skill_level,
+					},
 				};
 
 				const res = await api.post("/resume/items/create", itemData);

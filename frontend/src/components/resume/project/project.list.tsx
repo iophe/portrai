@@ -15,10 +15,12 @@ export function ProjectList(props: ProjectListProps) {
 
 	const [projects, { mutate, refetch }] = createResource(async () => {
 		try {
-			const response = await api.get("/resume/items/by-type?item_type=project");
+			const response = await api.get(
+				"/resume/items/by-type?item_type=project"
+			);
 			const result = response.data.items as ResumeItem[];
-			
-			const projectItems = result.map(item => ({
+
+			const projectItems = result.map((item) => ({
 				project_id: item.item_id,
 				project_title: item.title,
 				optional_project_subtitle: item.subtitle,
@@ -29,9 +31,9 @@ export function ProjectList(props: ProjectListProps) {
 				priority: item.priority,
 				is_visible: item.is_visible,
 				tags: item.tags,
-				notes: item.notes
+				notes: item.notes,
 			}));
-			
+
 			return projectItems as Project[];
 		} catch (error) {
 			fault.minor({
@@ -95,7 +97,7 @@ export function ProjectList(props: ProjectListProps) {
 											{
 												item_id: source_id,
 												after_id: target_id,
-												item_type: "project" // Specify the item type
+												item_type: "project", // Specify the item type
 											}
 										);
 									} catch (error) {
@@ -138,8 +140,9 @@ export function ProjectList(props: ProjectListProps) {
 												await api.post(
 													"/resume/items/delete",
 													{
-														item_id: project.project_id,
-														item_type: "project" // Specify the item type
+														item_id:
+															project.project_id,
+														item_type: "project", // Specify the item type
 													}
 												);
 												refetch();

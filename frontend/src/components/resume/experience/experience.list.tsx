@@ -17,24 +17,29 @@ export function ExperienceList(props: ExperienceListProps) {
 
 	const [experiences, { mutate, refetch }] = createResource(async () => {
 		try {
-			const response = await api.get("/resume/items/by-type?item_type=experience");
+			const response = await api.get(
+				"/resume/items/by-type?item_type=experience"
+			);
 			const result = response.data.items as ResumeItem[];
-			
-			const experienceItems : Experience[] = result.map(item => ({
-				experience_id: item.item_id,
-				job_title: item.title,
-				company_name: item.subtitle,
-				location: item.location,
-				start_date: item.start_date,
-				optional_end_date: item.end_date,
-				is_current: item.is_current,
-				description: item.description,
-				priority: item.priority,
-				is_visible: item.is_visible,
-				tags: item.tags,
-				notes: item.notes
-			} as Experience));
-			
+
+			const experienceItems: Experience[] = result.map(
+				(item) =>
+					({
+						experience_id: item.item_id,
+						job_title: item.title,
+						company_name: item.subtitle,
+						location: item.location,
+						start_date: item.start_date,
+						optional_end_date: item.end_date,
+						is_current: item.is_current,
+						description: item.description,
+						priority: item.priority,
+						is_visible: item.is_visible,
+						tags: item.tags,
+						notes: item.notes,
+					}) as Experience
+			);
+
 			return experienceItems;
 		} catch (error) {
 			fault.minor({
@@ -96,7 +101,7 @@ export function ExperienceList(props: ExperienceListProps) {
 											{
 												item_id: source_id,
 												after_id: target_id,
-												item_type: "experience" // Specify the item type
+												item_type: "experience", // Specify the item type
 											}
 										);
 									} catch (error) {
@@ -139,8 +144,9 @@ export function ExperienceList(props: ExperienceListProps) {
 												await api.post(
 													"/resume/items/delete",
 													{
-														item_id: experience.experience_id,
-														item_type: "experience" // Specify the item type
+														item_id:
+															experience.experience_id,
+														item_type: "experience", // Specify the item type
 													}
 												);
 												refetch();

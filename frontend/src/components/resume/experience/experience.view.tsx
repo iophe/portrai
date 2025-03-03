@@ -43,7 +43,7 @@ export function ExperienceView(props: ExperienceViewProps) {
 				try {
 					await api.post("/resume/items/toggle", {
 						item_id: props.experience.experience_id,
-						item_type: "experience"
+						item_type: "experience",
 					});
 					props.refetch();
 				} catch (error) {
@@ -115,7 +115,7 @@ export function ExperienceForm(props: ExperienceFormProps) {
 					description: form_data.description,
 					priority: form_data.priority,
 					tags: form_data.tags,
-					metadata: {}
+					metadata: {},
 				};
 
 				await api.post("/resume/items/update", itemData);
@@ -140,7 +140,7 @@ export function ExperienceForm(props: ExperienceFormProps) {
 					description: form_data.description,
 					tags: form_data.tags,
 					// metadata can be used for any experience-specific fields
-					metadata: {}
+					metadata: {},
 				};
 
 				const res = await api.post("/resume/items/create", itemData);

@@ -186,6 +186,12 @@ CREATE TABLE public.resume_item_notes (
   created_at timestamp with time zone DEFAULT current_timestamp,
   updated_at timestamp with time zone DEFAULT current_timestamp
 );
+-- versions created by the user
+CREATE TABLE public.resume_versions (
+  user_id uuid NOT NULL REFERENCES auth.users ON DELETE CASCADE,
+  version text NOT NULL DEFAULT 'main',
+  CONSTRAINT unique_user_version UNIQUE (user_id, version)
+);
 
 -- Set priority based on item type and user
 CREATE OR REPLACE FUNCTION set_resume_item_priority()

@@ -12,7 +12,7 @@ interface ResumeItem {
 	is_visible: boolean;
 	tags: string[];
 	notes: any[];
-	metadata?: Record<string, any>;
+	metadata?: string;
 }
 
 // Base interfaces
@@ -132,4 +132,9 @@ interface CertificatesResponse {
 
 interface ProjectsResponse {
 	projects: Project[];
+}
+
+interface UserResumeVersions {
+	current_resume_version: string;
+	all_versions: string[];
 }

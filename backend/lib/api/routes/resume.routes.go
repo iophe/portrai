@@ -17,9 +17,45 @@ func RegisterResumeRoutes(group fiber.Router) {
 	resume_group.Get("/data", func(c *fiber.Ctx) error {
 		return handlers.HandleGetResumeData(c, &db.DB)
 	})
-
-	// ==================== Unified Resume Item API ====================
-
+	resume_group.Get("/versions", func(c *fiber.Ctx) error {
+		return handlers.HandleGetResumeVersions(c, &db.DB)
+	})
+	resume_group.Post("/change-version", func(c *fiber.Ctx) error {
+		var data handlers.ChangeResumeVersionData
+		if err := c.BodyParser(&data); err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Invalid request body",
+			})
+		}
+		return handlers.HandleChangeResumeVersion(data, c, &db.DB)
+	})
+	resume_group.Post("/add-version", func(c *fiber.Ctx) error {
+		var data handlers.AddResumeVersionData
+		if err := c.BodyParser(&data); err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Invalid request body",
+			})
+		}
+		return handlers.HandleAddResumeVersion(data, c, &db.DB)
+	})
+	resume_group.Post("/delete-version", func(c *fiber.Ctx) error {
+		var data handlers.DeleteResumeVersionData
+		if err := c.BodyParser(&data); err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Invalid request body",
+			})
+		}
+		return handlers.HandleDeleteResumeVersion(data, c, &db.DB)
+	})
+	resume_group.Post("/rename-version", func(c *fiber.Ctx) error {
+		var data handlers.RenameResumeVersionData
+		if err := c.BodyParser(&data); err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Invalid request body",
+			})
+		}
+		return handlers.HandleRenameResumeVersion(data, c, &db.DB)
+	})
 	// This is a new API that provides a unified way to work with all resume items
 	items_group := resume_group.Group("/items")
 
@@ -99,8 +135,6 @@ func RegisterResumeRoutes(group fiber.Router) {
 		}
 		return handlers.HandleReorderItem(data, c, &db.DB)
 	})
-
-	// ==================== Unified Notes API ====================
 
 	notes_group := resume_group.Group("/notes")
 

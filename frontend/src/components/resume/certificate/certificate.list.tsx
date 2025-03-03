@@ -15,10 +15,12 @@ export function CertificateList(props: CertificateListProps) {
 
 	const [certificates, { mutate, refetch }] = createResource(async () => {
 		try {
-			const response = await api.get("/resume/items/by-type?item_type=certificate");
+			const response = await api.get(
+				"/resume/items/by-type?item_type=certificate"
+			);
 			const result = response.data.items as ResumeItem[];
-			
-			const certificateItems = result.map(item => ({
+
+			const certificateItems = result.map((item) => ({
 				certificate_id: item.item_id,
 				certificate_name: item.title,
 				optional_issuer: item.subtitle,
@@ -28,9 +30,9 @@ export function CertificateList(props: CertificateListProps) {
 				priority: item.priority,
 				is_visible: item.is_visible,
 				tags: item.tags,
-				notes: item.notes
+				notes: item.notes,
 			}));
-			
+
 			return certificateItems as Certificate[];
 		} catch (error) {
 			fault.minor({
@@ -95,7 +97,7 @@ export function CertificateList(props: CertificateListProps) {
 											{
 												item_id: source_id,
 												after_id: target_id,
-												item_type: "certificate" // Specify the item type
+												item_type: "certificate", // Specify the item type
 											}
 										);
 									} catch (error) {
@@ -140,8 +142,10 @@ export function CertificateList(props: CertificateListProps) {
 												await api.post(
 													"/resume/items/delete",
 													{
-														item_id: certificate.certificate_id,
-														item_type: "certificate" // Specify the item type
+														item_id:
+															certificate.certificate_id,
+														item_type:
+															"certificate", // Specify the item type
 													}
 												);
 												refetch();

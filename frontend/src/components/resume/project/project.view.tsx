@@ -43,7 +43,7 @@ export function ProjectView(props: ProjectViewProps) {
 				try {
 					await api.post("/resume/items/toggle", {
 						item_id: props.project.project_id,
-						item_type: "project"
+						item_type: "project",
 					});
 					props.refetch();
 				} catch (error) {
@@ -113,7 +113,7 @@ export function ProjectForm(props: ProjectFormProps) {
 					priority: form_data.priority,
 					tags: form_data.tags,
 					// metadata can be used for any project-specific fields
-					metadata: {}
+					metadata: {},
 				};
 
 				await api.post("/resume/items/update", itemData);
@@ -137,7 +137,7 @@ export function ProjectForm(props: ProjectFormProps) {
 					description: form_data.description,
 					tags: form_data.tags,
 					// metadata can be used for any project-specific fields
-					metadata: {}
+					metadata: {},
 				};
 
 				const res = await api.post("/resume/items/create", itemData);

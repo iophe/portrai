@@ -42,7 +42,7 @@ export function CertificateView(props: CertificateViewProps) {
 				try {
 					await api.post("/resume/items/toggle", {
 						item_id: props.certificate.certificate_id,
-						item_type: "certificate"
+						item_type: "certificate",
 					});
 					props.refetch();
 				} catch (error) {
@@ -110,7 +110,7 @@ export function CertificateForm(props: CertificateFormProps) {
 					priority: form_data.priority,
 					tags: form_data.tags,
 					// metadata can be used for any certificate-specific fields
-					metadata: {}
+					metadata: {},
 				};
 
 				await api.post("/resume/items/update", itemData);
@@ -133,7 +133,7 @@ export function CertificateForm(props: CertificateFormProps) {
 					description: form_data.description,
 					tags: form_data.tags,
 					// metadata can be used for any certificate-specific fields
-					metadata: {}
+					metadata: {},
 				};
 
 				const res = await api.post("/resume/items/create", itemData);
