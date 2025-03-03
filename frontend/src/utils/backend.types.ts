@@ -91,6 +91,7 @@ interface ResumeData {
 	skills: Skill[];
 	certificates: Certificate[];
 	projects: Project[];
+	letter: string;
 }
 // Response interfaces for single items
 interface ExperienceResponse {

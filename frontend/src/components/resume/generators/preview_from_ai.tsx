@@ -6,6 +6,7 @@ import { api } from "@utils/api";
 import { AxiosError } from "axios";
 import { ExecutiveTemplate } from "./templates/default.template";
 import DownloadIcon from "@assets/icons/download.svg?component-solid";
+import { FormCheckbox } from "../utils/form.input";
 
 interface ResumePreviewProps {
 	template_name?: string;
@@ -20,6 +21,7 @@ function ResumeAIPreview(props: ResumePreviewProps) {
 	// Fetch resume data
 	const [resume_data, set_resume_data] = createSignal<TemplateData>();
 	const [job_description, set_job_description] = createSignal<string>("");
+	const [with_cover_letter, set_with_cover_letter] = createSignal<boolean>(false);
 
 	return (
 		<section class="w-full h-full flex flex-col gap-4">
@@ -33,15 +35,26 @@ function ResumeAIPreview(props: ResumePreviewProps) {
 				placeholder="paste the job description"
 			/>
 			<div class="flex flex-col gap-2 self-center">
+				<FormCheckbox
+					label="with cover letter"
+					on_input={(value) => {
+						set_with_cover_letter(value)
+					}}
+					value={with_cover_letter()}
+				/>
 				<button
 					class="bg-night-200 px-4 py-2 rounded text-snow-100 font-bold"
 					onClick={async () => {
 						if (!job_description()) return;
 						try {
 							toGenerating(true);
+							console.log(with_cover_letter());
 							const res = await api.post("/ai/session/resume", {
 								job_description: job_description(),
+								with_cover_letter: with_cover_letter(),
 							});
+							console.log(res.data.result);
+							
 							set_resume_data({
 								resume_data: res.data.result as ResumeData,
 								contact: {
@@ -63,6 +76,7 @@ function ResumeAIPreview(props: ResumePreviewProps) {
 				>
 					Generate resume
 				</button>
+
 
 				<button
 					class=""
@@ -124,6 +138,13 @@ function ResumeAIPreview(props: ResumePreviewProps) {
 							}}
 						/>
 					</div>
+
+					<Show when={resume_data()?.resume_data.letter}>
+						<div>
+							{resume_data()?.resume_data.letter}
+						</div>
+					</Show>
+					<div></div>
 				</Show>
 			</section>
 
