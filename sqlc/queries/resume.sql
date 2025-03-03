@@ -16,6 +16,7 @@ INSERT INTO public.experiences (
     description,
     priority,
     tags,
+    version,
     metadata
 ) VALUES (
     @user_id::uuid,
@@ -28,6 +29,7 @@ INSERT INTO public.experiences (
     @description::text,
     @priority::integer,
     COALESCE(@tags::text[], ARRAY[]::text[]),
+    (SELECT current_resume_version FROM public.users WHERE id = @user_id::uuid),
     COALESCE(@metadata::jsonb, '{}'::jsonb)
 )
 RETURNING experience_id;
@@ -47,6 +49,7 @@ SET
     description = COALESCE(@description::text, description),
     priority = COALESCE(@priority::integer, priority),
     tags = COALESCE(@tags::text[], tags),
+    version = COALESCE(@version::text, version),
     metadata = COALESCE(@metadata::jsonb, metadata)
 WHERE 
     experience_id = @experience_id::bigint 
@@ -83,7 +86,8 @@ SELECT
         WHERE experience_notes.experience_id = experiences.experience_id
     ) as notes
 FROM public.experiences
-WHERE user_id = @user_id::uuid
+WHERE user_id = @user_id::uuid AND
+    version = (SELECT current_resume_version FROM public.users WHERE id = @user_id::uuid)
 ORDER BY 
     COALESCE(priority, 0) DESC,
     COALESCE(optional_end_date, '9999-12-31'::date) DESC,
@@ -191,6 +195,7 @@ INSERT INTO public.educations (
     description,
     priority,
     tags,
+    version,
     metadata
 ) VALUES (
     @user_id::uuid,
@@ -203,6 +208,7 @@ INSERT INTO public.educations (
     @description::text,
     @priority::integer,
     COALESCE(@tags::text[], ARRAY[]::text[]),
+    (SELECT current_resume_version FROM public.users WHERE id = @user_id::uuid),
     COALESCE(@metadata::jsonb, '{}'::jsonb)
 )
 RETURNING education_id;
@@ -222,6 +228,7 @@ SET
     description = COALESCE(@description::text, description),
     priority = COALESCE(@priority::integer, priority),
     tags = COALESCE(@tags::text[], tags),
+    version = COALESCE(@version::text, version),
     metadata = COALESCE(@metadata::jsonb, metadata)
 WHERE 
     education_id = @education_id::bigint 
@@ -258,7 +265,8 @@ SELECT
         WHERE education_notes.education_id = educations.education_id
     ) as notes
 FROM public.educations
-WHERE user_id = @user_id::uuid
+WHERE user_id = @user_id::uuid AND
+    version = (SELECT current_resume_version FROM public.users WHERE id = @user_id::uuid)
 ORDER BY 
     COALESCE(priority, 0) DESC,
     COALESCE(optional_end_date, '9999-12-31'::date) DESC,
@@ -362,6 +370,7 @@ INSERT INTO public.skills (
     description,
     priority,
     tags,
+    version,
     metadata
 ) VALUES (
     @user_id::uuid,
@@ -371,6 +380,7 @@ INSERT INTO public.skills (
     @description::text,
     @priority::integer,
     COALESCE(@tags::text[], ARRAY[]::text[]),
+    (SELECT current_resume_version FROM public.users WHERE id = @user_id::uuid),
     COALESCE(@metadata::jsonb, '{}'::jsonb)
 )
 RETURNING skill_id;
@@ -384,6 +394,7 @@ SET
     description = COALESCE(@description::text, description),
     priority = COALESCE(@priority::integer, priority),
     tags = COALESCE(@tags::text[], tags),
+    version = COALESCE(@version::text, version),
     metadata = COALESCE(@metadata::jsonb, metadata)
 WHERE 
     skill_id = @skill_id::bigint 
@@ -417,7 +428,8 @@ SELECT
         WHERE skill_notes.skill_id = skills.skill_id
     ) as notes
 FROM public.skills
-WHERE user_id = @user_id::uuid
+WHERE user_id = @user_id::uuid AND
+    version = (SELECT current_resume_version FROM public.users WHERE id = @user_id::uuid)
 ORDER BY 
     COALESCE(priority, 0) DESC,
     skill_name ASC;
@@ -518,6 +530,7 @@ INSERT INTO public.certificates (
     description,
     priority,
     tags,
+    version,
     metadata
 ) VALUES (
     @user_id::uuid,
@@ -528,6 +541,7 @@ INSERT INTO public.certificates (
     @description::text,
     @priority::integer,
     COALESCE(@tags::text[], ARRAY[]::text[]),
+    (SELECT current_resume_version FROM public.users WHERE id = @user_id::uuid),
     COALESCE(@metadata::jsonb, '{}'::jsonb)
 )
 RETURNING certificate_id;
@@ -542,6 +556,7 @@ SET
     description = COALESCE(@description::text, description),
     priority = COALESCE(@priority::integer, priority),
     tags = COALESCE(@tags::text[], tags),
+    version = COALESCE(@version::text, version),
     metadata = COALESCE(@metadata::jsonb, metadata)
 WHERE 
     certificate_id = @certificate_id::bigint 
@@ -577,7 +592,8 @@ SELECT
         WHERE certificate_notes.certificate_id = certificates.certificate_id
     ) as notes
 FROM public.certificates
-WHERE user_id = @user_id::uuid
+WHERE user_id = @user_id::uuid AND
+    version = (SELECT current_resume_version FROM public.users WHERE id = @user_id::uuid)
 ORDER BY 
     COALESCE(priority, 0) DESC,
     COALESCE(optional_granted_date, '1900-01-01'::date) DESC,
@@ -681,6 +697,7 @@ INSERT INTO public.projects (
     description,
     priority,
     tags,
+    version,
     metadata
 ) VALUES (
     @user_id::uuid,
@@ -692,6 +709,7 @@ INSERT INTO public.projects (
     @description::text,
     @priority::integer,
     COALESCE(@tags::text[], ARRAY[]::text[]),
+    (SELECT current_resume_version FROM public.users WHERE id = @user_id::uuid),
     COALESCE(@metadata::jsonb, '{}'::jsonb)
 )
 RETURNING project_id;
@@ -710,6 +728,7 @@ SET
     description = COALESCE(@description::text, description),
     priority = COALESCE(@priority::integer, priority),
     tags = COALESCE(@tags::text[], tags),
+    version = COALESCE(@version::text, version),
     metadata = COALESCE(@metadata::jsonb, metadata)
 WHERE 
     project_id = @project_id::bigint 
@@ -746,7 +765,8 @@ SELECT
         WHERE project_notes.project_id = projects.project_id
     ) as notes
 FROM public.projects
-WHERE user_id = @user_id::uuid
+WHERE user_id = @user_id::uuid AND
+    version = (SELECT current_resume_version FROM public.users WHERE id = @user_id::uuid)
 ORDER BY 
     COALESCE(priority, 0) DESC,
     COALESCE(optional_end_date, '9999-12-31'::date) DESC,
@@ -838,7 +858,12 @@ WHERE project_id = @project_id::bigint
 AND user_id = @user_id::uuid;
 
 -- name: GetResumeData :one
-WITH resume_data AS (
+WITH resume_version AS (
+    SELECT current_resume_version
+    FROM public.users
+    WHERE id = @user_id::uuid
+),
+resume_data AS (
     -- Experiences
     SELECT 
         'experiences' as type,
@@ -869,6 +894,7 @@ WITH resume_data AS (
     FROM experiences e
     WHERE e.user_id = @user_id::uuid 
     AND e.is_visible = true
+    AND e.version = resume_version.current_resume_version
 
     UNION ALL
 
@@ -902,6 +928,7 @@ WITH resume_data AS (
     FROM educations ed
     WHERE ed.user_id = @user_id::uuid 
     AND ed.is_visible = true
+    AND ed.version = resume_version.current_resume_version
 
     UNION ALL
 
@@ -932,6 +959,7 @@ WITH resume_data AS (
     FROM skills s
     WHERE s.user_id = @user_id::uuid 
     AND s.is_visible = true
+    AND s.version = resume_version.current_resume_version
 
     UNION ALL
 
@@ -963,6 +991,7 @@ WITH resume_data AS (
     FROM certificates c
     WHERE c.user_id = @user_id::uuid 
     AND c.is_visible = true
+    AND c.version = resume_version.current_resume_version
 
     UNION ALL
 
@@ -995,6 +1024,7 @@ WITH resume_data AS (
     FROM projects p
     WHERE p.user_id = @user_id::uuid 
     AND p.is_visible = true
+    AND p.version = resume_version.current_resume_version
 )
 SELECT 
     (SELECT jsonb_build_object(

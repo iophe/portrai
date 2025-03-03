@@ -154,6 +154,7 @@ type Certificate struct {
 	Priority            int32              `json:"priority"`
 	IsVisible           pgtype.Bool        `json:"is_visible"`
 	Tags                []string           `json:"tags"`
+	Version             string             `json:"version"`
 	Metadata            []byte             `json:"metadata"`
 	CreatedAt           pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
@@ -182,6 +183,7 @@ type Education struct {
 	Priority        int32              `json:"priority"`
 	IsVisible       pgtype.Bool        `json:"is_visible"`
 	Tags            []string           `json:"tags"`
+	Version         string             `json:"version"`
 	Metadata        []byte             `json:"metadata"`
 	CreatedAt       pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
@@ -210,6 +212,7 @@ type Experience struct {
 	Priority        int32              `json:"priority"`
 	IsVisible       pgtype.Bool        `json:"is_visible"`
 	Tags            []string           `json:"tags"`
+	Version         string             `json:"version"`
 	Metadata        []byte             `json:"metadata"`
 	CreatedAt       pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
@@ -286,6 +289,7 @@ type Project struct {
 	Priority                int32              `json:"priority"`
 	IsVisible               pgtype.Bool        `json:"is_visible"`
 	Tags                    []string           `json:"tags"`
+	Version                 string             `json:"version"`
 	Metadata                []byte             `json:"metadata"`
 	CreatedAt               pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt               pgtype.Timestamptz `json:"updated_at"`
@@ -311,6 +315,7 @@ type Skill struct {
 	Priority           int32              `json:"priority"`
 	IsVisible          pgtype.Bool        `json:"is_visible"`
 	Tags               []string           `json:"tags"`
+	Version            string             `json:"version"`
 	Metadata           []byte             `json:"metadata"`
 	CreatedAt          pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt          pgtype.Timestamptz `json:"updated_at"`
@@ -327,10 +332,11 @@ type SkillNote struct {
 }
 
 type User struct {
-	ID             uuid.UUID          `json:"id"`
-	FullName       pgtype.Text        `json:"full_name"`
-	BillingAddress []byte             `json:"billing_address"`
-	PaymentMethod  []byte             `json:"payment_method"`
-	CreatedAt      pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt      pgtype.Timestamptz `json:"updated_at"`
+	ID                   uuid.UUID          `json:"id"`
+	FullName             pgtype.Text        `json:"full_name"`
+	CurrentResumeVersion string             `json:"current_resume_version"`
+	BillingAddress       []byte             `json:"billing_address"`
+	PaymentMethod        []byte             `json:"payment_method"`
+	CreatedAt            pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt            pgtype.Timestamptz `json:"updated_at"`
 }

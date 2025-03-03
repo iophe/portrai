@@ -23,6 +23,8 @@ create table public.users (
 
   full_name text,
 
+  current_resume_version text not null default 'main',
+
   -- The customer's billing address, stored in JSON format.
   billing_address jsonb,
   -- Stores your customer's payment instruments.
@@ -166,6 +168,7 @@ create table public.experiences (
   priority integer not null default 0,
   is_visible boolean default true,
   tags text[] not null default ARRAY[]::text[],
+  version text not null default 'main',
   metadata jsonb not null default '{}'::jsonb,
   created_at timestamp with time zone default current_timestamp,
   updated_at timestamp with time zone default current_timestamp
@@ -228,6 +231,7 @@ create table public.educations (
   priority integer not null default 0,
   is_visible boolean default true,
   tags text[] not null default ARRAY[]::text[],
+  version text not null default 'main',
   metadata jsonb not null default '{}'::jsonb,
   created_at timestamp with time zone default current_timestamp,
   updated_at timestamp with time zone default current_timestamp
@@ -286,6 +290,7 @@ create table public.skills (
   priority integer not null default 0,
   is_visible boolean default true,
   tags text[] not null default ARRAY[]::text[],
+  version text not null default 'main',
   metadata jsonb not null default '{}'::jsonb,
   created_at timestamp with time zone default current_timestamp,
   updated_at timestamp with time zone default current_timestamp
@@ -344,6 +349,7 @@ create table public.certificates (
   priority integer not null default 0,
   is_visible boolean default true,
   tags text[] not null default ARRAY[]::text[],
+  version text not null default 'main',
   metadata jsonb not null default '{}'::jsonb,
   created_at timestamp with time zone default current_timestamp,
   updated_at timestamp with time zone default current_timestamp
@@ -402,6 +408,7 @@ create table public.projects (
   priority integer not null default 0,
   is_visible boolean default true,
   tags text[] not null default ARRAY[]::text[],
+  version text not null default 'main',
   metadata jsonb not null default '{}'::jsonb,
   created_at timestamp with time zone default current_timestamp,
   updated_at timestamp with time zone default current_timestamp

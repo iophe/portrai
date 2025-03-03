@@ -26,6 +26,7 @@ INSERT INTO public.certificates (
     description,
     priority,
     tags,
+    version,
     metadata
 ) VALUES (
     $1::uuid,
@@ -36,6 +37,7 @@ INSERT INTO public.certificates (
     $6::text,
     $7::integer,
     COALESCE($8::text[], ARRAY[]::text[]),
+    (SELECT current_resume_version FROM public.users WHERE id = $1::uuid),
     COALESCE($9::jsonb, '{}'::jsonb)
 )
 RETURNING certificate_id
@@ -86,6 +88,7 @@ INSERT INTO public.educations (
     description,
     priority,
     tags,
+    version,
     metadata
 ) VALUES (
     $1::uuid,
@@ -98,6 +101,7 @@ INSERT INTO public.educations (
     $8::text,
     $9::integer,
     COALESCE($10::text[], ARRAY[]::text[]),
+    (SELECT current_resume_version FROM public.users WHERE id = $1::uuid),
     COALESCE($11::jsonb, '{}'::jsonb)
 )
 RETURNING education_id
@@ -153,6 +157,7 @@ INSERT INTO public.experiences (
     description,
     priority,
     tags,
+    version,
     metadata
 ) VALUES (
     $1::uuid,
@@ -165,6 +170,7 @@ INSERT INTO public.experiences (
     $8::text,
     $9::integer,
     COALESCE($10::text[], ARRAY[]::text[]),
+    (SELECT current_resume_version FROM public.users WHERE id = $1::uuid),
     COALESCE($11::jsonb, '{}'::jsonb)
 )
 RETURNING experience_id
@@ -373,6 +379,7 @@ INSERT INTO public.projects (
     description,
     priority,
     tags,
+    version,
     metadata
 ) VALUES (
     $1::uuid,
@@ -384,6 +391,7 @@ INSERT INTO public.projects (
     $7::text,
     $8::integer,
     COALESCE($9::text[], ARRAY[]::text[]),
+    (SELECT current_resume_version FROM public.users WHERE id = $1::uuid),
     COALESCE($10::jsonb, '{}'::jsonb)
 )
 RETURNING project_id
@@ -433,6 +441,7 @@ INSERT INTO public.skills (
     description,
     priority,
     tags,
+    version,
     metadata
 ) VALUES (
     $1::uuid,
@@ -442,6 +451,7 @@ INSERT INTO public.skills (
     $5::text,
     $6::integer,
     COALESCE($7::text[], ARRAY[]::text[]),
+    (SELECT current_resume_version FROM public.users WHERE id = $1::uuid),
     COALESCE($8::jsonb, '{}'::jsonb)
 )
 RETURNING skill_id
@@ -751,7 +761,8 @@ SELECT
         WHERE certificate_notes.certificate_id = certificates.certificate_id
     ) as notes
 FROM public.certificates
-WHERE user_id = $1::uuid
+WHERE user_id = $1::uuid AND
+    version = (SELECT current_resume_version FROM public.users WHERE id = $1::uuid)
 ORDER BY 
     COALESCE(priority, 0) DESC,
     COALESCE(optional_granted_date, '1900-01-01'::date) DESC,
@@ -906,7 +917,8 @@ SELECT
         WHERE education_notes.education_id = educations.education_id
     ) as notes
 FROM public.educations
-WHERE user_id = $1::uuid
+WHERE user_id = $1::uuid AND
+    version = (SELECT current_resume_version FROM public.users WHERE id = $1::uuid)
 ORDER BY 
     COALESCE(priority, 0) DESC,
     COALESCE(optional_end_date, '9999-12-31'::date) DESC,
@@ -1065,7 +1077,8 @@ SELECT
         WHERE experience_notes.experience_id = experiences.experience_id
     ) as notes
 FROM public.experiences
-WHERE user_id = $1::uuid
+WHERE user_id = $1::uuid AND
+    version = (SELECT current_resume_version FROM public.users WHERE id = $1::uuid)
 ORDER BY 
     COALESCE(priority, 0) DESC,
     COALESCE(optional_end_date, '9999-12-31'::date) DESC,
@@ -1221,7 +1234,8 @@ SELECT
         WHERE project_notes.project_id = projects.project_id
     ) as notes
 FROM public.projects
-WHERE user_id = $1::uuid
+WHERE user_id = $1::uuid AND
+    version = (SELECT current_resume_version FROM public.users WHERE id = $1::uuid)
 ORDER BY 
     COALESCE(priority, 0) DESC,
     COALESCE(optional_end_date, '9999-12-31'::date) DESC,
@@ -1276,7 +1290,12 @@ func (q *Queries) GetProjectsByUserId(ctx context.Context, userID uuid.UUID) ([]
 }
 
 const getResumeData = `-- name: GetResumeData :one
-WITH resume_data AS (
+WITH resume_version AS (
+    SELECT current_resume_version
+    FROM public.users
+    WHERE id = $1::uuid
+),
+resume_data AS (
     -- Experiences
     SELECT 
         'experiences' as type,
@@ -1307,6 +1326,7 @@ WITH resume_data AS (
     FROM experiences e
     WHERE e.user_id = $1::uuid 
     AND e.is_visible = true
+    AND e.version = resume_version.current_resume_version
 
     UNION ALL
 
@@ -1340,6 +1360,7 @@ WITH resume_data AS (
     FROM educations ed
     WHERE ed.user_id = $1::uuid 
     AND ed.is_visible = true
+    AND ed.version = resume_version.current_resume_version
 
     UNION ALL
 
@@ -1370,6 +1391,7 @@ WITH resume_data AS (
     FROM skills s
     WHERE s.user_id = $1::uuid 
     AND s.is_visible = true
+    AND s.version = resume_version.current_resume_version
 
     UNION ALL
 
@@ -1401,6 +1423,7 @@ WITH resume_data AS (
     FROM certificates c
     WHERE c.user_id = $1::uuid 
     AND c.is_visible = true
+    AND c.version = resume_version.current_resume_version
 
     UNION ALL
 
@@ -1433,6 +1456,7 @@ WITH resume_data AS (
     FROM projects p
     WHERE p.user_id = $1::uuid 
     AND p.is_visible = true
+    AND p.version = resume_version.current_resume_version
 )
 SELECT 
     (SELECT jsonb_build_object(
@@ -1543,7 +1567,8 @@ SELECT
         WHERE skill_notes.skill_id = skills.skill_id
     ) as notes
 FROM public.skills
-WHERE user_id = $1::uuid
+WHERE user_id = $1::uuid AND
+    version = (SELECT current_resume_version FROM public.users WHERE id = $1::uuid)
 ORDER BY 
     COALESCE(priority, 0) DESC,
     skill_name ASC
@@ -1987,10 +2012,11 @@ SET
     description = COALESCE($5::text, description),
     priority = COALESCE($6::integer, priority),
     tags = COALESCE($7::text[], tags),
-    metadata = COALESCE($8::jsonb, metadata)
+    version = COALESCE($8::text, version),
+    metadata = COALESCE($9::jsonb, metadata)
 WHERE 
-    certificate_id = $9::bigint 
-    AND user_id = $10::uuid
+    certificate_id = $10::bigint 
+    AND user_id = $11::uuid
 `
 
 type UpdateCertificateParams struct {
@@ -2001,6 +2027,7 @@ type UpdateCertificateParams struct {
 	Description         string      `json:"description"`
 	Priority            int32       `json:"priority"`
 	Tags                []string    `json:"tags"`
+	Version             string      `json:"version"`
 	Metadata            []byte      `json:"metadata"`
 	CertificateID       int64       `json:"certificate_id"`
 	UserID              uuid.UUID   `json:"user_id"`
@@ -2015,6 +2042,7 @@ func (q *Queries) UpdateCertificate(ctx context.Context, arg UpdateCertificatePa
 		arg.Description,
 		arg.Priority,
 		arg.Tags,
+		arg.Version,
 		arg.Metadata,
 		arg.CertificateID,
 		arg.UserID,
@@ -2037,10 +2065,11 @@ SET
     description = COALESCE($8::text, description),
     priority = COALESCE($9::integer, priority),
     tags = COALESCE($10::text[], tags),
-    metadata = COALESCE($11::jsonb, metadata)
+    version = COALESCE($11::text, version),
+    metadata = COALESCE($12::jsonb, metadata)
 WHERE 
-    education_id = $12::bigint 
-    AND user_id = $13::uuid
+    education_id = $13::bigint 
+    AND user_id = $14::uuid
 `
 
 type UpdateEducationParams struct {
@@ -2054,6 +2083,7 @@ type UpdateEducationParams struct {
 	Description     string      `json:"description"`
 	Priority        int32       `json:"priority"`
 	Tags            []string    `json:"tags"`
+	Version         string      `json:"version"`
 	Metadata        []byte      `json:"metadata"`
 	EducationID     int64       `json:"education_id"`
 	UserID          uuid.UUID   `json:"user_id"`
@@ -2071,6 +2101,7 @@ func (q *Queries) UpdateEducation(ctx context.Context, arg UpdateEducationParams
 		arg.Description,
 		arg.Priority,
 		arg.Tags,
+		arg.Version,
 		arg.Metadata,
 		arg.EducationID,
 		arg.UserID,
@@ -2093,10 +2124,11 @@ SET
     description = COALESCE($7::text, description),
     priority = COALESCE($8::integer, priority),
     tags = COALESCE($9::text[], tags),
-    metadata = COALESCE($10::jsonb, metadata)
+    version = COALESCE($10::text, version),
+    metadata = COALESCE($11::jsonb, metadata)
 WHERE 
-    experience_id = $11::bigint 
-    AND user_id = $12::uuid
+    experience_id = $12::bigint 
+    AND user_id = $13::uuid
 `
 
 type UpdateExperienceParams struct {
@@ -2109,6 +2141,7 @@ type UpdateExperienceParams struct {
 	Description     string      `json:"description"`
 	Priority        int32       `json:"priority"`
 	Tags            []string    `json:"tags"`
+	Version         string      `json:"version"`
 	Metadata        []byte      `json:"metadata"`
 	ExperienceID    int64       `json:"experience_id"`
 	UserID          uuid.UUID   `json:"user_id"`
@@ -2125,6 +2158,7 @@ func (q *Queries) UpdateExperience(ctx context.Context, arg UpdateExperiencePara
 		arg.Description,
 		arg.Priority,
 		arg.Tags,
+		arg.Version,
 		arg.Metadata,
 		arg.ExperienceID,
 		arg.UserID,
@@ -2296,10 +2330,11 @@ SET
     description = COALESCE($7::text, description),
     priority = COALESCE($8::integer, priority),
     tags = COALESCE($9::text[], tags),
-    metadata = COALESCE($10::jsonb, metadata)
+    version = COALESCE($10::text, version),
+    metadata = COALESCE($11::jsonb, metadata)
 WHERE 
-    project_id = $11::bigint 
-    AND user_id = $12::uuid
+    project_id = $12::bigint 
+    AND user_id = $13::uuid
 `
 
 type UpdateProjectParams struct {
@@ -2312,6 +2347,7 @@ type UpdateProjectParams struct {
 	Description             string      `json:"description"`
 	Priority                int32       `json:"priority"`
 	Tags                    []string    `json:"tags"`
+	Version                 string      `json:"version"`
 	Metadata                []byte      `json:"metadata"`
 	ProjectID               int64       `json:"project_id"`
 	UserID                  uuid.UUID   `json:"user_id"`
@@ -2328,6 +2364,7 @@ func (q *Queries) UpdateProject(ctx context.Context, arg UpdateProjectParams) er
 		arg.Description,
 		arg.Priority,
 		arg.Tags,
+		arg.Version,
 		arg.Metadata,
 		arg.ProjectID,
 		arg.UserID,
@@ -2344,10 +2381,11 @@ SET
     description = COALESCE($4::text, description),
     priority = COALESCE($5::integer, priority),
     tags = COALESCE($6::text[], tags),
-    metadata = COALESCE($7::jsonb, metadata)
+    version = COALESCE($7::text, version),
+    metadata = COALESCE($8::jsonb, metadata)
 WHERE 
-    skill_id = $8::bigint 
-    AND user_id = $9::uuid
+    skill_id = $9::bigint 
+    AND user_id = $10::uuid
 `
 
 type UpdateSkillParams struct {
@@ -2357,6 +2395,7 @@ type UpdateSkillParams struct {
 	Description        string      `json:"description"`
 	Priority           int32       `json:"priority"`
 	Tags               []string    `json:"tags"`
+	Version            string      `json:"version"`
 	Metadata           []byte      `json:"metadata"`
 	SkillID            int64       `json:"skill_id"`
 	UserID             uuid.UUID   `json:"user_id"`
@@ -2370,6 +2409,7 @@ func (q *Queries) UpdateSkill(ctx context.Context, arg UpdateSkillParams) error 
 		arg.Description,
 		arg.Priority,
 		arg.Tags,
+		arg.Version,
 		arg.Metadata,
 		arg.SkillID,
 		arg.UserID,
