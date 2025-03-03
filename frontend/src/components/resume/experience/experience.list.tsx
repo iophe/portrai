@@ -193,3 +193,153 @@ export function ExperienceList(props: ExperienceListProps) {
 		</section>
 	);
 }
+
+
+interface OfflineExperienceListProps {
+	experiences: Experience[]
+}
+
+export function OfflineExperienceList(props: OfflineExperienceListProps) {
+	const fault = useFault();
+
+	const [editing_experiences, updateEditingExperiences] = createStore(
+		[] as number[]
+	);
+	const [dragged_id, set_dragged_id] = createSignal<number | null>(null);
+
+	return (
+		<section class="w-full flex flex-col gap-4 justify-items-center">
+			<SectionHeader
+				add={() => {}}
+				section_title="Professional Experiences"
+				section_name="experience"
+				form={(props) => (
+					<ExperienceForm
+						delete={() => {}}
+						onCancel={() => {
+							props.cancel();
+						}}
+						onSubmit={() => {
+							props.submit();
+						}}
+						is_new
+					/>
+				)}
+			/>
+			<Suspense fallback={<LoadingSpinner />}>
+				<For each={props.experiences}>
+					{(experience) => {
+						return (
+							<Ordered
+								set_dragged_id={set_dragged_id}
+								dragged_id={dragged_id}
+								draggable={(id) =>
+									editing_experiences.includes(id)
+								}
+								id={experience.experience_id}
+								getId={(e) => e.experience_id}
+								list={() => props.experiences}
+								onSubmit={async (
+									new_list,
+									source_id,
+									target_id
+								) => {
+									// mutate(new_list);
+									try {
+										// await api.post(
+										// 	"/resume/items/reorder",
+										// 	{
+										// 		item_id: source_id,
+										// 		after_id: target_id,
+										// 		item_type: "experience", // Specify the item type
+										// 	}
+										// );
+									} catch (error) {
+										fault.minor({
+											message:
+												(
+													(error as AxiosError)
+														.response?.data as any
+												).error ??
+												(error as AxiosError).message,
+										});
+									}
+								}}
+							>
+								<Show
+									when={editing_experiences.includes(
+										experience.experience_id
+									)}
+									fallback={
+										<ExperienceView
+											refetch={() => {}}
+											set_dragged_id={set_dragged_id}
+											draggable={(id) =>
+												editing_experiences.includes(id)
+											}
+											experience={experience}
+											edit={(experience_id) => {
+												updateEditingExperiences([
+													...editing_experiences,
+													experience_id,
+												]);
+											}}
+										/>
+									}
+								>
+									<ExperienceForm
+										experience={experience}
+										delete={async () => {
+											try {
+												// await api.post(
+												// 	"/resume/items/delete",
+												// 	{
+												// 		item_id:
+												// 			experience.experience_id,
+												// 		item_type: "experience", // Specify the item type
+												// 	}
+												// );
+												// refetch();
+											} catch (error) {
+												fault.minor({
+													message:
+														(
+															(
+																error as AxiosError
+															).response
+																?.data as any
+														).error ??
+														(error as AxiosError)
+															.message,
+												});
+											}
+										}}
+										onCancel={() => {
+											updateEditingExperiences(
+												editing_experiences.filter(
+													(id) =>
+														id !==
+														experience.experience_id
+												)
+											);
+										}}
+										onSubmit={() => {
+											// refetch();
+											updateEditingExperiences(
+												editing_experiences.filter(
+													(id) =>
+														id !==
+														experience.experience_id
+												)
+											);
+										}}
+									/>
+								</Show>
+							</Ordered>
+						);
+					}}
+				</For>
+			</Suspense>
+		</section>
+	);
+}

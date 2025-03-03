@@ -169,38 +169,40 @@ function ResumeSettings(props: ResumeSettingsProps) {
 							</div>
 						</Show>
 						<div class="flex flex-row gap-4 items-center justify-between">
-								<FormSelect
-									value={""}
-									on_input={async (value) => {
-										setFormData("selected_version", value)
+							<FormSelect
+								value={""}
+								on_input={async (value) => {
+									setFormData("selected_version", value);
 
-                                        if (
-                                            !form_data.selected_version ||
-                                            form_data.selected_version ===
-                                                form_data.current_version
-                                        )
-                                            return;
-                                        try {
-                                            await api.post("/resume/change-version", {
-                                                version: form_data.selected_version,
-                                            });
-                                            refetch();
-                                        } catch (error) {
-                                            fault.minor({
-                                                message:
-                                                    (
-                                                        (error as AxiosError)
-                                                            .response?.data as any
-                                                    ).error ??
-                                                    (error as AxiosError).message,
-                                            });
-                                        }
-                                    }
-                                        
+									if (
+										!form_data.selected_version ||
+										form_data.selected_version ===
+											form_data.current_version
+									)
+										return;
+									try {
+										await api.post(
+											"/resume/change-version",
+											{
+												version:
+													form_data.selected_version,
+											}
+										);
+										refetch();
+									} catch (error) {
+										fault.minor({
+											message:
+												(
+													(error as AxiosError)
+														.response?.data as any
+												).error ??
+												(error as AxiosError).message,
+										});
 									}
-									choices={versions()?.all_versions ?? []}
-									select_label="change version"
-								/>
+								}}
+								choices={versions()?.all_versions ?? []}
+								select_label="change version"
+							/>
 							<button
 								onClick={() => {
 									add_version(true);
@@ -237,7 +239,7 @@ function ResumeSettings(props: ResumeSettingsProps) {
 													}
 												);
 												refetch();
-                                                add_version(false);
+												add_version(false);
 											} catch (error) {
 												fault.minor({
 													message:

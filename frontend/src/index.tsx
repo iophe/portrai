@@ -24,6 +24,9 @@ const Account = Protected({ redirect: "/" })(
 const Success = Protected({ redirect: "/" })(
 	lazy(() => import("./pages/payment/success.page"))
 );
+const Resume = Protected({ redirect: "/" })(
+	lazy(() => import("./pages/resume/resume.page"))
+);
 
 render(
 	() => (
@@ -36,6 +39,7 @@ render(
 				<Route path={"/pricing"} component={Pricing} />
 				<Route path={"/success"} component={Success} />
 				<Route path={"/account"} component={Account} />
+				<Route path={"/resume/:title"} component={Resume} />
 			</Router>
 		</FaultProvider>
 	),
