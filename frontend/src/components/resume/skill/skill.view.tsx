@@ -26,6 +26,8 @@ interface SkillViewProps {
 	refetch: () => void;
 	set_dragged_id: Setter<number | null>;
 	draggable: (id: number) => boolean;
+	offline?: boolean;
+	toggle_visibility?: (id: number) => void;
 }
 
 export function SkillView(props: SkillViewProps) {
@@ -40,17 +42,22 @@ export function SkillView(props: SkillViewProps) {
 			is_visible={props.skill?.is_visible ?? true}
 			toggle_visibility={async () => {
 				if (!props.skill) return;
-				try {
-					await api.post("/resume/skill/toggle", {
-						skill_id: props.skill.skill_id,
-					});
-					props.refetch();
-				} catch (error) {
-					fault.minor({
-						message:
-							((error as AxiosError).response?.data as any)
-								.error ?? (error as AxiosError).message,
-					});
+				if (props.offline) {
+					props.toggle_visibility?.(props.skill.skill_id);
+				} else {
+					try {
+						await api.post("/resume/items/toggle", {
+							item_id: props.skill.skill_id,
+							item_type: "skill",
+						});
+						props.refetch();
+					} catch (error) {
+						fault.minor({
+							message:
+								((error as AxiosError).response?.data as any)
+									.error ?? (error as AxiosError).message,
+						});
+					}
 				}
 			}}
 		>
@@ -62,12 +69,14 @@ export function SkillView(props: SkillViewProps) {
 			</Show>
 			<ItemText>{props.skill.description}</ItemText>
 			<Tags values={props.skill.tags} />
-			<NoteList
-				notes={props.skill.notes}
-				id={props.skill.skill_id}
-				section_type="experience"
-				refetch={props.refetch}
-			/>
+			<Show when={!props.offline}>
+				<NoteList
+					notes={props.skill.notes}
+					id={props.skill.skill_id}
+					section_type="skill" // Changed from "experience" to "skill" to fix a bug
+					refetch={props.refetch}
+				/>
+			</Show>
 		</ItemArticle>
 	);
 }
@@ -75,9 +84,10 @@ export function SkillView(props: SkillViewProps) {
 interface SkillFormProps {
 	skill?: Skill;
 	is_new?: boolean;
-	delete: () => void;
-	onSubmit: (skill_id: number) => void;
+	delete: (id: number) => void;
+	onSubmit: (skill_id: number, s: Skill) => void;
 	onCancel: () => void;
+	offline?: boolean;
 }
 
 export function SkillForm(props: SkillFormProps) {
@@ -96,11 +106,34 @@ export function SkillForm(props: SkillFormProps) {
 		if (!props.is_new) {
 			if (!props.skill) return;
 			try {
-				await api.post("/resume/skill/update", {
-					...form_data,
+				const itemData = {
+					item_id: props.skill.skill_id,
+					item_type: "skill",
+					title: form_data.skill_name,
+					subtitle: form_data.optional_skill_type,
+					description: form_data.description,
+					priority: form_data.priority,
+					tags: form_data.tags,
+					// Store skill level in metadata
+					metadata: {
+						skill_level: form_data.optional_skill_level,
+					},
+				};
+
+				if (!props.offline) {
+					await api.post("/resume/items/update", itemData);
+				}
+				props.onSubmit(props.skill.skill_id, {
 					skill_id: props.skill.skill_id,
+					skill_name: form_data.skill_name,
+					optional_skill_type: form_data.optional_skill_type,
+					optional_skill_level: form_data.optional_skill_level,
+					description: form_data.description,
+					priority: form_data.priority,
+					is_visible: true,
+					tags: form_data.tags,
+					notes: [],
 				});
-				props.onSubmit(props.skill.skill_id);
 			} catch (error) {
 				fault.minor({
 					message:
@@ -110,9 +143,37 @@ export function SkillForm(props: SkillFormProps) {
 			}
 		} else {
 			try {
-				const res = await api.post("/resume/skill/create", form_data);
-				const skill_id = res.data.skill_id;
-				props.onSubmit(skill_id);
+				const itemData = {
+					item_type: "skill",
+					title: form_data.skill_name,
+					subtitle: form_data.optional_skill_type,
+					description: form_data.description,
+					tags: form_data.tags,
+					// Store skill level in metadata
+					metadata: {
+						skill_level: form_data.optional_skill_level,
+					},
+				};
+
+				let item_id = 0;
+				if (!props.offline) {
+					const res = await api.post(
+						"/resume/items/create",
+						itemData
+					);
+					item_id = res.data.item_id;
+				}
+				props.onSubmit(item_id, {
+					skill_id: item_id,
+					skill_name: form_data.skill_name,
+					optional_skill_type: form_data.optional_skill_type,
+					optional_skill_level: form_data.optional_skill_level,
+					description: form_data.description,
+					priority: form_data.priority,
+					is_visible: true,
+					tags: form_data.tags,
+					notes: [],
+				});
 			} catch (error) {
 				fault.minor({
 					message:
@@ -125,8 +186,9 @@ export function SkillForm(props: SkillFormProps) {
 
 	return (
 		<FormArticle on_submit={handleSubmit}>
-			<FormDeleteButton delete={props.delete} />
-
+			<FormDeleteButton
+				delete={() => props.delete(props.skill!.skill_id)}
+			/>
 			<FormLabeledInput label="Skill">
 				<FormInputText
 					value={form_data.skill_name}
@@ -172,7 +234,7 @@ export function SkillForm(props: SkillFormProps) {
 			</FormLabeledInput>
 			<FormLabeledInput label="Description">
 				<FormTextArea
-					placeholder="write the description of this experience"
+					placeholder="write the description of this skill"
 					value={form_data.description}
 					on_input={(value) => setFormData("description", value)}
 					rows={4}

@@ -25,6 +25,8 @@ interface ExperienceViewProps {
 	refetch: () => void;
 	set_dragged_id: Setter<number | null>;
 	draggable: (id: number) => boolean;
+	offline?: boolean;
+	toggle_visibility?: (id: number) => void;
 }
 
 export function ExperienceView(props: ExperienceViewProps) {
@@ -40,17 +42,22 @@ export function ExperienceView(props: ExperienceViewProps) {
 			is_visible={props.experience?.is_visible ?? true}
 			toggle_visibility={async () => {
 				if (!props.experience) return;
-				try {
-					await api.post("/resume/experience/toggle", {
-						experience_id: props.experience.experience_id,
-					});
-					props.refetch();
-				} catch (error) {
-					fault.minor({
-						message:
-							((error as AxiosError).response?.data as any)
-								.error ?? (error as AxiosError).message,
-					});
+				if (props.offline) {
+					props.toggle_visibility?.(props.experience.experience_id);
+				} else {
+					try {
+						await api.post("/resume/items/toggle", {
+							item_id: props.experience.experience_id,
+							item_type: "experience",
+						});
+						props.refetch();
+					} catch (error) {
+						fault.minor({
+							message:
+								((error as AxiosError).response?.data as any)
+									.error ?? (error as AxiosError).message,
+						});
+					}
 				}
 			}}
 		>
@@ -65,12 +72,14 @@ export function ExperienceView(props: ExperienceViewProps) {
 			/>
 			<ItemText>{props.experience.description}</ItemText>
 			<Tags values={props.experience.tags} />
-			<NoteList
-				notes={props.experience.notes}
-				id={props.experience.experience_id}
-				section_type="experience"
-				refetch={props.refetch}
-			/>
+			<Show when={!props.offline}>
+				<NoteList
+					notes={props.experience.notes}
+					id={props.experience.experience_id}
+					section_type="experience"
+					refetch={props.refetch}
+				/>
+			</Show>
 		</ItemArticle>
 	);
 }
@@ -78,9 +87,10 @@ export function ExperienceView(props: ExperienceViewProps) {
 interface ExperienceFormProps {
 	experience?: Experience;
 	is_new?: boolean;
-	delete: () => void;
-	onSubmit: (experience_id: number) => void;
+	delete: (experience_id: number) => void;
+	onSubmit: (experience_id: number, exp: Experience) => void;
 	onCancel: () => void;
+	offline?: boolean;
 }
 
 export function ExperienceForm(props: ExperienceFormProps) {
@@ -102,18 +112,37 @@ export function ExperienceForm(props: ExperienceFormProps) {
 		if (!props.is_new) {
 			if (!props.experience) return;
 			try {
-				console.log({ ...form_data });
-
-				await api.post("/resume/experience/update", {
-					...form_data,
+				const itemData = {
+					item_id: props.experience.experience_id,
+					item_type: "experience",
+					title: form_data.job_title,
+					subtitle: form_data.company_name,
+					location: form_data.location,
+					start_date: form_data.start_date,
+					end_date: form_data.optional_end_date,
+					is_current: form_data.is_current,
+					description: form_data.description,
+					priority: form_data.priority,
+					tags: form_data.tags,
+					metadata: {},
+				};
+				if (!props.offline) {
+					await api.post("/resume/items/update", itemData);
+				}
+				props.onSubmit(props.experience.experience_id, {
 					experience_id: props.experience.experience_id,
+					company_name: form_data.company_name,
+					job_title: form_data.job_title,
+					location: form_data.location,
+					start_date: form_data.start_date,
+					optional_end_date: form_data.optional_end_date,
+					is_current: form_data.is_current,
+					description: form_data.description,
+					priority: form_data.priority,
+					is_visible: true,
+					tags: form_data.tags,
+					notes: [],
 				});
-				console.log({
-					form_data: form_data,
-					experience_id: props.experience.experience_id,
-				});
-
-				props.onSubmit(props.experience.experience_id);
 			} catch (error) {
 				fault.minor({
 					message:
@@ -123,12 +152,41 @@ export function ExperienceForm(props: ExperienceFormProps) {
 			}
 		} else {
 			try {
-				const res = await api.post(
-					"/resume/experience/create",
-					form_data
-				);
-				const experience_id = res.data.experience_id;
-				props.onSubmit(experience_id);
+				const itemData = {
+					item_type: "experience",
+					title: form_data.job_title,
+					subtitle: form_data.company_name,
+					location: form_data.location,
+					start_date: form_data.start_date,
+					end_date: form_data.optional_end_date,
+					is_current: form_data.is_current,
+					description: form_data.description,
+					tags: form_data.tags,
+					// metadata can be used for any experience-specific fields
+					metadata: {},
+				};
+				let item_id = 0;
+				if (!props.offline) {
+					const res = await api.post(
+						"/resume/items/create",
+						itemData
+					);
+					item_id = res.data.item_id;
+				}
+				props.onSubmit(item_id, {
+					experience_id: item_id,
+					company_name: form_data.company_name,
+					job_title: form_data.job_title,
+					location: form_data.location,
+					start_date: form_data.start_date,
+					optional_end_date: form_data.optional_end_date,
+					is_current: form_data.is_current,
+					description: form_data.description,
+					priority: form_data.priority,
+					is_visible: true,
+					tags: form_data.tags,
+					notes: [],
+				});
 			} catch (error) {
 				fault.minor({
 					message:
@@ -141,7 +199,12 @@ export function ExperienceForm(props: ExperienceFormProps) {
 
 	return (
 		<FormArticle on_submit={handleSubmit}>
-			<FormDeleteButton delete={props.delete} />
+			<FormDeleteButton
+				delete={() => {
+					if (props.experience?.experience_id)
+						props.delete(props.experience?.experience_id);
+				}}
+			/>
 			<FormLabeledInput label="Job Title">
 				<FormInputText
 					value={form_data.job_title}

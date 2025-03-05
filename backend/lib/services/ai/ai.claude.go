@@ -86,6 +86,7 @@ Core Responsibilities:
 6. Response Format:
 Always return a JSON object strictly following this structure:
 {
+  "title": string, // A title for the given job offers
   "experiences": [{
     "company_name": string,
     "job_title": string,
@@ -227,13 +228,15 @@ type OutputResumeData struct {
 		IsVisible               bool     `json:"is_visible"`
 		Tags                    []string `json:"tags"`
 	} `json:"projects"`
+	Letter string `json:"letter"`
+	Title  string `json:"title"`
 }
 
 const (
 	MAX_HISTORY_MESSAGES = 2
 )
 
-func GenerateResume(ctx context.Context, user_id uuid.UUID, resume_data ca.ResumeCachedData, job_description string, claude *anthropic.Client, cache *ca.Cache) (OutputResumeData, error) {
+func GenerateResume(ctx context.Context, user_id uuid.UUID, resume_data ca.ResumeCachedData, job_description string, with_cover_letter bool, claude *anthropic.Client, cache *ca.Cache) (OutputResumeData, error) {
 	resume_data_json, err := json.Marshal(resume_data)
 	if err != nil {
 		return OutputResumeData{}, fmt.Errorf("failed to marshal user data: %w", err)
@@ -242,7 +245,7 @@ func GenerateResume(ctx context.Context, user_id uuid.UUID, resume_data ca.Resum
 	Job Description:
 	%s
 		
-	Please analyze the job description and select the most relevant experiences, skills, projects, certificates, and education from the user's data. Return the response in the specified JSON format.Your response must be a single JSON object with no additional text, explanations, or markdown formatting.`,
+	Please analyze the job description and select the most relevant experiences, skills, projects, certificates, and education from the user's data. Return the response in the specified JSON format, create also a title for this resume based on the provided job description that you will put in the "title" key of the created json.Your response must be a single JSON object no additional text, explanations, or markdown formatting.`,
 		job_description)
 
 	resume_hash := utils.Hash(resume_data_json)
@@ -311,6 +314,39 @@ func GenerateResume(ctx context.Context, user_id uuid.UUID, resume_data ca.Resum
 	var outputResume OutputResumeData
 	if err := json.Unmarshal([]byte(json_content), &outputResume); err != nil {
 		return OutputResumeData{}, fmt.Errorf("failed to parse AI response: %w", err)
+	}
+	if with_cover_letter {
+		cover_letter_prompt := fmt.Sprintf(`The profile of the user is : %s
+		Please write a cover letter for this job offer,
+		Your response must be a single JSON object with a single key 'letter' with a string as value
+		and with no additional text, explanations, or markdown formatting.`,
+			"",
+		)
+
+		history = append(history, message.ToParam())
+		history = append(history, anthropic.NewUserMessage(anthropic.NewTextBlock(cover_letter_prompt)))
+		cover_letter_message, err := claude.Messages.New(ctx, anthropic.MessageNewParams{
+			Model:     anthropic.F(anthropic.ModelClaude3_5HaikuLatest),
+			MaxTokens: anthropic.F(int64(4096)),
+			Messages:  anthropic.F(history),
+		})
+		if err != nil {
+			return OutputResumeData{}, fmt.Errorf("failed to generate resume: %w", err)
+		}
+
+		content := cover_letter_message.Content[0].Text
+		json_content, err = extractJSONFromString(content)
+		if err != nil {
+			return OutputResumeData{}, fmt.Errorf("failed to extract JSON from response: %w", err)
+		}
+
+		var letter struct {
+			Letter string `json:"letter"`
+		}
+		if err := json.Unmarshal([]byte(json_content), &letter); err != nil {
+			return OutputResumeData{}, fmt.Errorf("failed to parse AI response: %w", err)
+		}
+		outputResume.Letter = letter.Letter
 	}
 
 	return outputResume, nil

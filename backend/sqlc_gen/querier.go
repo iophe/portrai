@@ -12,67 +12,36 @@ import (
 )
 
 type Querier interface {
-	CreateCertificate(ctx context.Context, arg CreateCertificateParams) (int64, error)
+	AddResumeVersion(ctx context.Context, arg AddResumeVersionParams) error
+	ChangeResumeVersion(ctx context.Context, arg ChangeResumeVersionParams) error
 	CreateCustomer(ctx context.Context, arg CreateCustomerParams) error
-	CreateEducation(ctx context.Context, arg CreateEducationParams) (int64, error)
-	CreateExperience(ctx context.Context, arg CreateExperienceParams) (int64, error)
-	CreateNoteOnCertificate(ctx context.Context, arg CreateNoteOnCertificateParams) error
-	CreateNoteOnEducation(ctx context.Context, arg CreateNoteOnEducationParams) error
-	CreateNoteOnExperience(ctx context.Context, arg CreateNoteOnExperienceParams) error
-	CreateNoteOnProject(ctx context.Context, arg CreateNoteOnProjectParams) error
-	CreateNoteOnSkill(ctx context.Context, arg CreateNoteOnSkillParams) error
-	CreateProject(ctx context.Context, arg CreateProjectParams) (int64, error)
-	CreateSkill(ctx context.Context, arg CreateSkillParams) (int64, error)
-	DeleteCertificate(ctx context.Context, arg DeleteCertificateParams) error
-	DeleteEducation(ctx context.Context, arg DeleteEducationParams) error
-	DeleteExperience(ctx context.Context, arg DeleteExperienceParams) error
-	DeleteNoteOnCertificate(ctx context.Context, arg DeleteNoteOnCertificateParams) error
-	DeleteNoteOnEducation(ctx context.Context, arg DeleteNoteOnEducationParams) error
-	DeleteNoteOnExperience(ctx context.Context, arg DeleteNoteOnExperienceParams) error
-	DeleteNoteOnProject(ctx context.Context, arg DeleteNoteOnProjectParams) error
-	DeleteNoteOnSkill(ctx context.Context, arg DeleteNoteOnSkillParams) error
+	// Note operations
+	CreateNoteOnResumeItem(ctx context.Context, arg CreateNoteOnResumeItemParams) error
+	CreateResumeItem(ctx context.Context, arg CreateResumeItemParams) (int64, error)
+	DeleteNote(ctx context.Context, arg DeleteNoteParams) error
 	DeletePayment(ctx context.Context, paymentID string) error
-	DeleteProject(ctx context.Context, arg DeleteProjectParams) error
-	DeleteSkill(ctx context.Context, arg DeleteSkillParams) error
-	GetCertificateById(ctx context.Context, arg GetCertificateByIdParams) (GetCertificateByIdRow, error)
-	GetCertificatesByUserId(ctx context.Context, userID uuid.UUID) ([]GetCertificatesByUserIdRow, error)
+	// Delete a resume item
+	DeleteResumeItem(ctx context.Context, arg DeleteResumeItemParams) error
+	// Delete all resume items with this version
+	DeleteResumeVersion(ctx context.Context, arg DeleteResumeVersionParams) error
 	GetCustomerByStripeID(ctx context.Context, stripeCustomerID string) (PaymentCustomer, error)
 	GetCustomerByUserID(ctx context.Context, userID uuid.UUID) (PaymentCustomer, error)
-	GetEducationById(ctx context.Context, arg GetEducationByIdParams) (GetEducationByIdRow, error)
-	GetEducationsByUserId(ctx context.Context, userID uuid.UUID) ([]GetEducationsByUserIdRow, error)
-	GetExperienceById(ctx context.Context, arg GetExperienceByIdParams) (GetExperienceByIdRow, error)
-	GetExperiencesByUserId(ctx context.Context, userID uuid.UUID) ([]GetExperiencesByUserIdRow, error)
 	GetPaymentValidity(ctx context.Context, userID uuid.UUID) (pgtype.Timestamptz, error)
 	GetPriceByAmount(ctx context.Context, arg GetPriceByAmountParams) (string, error)
 	GetPriceByPlan(ctx context.Context, plan string) (GetPriceByPlanRow, error)
-	GetProjectById(ctx context.Context, arg GetProjectByIdParams) (GetProjectByIdRow, error)
-	GetProjectsByUserId(ctx context.Context, userID uuid.UUID) ([]GetProjectsByUserIdRow, error)
 	GetResumeData(ctx context.Context, userID uuid.UUID) ([]byte, error)
-	GetSkillById(ctx context.Context, arg GetSkillByIdParams) (GetSkillByIdRow, error)
-	GetSkillsByUserId(ctx context.Context, userID uuid.UUID) ([]GetSkillsByUserIdRow, error)
+	GetResumeItemById(ctx context.Context, arg GetResumeItemByIdParams) (GetResumeItemByIdRow, error)
+	GetResumeItemsByType(ctx context.Context, arg GetResumeItemsByTypeParams) ([]GetResumeItemsByTypeRow, error)
+	GetUserResumeVersions(ctx context.Context, userID uuid.UUID) (GetUserResumeVersionsRow, error)
 	GetValidityPeroidByProductID(ctx context.Context, productID string) (pgtype.Interval, error)
 	InsertPayment(ctx context.Context, arg InsertPaymentParams) error
-	ReorderCertificate(ctx context.Context, arg ReorderCertificateParams) error
-	ReorderEducation(ctx context.Context, arg ReorderEducationParams) error
-	// Finally, update the priority of the moved experience
-	ReorderExperience(ctx context.Context, arg ReorderExperienceParams) error
-	ReorderProject(ctx context.Context, arg ReorderProjectParams) error
-	ReorderSkill(ctx context.Context, arg ReorderSkillParams) error
-	ToggleCertificateVisibility(ctx context.Context, arg ToggleCertificateVisibilityParams) (pgtype.Bool, error)
-	ToggleEducationVisibility(ctx context.Context, arg ToggleEducationVisibilityParams) (pgtype.Bool, error)
-	ToggleExperienceVisibility(ctx context.Context, arg ToggleExperienceVisibilityParams) (pgtype.Bool, error)
-	ToggleProjectVisibility(ctx context.Context, arg ToggleProjectVisibilityParams) (pgtype.Bool, error)
-	ToggleSkillVisibility(ctx context.Context, arg ToggleSkillVisibilityParams) (pgtype.Bool, error)
-	UpdateCertificate(ctx context.Context, arg UpdateCertificateParams) error
-	UpdateEducation(ctx context.Context, arg UpdateEducationParams) error
-	UpdateExperience(ctx context.Context, arg UpdateExperienceParams) error
-	UpdateNoteOnCertificate(ctx context.Context, arg UpdateNoteOnCertificateParams) error
-	UpdateNoteOnEducation(ctx context.Context, arg UpdateNoteOnEducationParams) error
-	UpdateNoteOnExperience(ctx context.Context, arg UpdateNoteOnExperienceParams) error
-	UpdateNoteOnProject(ctx context.Context, arg UpdateNoteOnProjectParams) error
-	UpdateNoteOnSkill(ctx context.Context, arg UpdateNoteOnSkillParams) error
-	UpdateProject(ctx context.Context, arg UpdateProjectParams) error
-	UpdateSkill(ctx context.Context, arg UpdateSkillParams) error
+	// Update all resume items with this version
+	RenameResumeVersion(ctx context.Context, arg RenameResumeVersionParams) error
+	// Finally, update the priority of the moved item
+	ReorderResumeItem(ctx context.Context, arg ReorderResumeItemParams) error
+	ToggleResumeItemVisibility(ctx context.Context, arg ToggleResumeItemVisibilityParams) (pgtype.Bool, error)
+	UpdateNote(ctx context.Context, arg UpdateNoteParams) error
+	UpdateResumeItem(ctx context.Context, arg UpdateResumeItemParams) error
 	UpsertPaymentValidity(ctx context.Context, arg UpsertPaymentValidityParams) error
 }
 

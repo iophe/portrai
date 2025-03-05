@@ -15,7 +15,6 @@ export function Ordered<T>(props: OrderedProps<T>) {
 	return (
 		<div
 			onDragOver={(e: DragEvent) => {
-				console.log("drag over", props.id);
 				e.preventDefault();
 				if (e.dataTransfer) {
 					e.dataTransfer.dropEffect = "move";
@@ -24,7 +23,6 @@ export function Ordered<T>(props: OrderedProps<T>) {
 			onDrop={(e: DragEvent) => {
 				e.preventDefault();
 				const source_id = props.dragged_id();
-				console.log("on drop", source_id);
 
 				if (source_id !== null && source_id !== props.id) {
 					const current_list = props.list();
@@ -43,8 +41,6 @@ export function Ordered<T>(props: OrderedProps<T>) {
 					new_list.splice(target_idx, 0, moved_item);
 
 					// Update the resource with new order
-					console.log(new_list);
-
 					props.onSubmit(new_list, source_id, props.id);
 				}
 			}}

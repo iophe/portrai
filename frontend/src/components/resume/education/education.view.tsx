@@ -25,6 +25,8 @@ interface EducationViewProps {
 	refetch: () => void;
 	set_dragged_id: Setter<number | null>;
 	draggable: (id: number) => boolean;
+	offline?: boolean;
+	toggle_visibility?: (id: number) => void;
 }
 
 export function EducationView(props: EducationViewProps) {
@@ -40,17 +42,22 @@ export function EducationView(props: EducationViewProps) {
 			is_visible={props.education?.is_visible ?? true}
 			toggle_visibility={async () => {
 				if (!props.education) return;
-				try {
-					await api.post("/resume/education/toggle", {
-						education_id: props.education.education_id,
-					});
-					props.refetch();
-				} catch (error) {
-					fault.minor({
-						message:
-							((error as AxiosError).response?.data as any)
-								.error ?? (error as AxiosError).message,
-					});
+				if (props.offline) {
+					props.toggle_visibility?.(props.education.education_id);
+				} else {
+					try {
+						await api.post("/resume/items/toggle", {
+							item_id: props.education.education_id,
+							item_type: "education",
+						});
+						props.refetch();
+					} catch (error) {
+						fault.minor({
+							message:
+								((error as AxiosError).response?.data as any)
+									.error ?? (error as AxiosError).message,
+						});
+					}
 				}
 			}}
 		>
@@ -65,12 +72,14 @@ export function EducationView(props: EducationViewProps) {
 			/>
 			<ItemText>{props.education.description}</ItemText>
 			<Tags values={props.education.tags} />
-			<NoteList
-				notes={props.education.notes}
-				id={props.education.education_id}
-				section_type="education"
-				refetch={props.refetch}
-			/>
+			<Show when={!props.offline}>
+				<NoteList
+					notes={props.education.notes}
+					id={props.education.education_id}
+					section_type="education"
+					refetch={props.refetch}
+				/>
+			</Show>
 		</ItemArticle>
 	);
 }
@@ -78,9 +87,10 @@ export function EducationView(props: EducationViewProps) {
 interface EducationFormProps {
 	education?: Education;
 	is_new?: boolean;
-	delete: () => void;
-	onSubmit: (education_id: number) => void;
+	delete: (id: number) => void;
+	onSubmit: (education_id: number, e: Education) => void;
 	onCancel: () => void;
+	offline?: boolean;
 }
 
 export function EducationForm(props: EducationFormProps) {
@@ -102,11 +112,39 @@ export function EducationForm(props: EducationFormProps) {
 		if (!props.is_new) {
 			if (!props.education) return;
 			try {
-				await api.post("/resume/education/update", {
-					...form_data,
+				const itemData = {
+					item_id: props.education.education_id,
+					item_type: "education",
+					title: form_data.degree,
+					subtitle: form_data.school,
+					location: form_data.location,
+					start_date: form_data.start_date,
+					end_date: form_data.optional_end_date,
+					is_current: form_data.is_current,
+					description: form_data.description,
+					priority: form_data.priority,
+					tags: form_data.tags,
+					// metadata can be used for any education-specific fields
+					metadata: {},
+				};
+
+				if (!props.offline) {
+					await api.post("/resume/items/update", itemData);
+				}
+				props.onSubmit(props.education.education_id, {
 					education_id: props.education.education_id,
+					school: form_data.school,
+					degree: form_data.degree,
+					location: form_data.location,
+					start_date: form_data.start_date,
+					optional_end_date: form_data.optional_end_date,
+					is_current: form_data.is_current,
+					description: form_data.description,
+					priority: form_data.priority,
+					is_visible: true,
+					tags: form_data.tags,
+					notes: [],
 				});
-				props.onSubmit(props.education.education_id);
 			} catch (error) {
 				fault.minor({
 					message:
@@ -116,12 +154,42 @@ export function EducationForm(props: EducationFormProps) {
 			}
 		} else {
 			try {
-				const res = await api.post(
-					"/resume/education/create",
-					form_data
-				);
-				const education_id = res.data.education_id;
-				props.onSubmit(education_id);
+				const itemData = {
+					item_type: "education",
+					title: form_data.degree,
+					subtitle: form_data.school,
+					location: form_data.location,
+					start_date: form_data.start_date,
+					end_date: form_data.optional_end_date,
+					is_current: form_data.is_current,
+					description: form_data.description,
+					tags: form_data.tags,
+					// metadata can be used for any education-specific fields
+					metadata: {},
+				};
+
+				let item_id = 0;
+				if (!props.offline) {
+					const res = await api.post(
+						"/resume/items/create",
+						itemData
+					);
+					item_id = res.data.item_id;
+				}
+				props.onSubmit(item_id, {
+					education_id: item_id,
+					school: form_data.school,
+					degree: form_data.degree,
+					location: form_data.location,
+					start_date: form_data.start_date,
+					optional_end_date: form_data.optional_end_date,
+					is_current: form_data.is_current,
+					description: form_data.description,
+					priority: form_data.priority,
+					is_visible: true,
+					tags: form_data.tags,
+					notes: [],
+				});
 			} catch (error) {
 				fault.minor({
 					message:
@@ -134,7 +202,9 @@ export function EducationForm(props: EducationFormProps) {
 
 	return (
 		<FormArticle on_submit={handleSubmit}>
-			<FormDeleteButton delete={props.delete} />
+			<FormDeleteButton
+				delete={() => props.delete(props.education!.education_id)}
+			/>
 			<FormLabeledInput label="Degree">
 				<FormInputText
 					value={form_data.degree}

@@ -23,6 +23,8 @@ create table public.users (
 
   full_name text,
 
+  current_resume_version text not null default 'main',
+
   -- The customer's billing address, stored in JSON format.
   billing_address jsonb,
   -- Stores your customer's payment instruments.
@@ -148,299 +150,81 @@ create table payment.payments (
 /******************************** SECTION : RESUME ****************************************/
 /******************************************************************************************/
 
-
-/**
-* Experiences
-* 
-*/
-create table public.experiences (
-  experience_id bigint primary key generated always as identity,
-  user_id uuid not null references auth.users on delete cascade,
-  company_name text not null default '',
-  job_title text not null default '',
-  location text not null default '',
-  start_date date not null default current_date,
-  optional_end_date date,
-  is_current boolean default false,
-  description text not null default '',
-  priority integer not null default 0,
-  is_visible boolean default true,
-  tags text[] not null default ARRAY[]::text[],
-  metadata jsonb not null default '{}'::jsonb,
-  created_at timestamp with time zone default current_timestamp,
-  updated_at timestamp with time zone default current_timestamp
-);
--- create a function to handle the priority per user
-create or replace function set_experience_priority()
-returns trigger as $$
-begin
-    if new.priority = 0 then
-        select coalesce(max(priority), 0) + 1 into new.priority
-        from public.experiences
-        where user_id = new.user_id;
-    end if;
-    return new;
-end;
-$$ language plpgsql;
-
--- create the trigger
-create trigger set_experience_priority
-before insert on public.experiences
-for each row
-execute function set_experience_priority();
-
-CREATE TRIGGER update_experiences_updated_at
-    BEFORE UPDATE ON public.experiences
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
-
-CREATE INDEX experiences_user_idx ON public.experiences(user_id);
-
-
-CREATE TABLE public.experience_notes (
-    note_id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    experience_id bigint NOT NULL REFERENCES public.experiences ON DELETE CASCADE,
-    user_id uuid NOT NULL REFERENCES auth.users ON DELETE CASCADE,
-    note_type text NOT NULL,
-    content text NOT NULL,
-    created_at timestamp with time zone DEFAULT current_timestamp,
-    updated_at timestamp with time zone DEFAULT current_timestamp
-);
-CREATE TRIGGER update_experience_notes_updated_at
-    BEFORE UPDATE ON public.experience_notes
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
-
-/**
-* Educations
-* 
-*/
-create table public.educations (
-  education_id bigint primary key generated always as identity,
-  user_id uuid not null references auth.users on delete cascade,
-  school text not null default '',
-  degree text not null default '',
-  location text not null default '',
-  start_date date not null default current_date,
-  optional_end_date date,
-  is_current boolean default false,
-  description text not null default '',
-  priority integer not null default 0,
-  is_visible boolean default true,
-  tags text[] not null default ARRAY[]::text[],
-  metadata jsonb not null default '{}'::jsonb,
-  created_at timestamp with time zone default current_timestamp,
-  updated_at timestamp with time zone default current_timestamp
+CREATE TABLE public.resume_items (
+  item_id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  user_id uuid NOT NULL REFERENCES auth.users ON DELETE CASCADE,
+  item_type text NOT NULL, -- 'experience', 'education', 'skill', 'certificate', 'project'
+  
+  -- Common fields
+  title text NOT NULL DEFAULT '', -- job_title, degree, skill_name, certificate_name, project_title
+  subtitle text DEFAULT '', -- company_name, school, skill_type, issuer, project_subtitle
+  location text DEFAULT '',
+  start_date date,
+  end_date date,
+  is_current boolean DEFAULT false,
+  description text DEFAULT '',
+  priority integer NOT NULL DEFAULT 0,
+  is_visible boolean DEFAULT true,
+  tags text[] NOT NULL DEFAULT ARRAY[]::text[],
+  version text NOT NULL DEFAULT 'main',
+  
+  -- Type-specific fields stored in JSONB
+  metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
+  
+  -- Timestamps
+  created_at timestamp with time zone DEFAULT current_timestamp,
+  updated_at timestamp with time zone DEFAULT current_timestamp
 );
 
-create or replace function set_education_priority()
-returns trigger as $$
-begin
-    if new.priority = 0 then
-        select coalesce(max(priority), 0) + 1 into new.priority
-        from public.educations
-        where user_id = new.user_id;
-    end if;
-    return new;
-end;
-$$ language plpgsql;
-
-create trigger set_education_priority
-before insert on public.educations
-for each row
-execute function set_education_priority();
-
-CREATE TRIGGER update_educations_updated_at
-    BEFORE UPDATE ON public.educations
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
-
-CREATE INDEX educations_user_idx ON public.educations(user_id);
-
-CREATE TABLE public.education_notes (
-    note_id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    education_id bigint NOT NULL REFERENCES public.educations ON DELETE CASCADE,
-    user_id uuid NOT NULL REFERENCES auth.users ON DELETE CASCADE,
-    note_type text NOT NULL,
-    content text NOT NULL,
-    created_at timestamp with time zone DEFAULT current_timestamp,
-    updated_at timestamp with time zone DEFAULT current_timestamp
+-- Notes for all resume items
+CREATE TABLE public.resume_item_notes (
+  note_id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  item_id bigint NOT NULL REFERENCES public.resume_items ON DELETE CASCADE,
+  user_id uuid NOT NULL REFERENCES auth.users ON DELETE CASCADE,
+  note_type text NOT NULL,
+  content text NOT NULL,
+  created_at timestamp with time zone DEFAULT current_timestamp,
+  updated_at timestamp with time zone DEFAULT current_timestamp
 );
-CREATE TRIGGER update_education_notes_updated_at
-    BEFORE UPDATE ON public.education_notes
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
-/**
-* Skills
-* 
-*/
-CREATE TYPE skill_level AS ENUM ('beginner', 'amateur', 'competent', 'proficient', 'expert');
-
-create table public.skills (
-  skill_id bigint primary key generated always as identity,
-  user_id uuid not null references auth.users on delete cascade,
-  skill_name text not null default '',
-  optional_skill_type text,
-  optional_skill_level skill_level,
-  description text not null default '',
-  priority integer not null default 0,
-  is_visible boolean default true,
-  tags text[] not null default ARRAY[]::text[],
-  metadata jsonb not null default '{}'::jsonb,
-  created_at timestamp with time zone default current_timestamp,
-  updated_at timestamp with time zone default current_timestamp
+-- versions created by the user
+CREATE TABLE public.resume_versions (
+  user_id uuid NOT NULL REFERENCES auth.users ON DELETE CASCADE,
+  version text NOT NULL DEFAULT 'main',
+  CONSTRAINT unique_user_version UNIQUE (user_id, version)
 );
 
-create or replace function set_skill_priority()
-returns trigger as $$
-begin
-    if new.priority = 0 then
-        select coalesce(max(priority), 0) + 1 into new.priority
-        from public.skills
-        where user_id = new.user_id;
-    end if;
-    return new;
-end;
-$$ language plpgsql;
+-- Set priority based on item type and user
+CREATE OR REPLACE FUNCTION set_resume_item_priority()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.priority = 0 THEN
+        SELECT COALESCE(MAX(priority), 0) + 1 INTO NEW.priority
+        FROM public.resume_items
+        WHERE user_id = NEW.user_id AND item_type = NEW.item_type;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
-create trigger set_skill_priority
-before insert on public.skills
-for each row
-execute function set_skill_priority();
+-- Create the trigger
+CREATE TRIGGER set_resume_item_priority
+BEFORE INSERT ON public.resume_items
+FOR EACH ROW
+EXECUTE FUNCTION set_resume_item_priority();
 
-CREATE TRIGGER update_skills_updated_at
-    BEFORE UPDATE ON public.skills
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
+-- Update timestamp trigger
+CREATE TRIGGER update_resume_items_updated_at
+BEFORE UPDATE ON public.resume_items
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
 
-CREATE INDEX skills_user_idx ON public.skills(user_id);
+-- Notes timestamp trigger
+CREATE TRIGGER update_resume_item_notes_updated_at
+BEFORE UPDATE ON public.resume_item_notes
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
 
-
-CREATE TABLE public.skill_notes (
-    note_id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    skill_id bigint NOT NULL REFERENCES public.skills ON DELETE CASCADE,
-    user_id uuid NOT NULL REFERENCES auth.users ON DELETE CASCADE,
-    note_type text NOT NULL,
-    content text NOT NULL,
-    created_at timestamp with time zone DEFAULT current_timestamp,
-    updated_at timestamp with time zone DEFAULT current_timestamp
-);
-CREATE TRIGGER update_skill_notes_updated_at
-    BEFORE UPDATE ON public.skill_notes
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
-/**
-* Certificates
-* 
-*/
-create table public.certificates (
-  certificate_id bigint primary key generated always as identity,
-  user_id uuid not null references auth.users on delete cascade,
-  certificate_name text not null default '',
-  optional_issuer text,
-  optional_location text,
-  optional_granted_date date,
-  description text not null default '',
-  priority integer not null default 0,
-  is_visible boolean default true,
-  tags text[] not null default ARRAY[]::text[],
-  metadata jsonb not null default '{}'::jsonb,
-  created_at timestamp with time zone default current_timestamp,
-  updated_at timestamp with time zone default current_timestamp
-);
-
-create or replace function set_certificates_priority()
-returns trigger as $$
-begin
-    if new.priority = 0 then
-        select coalesce(max(priority), 0) + 1 into new.priority
-        from public.certificates
-        where user_id = new.user_id;
-    end if;
-    return new;
-end;
-$$ language plpgsql;
-
-create trigger set_certificates_priority
-before insert on public.certificates
-for each row
-execute function set_certificates_priority();
-
-CREATE TRIGGER update_certificates_updated_at
-    BEFORE UPDATE ON public.certificates
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
-
-CREATE INDEX certificates_user_idx ON public.certificates(user_id);
-
-CREATE TABLE public.certificate_notes (
-    note_id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    certificate_id bigint NOT NULL REFERENCES public.certificates ON DELETE CASCADE,
-    user_id uuid NOT NULL REFERENCES auth.users ON DELETE CASCADE,
-    note_type text NOT NULL,
-    content text NOT NULL,
-    created_at timestamp with time zone DEFAULT current_timestamp,
-    updated_at timestamp with time zone DEFAULT current_timestamp
-);
-CREATE TRIGGER update_certificate_notes_updated_at
-    BEFORE UPDATE ON public.certificate_notes
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
-/**
-* Projects
-* 
-*/
-create table public.projects (
-  project_id bigint primary key generated always as identity,
-  user_id uuid not null references auth.users on delete cascade,
-  project_title text not null default '',
-  optional_project_subtitle text,
-  optional_start_date date,
-  optional_end_date date,
-  is_current boolean default false,
-  description text not null default '',
-  priority integer not null default 0,
-  is_visible boolean default true,
-  tags text[] not null default ARRAY[]::text[],
-  metadata jsonb not null default '{}'::jsonb,
-  created_at timestamp with time zone default current_timestamp,
-  updated_at timestamp with time zone default current_timestamp
-);
-
-create or replace function set_projects_priority()
-returns trigger as $$
-begin
-    if new.priority = 0 then
-        select coalesce(max(priority), 0) + 1 into new.priority
-        from public.projects
-        where user_id = new.user_id;
-    end if;
-    return new;
-end;
-$$ language plpgsql;
-
-create trigger set_projects_priority
-before insert on public.projects
-for each row
-execute function set_projects_priority();
-
-CREATE TRIGGER update_projects_updated_at
-    BEFORE UPDATE ON public.projects
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
-
-CREATE INDEX projects_user_idx ON public.projects(user_id);
-
-CREATE TABLE public.project_notes (
-    note_id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    project_id bigint NOT NULL REFERENCES public.projects ON DELETE CASCADE,
-    user_id uuid NOT NULL REFERENCES auth.users ON DELETE CASCADE,
-    note_type text NOT NULL,
-    content text NOT NULL,
-    created_at timestamp with time zone DEFAULT current_timestamp,
-    updated_at timestamp with time zone DEFAULT current_timestamp
-);
-CREATE TRIGGER update_project_notes_updated_at
-    BEFORE UPDATE ON public.project_notes
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
+-- Indexes
+CREATE INDEX resume_items_user_idx ON public.resume_items(user_id);
+CREATE INDEX resume_items_type_idx ON public.resume_items(item_type);
+CREATE INDEX resume_items_user_type_idx ON public.resume_items(user_id, item_type);

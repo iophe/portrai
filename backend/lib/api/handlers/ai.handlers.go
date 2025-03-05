@@ -15,7 +15,8 @@ import (
 )
 
 type BuildResumeData struct {
-	JobDescription string `json:"job_description"`
+	JobDescription  string `json:"job_description"`
+	WithCoverLetter bool   `json:"with_cover_letter"`
 }
 
 func HandleBuildResume(data BuildResumeData, c *fiber.Ctx, cache *ca.Cache, db *database.Database, claude *anthropic.Client) error {
@@ -44,7 +45,7 @@ func HandleBuildResume(data BuildResumeData, c *fiber.Ctx, cache *ca.Cache, db *
 		})
 	}
 
-	result, err := ai.GenerateResume(c.Context(), user_id, resume_data, data.JobDescription, claude, cache)
+	result, err := ai.GenerateResume(c.Context(), user_id, resume_data, data.JobDescription, data.WithCoverLetter, claude, cache)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Failed to generate the resume with claude",
