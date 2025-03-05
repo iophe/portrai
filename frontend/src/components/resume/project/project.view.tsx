@@ -25,6 +25,8 @@ interface ProjectViewProps {
 	refetch: () => void;
 	set_dragged_id: Setter<number | null>;
 	draggable: (id: number) => boolean;
+	offline?: boolean;
+	toggle_visibility?: (id: number) => void;
 }
 
 export function ProjectView(props: ProjectViewProps) {
@@ -40,18 +42,22 @@ export function ProjectView(props: ProjectViewProps) {
 			is_visible={props.project.is_visible}
 			toggle_visibility={async () => {
 				if (!props.project) return;
-				try {
-					await api.post("/resume/items/toggle", {
-						item_id: props.project.project_id,
-						item_type: "project",
-					});
-					props.refetch();
-				} catch (error) {
-					fault.minor({
-						message:
-							((error as AxiosError).response?.data as any)
-								.error ?? (error as AxiosError).message,
-					});
+				if (props.offline) {
+					props.toggle_visibility?.(props.project.project_id);
+				} else {
+					try {
+						await api.post("/resume/items/toggle", {
+							item_id: props.project.project_id,
+							item_type: "project",
+						});
+						props.refetch();
+					} catch (error) {
+						fault.minor({
+							message:
+								((error as AxiosError).response?.data as any)
+									.error ?? (error as AxiosError).message,
+						});
+					}
 				}
 			}}
 		>
@@ -65,12 +71,14 @@ export function ProjectView(props: ProjectViewProps) {
 			/>
 			<ItemText>{props.project.description}</ItemText>
 			<Tags values={props.project.tags} />
-			<NoteList
-				notes={props.project.notes}
-				id={props.project.project_id}
-				section_type="project"
-				refetch={props.refetch}
-			/>
+			<Show when={!props.offline}>
+				<NoteList
+					notes={props.project.notes}
+					id={props.project.project_id}
+					section_type="project"
+					refetch={props.refetch}
+				/>
+			</Show>
 		</ItemArticle>
 	);
 }
@@ -78,9 +86,10 @@ export function ProjectView(props: ProjectViewProps) {
 interface ProjectFormProps {
 	project?: Project;
 	is_new?: boolean;
-	delete: () => void;
-	onSubmit: (project_id: number) => void;
+	delete: (id: number) => void;
+	onSubmit: (project_id: number, p: Project) => void;
 	onCancel: () => void;
+	offline?: boolean;
 }
 
 export function ProjectForm(props: ProjectFormProps) {
@@ -116,8 +125,23 @@ export function ProjectForm(props: ProjectFormProps) {
 					metadata: {},
 				};
 
-				await api.post("/resume/items/update", itemData);
-				props.onSubmit(props.project.project_id);
+				if (!props.offline) {
+					await api.post("/resume/items/update", itemData);
+				}
+				props.onSubmit(props.project.project_id, {
+					project_id: props.project.project_id,
+					project_title: form_data.project_title,
+					optional_project_subtitle:
+						form_data.optional_project_subtitle,
+					start_date: form_data.start_date,
+					optional_end_date: form_data.optional_end_date,
+					is_current: form_data.is_current,
+					description: form_data.description,
+					priority: form_data.priority,
+					is_visible: true,
+					tags: form_data.tags,
+					notes: [],
+				});
 			} catch (error) {
 				fault.minor({
 					message:
@@ -140,9 +164,28 @@ export function ProjectForm(props: ProjectFormProps) {
 					metadata: {},
 				};
 
-				const res = await api.post("/resume/items/create", itemData);
-				const item_id = res.data.item_id;
-				props.onSubmit(item_id);
+				let item_id = 0;
+				if (!props.offline) {
+					const res = await api.post(
+						"/resume/items/create",
+						itemData
+					);
+					item_id = res.data.item_id;
+				}
+				props.onSubmit(item_id, {
+					project_id: item_id,
+					project_title: form_data.project_title,
+					optional_project_subtitle:
+						form_data.optional_project_subtitle,
+					start_date: form_data.start_date,
+					optional_end_date: form_data.optional_end_date,
+					is_current: form_data.is_current,
+					description: form_data.description,
+					priority: form_data.priority,
+					is_visible: true,
+					tags: form_data.tags,
+					notes: [],
+				});
 			} catch (error) {
 				fault.minor({
 					message:
@@ -155,7 +198,9 @@ export function ProjectForm(props: ProjectFormProps) {
 
 	return (
 		<FormArticle on_submit={handleSubmit}>
-			<FormDeleteButton delete={props.delete} />
+			<FormDeleteButton
+				delete={() => props.delete(props.project!.project_id)}
+			/>
 			<FormLabeledInput label="Project Title">
 				<FormInputText
 					value={form_data.project_title}

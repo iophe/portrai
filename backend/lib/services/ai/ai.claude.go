@@ -86,6 +86,7 @@ Core Responsibilities:
 6. Response Format:
 Always return a JSON object strictly following this structure:
 {
+  "title": string, // A title for the given job offers
   "experiences": [{
     "company_name": string,
     "job_title": string,
@@ -228,6 +229,7 @@ type OutputResumeData struct {
 		Tags                    []string `json:"tags"`
 	} `json:"projects"`
 	Letter string `json:"letter"`
+	Title  string `json:"title"`
 }
 
 const (
@@ -243,7 +245,7 @@ func GenerateResume(ctx context.Context, user_id uuid.UUID, resume_data ca.Resum
 	Job Description:
 	%s
 		
-	Please analyze the job description and select the most relevant experiences, skills, projects, certificates, and education from the user's data. Return the response in the specified JSON format.Your response must be a single JSON object with no additional text, explanations, or markdown formatting.`,
+	Please analyze the job description and select the most relevant experiences, skills, projects, certificates, and education from the user's data. Return the response in the specified JSON format, create also a title for this resume based on the provided job description that you will put in the "title" key of the created json.Your response must be a single JSON object no additional text, explanations, or markdown formatting.`,
 		job_description)
 
 	resume_hash := utils.Hash(resume_data_json)

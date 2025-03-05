@@ -45,7 +45,6 @@ SET
     description = COALESCE(@description::text, description),
     priority = COALESCE(@priority::integer, priority),
     tags = COALESCE(@tags::text[], tags),
-    version = COALESCE(@version::text, version),
     metadata = COALESCE(@metadata::jsonb, metadata)
 WHERE 
     item_id = @item_id::bigint 
@@ -224,12 +223,12 @@ SELECT jsonb_build_object(
     'experiences', (
         SELECT COALESCE(jsonb_agg(
             jsonb_build_object(
-                'item_id', item_id,
+                'experience_id', item_id,
                 'job_title', title,
                 'company_name', subtitle,
                 'location', location,
                 'start_date', start_date,
-                'end_date', end_date,
+                'optional_end_date', end_date,
                 'is_current', is_current,
                 'description', description,
                 'priority', priority,
@@ -258,12 +257,12 @@ SELECT jsonb_build_object(
     'educations', (
         SELECT COALESCE(jsonb_agg(
             jsonb_build_object(
-                'item_id', item_id,
+                'education_id', item_id,
                 'degree', title,
                 'school', subtitle,
                 'location', location,
                 'start_date', start_date,
-                'end_date', end_date,
+                'optional_end_date', end_date,
                 'is_current', is_current,
                 'description', description,
                 'priority', priority,
@@ -292,10 +291,10 @@ SELECT jsonb_build_object(
     'skills', (
         SELECT COALESCE(jsonb_agg(
             jsonb_build_object(
-                'item_id', item_id,
+                'skill_id', item_id,
                 'skill_name', title,
-                'skill_type', subtitle,
-                'skill_level', metadata->>'skill_level',
+                'optional_skill_type', subtitle,
+                'optional_skill_level', metadata->>'skill_level',
                 'description', description,
                 'priority', priority,
                 'is_visible', is_visible,
@@ -322,11 +321,11 @@ SELECT jsonb_build_object(
     'certificates', (
         SELECT COALESCE(jsonb_agg(
             jsonb_build_object(
-                'item_id', item_id,
+                'certificate_id', item_id,
                 'certificate_name', title,
-                'issuer', subtitle,
-                'location', location,
-                'granted_date', start_date,
+                'optional_issuer', subtitle,
+                'optional_location', location,
+                'optional_granted_date', start_date,
                 'description', description,
                 'priority', priority,
                 'is_visible', is_visible,
@@ -353,11 +352,11 @@ SELECT jsonb_build_object(
     'projects', (
         SELECT COALESCE(jsonb_agg(
             jsonb_build_object(
-                'item_id', item_id,
+                'project_id', item_id,
                 'project_title', title,
                 'project_subtitle', subtitle,
-                'start_date', start_date,
-                'end_date', end_date,
+                'optional_start_date', start_date,
+                'optional_end_date', end_date,
                 'is_current', is_current,
                 'description', description,
                 'priority', priority,

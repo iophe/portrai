@@ -24,6 +24,8 @@ interface CertificateViewProps {
 	refetch: () => void;
 	set_dragged_id: Setter<number | null>;
 	draggable: (id: number) => boolean;
+	offline?: boolean;
+	toggle_visibility?: (id: number) => void;
 }
 
 export function CertificateView(props: CertificateViewProps) {
@@ -39,18 +41,22 @@ export function CertificateView(props: CertificateViewProps) {
 			is_visible={props.certificate?.is_visible ?? true}
 			toggle_visibility={async () => {
 				if (!props.certificate) return;
-				try {
-					await api.post("/resume/items/toggle", {
-						item_id: props.certificate.certificate_id,
-						item_type: "certificate",
-					});
-					props.refetch();
-				} catch (error) {
-					fault.minor({
-						message:
-							((error as AxiosError).response?.data as any)
-								.error ?? (error as AxiosError).message,
-					});
+				if (props.offline) {
+					props.toggle_visibility?.(props.certificate.certificate_id);
+				} else {
+					try {
+						await api.post("/resume/items/toggle", {
+							item_id: props.certificate.certificate_id,
+							item_type: "certificate",
+						});
+						props.refetch();
+					} catch (error) {
+						fault.minor({
+							message:
+								((error as AxiosError).response?.data as any)
+									.error ?? (error as AxiosError).message,
+						});
+					}
 				}
 			}}
 		>
@@ -77,9 +83,10 @@ export function CertificateView(props: CertificateViewProps) {
 interface CertificateFormProps {
 	certificate?: Certificate;
 	is_new?: boolean;
-	delete: () => void;
-	onSubmit: (certificate_id: number) => void;
+	delete: (id: number) => void;
+	onSubmit: (certificate_id: number, c: Certificate) => void;
 	onCancel: () => void;
+	offline?: boolean;
 }
 
 export function CertificateForm(props: CertificateFormProps) {
@@ -113,8 +120,21 @@ export function CertificateForm(props: CertificateFormProps) {
 					metadata: {},
 				};
 
-				await api.post("/resume/items/update", itemData);
-				props.onSubmit(props.certificate.certificate_id);
+				if (!props.offline) {
+					await api.post("/resume/items/update", itemData);
+				}
+				props.onSubmit(props.certificate.certificate_id, {
+					certificate_id: props.certificate.certificate_id,
+					certificate_name: form_data.certificate_name,
+					optional_issuer: form_data.optional_issuer,
+					optional_location: form_data.optional_location,
+					optional_granted_date: form_data.optional_granted_date,
+					description: form_data.description,
+					priority: form_data.priority,
+					is_visible: true,
+					tags: form_data.tags,
+					notes: [],
+				});
 			} catch (error) {
 				fault.minor({
 					message:
@@ -136,9 +156,26 @@ export function CertificateForm(props: CertificateFormProps) {
 					metadata: {},
 				};
 
-				const res = await api.post("/resume/items/create", itemData);
-				const item_id = res.data.item_id;
-				props.onSubmit(item_id);
+				let item_id = 0;
+				if (!props.offline) {
+					const res = await api.post(
+						"/resume/items/create",
+						itemData
+					);
+					item_id = res.data.item_id;
+				}
+				props.onSubmit(item_id, {
+					certificate_id: item_id,
+					certificate_name: form_data.certificate_name,
+					optional_issuer: form_data.optional_issuer,
+					optional_location: form_data.optional_location,
+					optional_granted_date: form_data.optional_granted_date,
+					description: form_data.description,
+					priority: form_data.priority,
+					is_visible: true,
+					tags: form_data.tags,
+					notes: [],
+				});
 			} catch (error) {
 				fault.minor({
 					message:
@@ -151,7 +188,9 @@ export function CertificateForm(props: CertificateFormProps) {
 
 	return (
 		<FormArticle on_submit={handleSubmit}>
-			<FormDeleteButton delete={props.delete} />
+			<FormDeleteButton
+				delete={() => props.delete(props.certificate!.certificate_id)}
+			/>
 			<FormLabeledInput label="Certificate Name">
 				<FormInputText
 					value={form_data.certificate_name}

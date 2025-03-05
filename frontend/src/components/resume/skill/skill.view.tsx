@@ -26,6 +26,8 @@ interface SkillViewProps {
 	refetch: () => void;
 	set_dragged_id: Setter<number | null>;
 	draggable: (id: number) => boolean;
+	offline?: boolean;
+	toggle_visibility?: (id: number) => void;
 }
 
 export function SkillView(props: SkillViewProps) {
@@ -40,18 +42,22 @@ export function SkillView(props: SkillViewProps) {
 			is_visible={props.skill?.is_visible ?? true}
 			toggle_visibility={async () => {
 				if (!props.skill) return;
-				try {
-					await api.post("/resume/items/toggle", {
-						item_id: props.skill.skill_id,
-						item_type: "skill",
-					});
-					props.refetch();
-				} catch (error) {
-					fault.minor({
-						message:
-							((error as AxiosError).response?.data as any)
-								.error ?? (error as AxiosError).message,
-					});
+				if (props.offline) {
+					props.toggle_visibility?.(props.skill.skill_id);
+				} else {
+					try {
+						await api.post("/resume/items/toggle", {
+							item_id: props.skill.skill_id,
+							item_type: "skill",
+						});
+						props.refetch();
+					} catch (error) {
+						fault.minor({
+							message:
+								((error as AxiosError).response?.data as any)
+									.error ?? (error as AxiosError).message,
+						});
+					}
 				}
 			}}
 		>
@@ -63,12 +69,14 @@ export function SkillView(props: SkillViewProps) {
 			</Show>
 			<ItemText>{props.skill.description}</ItemText>
 			<Tags values={props.skill.tags} />
-			<NoteList
-				notes={props.skill.notes}
-				id={props.skill.skill_id}
-				section_type="skill" // Changed from "experience" to "skill" to fix a bug
-				refetch={props.refetch}
-			/>
+			<Show when={!props.offline}>
+				<NoteList
+					notes={props.skill.notes}
+					id={props.skill.skill_id}
+					section_type="skill" // Changed from "experience" to "skill" to fix a bug
+					refetch={props.refetch}
+				/>
+			</Show>
 		</ItemArticle>
 	);
 }
@@ -76,9 +84,10 @@ export function SkillView(props: SkillViewProps) {
 interface SkillFormProps {
 	skill?: Skill;
 	is_new?: boolean;
-	delete: () => void;
-	onSubmit: (skill_id: number) => void;
+	delete: (id: number) => void;
+	onSubmit: (skill_id: number, s: Skill) => void;
 	onCancel: () => void;
+	offline?: boolean;
 }
 
 export function SkillForm(props: SkillFormProps) {
@@ -111,8 +120,20 @@ export function SkillForm(props: SkillFormProps) {
 					},
 				};
 
-				await api.post("/resume/items/update", itemData);
-				props.onSubmit(props.skill.skill_id);
+				if (!props.offline) {
+					await api.post("/resume/items/update", itemData);
+				}
+				props.onSubmit(props.skill.skill_id, {
+					skill_id: props.skill.skill_id,
+					skill_name: form_data.skill_name,
+					optional_skill_type: form_data.optional_skill_type,
+					optional_skill_level: form_data.optional_skill_level,
+					description: form_data.description,
+					priority: form_data.priority,
+					is_visible: true,
+					tags: form_data.tags,
+					notes: [],
+				});
 			} catch (error) {
 				fault.minor({
 					message:
@@ -134,9 +155,25 @@ export function SkillForm(props: SkillFormProps) {
 					},
 				};
 
-				const res = await api.post("/resume/items/create", itemData);
-				const item_id = res.data.item_id;
-				props.onSubmit(item_id);
+				let item_id = 0;
+				if (!props.offline) {
+					const res = await api.post(
+						"/resume/items/create",
+						itemData
+					);
+					item_id = res.data.item_id;
+				}
+				props.onSubmit(item_id, {
+					skill_id: item_id,
+					skill_name: form_data.skill_name,
+					optional_skill_type: form_data.optional_skill_type,
+					optional_skill_level: form_data.optional_skill_level,
+					description: form_data.description,
+					priority: form_data.priority,
+					is_visible: true,
+					tags: form_data.tags,
+					notes: [],
+				});
 			} catch (error) {
 				fault.minor({
 					message:
@@ -149,8 +186,9 @@ export function SkillForm(props: SkillFormProps) {
 
 	return (
 		<FormArticle on_submit={handleSubmit}>
-			<FormDeleteButton delete={props.delete} />
-
+			<FormDeleteButton
+				delete={() => props.delete(props.skill!.skill_id)}
+			/>
 			<FormLabeledInput label="Skill">
 				<FormInputText
 					value={form_data.skill_name}

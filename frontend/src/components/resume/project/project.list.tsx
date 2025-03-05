@@ -49,7 +49,6 @@ export function ProjectList(props: ProjectListProps) {
 		[] as number[]
 	);
 
-	const [creating_new, createNew] = createSignal(false);
 	const [dragged_id, set_dragged_id] = createSignal<number | null>(null);
 
 	return (
@@ -179,6 +178,127 @@ export function ProjectList(props: ProjectListProps) {
 												)
 											);
 										}}
+									/>
+								</Show>
+							</Ordered>
+						);
+					}}
+				</For>
+			</Suspense>
+		</section>
+	);
+}
+
+interface OfflineProjectListProps {
+	projects: Project[];
+	add: (project: Project) => void;
+	update: (project: Project) => void;
+	delete: (id: number) => void;
+	reorder: (new_list: Project[]) => void;
+	toggle_visibility: (id: number) => void;
+}
+
+export function OfflineProjectList(props: OfflineProjectListProps) {
+	const fault = useFault();
+
+	const [editing_projects, updateEditingProjects] = createStore(
+		[] as number[]
+	);
+
+	const [dragged_id, set_dragged_id] = createSignal<number | null>(null);
+
+	return (
+		<section class="w-full flex flex-col gap-4 justify-items-center">
+			<SectionHeader
+				add={() => {}}
+				section_title="Projects"
+				section_name="project"
+				form={(p) => (
+					<ProjectForm
+						delete={() => {}}
+						onCancel={() => {
+							p.cancel();
+						}}
+						onSubmit={(i, v) => {
+							p.submit();
+							props.add(v);
+						}}
+						is_new
+						offline
+					/>
+				)}
+			/>
+			<Suspense fallback={<LoadingSpinner />}>
+				<For each={props.projects}>
+					{(project) => {
+						return (
+							<Ordered
+								set_dragged_id={set_dragged_id}
+								dragged_id={dragged_id}
+								draggable={(id) =>
+									editing_projects.includes(id)
+								}
+								id={project.project_id}
+								getId={(e) => e.project_id}
+								list={() => props.projects}
+								onSubmit={async (
+									new_list,
+									source_id,
+									target_id
+								) => {
+									props.reorder(new_list);
+								}}
+							>
+								<Show
+									when={editing_projects.includes(
+										project.project_id
+									)}
+									fallback={
+										<ProjectView
+											refetch={() => {}}
+											set_dragged_id={set_dragged_id}
+											draggable={(id) =>
+												editing_projects.includes(id)
+											}
+											project={project}
+											toggle_visibility={
+												props.toggle_visibility
+											}
+											edit={(project_id) => {
+												updateEditingProjects([
+													...editing_projects,
+													project_id,
+												]);
+											}}
+											offline
+										/>
+									}
+								>
+									<ProjectForm
+										project={project}
+										delete={(id) => {
+											props.delete(id);
+										}}
+										onCancel={() => {
+											updateEditingProjects(
+												editing_projects.filter(
+													(id) =>
+														id !==
+														project.project_id
+												)
+											);
+										}}
+										onSubmit={(i, v) => {
+											props.update(v);
+											updateEditingProjects(
+												editing_projects.filter(
+													(id) =>
+														id !==
+														project.project_id
+												)
+											);
+										}}
+										offline
 									/>
 								</Show>
 							</Ordered>

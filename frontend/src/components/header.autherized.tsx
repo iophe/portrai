@@ -15,11 +15,11 @@ function Header(props: HeaderProps) {
 			</A>
 			<div class="flex flex-row gap-8 items-center">
 				<A
-					href="/blog"
+					href="/history"
 					class="tracking-widest"
 					activeClass="text-night-600"
 				>
-					<h2>Blog</h2>
+					<h2>History</h2>
 				</A>
 				<A
 					href="/account"

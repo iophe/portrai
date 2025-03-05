@@ -27,7 +27,6 @@ function ItemArticle(props: ItemArticleProps) {
 					draggable={!props.draggable(props.item_id)}
 					onDragStart={(e: DragEvent) => {
 						props.set_dragged_id(props.item_id);
-						console.log("drag start", props.item_id);
 
 						if (e.dataTransfer) {
 							e.dataTransfer.effectAllowed = "move";
@@ -37,7 +36,6 @@ function ItemArticle(props: ItemArticleProps) {
 						}
 					}}
 					onDragEnd={(e: DragEvent) => {
-						console.log("drag end", props.item_id);
 						props.set_dragged_id(null);
 						if (e.target instanceof HTMLElement) {
 							e.target.classList.remove("opacity-50");

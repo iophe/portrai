@@ -1,7 +1,7 @@
 import Dexie, { Table } from "dexie";
 
 export interface JobSpecificResume {
-	id?: number;
+	id: string;
 	title: string;
 	job_description: string;
 	resume_data: ResumeData;
@@ -15,7 +15,7 @@ export class AppDatabase extends Dexie {
 	constructor() {
 		super("AppDatabase");
 		this.version(1).stores({
-			job_specific_resumes: "++id, title",
+			job_specific_resumes: "id, title, created_at",
 		});
 
 		// Add hooks for automatic date handling

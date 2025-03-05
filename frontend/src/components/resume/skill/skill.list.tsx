@@ -171,3 +171,112 @@ export function SkillList(props: SkillListProps) {
 		</section>
 	);
 }
+
+interface OfflineSkillListProps {
+	skills: Skill[];
+	add: (skill: Skill) => void;
+	update: (skill: Skill) => void;
+	delete: (id: number) => void;
+	reorder: (new_list: Skill[]) => void;
+	toggle_visibility: (id: number) => void;
+}
+
+export function OfflineSkillList(props: OfflineSkillListProps) {
+	const fault = useFault();
+
+	const [editing_skills, updateEditingSkills] = createStore([] as number[]);
+
+	const [dragged_id, set_dragged_id] = createSignal<number | null>(null);
+
+	return (
+		<section class="w-full flex flex-col gap-4 justify-items-center">
+			<SectionHeader
+				add={() => {}}
+				section_title="Skills and Expertise"
+				section_name="skill"
+				form={(p) => (
+					<SkillForm
+						delete={() => {}}
+						onCancel={() => {
+							p.cancel();
+						}}
+						onSubmit={(id, v) => {
+							p.submit();
+							props.add(v);
+						}}
+						is_new
+						offline
+					/>
+				)}
+			/>
+			<Suspense fallback={<LoadingSpinner />}>
+				<For each={props.skills}>
+					{(skill) => (
+						<Ordered
+							set_dragged_id={set_dragged_id}
+							dragged_id={dragged_id}
+							draggable={(id) => editing_skills.includes(id)}
+							id={skill.skill_id}
+							getId={(e) => e.skill_id}
+							list={() => props.skills}
+							onSubmit={async (
+								new_list,
+								source_id,
+								target_id
+							) => {
+								props.reorder(new_list);
+							}}
+						>
+							<Show
+								when={editing_skills.includes(skill.skill_id)}
+								fallback={
+									<SkillView
+										refetch={() => {}}
+										set_dragged_id={set_dragged_id}
+										draggable={(id) =>
+											editing_skills.includes(id)
+										}
+										skill={skill}
+										toggle_visibility={
+											props.toggle_visibility
+										}
+										edit={(skill_id) => {
+											updateEditingSkills([
+												...editing_skills,
+												skill_id,
+											]);
+										}}
+										offline
+									/>
+								}
+							>
+								<SkillForm
+									skill={skill}
+									delete={(id) => {
+										props.delete(id);
+									}}
+									onCancel={() => {
+										updateEditingSkills(
+											editing_skills.filter(
+												(id) => id !== skill.skill_id
+											)
+										);
+									}}
+									onSubmit={(id, v) => {
+										props.update(v);
+										updateEditingSkills(
+											editing_skills.filter(
+												(id) => id !== skill.skill_id
+											)
+										);
+									}}
+									offline
+								/>
+							</Show>
+						</Ordered>
+					)}
+				</For>
+			</Suspense>
+		</section>
+	);
+}

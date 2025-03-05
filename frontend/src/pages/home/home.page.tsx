@@ -32,82 +32,170 @@ function Home(props: HomeProps) {
 			 items-start text-night-900"
 			>
 				<section class="overflow-y-auto pr-4 h-full">
-					<aside class="flex gap-4 justify-between text-sm">
+					<aside class="flex gap-4 justify-between text-sm pb-2 border-b-2 border-night-900">
 						<button
 							onclick={() => {
 								set_section("settings");
 							}}
-							class="flex flex-wrap gap-2 items-center rounded"
+							class="flex flex-wrap gap-2 items-center rounded opacity-70 hover:opacity-100 transition duration-200 ease-in-out"
 							classList={{
-								"bg-lapis-50 px-4 py-2":
+								"bg-night-50 px-4 py-2 opacity-100":
 									section() === "settings",
 							}}
 						>
-							<SettingsIcon class="w-8 h-8 [&_path]:stroke-night-900" />
+							<SettingsIcon
+								class="w-8 h-8 "
+								classList={{
+									"[&_path]:stroke-night-900 [&_circle]:stroke-night-900":
+										section() === "settings",
+									"[&_path]:stroke-night-700 [&_circle]:stroke-night-700":
+										section() !== "settings",
+								}}
+							/>
 						</button>
 						<button
 							onclick={() => {
 								set_section("experience");
 							}}
-							class="flex flex-wrap gap-2 items-center rounded"
+							class="flex flex-wrap gap-2 items-center rounded opacity-70 hover:opacity-100 transition-opacity duration-200 ease-in-out"
 							classList={{
-								"bg-lapis-50 px-4 py-2":
+								"bg-night-50 px-4 py-2 opacity-100":
 									section() === "experience",
 							}}
 						>
-							<label>Experiences</label>
-							<ExperienceIcon class="w-8 h-8 [&_path]:stroke-night-900" />
+							<label
+								classList={{
+									"text-night-900":
+										section() === "experience",
+									"text-night-700":
+										section() !== "experience",
+								}}
+							>
+								Experiences
+							</label>
+							<ExperienceIcon
+								class="w-8 h-8 "
+								classList={{
+									"[&_path]:stroke-night-900":
+										section() === "experience",
+									"[&_path]:stroke-night-700":
+										section() !== "experience",
+								}}
+							/>
 						</button>
 						<button
 							onclick={() => {
 								set_section("education");
 							}}
-							class="flex flex-wrap gap-2 items-center rounded"
+							class="flex flex-wrap gap-2 items-center rounded opacity-70 hover:opacity-100 transition-opacity duration-200 ease-in-out"
 							classList={{
-								"bg-lapis-50 px-4 py-2":
+								"bg-night-50 px-4 py-2 opacity-100":
 									section() === "education",
 							}}
 						>
-							<label>Educations</label>
-							<EducationIcon class="w-8 h-8 [&_path]:stroke-night-900" />
+							<label
+								classList={{
+									"text-night-900": section() === "education",
+									"text-night-700": section() !== "education",
+								}}
+							>
+								Educations
+							</label>
+							<EducationIcon
+								class="w-8 h-8"
+								classList={{
+									"[&_path]:stroke-night-900 [&_polygon]:stroke-night-900 [&_line]:stroke-night-900":
+										section() === "education",
+									"[&_path]:stroke-night-700 [&_polygon]:stroke-night-700 [&_line]:stroke-night-700":
+										section() !== "education",
+								}}
+							/>
 						</button>
 						<button
 							onclick={() => {
 								set_section("certificate");
 							}}
-							class="flex flex-wrap gap-2 items-center rounded"
+							class="flex flex-wrap gap-2 items-center rounded opacity-70 hover:opacity-100 transition-opacity duration-200 ease-in-out"
 							classList={{
-								"bg-lapis-50 px-4 py-2":
+								"bg-night-50 px-4 py-2 opacity-100":
 									section() === "certificate",
 							}}
 						>
-							<label>Certifications</label>
-							<CertificateIcon class="w-8 h-8 [&_path]:stroke-night-900" />
+							<label
+								classList={{
+									"text-night-900":
+										section() === "certificate",
+									"text-night-700":
+										section() !== "certificate",
+								}}
+							>
+								Certifications
+							</label>
+							<CertificateIcon
+								class="w-8 h-8 [&_path]:stroke-night-700"
+								classList={{
+									"[&_path]:stroke-night-900 [&_circle]:stroke-night-900":
+										section() === "certificate",
+									"[&_path]:stroke-night-700 [&_circle]:stroke-night-700":
+										section() !== "certificate",
+								}}
+							/>
 						</button>
 						<button
 							onclick={() => {
 								set_section("project");
 							}}
-							class="flex flex-wrap gap-2 items-center rounded"
+							class="flex flex-wrap gap-2 items-center rounded opacity-70 hover:opacity-100 transition-opacity duration-200 ease-in-out"
 							classList={{
-								"bg-lapis-50 px-4 py-2":
+								"bg-night-50 px-4 py-2 opacity-100":
 									section() === "project",
 							}}
 						>
-							<label>Projects</label>
-							<ProjectIcon class="w-8 h-8 [&_path]:stroke-night-900" />
+							<label
+								classList={{
+									"text-night-900": section() === "project",
+									"text-night-700": section() !== "project",
+								}}
+							>
+								Projects
+							</label>
+							<ProjectIcon
+								class="w-8 h-8"
+								classList={{
+									"[&_path]:stroke-night-900":
+										section() === "project",
+									"[&_path]:stroke-night-700":
+										section() !== "project",
+								}}
+							/>
 						</button>
 						<button
 							onclick={() => {
 								set_section("skill");
 							}}
-							class="flex flex-wrap gap-2 items-center rounded"
+							class="flex flex-wrap gap-2 items-center rounded opacity-70 hover:opacity-100 transition-opacity duration-200 ease-in-out"
 							classList={{
-								"bg-lapis-50 px-4 py-2": section() === "skill",
+								"bg-night-50 px-4 py-2 opacity-100":
+									section() === "skill",
 							}}
 						>
-							<label>Skills</label>
-							<SkillIcon class="w-8 h-8 [&_path]:stroke-night-900" />
+							<label
+								classList={{
+									"text-night-900": section() === "skill",
+									"text-night-700": section() !== "skill",
+								}}
+							>
+								Skills
+							</label>
+							<SkillIcon
+								class="m-1 w-6 h-6"
+								classList={{
+									"[&_path]:fill-night-900":
+										section() === "skill",
+									"[&_path]:fill-night-700":
+										section() !== "skill",
+								}}
+							/>
 						</button>
 					</aside>
 					<br />

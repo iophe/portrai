@@ -15,9 +15,23 @@ export const DB_JOB_SPECIFIC_RESUMES = {
 			.reverse() // most recent first
 			.toArray();
 	},
+	async all_titles(
+		db: AppDatabase
+	): Promise<Array<{ title: string; id: string; created_at: Date }>> {
+		return await db.job_specific_resumes
+			.orderBy("created_at")
+			.reverse()
+			.toArray((resumes) =>
+				resumes.map((resume) => ({
+					title: resume.title,
+					id: resume.id,
+					created_at: resume.created_at,
+				}))
+			);
+	},
 	async upsert(
 		db: AppDatabase,
-		title: string,
+		id: string,
 		updates: {
 			title?: string;
 			job_description?: string;
@@ -25,41 +39,42 @@ export const DB_JOB_SPECIFIC_RESUMES = {
 		}
 	): Promise<JobSpecificResume> {
 		const existing = await db.job_specific_resumes
-			.where("title")
-			.equals(title)
+			.where("id")
+			.equals(id)
 			.first();
 
 		if (existing) {
 			await db.job_specific_resumes
-				.where("title")
-				.equals(title)
+				.where("id")
+				.equals(id)
 				.modify({
 					...updates,
 					last_modified_at: new Date(),
 				});
 
 			const updated = await db.job_specific_resumes
-				.where("title")
-				.equals(updates.title || title)
+				.where("id")
+				.equals(id)
 				.first();
 
-			if (!updated)
-				throw new JobSpecificResumeNotFoundError(
-					updates.title || title
-				);
+			if (!updated) throw new JobSpecificResumeNotFoundError(id);
 			return updated;
 		} else {
 			// Create new module
-			const id = await db.job_specific_resumes.add({
-				title: updates.title || title,
-				job_description: updates.job_description || "",
-				resume_data: updates.resume_data!,
-				created_at: new Date(),
-				last_modified_at: new Date(),
-			});
+			await db.job_specific_resumes.add(
+				{
+					title: updates.title || "generated",
+					job_description: updates.job_description || "",
+					resume_data: updates.resume_data!,
+					created_at: new Date(),
+					last_modified_at: new Date(),
+					id: id,
+				},
+				id
+			);
 
 			const created = await db.job_specific_resumes.get(id);
-			if (!created) throw new JobSpecificResumeNotFoundError(title);
+			if (!created) throw new JobSpecificResumeNotFoundError(id);
 			return created;
 		}
 	},
@@ -78,8 +93,8 @@ export const DB_JOB_SPECIFIC_RESUMES = {
 
 	async get(
 		db: AppDatabase,
-		title: string
+		id: string
 	): Promise<JobSpecificResume | undefined> {
-		return db.job_specific_resumes.where("title").equals(title).first();
+		return db.job_specific_resumes.where("id").equals(id).first();
 	},
 };

@@ -70,14 +70,28 @@ function ResumeAIPreview(props: ResumePreviewProps) {
 								},
 							});
 							set_resume_title(uuid);
-							DB_JOB_SPECIFIC_RESUMES.upsert(
-								db,
-								uuid,
-								{
-									resume_data: res.data.result as ResumeData,
-									job_description: job_description(),
-								}
-							);
+							const resume_data = res.data.result as ResumeData;
+							// resume_data.certificates.forEach(
+							// 	(v, i) => (v.certificate_id = i)
+							// );
+							// resume_data.experiences.forEach(
+							// 	(v, i) => (v.experience_id = i)
+							// );
+							// resume_data.educations.forEach(
+							// 	(v, i) => (v.education_id = i)
+							// );
+							// resume_data.projects.forEach(
+							// 	(v, i) => (v.project_id = i)
+							// );
+							// resume_data.skills.forEach(
+							// 	(v, i) => (v.skill_id = i)
+							// );
+
+							DB_JOB_SPECIFIC_RESUMES.upsert(db, uuid, {
+								resume_data: resume_data,
+								job_description: job_description(),
+								title: resume_data.title,
+							});
 						} catch (error) {
 							fault.major({
 								message: "Failed to generate the resume",
@@ -125,7 +139,7 @@ function ResumeAIPreview(props: ResumePreviewProps) {
 					<button
 						title="Edit"
 						onclick={() => {
-							navigate(`/resume/${resume_title()}`)
+							navigate(`/resume/${resume_title()}`);
 						}}
 					>
 						<EditIcon class="w-8 h-8 [&_path]:stroke-night-900" />

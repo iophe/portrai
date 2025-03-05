@@ -194,9 +194,13 @@ export function ExperienceList(props: ExperienceListProps) {
 	);
 }
 
-
 interface OfflineExperienceListProps {
-	experiences: Experience[]
+	experiences: Experience[];
+	add: (experience: Experience) => void;
+	update: (experience: Experience) => void;
+	delete: (id: number) => void;
+	toggle_visibility: (id: number) => void;
+	reorder: (new_list: Experience[]) => void;
 }
 
 export function OfflineExperienceList(props: OfflineExperienceListProps) {
@@ -213,16 +217,18 @@ export function OfflineExperienceList(props: OfflineExperienceListProps) {
 				add={() => {}}
 				section_title="Professional Experiences"
 				section_name="experience"
-				form={(props) => (
+				form={(p) => (
 					<ExperienceForm
 						delete={() => {}}
 						onCancel={() => {
-							props.cancel();
+							p.cancel();
 						}}
-						onSubmit={() => {
-							props.submit();
+						onSubmit={(id, exp) => {
+							p.submit();
+							props.add(exp);
 						}}
 						is_new
+						offline
 					/>
 				)}
 			/>
@@ -244,26 +250,7 @@ export function OfflineExperienceList(props: OfflineExperienceListProps) {
 									source_id,
 									target_id
 								) => {
-									// mutate(new_list);
-									try {
-										// await api.post(
-										// 	"/resume/items/reorder",
-										// 	{
-										// 		item_id: source_id,
-										// 		after_id: target_id,
-										// 		item_type: "experience", // Specify the item type
-										// 	}
-										// );
-									} catch (error) {
-										fault.minor({
-											message:
-												(
-													(error as AxiosError)
-														.response?.data as any
-												).error ??
-												(error as AxiosError).message,
-										});
-									}
+									props.reorder(new_list);
 								}}
 							>
 								<Show
@@ -284,35 +271,17 @@ export function OfflineExperienceList(props: OfflineExperienceListProps) {
 													experience_id,
 												]);
 											}}
+											toggle_visibility={
+												props.toggle_visibility
+											}
+											offline
 										/>
 									}
 								>
 									<ExperienceForm
 										experience={experience}
-										delete={async () => {
-											try {
-												// await api.post(
-												// 	"/resume/items/delete",
-												// 	{
-												// 		item_id:
-												// 			experience.experience_id,
-												// 		item_type: "experience", // Specify the item type
-												// 	}
-												// );
-												// refetch();
-											} catch (error) {
-												fault.minor({
-													message:
-														(
-															(
-																error as AxiosError
-															).response
-																?.data as any
-														).error ??
-														(error as AxiosError)
-															.message,
-												});
-											}
+										delete={(id) => {
+											props.delete(id);
 										}}
 										onCancel={() => {
 											updateEditingExperiences(
@@ -323,8 +292,8 @@ export function OfflineExperienceList(props: OfflineExperienceListProps) {
 												)
 											);
 										}}
-										onSubmit={() => {
-											// refetch();
+										onSubmit={(id, exp) => {
+											props.update(exp);
 											updateEditingExperiences(
 												editing_experiences.filter(
 													(id) =>
@@ -333,6 +302,7 @@ export function OfflineExperienceList(props: OfflineExperienceListProps) {
 												)
 											);
 										}}
+										offline
 									/>
 								</Show>
 							</Ordered>

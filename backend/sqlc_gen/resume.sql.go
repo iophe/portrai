@@ -240,12 +240,12 @@ SELECT jsonb_build_object(
     'experiences', (
         SELECT COALESCE(jsonb_agg(
             jsonb_build_object(
-                'item_id', item_id,
+                'experience_id', item_id,
                 'job_title', title,
                 'company_name', subtitle,
                 'location', location,
                 'start_date', start_date,
-                'end_date', end_date,
+                'optional_end_date', end_date,
                 'is_current', is_current,
                 'description', description,
                 'priority', priority,
@@ -274,12 +274,12 @@ SELECT jsonb_build_object(
     'educations', (
         SELECT COALESCE(jsonb_agg(
             jsonb_build_object(
-                'item_id', item_id,
+                'education_id', item_id,
                 'degree', title,
                 'school', subtitle,
                 'location', location,
                 'start_date', start_date,
-                'end_date', end_date,
+                'optional_end_date', end_date,
                 'is_current', is_current,
                 'description', description,
                 'priority', priority,
@@ -308,10 +308,10 @@ SELECT jsonb_build_object(
     'skills', (
         SELECT COALESCE(jsonb_agg(
             jsonb_build_object(
-                'item_id', item_id,
+                'skill_id', item_id,
                 'skill_name', title,
-                'skill_type', subtitle,
-                'skill_level', metadata->>'skill_level',
+                'optional_skill_type', subtitle,
+                'optional_skill_level', metadata->>'skill_level',
                 'description', description,
                 'priority', priority,
                 'is_visible', is_visible,
@@ -338,11 +338,11 @@ SELECT jsonb_build_object(
     'certificates', (
         SELECT COALESCE(jsonb_agg(
             jsonb_build_object(
-                'item_id', item_id,
+                'certificate_id', item_id,
                 'certificate_name', title,
-                'issuer', subtitle,
-                'location', location,
-                'granted_date', start_date,
+                'optional_issuer', subtitle,
+                'optional_location', location,
+                'optional_granted_date', start_date,
                 'description', description,
                 'priority', priority,
                 'is_visible', is_visible,
@@ -369,11 +369,11 @@ SELECT jsonb_build_object(
     'projects', (
         SELECT COALESCE(jsonb_agg(
             jsonb_build_object(
-                'item_id', item_id,
+                'project_id', item_id,
                 'project_title', title,
                 'project_subtitle', subtitle,
-                'start_date', start_date,
-                'end_date', end_date,
+                'optional_start_date', start_date,
+                'optional_end_date', end_date,
                 'is_current', is_current,
                 'description', description,
                 'priority', priority,
@@ -779,11 +779,10 @@ SET
     description = COALESCE($7::text, description),
     priority = COALESCE($8::integer, priority),
     tags = COALESCE($9::text[], tags),
-    version = COALESCE($10::text, version),
-    metadata = COALESCE($11::jsonb, metadata)
+    metadata = COALESCE($10::jsonb, metadata)
 WHERE 
-    item_id = $12::bigint 
-    AND user_id = $13::uuid
+    item_id = $11::bigint 
+    AND user_id = $12::uuid
 `
 
 type UpdateResumeItemParams struct {
@@ -796,7 +795,6 @@ type UpdateResumeItemParams struct {
 	Description string      `json:"description"`
 	Priority    int32       `json:"priority"`
 	Tags        []string    `json:"tags"`
-	Version     string      `json:"version"`
 	Metadata    []byte      `json:"metadata"`
 	ItemID      int64       `json:"item_id"`
 	UserID      uuid.UUID   `json:"user_id"`
@@ -813,7 +811,6 @@ func (q *Queries) UpdateResumeItem(ctx context.Context, arg UpdateResumeItemPara
 		arg.Description,
 		arg.Priority,
 		arg.Tags,
-		arg.Version,
 		arg.Metadata,
 		arg.ItemID,
 		arg.UserID,
