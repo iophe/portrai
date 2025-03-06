@@ -176,7 +176,7 @@ export function FormDeleteButton(props: FormDeleteButtonProps) {
 					}
 				}}
 			>
-				<DeleteIcon class="w-6 h-6 [&_path]:stroke-night-900" />
+				<DeleteIcon class="fill-night-900" />
 			</button>
 		</div>
 	);

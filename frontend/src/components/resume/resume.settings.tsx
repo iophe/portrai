@@ -71,7 +71,7 @@ function ResumeSettings(props: ResumeSettingsProps) {
 													edit_version(true);
 												}}
 											>
-												<EditIcon class="w-8 h-8 [&_path]:stroke-night-900" />
+												<EditIcon class="fill-night-900" />
 											</button>
 											<button
 												title="delete"
@@ -120,7 +120,7 @@ function ResumeSettings(props: ResumeSettingsProps) {
 													}
 												}}
 											>
-												<DeleteIcon class="m-1 w-6 h-6 [&_path]:stroke-night-900" />
+												<DeleteIcon class="fill-night-900" />
 											</button>
 										</div>
 									</div>
@@ -182,7 +182,7 @@ function ResumeSettings(props: ResumeSettingsProps) {
 											edit_version(false);
 										}}
 									>
-										<CloseIcon class="w-8 h-8 [&_path]:stroke-night-900" />
+										<CloseIcon class="fill-night-900" />
 									</button>
 								</div>
 							</Show>
@@ -229,7 +229,7 @@ function ResumeSettings(props: ResumeSettingsProps) {
 									}}
 									title="add a new version"
 								>
-									<AddIcon class="w-8 h-8 [&_path]:stroke-night-900" />
+									<AddIcon class="fill-night-900" />
 								</button>
 							</div>
 						</FormLabeledInput>
@@ -281,7 +281,7 @@ function ResumeSettings(props: ResumeSettingsProps) {
 											}}
 											title="add a new version"
 										>
-											<AddIcon class="w-8 h-8 [&_path]:stroke-night-900" />
+											<AddIcon class="fill-night-900" />
 										</button>
 									</Show>
 									<button
@@ -290,7 +290,7 @@ function ResumeSettings(props: ResumeSettingsProps) {
 											add_version(false);
 										}}
 									>
-										<CloseIcon class="w-8 h-8 [&_path]:stroke-night-900" />
+										<CloseIcon class="fill-night-900" />
 									</button>
 								</div>
 							</div>

@@ -84,11 +84,11 @@ function Resume(props: ResumeProps) {
 							}}
 						>
 							<SettingsIcon
-								class="w-8 h-8 "
+								class=""
 								classList={{
-									"[&_path]:stroke-night-900 [&_circle]:stroke-night-900":
+									"fill-night-900":
 										section() === "settings",
-									"[&_path]:stroke-night-700 [&_circle]:stroke-night-700":
+									"fill-night-700":
 										section() !== "settings",
 								}}
 							/>
@@ -114,11 +114,11 @@ function Resume(props: ResumeProps) {
 								Experiences
 							</label>
 							<ExperienceIcon
-								class="w-8 h-8 "
+								class=""
 								classList={{
-									"[&_path]:stroke-night-900":
+									"fill-night-900":
 										section() === "experience",
-									"[&_path]:stroke-night-700":
+									"fill-night-700":
 										section() !== "experience",
 								}}
 							/>
@@ -142,11 +142,11 @@ function Resume(props: ResumeProps) {
 								Educations
 							</label>
 							<EducationIcon
-								class="w-8 h-8"
+								class=""
 								classList={{
-									"[&_path]:stroke-night-900 [&_polygon]:stroke-night-900 [&_line]:stroke-night-900":
+									"fill-night-900":
 										section() === "education",
-									"[&_path]:stroke-night-700 [&_polygon]:stroke-night-700 [&_line]:stroke-night-700":
+									"fill-night-700":
 										section() !== "education",
 								}}
 							/>
@@ -172,11 +172,11 @@ function Resume(props: ResumeProps) {
 								Certifications
 							</label>
 							<CertificateIcon
-								class="w-8 h-8 [&_path]:stroke-night-700"
+								class=""
 								classList={{
-									"[&_path]:stroke-night-900 [&_circle]:stroke-night-900":
+									"fill-night-900":
 										section() === "certificate",
-									"[&_path]:stroke-night-700 [&_circle]:stroke-night-700":
+									"fill-night-700":
 										section() !== "certificate",
 								}}
 							/>
@@ -200,11 +200,11 @@ function Resume(props: ResumeProps) {
 								Projects
 							</label>
 							<ProjectIcon
-								class="w-8 h-8"
+								class=""
 								classList={{
-									"[&_path]:stroke-night-900":
+									"fill-night-900":
 										section() === "project",
-									"[&_path]:stroke-night-700":
+									"fill-night-700":
 										section() !== "project",
 								}}
 							/>
@@ -228,11 +228,11 @@ function Resume(props: ResumeProps) {
 								Skills
 							</label>
 							<SkillIcon
-								class="m-1 w-6 h-6"
+								class=""
 								classList={{
-									"[&_path]:fill-night-900":
+									"fill-night-900":
 										section() === "skill",
-									"[&_path]:fill-night-700":
+									"fill-night-700":
 										section() !== "skill",
 								}}
 							/>

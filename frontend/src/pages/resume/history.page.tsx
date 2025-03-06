@@ -95,7 +95,7 @@ function HistoryPage(props: HistoryPageProps) {
 													href={`/resume/${resume.id}`}
 													class="flex-shrink-0 hidden group-hover:block"
 												>
-													<EditIcon class="w-6 h-6 [&_path]:stroke-night-900" />
+													<EditIcon class="fill-night-900" />
 												</A>
 											</li>
 										);

@@ -32,7 +32,7 @@ function Home(props: HomeProps) {
 			 items-start text-night-900"
 			>
 				<section class="overflow-y-auto pr-4 h-full">
-					<aside class="flex gap-4 justify-between text-sm pb-2 border-b-2 border-night-900">
+				<aside class="flex gap-4 justify-between text-sm pb-2 border-b-2 border-night-900">
 						<button
 							onclick={() => {
 								set_section("settings");
@@ -44,11 +44,11 @@ function Home(props: HomeProps) {
 							}}
 						>
 							<SettingsIcon
-								class="w-8 h-8 "
+								class=""
 								classList={{
-									"[&_path]:stroke-night-900 [&_circle]:stroke-night-900":
+									"fill-night-900":
 										section() === "settings",
-									"[&_path]:stroke-night-700 [&_circle]:stroke-night-700":
+									"fill-night-700":
 										section() !== "settings",
 								}}
 							/>
@@ -74,11 +74,11 @@ function Home(props: HomeProps) {
 								Experiences
 							</label>
 							<ExperienceIcon
-								class="w-8 h-8 "
+								class=""
 								classList={{
-									"[&_path]:stroke-night-900":
+									"fill-night-900":
 										section() === "experience",
-									"[&_path]:stroke-night-700":
+									"fill-night-700":
 										section() !== "experience",
 								}}
 							/>
@@ -102,11 +102,11 @@ function Home(props: HomeProps) {
 								Educations
 							</label>
 							<EducationIcon
-								class="w-8 h-8"
+								class=""
 								classList={{
-									"[&_path]:stroke-night-900 [&_polygon]:stroke-night-900 [&_line]:stroke-night-900":
+									"fill-night-900":
 										section() === "education",
-									"[&_path]:stroke-night-700 [&_polygon]:stroke-night-700 [&_line]:stroke-night-700":
+									"fill-night-700":
 										section() !== "education",
 								}}
 							/>
@@ -132,11 +132,11 @@ function Home(props: HomeProps) {
 								Certifications
 							</label>
 							<CertificateIcon
-								class="w-8 h-8 [&_path]:stroke-night-700"
+								class=""
 								classList={{
-									"[&_path]:stroke-night-900 [&_circle]:stroke-night-900":
+									"fill-night-900":
 										section() === "certificate",
-									"[&_path]:stroke-night-700 [&_circle]:stroke-night-700":
+									"fill-night-700":
 										section() !== "certificate",
 								}}
 							/>
@@ -160,11 +160,11 @@ function Home(props: HomeProps) {
 								Projects
 							</label>
 							<ProjectIcon
-								class="w-8 h-8"
+								class=""
 								classList={{
-									"[&_path]:stroke-night-900":
+									"fill-night-900":
 										section() === "project",
-									"[&_path]:stroke-night-700":
+									"fill-night-700":
 										section() !== "project",
 								}}
 							/>
@@ -188,11 +188,11 @@ function Home(props: HomeProps) {
 								Skills
 							</label>
 							<SkillIcon
-								class="m-1 w-6 h-6"
+								class=""
 								classList={{
-									"[&_path]:fill-night-900":
+									"fill-night-900":
 										section() === "skill",
-									"[&_path]:fill-night-700":
+									"fill-night-700":
 										section() !== "skill",
 								}}
 							/>
