@@ -27,7 +27,6 @@ function ItemArticle(props: ItemArticleProps) {
 					draggable={!props.draggable(props.item_id)}
 					onDragStart={(e: DragEvent) => {
 						props.set_dragged_id(props.item_id);
-						console.log("drag start", props.item_id);
 
 						if (e.dataTransfer) {
 							e.dataTransfer.effectAllowed = "move";
@@ -37,7 +36,6 @@ function ItemArticle(props: ItemArticleProps) {
 						}
 					}}
 					onDragEnd={(e: DragEvent) => {
-						console.log("drag end", props.item_id);
 						props.set_dragged_id(null);
 						if (e.target instanceof HTMLElement) {
 							e.target.classList.remove("opacity-50");
@@ -46,7 +44,7 @@ function ItemArticle(props: ItemArticleProps) {
 					class="cursor-move pr-4 py-4 hover:bg-gray-100"
 					title="Drag to reorder"
 				>
-					<DragIcon class="w-4 h-4 [&_path]:stroke-night-900" />
+					<DragIcon class="fill-night-900" />
 				</button>
 				<div class="flex flex-row gap-4">
 					<button
@@ -57,10 +55,10 @@ function ItemArticle(props: ItemArticleProps) {
 					>
 						<Switch>
 							<Match when={props.is_visible}>
-								<EyeOpenIcon class="w-6 h-6 [&_path]:stroke-night-900" />
+								<EyeOpenIcon class="fill-night-900" />
 							</Match>
 							<Match when={!props.is_visible}>
-								<EyeCloseIcon class="w-6 h-6 [&_path]:stroke-night-900" />
+								<EyeCloseIcon class="fill-night-900" />
 							</Match>
 						</Switch>
 					</button>
@@ -70,7 +68,7 @@ function ItemArticle(props: ItemArticleProps) {
 							props.edit(props.item_id);
 						}}
 					>
-						<EditIcon class="w-8 h-8 [&_path]:stroke-night-900" />
+						<EditIcon class="fill-night-900" />
 					</button>
 				</div>
 			</header>

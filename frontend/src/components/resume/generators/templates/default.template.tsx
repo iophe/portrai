@@ -106,7 +106,9 @@ export function ExecutiveTemplate(props: TemplateProps) {
 			<Show
 				when={
 					settings.show_sections.experience &&
-					props.data.resume_data.experiences.length > 0
+					props.data.resume_data.experiences.filter(
+						(v) => v.is_visible
+					).length > 0
 				}
 			>
 				<section class="mb-6">
@@ -118,7 +120,11 @@ export function ExecutiveTemplate(props: TemplateProps) {
 					>
 						Professional Experience
 					</h2>
-					<For each={props.data.resume_data.experiences}>
+					<For
+						each={props.data.resume_data.experiences.filter(
+							(v) => v.is_visible
+						)}
+					>
 						{(experience) => (
 							<div class="mb-4">
 								<div class="flex justify-between items-baseline">
@@ -165,7 +171,9 @@ export function ExecutiveTemplate(props: TemplateProps) {
 			<Show
 				when={
 					settings.show_sections.education &&
-					props.data.resume_data.educations.length > 0
+					props.data.resume_data.educations.filter(
+						(v) => v.is_visible
+					).length > 0
 				}
 			>
 				<section class="mb-6">
@@ -177,7 +185,11 @@ export function ExecutiveTemplate(props: TemplateProps) {
 					>
 						Education
 					</h2>
-					<For each={props.data.resume_data.educations}>
+					<For
+						each={props.data.resume_data.educations.filter(
+							(v) => v.is_visible
+						)}
+					>
 						{(education) => (
 							<div class="mb-4">
 								<div class="flex justify-between items-baseline">
@@ -225,7 +237,8 @@ export function ExecutiveTemplate(props: TemplateProps) {
 			<Show
 				when={
 					settings.show_sections.skills &&
-					props.data.resume_data.skills.length > 0
+					props.data.resume_data.skills.filter((v) => v.is_visible)
+						.length > 0
 				}
 			>
 				<section class="mb-6">
@@ -238,7 +251,11 @@ export function ExecutiveTemplate(props: TemplateProps) {
 						Skills & Expertise
 					</h2>
 					<div class="grid grid-cols-1 gap-4">
-						<For each={props.data.resume_data.skills}>
+						<For
+							each={props.data.resume_data.skills.filter(
+								(v) => v.is_visible
+							)}
+						>
 							{(skill) => (
 								<div>
 									<h3
@@ -270,7 +287,8 @@ export function ExecutiveTemplate(props: TemplateProps) {
 			<Show
 				when={
 					settings.show_sections.projects &&
-					props.data.resume_data.projects.length > 0
+					props.data.resume_data.projects.filter((v) => v.is_visible)
+						.length > 0
 				}
 			>
 				<section class="mb-6">
@@ -282,7 +300,11 @@ export function ExecutiveTemplate(props: TemplateProps) {
 					>
 						Notable Projects
 					</h2>
-					<For each={props.data.resume_data.projects}>
+					<For
+						each={props.data.resume_data.projects.filter(
+							(v) => v.is_visible
+						)}
+					>
 						{(project) => (
 							<div class="mb-4">
 								<div class="flex justify-between items-baseline">
@@ -333,7 +355,9 @@ export function ExecutiveTemplate(props: TemplateProps) {
 			<Show
 				when={
 					settings.show_sections.certificates &&
-					props.data.resume_data.certificates.length > 0
+					props.data.resume_data.certificates.filter(
+						(v) => v.is_visible
+					).length > 0
 				}
 			>
 				<section class="mb-6">
@@ -345,7 +369,11 @@ export function ExecutiveTemplate(props: TemplateProps) {
 					>
 						Certifications
 					</h2>
-					<For each={props.data.resume_data.certificates}>
+					<For
+						each={props.data.resume_data.certificates.filter(
+							(v) => v.is_visible
+						)}
+					>
 						{(certificate) => (
 							<div class="mb-4">
 								<div class="flex justify-between items-baseline">

@@ -16,6 +16,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+// Common handler for getting full resume data
 func HandleGetResumeData(c *fiber.Ctx, db *database.Database) error {
 	user_id, err := middlewares.GetUserID(c)
 	if err != nil {
@@ -30,6 +31,7 @@ func HandleGetResumeData(c *fiber.Ctx, db *database.Database) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to retrieve resume data",
+			"info":  err.Error(),
 		})
 	}
 	var resume_data cache.ResumeCachedData
@@ -45,10 +47,10 @@ func HandleGetResumeData(c *fiber.Ctx, db *database.Database) error {
 }
 
 type NoteCreationData struct {
-	Content string `json:"content"`
-	Section string `json:"section"`
-	Type    string `json:"type"`
-	OnId    int64  `json:"on_id"`
+	Content  string `json:"content"`
+	ItemType string `json:"item_type"` // Type of resume item: experience, education, skill, certificate, project
+	Type     string `json:"type"`      // Note type
+	ItemID   int64  `json:"item_id"`   // ID of the associated resume item
 }
 
 func HandleCreateNote(data NoteCreationData, c *fiber.Ctx, db *database.Database) error {
@@ -58,84 +60,33 @@ func HandleCreateNote(data NoteCreationData, c *fiber.Ctx, db *database.Database
 			"error": "Unauthorized access",
 		})
 	}
+
 	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	queries := sqlc_gen.New(db.Pool)
-	switch data.Section {
-	case "experience":
-		err = queries.CreateNoteOnExperience(query_ctx, sqlc_gen.CreateNoteOnExperienceParams{
-			UserID:       user_id,
-			Content:      data.Content,
-			NoteType:     data.Type,
-			ExperienceID: data.OnId,
-		})
-		if err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "could not create this note",
-				"info":  err.Error(),
-			})
-		}
-	case "certificate":
-		err = queries.CreateNoteOnCertificate(query_ctx, sqlc_gen.CreateNoteOnCertificateParams{
-			UserID:        user_id,
-			Content:       data.Content,
-			NoteType:      data.Type,
-			CertificateID: data.OnId,
-		})
-		if err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "could not create this note",
-				"info":  err.Error(),
-			})
-		}
-	case "project":
-		err = queries.CreateNoteOnProject(query_ctx, sqlc_gen.CreateNoteOnProjectParams{
-			UserID:    user_id,
-			Content:   data.Content,
-			NoteType:  data.Type,
-			ProjectID: data.OnId,
-		})
-		if err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "could not create this note",
-				"info":  err.Error(),
-			})
-		}
-	case "skill":
-		err = queries.CreateNoteOnSkill(query_ctx, sqlc_gen.CreateNoteOnSkillParams{
-			UserID:   user_id,
-			Content:  data.Content,
-			NoteType: data.Type,
-			SkillID:  data.OnId,
-		})
-		if err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "could not create this note",
-				"info":  err.Error(),
-			})
-		}
-	case "education":
-		err = queries.CreateNoteOnEducation(query_ctx, sqlc_gen.CreateNoteOnEducationParams{
-			UserID:      user_id,
-			Content:     data.Content,
-			NoteType:    data.Type,
-			EducationID: data.OnId,
-		})
-		if err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "could not create this note",
-				"info":  err.Error(),
-			})
-		}
 
+	// Create note on the unified resume_items table
+	err = queries.CreateNoteOnResumeItem(query_ctx, sqlc_gen.CreateNoteOnResumeItemParams{
+		UserID:   user_id,
+		ItemID:   data.ItemID,
+		NoteType: data.Type,
+		Content:  data.Content,
+	})
+
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": fmt.Sprintf("could not create note on %s", data.ItemType),
+			"info":  err.Error(),
+		})
 	}
+
 	return c.SendStatus(fiber.StatusOK)
 }
 
 type NoteDeletionData struct {
-	NoteId  int64  `json:"note_id"`
-	Section string `json:"section"`
-	OnId    int64  `json:"on_id"`
+	NoteID   int64  `json:"note_id"`
+	ItemType string `json:"item_type"` // Type of resume item
+	ItemID   int64  `json:"item_id"`   // ID of the associated resume item
 }
 
 func HandleDeleteNote(data NoteDeletionData, c *fiber.Ctx, db *database.Database) error {
@@ -145,1081 +96,54 @@ func HandleDeleteNote(data NoteDeletionData, c *fiber.Ctx, db *database.Database
 			"error": "Unauthorized access",
 		})
 	}
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	queries := sqlc_gen.New(db.Pool)
-	switch data.Section {
-	case "experience":
-		err = queries.DeleteNoteOnExperience(query_ctx, sqlc_gen.DeleteNoteOnExperienceParams{
-			UserID:       user_id,
-			NoteID:       data.NoteId,
-			ExperienceID: data.OnId,
-		})
-		if err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "could not Delete this note",
-				"info":  err.Error(),
-			})
-		}
-	case "certificate":
-		err = queries.DeleteNoteOnCertificate(query_ctx, sqlc_gen.DeleteNoteOnCertificateParams{
-			UserID:        user_id,
-			NoteID:        data.NoteId,
-			CertificateID: data.OnId,
-		})
-		if err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "could not Delete this note",
-				"info":  err.Error(),
-			})
-		}
-	case "project":
-		err = queries.DeleteNoteOnProject(query_ctx, sqlc_gen.DeleteNoteOnProjectParams{
-			UserID:    user_id,
-			NoteID:    data.NoteId,
-			ProjectID: data.OnId,
-		})
-		if err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "could not Delete this note",
-				"info":  err.Error(),
-			})
-		}
-	case "skill":
-		err = queries.DeleteNoteOnSkill(query_ctx, sqlc_gen.DeleteNoteOnSkillParams{
-			UserID:  user_id,
-			NoteID:  data.NoteId,
-			SkillID: data.OnId,
-		})
-		if err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "could not Delete this note",
-				"info":  err.Error(),
-			})
-		}
-	case "education":
-		err = queries.DeleteNoteOnEducation(query_ctx, sqlc_gen.DeleteNoteOnEducationParams{
-			UserID:      user_id,
-			NoteID:      data.NoteId,
-			EducationID: data.OnId,
-		})
-		if err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "could not Delete this note",
-				"info":  err.Error(),
-			})
-		}
 
-	}
-	return c.SendStatus(fiber.StatusOK)
-}
-
-type ExperienceCreationData struct {
-	CompanyName string   `json:"company_name"`
-	JobTitle    string   `json:"job_title"`
-	Location    string   `json:"location"`
-	StartDate   string   `json:"start_date"`
-	EndDate     string   `json:"optional_end_date"`
-	IsCurrent   bool     `json:"is_current"`
-	Description string   `json:"description"`
-	Tags        []string `json:"tags"`
-}
-
-func HandleExperienceCreation(data ExperienceCreationData, c *fiber.Ctx, db *database.Database) error {
-	user_id, err := middlewares.GetUserID(c)
-	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Unauthorized access",
-		})
-	}
 	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	queries := sqlc_gen.New(db.Pool)
 
-	start_date, err := database.StringToDate(data.StartDate)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "invalid start date",
-		})
-	}
-	var end_date pgtype.Date
-	slog.Info("data end date", "", data.EndDate)
-	if len(data.EndDate) > 0 {
-		end_date, err = database.StringToDate(data.EndDate)
-		if err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "invalid end date",
-			})
-		}
-	}
-
-	experience_id, err := queries.CreateExperience(query_ctx, sqlc_gen.CreateExperienceParams{
-		UserID:          user_id,
-		CompanyName:     data.CompanyName,
-		JobTitle:        data.JobTitle,
-		Location:        data.Location,
-		StartDate:       start_date,
-		OptionalEndDate: end_date,
-		IsCurrent:       data.IsCurrent,
-		Description:     data.Description,
-		Tags:            data.Tags,
+	err = queries.DeleteNote(query_ctx, sqlc_gen.DeleteNoteParams{
+		UserID: user_id,
+		NoteID: data.NoteID,
+		ItemID: data.ItemID,
 	})
+
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "could not create this experience",
+			"error": fmt.Sprintf("could not delete note from %s", data.ItemType),
 			"info":  err.Error(),
 		})
 	}
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"experience_id": experience_id,
-	})
-}
-
-type ExperienceUpdateData struct {
-	ExperienceId int64    `json:"experience_id"`
-	CompanyName  string   `json:"company_name"`
-	JobTitle     string   `json:"job_title"`
-	Location     string   `json:"location"`
-	StartDate    string   `json:"start_date"`
-	EndDate      string   `json:"optional_end_date"`
-	IsCurrent    bool     `json:"is_current"`
-	Description  string   `json:"description"`
-	Priority     int32    `json:"priority"`
-	Tags         []string `json:"tags"`
-}
-
-func HandleExperienceUpdate(data ExperienceUpdateData, c *fiber.Ctx, db *db.Database) error {
-	user_id, err := middlewares.GetUserID(c)
-	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Unauthorized access",
-		})
-	}
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	queries := sqlc_gen.New(db.Pool)
-
-	start_date, err := database.StringToDate(data.StartDate)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": fmt.Sprintf("invalid start date %s", err),
-		})
-	}
-	var end_date pgtype.Date
-	if len(data.EndDate) > 0 {
-		end_date, err = database.StringToDate(data.EndDate)
-		if err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": fmt.Sprintf("invalid end date %s", err),
-			})
-		}
-	}
-	slog.Info("updating", "id", data.ExperienceId, "user", user_id)
-	err = queries.UpdateExperience(query_ctx, sqlc_gen.UpdateExperienceParams{
-		ExperienceID:    data.ExperienceId,
-		UserID:          user_id,
-		CompanyName:     data.CompanyName,
-		JobTitle:        data.JobTitle,
-		Location:        data.Location,
-		StartDate:       start_date,
-		OptionalEndDate: end_date,
-		IsCurrent:       data.IsCurrent,
-		Description:     data.Description,
-		Priority:        data.Priority,
-		Tags:            data.Tags,
-	})
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "could not update this experience",
-		})
-	}
-	return c.SendStatus(fiber.StatusOK)
-}
-
-func HandleGetAllExperiences(c *fiber.Ctx, db *db.Database) error {
-	user_id, err := middlewares.GetUserID(c)
-	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Unauthorized access",
-		})
-	}
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	queries := sqlc_gen.New(db.Pool)
-
-	experiences, err := queries.GetExperiencesByUserId(query_ctx, user_id)
-	if err != nil {
-		slog.Error(err.Error())
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "could not get your experiences",
-		})
-	}
-
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"experiences": experiences,
-	})
-}
-
-type GetExperienceParams struct {
-	ExperienceId int64 `query:"experience_id"`
-}
-
-func HandleGetExperience(params GetExperienceParams, c *fiber.Ctx, db *db.Database) error {
-	user_id, err := middlewares.GetUserID(c)
-	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Unauthorized access",
-		})
-	}
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	queries := sqlc_gen.New(db.Pool)
-
-	experience, err := queries.GetExperienceById(query_ctx, sqlc_gen.GetExperienceByIdParams{
-		ExperienceID: params.ExperienceId,
-		UserID:       user_id,
-	})
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "could not get this experience",
-		})
-	}
-
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"experience": experience,
-	})
-}
-
-type DeleteExperienceData struct {
-	ExperienceId int64 `json:"experience_id"`
-}
-
-func HandleDeleteExperience(data DeleteExperienceData, c *fiber.Ctx, db *db.Database) error {
-	user_id, err := middlewares.GetUserID(c)
-	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Unauthorized access",
-		})
-	}
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	queries := sqlc_gen.New(db.Pool)
-	slog.Info("deleting experiences", "experience_id", data.ExperienceId, "user_id", user_id)
-	err = queries.DeleteExperience(query_ctx, sqlc_gen.DeleteExperienceParams{
-		ExperienceID: data.ExperienceId,
-		UserID:       user_id,
-	})
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "could not delete this experiences",
-		})
-	}
 
 	return c.SendStatus(fiber.StatusOK)
 }
 
-type ToggleExperienceVisibilityData struct {
-	ExperienceId int64 `json:"experience_id"`
+// Common structure for all resume items
+type ResumeItemCreationData struct {
+	ItemType    string                 `json:"item_type"`  // experience, education, skill, certificate, project
+	Title       string                 `json:"title"`      // job_title, degree, skill_name, certificate_name, project_title
+	Subtitle    string                 `json:"subtitle"`   // company_name, school, skill_type, issuer, project_subtitle
+	Location    string                 `json:"location"`   // not used for all types
+	StartDate   string                 `json:"start_date"` // not used for all types
+	EndDate     string                 `json:"end_date"`   // not used for all types
+	IsCurrent   bool                   `json:"is_current"` // not used for all types
+	Description string                 `json:"description"`
+	Tags        []string               `json:"tags"`
+	Metadata    map[string]interface{} `json:"metadata"` // Type-specific fields
 }
 
-func HandleToggleExperienceVisibility(data ToggleExperienceVisibilityData, c *fiber.Ctx, db *db.Database) error {
+func HandleResumeItemCreation(data ResumeItemCreationData, c *fiber.Ctx, db *database.Database) error {
 	user_id, err := middlewares.GetUserID(c)
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": "Unauthorized access",
 		})
 	}
+
 	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	queries := sqlc_gen.New(db.Pool)
 
-	visibility, err := queries.ToggleExperienceVisibility(query_ctx, sqlc_gen.ToggleExperienceVisibilityParams{
-		ExperienceID: data.ExperienceId,
-		UserID:       user_id,
-	})
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "could not toggle this experience visibility",
-		})
-	}
-
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"visibility": visibility,
-	})
-}
-
-type ReorderExperienceData struct {
-	ExperienceId int64 `json:"experience_id"`
-	AfterID      int64 `json:"after_id"`
-}
-
-func HandleReorderExperience(data ReorderExperienceData, c *fiber.Ctx, db *db.Database) error {
-	user_id, err := middlewares.GetUserID(c)
-	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Unauthorized access",
-		})
-	}
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	queries := sqlc_gen.New(db.Pool)
-
-	err = queries.ReorderExperience(query_ctx, sqlc_gen.ReorderExperienceParams{
-		ExperienceID: data.ExperienceId,
-		AfterID:      data.AfterID,
-		UserID:       user_id,
-	})
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "could not toggle this experience visibility",
-		})
-	}
-
-	return c.SendStatus(fiber.StatusOK)
-}
-
-// Education Handlers
-
-type EducationCreationData struct {
-	School      string   `json:"school"`
-	Degree      string   `json:"degree"`
-	Location    string   `json:"location"`
-	StartDate   string   `json:"start_date"`
-	EndDate     string   `json:"optional_end_date"`
-	IsCurrent   bool     `json:"is_current"`
-	Description string   `json:"description"`
-	Tags        []string `json:"tags"`
-}
-
-func HandleEducationCreation(data EducationCreationData, c *fiber.Ctx, db *database.Database) error {
-	user_id, err := middlewares.GetUserID(c)
-	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Unauthorized access",
-		})
-	}
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	queries := sqlc_gen.New(db.Pool)
-
-	start_date, err := database.StringToDate(data.StartDate)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "invalid start date",
-		})
-	}
-	var end_date pgtype.Date
-	if len(data.EndDate) > 0 {
-		end_date, err = database.StringToDate(data.EndDate)
-		if err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "invalid end date",
-			})
-		}
-	}
-
-	education_id, err := queries.CreateEducation(query_ctx, sqlc_gen.CreateEducationParams{
-		UserID:          user_id,
-		School:          data.School,
-		Degree:          data.Degree,
-		Location:        data.Location,
-		StartDate:       start_date,
-		OptionalEndDate: end_date,
-		IsCurrent:       data.IsCurrent,
-		Description:     data.Description,
-		Tags:            data.Tags,
-	})
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "could not create this education",
-		})
-	}
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"education_id": education_id,
-	})
-}
-
-type EducationUpdateData struct {
-	EducationId int64    `json:"education_id"`
-	School      string   `json:"school"`
-	Degree      string   `json:"degree"`
-	Location    string   `json:"location"`
-	StartDate   string   `json:"start_date"`
-	EndDate     string   `json:"optional_end_date"`
-	IsCurrent   bool     `json:"is_current"`
-	Description string   `json:"description"`
-	Priority    int32    `json:"priority"`
-	Tags        []string `json:"tags"`
-}
-
-func HandleEducationUpdate(data EducationUpdateData, c *fiber.Ctx, db *db.Database) error {
-	user_id, err := middlewares.GetUserID(c)
-	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Unauthorized access",
-		})
-	}
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	queries := sqlc_gen.New(db.Pool)
-
-	start_date, err := database.StringToDate(data.StartDate)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": fmt.Sprintf("invalid start date %s", err),
-		})
-	}
-	var end_date pgtype.Date
-	if len(data.EndDate) > 0 {
-		end_date, err = database.StringToDate(data.EndDate)
-		if err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": fmt.Sprintf("invalid end date %s", err),
-			})
-		}
-	}
-
-	err = queries.UpdateEducation(query_ctx, sqlc_gen.UpdateEducationParams{
-		EducationID:     data.EducationId,
-		UserID:          user_id,
-		School:          data.School,
-		Degree:          data.Degree,
-		Location:        data.Location,
-		StartDate:       start_date,
-		OptionalEndDate: end_date,
-		IsCurrent:       data.IsCurrent,
-		Description:     data.Description,
-		Priority:        data.Priority,
-		Tags:            data.Tags,
-	})
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "could not update this education",
-		})
-	}
-	return c.SendStatus(fiber.StatusOK)
-}
-
-func HandleGetAllEducations(c *fiber.Ctx, db *db.Database) error {
-	user_id, err := middlewares.GetUserID(c)
-	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Unauthorized access",
-		})
-	}
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	queries := sqlc_gen.New(db.Pool)
-
-	educations, err := queries.GetEducationsByUserId(query_ctx, user_id)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "could not get your educations",
-		})
-	}
-
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"educations": educations,
-	})
-}
-
-type GetEducationParams struct {
-	EducationId int64 `query:"education_id"`
-}
-
-func HandleGetEducation(params GetEducationParams, c *fiber.Ctx, db *db.Database) error {
-	user_id, err := middlewares.GetUserID(c)
-	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Unauthorized access",
-		})
-	}
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	queries := sqlc_gen.New(db.Pool)
-
-	education, err := queries.GetEducationById(query_ctx, sqlc_gen.GetEducationByIdParams{
-		EducationID: params.EducationId,
-		UserID:      user_id,
-	})
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "could not get this education",
-		})
-	}
-
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"education": education,
-	})
-}
-
-type DeleteEducationData struct {
-	EducationId int64 `json:"education_id"`
-}
-
-func HandleDeleteEducation(params DeleteEducationData, c *fiber.Ctx, db *db.Database) error {
-	user_id, err := middlewares.GetUserID(c)
-	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Unauthorized access",
-		})
-	}
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	queries := sqlc_gen.New(db.Pool)
-
-	err = queries.DeleteEducation(query_ctx, sqlc_gen.DeleteEducationParams{
-		EducationID: params.EducationId,
-		UserID:      user_id,
-	})
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "could not delete this education",
-		})
-	}
-
-	return c.SendStatus(fiber.StatusOK)
-}
-
-type ToggleEducationVisibilityData struct {
-	EducationId int64 `json:"education_id"`
-}
-
-func HandleToggleEducationVisibility(data ToggleEducationVisibilityData, c *fiber.Ctx, db *db.Database) error {
-	user_id, err := middlewares.GetUserID(c)
-	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Unauthorized access",
-		})
-	}
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	queries := sqlc_gen.New(db.Pool)
-
-	visibility, err := queries.ToggleEducationVisibility(query_ctx, sqlc_gen.ToggleEducationVisibilityParams{
-		EducationID: data.EducationId,
-		UserID:      user_id,
-	})
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "could not toggle this experience visibility",
-		})
-	}
-
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"visibility": visibility,
-	})
-}
-
-type ReorderEducationData struct {
-	EducationId int64 `json:"education_id"`
-	AfterID     int64 `json:"after_id"`
-}
-
-func HandleReorderEducation(data ReorderEducationData, c *fiber.Ctx, db *db.Database) error {
-	user_id, err := middlewares.GetUserID(c)
-	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Unauthorized access",
-		})
-	}
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	queries := sqlc_gen.New(db.Pool)
-
-	err = queries.ReorderEducation(query_ctx, sqlc_gen.ReorderEducationParams{
-		EducationID: data.EducationId,
-		AfterID:     data.AfterID,
-		UserID:      user_id,
-	})
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "could not toggle this experience visibility",
-		})
-	}
-
-	return c.SendStatus(fiber.StatusOK)
-}
-
-// Skills Handlers
-
-type SkillCreationData struct {
-	SkillName          string   `json:"skill_name"`
-	OptionalSkillType  string   `json:"optional_skill_type"`
-	OptionalSkillLevel string   `json:"optional_skill_level"`
-	Description        string   `json:"description"`
-	Tags               []string `json:"tags"`
-}
-
-func HandleSkillCreation(data SkillCreationData, c *fiber.Ctx, db *database.Database) error {
-	user_id, err := middlewares.GetUserID(c)
-	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Unauthorized access",
-		})
-	}
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	queries := sqlc_gen.New(db.Pool)
-
-	skill_id, err := queries.CreateSkill(query_ctx, sqlc_gen.CreateSkillParams{
-		UserID:             user_id,
-		SkillName:          data.SkillName,
-		OptionalSkillType:  data.OptionalSkillType,
-		OptionalSkillLevel: sqlc_gen.SkillLevel(data.OptionalSkillLevel),
-		Description:        data.Description,
-		Tags:               data.Tags,
-	})
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "could not create this skill",
-		})
-	}
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"skill_id": skill_id,
-	})
-}
-
-type SkillUpdateData struct {
-	SkillId            int64    `json:"skill_id"`
-	SkillName          string   `json:"skill_name"`
-	OptionalSkillType  string   `json:"optional_skill_type"`
-	OptionalSkillLevel string   `json:"optional_skill_level"`
-	Description        string   `json:"description"`
-	Priority           int32    `json:"priority"`
-	Tags               []string `json:"tags"`
-}
-
-func HandleSkillUpdate(data SkillUpdateData, c *fiber.Ctx, db *db.Database) error {
-	user_id, err := middlewares.GetUserID(c)
-	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Unauthorized access",
-		})
-	}
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	queries := sqlc_gen.New(db.Pool)
-
-	err = queries.UpdateSkill(query_ctx, sqlc_gen.UpdateSkillParams{
-		SkillID:            data.SkillId,
-		UserID:             user_id,
-		SkillName:          data.SkillName,
-		OptionalSkillType:  data.OptionalSkillType,
-		OptionalSkillLevel: sqlc_gen.SkillLevel(data.OptionalSkillLevel),
-		Description:        data.Description,
-		Priority:           data.Priority,
-		Tags:               data.Tags,
-	})
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "could not update this skill",
-		})
-	}
-	return c.SendStatus(fiber.StatusOK)
-}
-
-func HandleGetAllSkills(c *fiber.Ctx, db *db.Database) error {
-	user_id, err := middlewares.GetUserID(c)
-	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Unauthorized access",
-		})
-	}
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	queries := sqlc_gen.New(db.Pool)
-
-	skills, err := queries.GetSkillsByUserId(query_ctx, user_id)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "could not get your skills",
-		})
-	}
-
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"skills": skills,
-	})
-}
-
-type GetSkillParams struct {
-	SkillId int64 `query:"skill_id"`
-}
-
-func HandleGetSkill(params GetSkillParams, c *fiber.Ctx, db *db.Database) error {
-	user_id, err := middlewares.GetUserID(c)
-	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Unauthorized access",
-		})
-	}
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	queries := sqlc_gen.New(db.Pool)
-
-	skill, err := queries.GetSkillById(query_ctx, sqlc_gen.GetSkillByIdParams{
-		SkillID: params.SkillId,
-		UserID:  user_id,
-	})
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "could not get this skill",
-		})
-	}
-
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"skill": skill,
-	})
-}
-
-type DeleteSkillData struct {
-	SkillId int64 `json:"skill_id"`
-}
-
-func HandleDeleteSkill(params DeleteSkillData, c *fiber.Ctx, db *db.Database) error {
-	user_id, err := middlewares.GetUserID(c)
-	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Unauthorized access",
-		})
-	}
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	queries := sqlc_gen.New(db.Pool)
-
-	err = queries.DeleteSkill(query_ctx, sqlc_gen.DeleteSkillParams{
-		SkillID: params.SkillId,
-		UserID:  user_id,
-	})
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "could not delete this skill",
-		})
-	}
-
-	return c.SendStatus(fiber.StatusOK)
-}
-
-type ToggleSkillVisibilityData struct {
-	SkillId int64 `json:"skill_id"`
-}
-
-func HandleToggleSkillVisibility(data ToggleSkillVisibilityData, c *fiber.Ctx, db *db.Database) error {
-	user_id, err := middlewares.GetUserID(c)
-	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Unauthorized access",
-		})
-	}
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	queries := sqlc_gen.New(db.Pool)
-
-	visibility, err := queries.ToggleSkillVisibility(query_ctx, sqlc_gen.ToggleSkillVisibilityParams{
-		SkillID: data.SkillId,
-		UserID:  user_id,
-	})
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "could not toggle this experience visibility",
-		})
-	}
-
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"visibility": visibility,
-	})
-}
-
-type ReorderSkillData struct {
-	SkillId int64 `json:"skill_id"`
-	AfterID int64 `json:"after_id"`
-}
-
-func HandleReorderSkill(data ReorderSkillData, c *fiber.Ctx, db *db.Database) error {
-	user_id, err := middlewares.GetUserID(c)
-	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Unauthorized access",
-		})
-	}
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	queries := sqlc_gen.New(db.Pool)
-
-	err = queries.ReorderSkill(query_ctx, sqlc_gen.ReorderSkillParams{
-		SkillID: data.SkillId,
-		AfterID: data.AfterID,
-		UserID:  user_id,
-	})
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "could not toggle this experience visibility",
-		})
-	}
-
-	return c.SendStatus(fiber.StatusOK)
-}
-
-// Certificate Handlers
-
-type CertificateCreationData struct {
-	CertificateName     string   `json:"certificate_name"`
-	OptionalIssuer      string   `json:"optional_issuer"`
-	OptionalLocation    string   `json:"optional_location"`
-	OptionalGrantedDate string   `json:"optional_granted_date"`
-	Description         string   `json:"description"`
-	Tags                []string `json:"tags"`
-}
-
-func HandleCertificateCreation(data CertificateCreationData, c *fiber.Ctx, db *database.Database) error {
-	user_id, err := middlewares.GetUserID(c)
-	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Unauthorized access",
-		})
-	}
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	queries := sqlc_gen.New(db.Pool)
-
-	granted_date, err := database.StringToDate(data.OptionalGrantedDate)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "invalid granted date",
-		})
-	}
-
-	certificate_id, err := queries.CreateCertificate(query_ctx, sqlc_gen.CreateCertificateParams{
-		UserID:              user_id,
-		CertificateName:     data.CertificateName,
-		OptionalIssuer:      data.OptionalIssuer,
-		OptionalLocation:    data.OptionalLocation,
-		OptionalGrantedDate: granted_date,
-		Description:         data.Description,
-		Tags:                data.Tags,
-	})
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "could not create this certificate",
-		})
-	}
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"certificate_id": certificate_id,
-	})
-}
-
-type CertificateUpdateData struct {
-	CertificateId       int64    `json:"certificate_id"`
-	CertificateName     string   `json:"certificate_name"`
-	OptionalIssuer      string   `json:"optional_issuer"`
-	OptionalLocation    string   `json:"optional_location"`
-	OptionalGrantedDate string   `json:"optional_granted_date"`
-	Description         string   `json:"description"`
-	Priority            int32    `json:"priority"`
-	Tags                []string `json:"tags"`
-}
-
-func HandleCertificateUpdate(data CertificateUpdateData, c *fiber.Ctx, db *db.Database) error {
-	user_id, err := middlewares.GetUserID(c)
-	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Unauthorized access",
-		})
-	}
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	queries := sqlc_gen.New(db.Pool)
-
-	granted_date, err := database.StringToDate(data.OptionalGrantedDate)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": fmt.Sprintf("invalid granted date %s", err),
-		})
-	}
-
-	err = queries.UpdateCertificate(query_ctx, sqlc_gen.UpdateCertificateParams{
-		CertificateID:       data.CertificateId,
-		UserID:              user_id,
-		CertificateName:     data.CertificateName,
-		OptionalIssuer:      data.OptionalIssuer,
-		OptionalLocation:    data.OptionalLocation,
-		OptionalGrantedDate: granted_date,
-		Description:         data.Description,
-		Priority:            data.Priority,
-		Tags:                data.Tags,
-	})
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "could not update this certificate",
-		})
-	}
-	return c.SendStatus(fiber.StatusOK)
-}
-
-func HandleGetAllCertificates(c *fiber.Ctx, db *db.Database) error {
-	user_id, err := middlewares.GetUserID(c)
-	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Unauthorized access",
-		})
-	}
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	queries := sqlc_gen.New(db.Pool)
-
-	certificates, err := queries.GetCertificatesByUserId(query_ctx, user_id)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "could not get your certificates",
-		})
-	}
-
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"certificates": certificates,
-	})
-}
-
-type GetCertificateParams struct {
-	CertificateId int64 `query:"certificate_id"`
-}
-
-func HandleGetCertificate(params GetCertificateParams, c *fiber.Ctx, db *db.Database) error {
-	user_id, err := middlewares.GetUserID(c)
-	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Unauthorized access",
-		})
-	}
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	queries := sqlc_gen.New(db.Pool)
-
-	certificate, err := queries.GetCertificateById(query_ctx, sqlc_gen.GetCertificateByIdParams{
-		CertificateID: params.CertificateId,
-		UserID:        user_id,
-	})
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "could not get this certificate",
-		})
-	}
-
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"certificate": certificate,
-	})
-}
-
-type DeleteCertificateData struct {
-	CertificateId int64 `json:"certificate_id"`
-}
-
-func HandleDeleteCertificate(params DeleteCertificateData, c *fiber.Ctx, db *db.Database) error {
-	user_id, err := middlewares.GetUserID(c)
-	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Unauthorized access",
-		})
-	}
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	queries := sqlc_gen.New(db.Pool)
-
-	err = queries.DeleteCertificate(query_ctx, sqlc_gen.DeleteCertificateParams{
-		CertificateID: params.CertificateId,
-		UserID:        user_id,
-	})
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "could not delete this certificate",
-		})
-	}
-
-	return c.SendStatus(fiber.StatusOK)
-}
-
-type ToggleCertificateVisibilityData struct {
-	CertificateId int64 `json:"certificate_id"`
-}
-
-func HandleToggleCertificateVisibility(data ToggleCertificateVisibilityData, c *fiber.Ctx, db *db.Database) error {
-	user_id, err := middlewares.GetUserID(c)
-	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Unauthorized access",
-		})
-	}
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	queries := sqlc_gen.New(db.Pool)
-
-	visibility, err := queries.ToggleCertificateVisibility(query_ctx, sqlc_gen.ToggleCertificateVisibilityParams{
-		CertificateID: data.CertificateId,
-		UserID:        user_id,
-	})
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "could not toggle this experience visibility",
-		})
-	}
-
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"visibility": visibility,
-	})
-}
-
-type ReorderCertificateData struct {
-	CertificateId int64 `json:"certificate_id"`
-	AfterID       int64 `json:"after_id"`
-}
-
-func HandleReorderCertificate(data ReorderCertificateData, c *fiber.Ctx, db *db.Database) error {
-	user_id, err := middlewares.GetUserID(c)
-	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Unauthorized access",
-		})
-	}
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	queries := sqlc_gen.New(db.Pool)
-
-	err = queries.ReorderCertificate(query_ctx, sqlc_gen.ReorderCertificateParams{
-		CertificateID: data.CertificateId,
-		AfterID:       data.AfterID,
-		UserID:        user_id,
-	})
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "could not toggle this experience visibility",
-		})
-	}
-
-	return c.SendStatus(fiber.StatusOK)
-}
-
-// Project Handlers
-
-type ProjectCreationData struct {
-	ProjectTitle            string   `json:"project_title"`
-	OptionalProjectSubtitle string   `json:"optional_project_subtitle"`
-	StartDate               string   `json:"start_date"`
-	EndDate                 string   `json:"optional_end_date"`
-	IsCurrent               bool     `json:"is_current"`
-	Description             string   `json:"description"`
-	Tags                    []string `json:"tags"`
-}
-
-func HandleProjectCreation(data ProjectCreationData, c *fiber.Ctx, db *database.Database) error {
-	user_id, err := middlewares.GetUserID(c)
-	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Unauthorized access",
-		})
-	}
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	queries := sqlc_gen.New(db.Pool)
-
+	// Process dates
 	var start_date pgtype.Date
 	if len(data.StartDate) > 0 {
 		start_date, err = database.StringToDate(data.StartDate)
@@ -1240,49 +164,75 @@ func HandleProjectCreation(data ProjectCreationData, c *fiber.Ctx, db *database.
 		}
 	}
 
-	project_id, err := queries.CreateProject(query_ctx, sqlc_gen.CreateProjectParams{
-		UserID:                  user_id,
-		ProjectTitle:            data.ProjectTitle,
-		OptionalProjectSubtitle: data.OptionalProjectSubtitle,
-		OptionalStartDate:       start_date,
-		OptionalEndDate:         end_date,
-		IsCurrent:               data.IsCurrent,
-		Description:             data.Description,
-		Tags:                    data.Tags,
+	// Convert metadata to JSON
+	var metadataJSON []byte
+	if data.Metadata != nil {
+		metadataJSON, err = json.Marshal(data.Metadata)
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "invalid metadata format",
+			})
+		}
+	} else {
+		metadataJSON = []byte("{}")
+	}
+
+	// Create using the unified CreateResumeItem function
+	item_id, err := queries.CreateResumeItem(query_ctx, sqlc_gen.CreateResumeItemParams{
+		UserID:      user_id,
+		ItemType:    data.ItemType,
+		Title:       data.Title,
+		Subtitle:    data.Subtitle,
+		Location:    data.Location,
+		StartDate:   start_date,
+		EndDate:     end_date,
+		IsCurrent:   data.IsCurrent,
+		Description: data.Description,
+		Tags:        data.Tags,
+		Metadata:    metadataJSON,
 	})
+
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "could not create this project",
+			"error": fmt.Sprintf("could not create this %s", data.ItemType),
+			"info":  err.Error(),
 		})
 	}
+
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"project_id": project_id,
+		"item_id": item_id,
+		"type":    data.ItemType,
 	})
 }
 
-type ProjectUpdateData struct {
-	ProjectId               int64    `json:"project_id"`
-	ProjectTitle            string   `json:"project_title"`
-	OptionalProjectSubtitle string   `json:"optional_project_subtitle"`
-	StartDate               string   `json:"start_date"`
-	EndDate                 string   `json:"optional_end_date"`
-	IsCurrent               bool     `json:"is_current"`
-	Description             string   `json:"description"`
-	Priority                int32    `json:"priority"`
-	Tags                    []string `json:"tags"`
+type ResumeItemUpdateData struct {
+	ItemID      int64                  `json:"item_id"`
+	ItemType    string                 `json:"item_type"`  // experience, education, skill, certificate, project
+	Title       string                 `json:"title"`      // job_title, degree, skill_name, certificate_name, project_title
+	Subtitle    string                 `json:"subtitle"`   // company_name, school, skill_type, issuer, project_subtitle
+	Location    string                 `json:"location"`   // not used for all types
+	StartDate   string                 `json:"start_date"` // not used for all types
+	EndDate     string                 `json:"end_date"`   // not used for all types
+	IsCurrent   bool                   `json:"is_current"` // not used for all types
+	Description string                 `json:"description"`
+	Priority    int32                  `json:"priority"`
+	Tags        []string               `json:"tags"`
+	Metadata    map[string]interface{} `json:"metadata"` // Type-specific fields
 }
 
-func HandleProjectUpdate(data ProjectUpdateData, c *fiber.Ctx, db *db.Database) error {
+func HandleResumeItemUpdate(data ResumeItemUpdateData, c *fiber.Ctx, db *db.Database) error {
 	user_id, err := middlewares.GetUserID(c)
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": "Unauthorized access",
 		})
 	}
+
 	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	queries := sqlc_gen.New(db.Pool)
 
+	// Process dates
 	var start_date pgtype.Date
 	if len(data.StartDate) > 0 {
 		start_date, err = database.StringToDate(data.StartDate)
@@ -1303,129 +253,174 @@ func HandleProjectUpdate(data ProjectUpdateData, c *fiber.Ctx, db *db.Database) 
 		}
 	}
 
-	err = queries.UpdateProject(query_ctx, sqlc_gen.UpdateProjectParams{
-		ProjectID:               data.ProjectId,
-		UserID:                  user_id,
-		ProjectTitle:            data.ProjectTitle,
-		OptionalProjectSubtitle: data.OptionalProjectSubtitle,
-		OptionalStartDate:       start_date,
-		OptionalEndDate:         end_date,
-		IsCurrent:               data.IsCurrent,
-		Description:             data.Description,
-		Priority:                data.Priority,
-		Tags:                    data.Tags,
+	// Convert metadata to JSON
+	var metadataJSON []byte
+	if data.Metadata != nil {
+		metadataJSON, err = json.Marshal(data.Metadata)
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "invalid metadata format",
+			})
+		}
+	} else {
+		metadataJSON = []byte("{}")
+	}
+
+	err = queries.UpdateResumeItem(query_ctx, sqlc_gen.UpdateResumeItemParams{
+		ItemID:      data.ItemID,
+		UserID:      user_id,
+		Title:       data.Title,
+		Subtitle:    data.Subtitle,
+		Location:    data.Location,
+		StartDate:   start_date,
+		EndDate:     end_date,
+		IsCurrent:   data.IsCurrent,
+		Description: data.Description,
+		Priority:    data.Priority,
+		Tags:        data.Tags,
+		Metadata:    metadataJSON,
 	})
+
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "could not update this project",
-		})
-	}
-	return c.SendStatus(fiber.StatusOK)
-}
-
-func HandleGetAllProjects(c *fiber.Ctx, db *db.Database) error {
-	user_id, err := middlewares.GetUserID(c)
-	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Unauthorized access",
-		})
-	}
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	queries := sqlc_gen.New(db.Pool)
-
-	projects, err := queries.GetProjectsByUserId(query_ctx, user_id)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "could not get your projects",
-		})
-	}
-
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"projects": projects,
-	})
-}
-
-type GetProjectParams struct {
-	ProjectId int64 `query:"project_id"`
-}
-
-func HandleGetProject(params GetProjectParams, c *fiber.Ctx, db *db.Database) error {
-	user_id, err := middlewares.GetUserID(c)
-	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Unauthorized access",
-		})
-	}
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	queries := sqlc_gen.New(db.Pool)
-
-	project, err := queries.GetProjectById(query_ctx, sqlc_gen.GetProjectByIdParams{
-		ProjectID: params.ProjectId,
-		UserID:    user_id,
-	})
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "could not get this project",
-		})
-	}
-
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"project": project,
-	})
-}
-
-type DeleteProjectData struct {
-	ProjectId int64 `json:"project_id"`
-}
-
-func HandleDeleteProject(params DeleteProjectData, c *fiber.Ctx, db *db.Database) error {
-	user_id, err := middlewares.GetUserID(c)
-	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Unauthorized access",
-		})
-	}
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	queries := sqlc_gen.New(db.Pool)
-
-	err = queries.DeleteProject(query_ctx, sqlc_gen.DeleteProjectParams{
-		ProjectID: params.ProjectId,
-		UserID:    user_id,
-	})
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "could not delete this project",
+			"error": fmt.Sprintf("could not update this %s", data.ItemType),
+			"info":  err.Error(),
 		})
 	}
 
 	return c.SendStatus(fiber.StatusOK)
 }
 
-type ToggleProjectVisibilityData struct {
-	ProjectId int64 `json:"project_id"`
+// Get items of a specific type
+type GetItemsByTypeParams struct {
+	ItemType string `query:"item_type"`
 }
 
-func HandleToggleProjectVisibility(data ToggleProjectVisibilityData, c *fiber.Ctx, db *db.Database) error {
+func HandleGetItemsByType(params GetItemsByTypeParams, c *fiber.Ctx, db *db.Database) error {
 	user_id, err := middlewares.GetUserID(c)
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": "Unauthorized access",
 		})
 	}
+
 	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	queries := sqlc_gen.New(db.Pool)
 
-	visibility, err := queries.ToggleProjectVisibility(query_ctx, sqlc_gen.ToggleProjectVisibilityParams{
-		ProjectID: data.ProjectId,
-		UserID:    user_id,
+	items, err := queries.GetResumeItemsByType(query_ctx, sqlc_gen.GetResumeItemsByTypeParams{
+		UserID:   user_id,
+		ItemType: params.ItemType,
 	})
+
+	if err != nil {
+		slog.Error(err.Error())
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": fmt.Sprintf("could not get your %ss", params.ItemType),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"items": items,
+		"type":  params.ItemType,
+	})
+}
+
+// Get a specific item by ID
+type GetItemParams struct {
+	ItemID   int64  `query:"item_id"`
+	ItemType string `query:"item_type"`
+}
+
+func HandleGetItemById(params GetItemParams, c *fiber.Ctx, db *db.Database) error {
+	user_id, err := middlewares.GetUserID(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized access",
+		})
+	}
+
+	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	queries := sqlc_gen.New(db.Pool)
+
+	item, err := queries.GetResumeItemById(query_ctx, sqlc_gen.GetResumeItemByIdParams{
+		ItemID: params.ItemID,
+		UserID: user_id,
+	})
+
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "could not toggle this experience visibility",
+			"error": fmt.Sprintf("could not get this %s", params.ItemType),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"item": item,
+		"type": params.ItemType,
+	})
+}
+
+// Delete an item
+type DeleteItemData struct {
+	ItemID   int64  `json:"item_id"`
+	ItemType string `json:"item_type"`
+}
+
+func HandleDeleteItem(data DeleteItemData, c *fiber.Ctx, db *db.Database) error {
+	user_id, err := middlewares.GetUserID(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized access",
+		})
+	}
+
+	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	queries := sqlc_gen.New(db.Pool)
+
+	slog.Info("deleting item", "item_id", data.ItemID, "item_type", data.ItemType, "user_id", user_id)
+
+	err = queries.DeleteResumeItem(query_ctx, sqlc_gen.DeleteResumeItemParams{
+		ItemID: data.ItemID,
+		UserID: user_id,
+	})
+
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": fmt.Sprintf("could not delete this %s", data.ItemType),
+		})
+	}
+
+	return c.SendStatus(fiber.StatusOK)
+}
+
+// Toggle item visibility
+type ToggleItemVisibilityData struct {
+	ItemID   int64  `json:"item_id"`
+	ItemType string `json:"item_type"`
+}
+
+func HandleToggleItemVisibility(data ToggleItemVisibilityData, c *fiber.Ctx, db *db.Database) error {
+	user_id, err := middlewares.GetUserID(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized access",
+		})
+	}
+
+	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	queries := sqlc_gen.New(db.Pool)
+
+	visibility, err := queries.ToggleResumeItemVisibility(query_ctx, sqlc_gen.ToggleResumeItemVisibilityParams{
+		ItemID: data.ItemID,
+		UserID: user_id,
+	})
+
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": fmt.Sprintf("could not toggle this %s visibility", data.ItemType),
 		})
 	}
 
@@ -1434,30 +429,174 @@ func HandleToggleProjectVisibility(data ToggleProjectVisibilityData, c *fiber.Ct
 	})
 }
 
-type ReorderProjectData struct {
-	ProjectId int64 `json:"project_id"`
-	AfterID   int64 `json:"after_id"`
+// Reorder an item
+type ReorderItemData struct {
+	ItemID   int64  `json:"item_id"`
+	AfterID  int64  `json:"after_id"`
+	ItemType string `json:"item_type"`
 }
 
-func HandleReorderProject(data ReorderProjectData, c *fiber.Ctx, db *db.Database) error {
+func HandleReorderItem(data ReorderItemData, c *fiber.Ctx, db *db.Database) error {
 	user_id, err := middlewares.GetUserID(c)
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": "Unauthorized access",
 		})
 	}
+
 	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	queries := sqlc_gen.New(db.Pool)
 
-	err = queries.ReorderProject(query_ctx, sqlc_gen.ReorderProjectParams{
-		ProjectID: data.ProjectId,
-		AfterID:   data.AfterID,
-		UserID:    user_id,
+	err = queries.ReorderResumeItem(query_ctx, sqlc_gen.ReorderResumeItemParams{
+		ItemID:  data.ItemID,
+		AfterID: data.AfterID,
+		UserID:  user_id,
+	})
+
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": fmt.Sprintf("could not reorder this %s", data.ItemType),
+		})
+	}
+
+	return c.SendStatus(fiber.StatusOK)
+}
+
+func HandleGetResumeVersions(c *fiber.Ctx, db *db.Database) error {
+	user_id, err := middlewares.GetUserID(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized access",
+		})
+	}
+
+	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	queries := sqlc_gen.New(db.Pool)
+
+	versions, err := queries.GetUserResumeVersions(query_ctx, user_id)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "could not get all the versions",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(versions)
+}
+
+type ChangeResumeVersionData struct {
+	Version string `json:"version"`
+}
+
+func HandleChangeResumeVersion(data ChangeResumeVersionData, c *fiber.Ctx, db *db.Database) error {
+	user_id, err := middlewares.GetUserID(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized access",
+		})
+	}
+
+	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	queries := sqlc_gen.New(db.Pool)
+
+	err = queries.ChangeResumeVersion(query_ctx, sqlc_gen.ChangeResumeVersionParams{
+		Version: data.Version,
+		UserID:  user_id,
 	})
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "could not toggle this experience visibility",
+			"error": "could not get all the versions",
+		})
+	}
+
+	return c.SendStatus(fiber.StatusOK)
+}
+
+type AddResumeVersionData struct {
+	NewVersion string `json:"new_version"`
+}
+
+func HandleAddResumeVersion(data AddResumeVersionData, c *fiber.Ctx, db *db.Database) error {
+	user_id, err := middlewares.GetUserID(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized access",
+		})
+	}
+
+	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	queries := sqlc_gen.New(db.Pool)
+
+	err = queries.AddResumeVersion(query_ctx, sqlc_gen.AddResumeVersionParams{
+		UserID:     user_id,
+		NewVersion: data.NewVersion,
+	})
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "could not get all the versions",
+		})
+	}
+
+	return c.SendStatus(fiber.StatusOK)
+}
+
+type DeleteResumeVersionData struct {
+	Version string `json:"version"`
+}
+
+func HandleDeleteResumeVersion(data DeleteResumeVersionData, c *fiber.Ctx, db *db.Database) error {
+	user_id, err := middlewares.GetUserID(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized access",
+		})
+	}
+
+	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	queries := sqlc_gen.New(db.Pool)
+
+	err = queries.DeleteResumeVersion(query_ctx, sqlc_gen.DeleteResumeVersionParams{
+		UserID:  user_id,
+		Version: data.Version,
+	})
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "could not get all the versions",
+		})
+	}
+
+	return c.SendStatus(fiber.StatusOK)
+}
+
+type RenameResumeVersionData struct {
+	OldName string `json:"old_name"`
+	NewName string `json:"new_name"`
+}
+
+func HandleRenameResumeVersion(data RenameResumeVersionData, c *fiber.Ctx, db *db.Database) error {
+	user_id, err := middlewares.GetUserID(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized access",
+		})
+	}
+
+	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	queries := sqlc_gen.New(db.Pool)
+
+	err = queries.RenameResumeVersion(query_ctx, sqlc_gen.RenameResumeVersionParams{
+		NewName: data.NewName,
+		OldName: data.OldName,
+		UserID:  user_id,
+	})
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "could not get all the versions",
 		})
 	}
 

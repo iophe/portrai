@@ -168,10 +168,15 @@ export function FormDeleteButton(props: FormDeleteButtonProps) {
 			<button
 				title="Delete"
 				onclick={() => {
-					props.delete();
+					const ok = confirm(
+						"Are you sure you want to delete this ?"
+					);
+					if (ok) {
+						props.delete();
+					}
 				}}
 			>
-				<DeleteIcon class="w-6 h-6 [&_path]:stroke-night-900" />
+				<DeleteIcon class="fill-night-900" />
 			</button>
 		</div>
 	);

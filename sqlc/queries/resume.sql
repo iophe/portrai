@@ -1,220 +1,43 @@
-
-/**
-* Experiences
-* 
-*/
-
--- name: CreateExperience :one
-INSERT INTO public.experiences (
+-- name: CreateResumeItem :one
+INSERT INTO public.resume_items (
     user_id,
-    company_name,
-    job_title,
+    item_type,
+    title,
+    subtitle,
     location,
     start_date,
-    optional_end_date,
+    end_date,
     is_current,
     description,
     priority,
     tags,
+    version,
     metadata
 ) VALUES (
     @user_id::uuid,
-    @company_name::text,
-    @job_title::text,
+    @item_type::text, -- 'experience', 'education', 'skill', 'certificate', 'project'
+    @title::text, -- Primary name (job_title, school, skill_name, certificate_name, project_title)
+    @subtitle::text, -- Secondary name (company_name, degree, skill_type, issuer, project_subtitle)
     @location::text,
     @start_date::date,
-    @optional_end_date::date,
+    @end_date::date,
     @is_current::boolean,
     @description::text,
     @priority::integer,
     COALESCE(@tags::text[], ARRAY[]::text[]),
-    COALESCE(@metadata::jsonb, '{}'::jsonb)
+    (SELECT current_resume_version FROM public.users WHERE id = @user_id::uuid),
+    COALESCE(@metadata::jsonb, '{}'::jsonb) -- Store type-specific fields in metadata
 )
-RETURNING experience_id;
+RETURNING item_id;
 
--- name: UpdateExperience :exec
-UPDATE public.experiences
+-- name: UpdateResumeItem :exec
+UPDATE public.resume_items
 SET
-    company_name = COALESCE(@company_name::text, company_name),
-    job_title = COALESCE(@job_title::text, job_title),
+    title = COALESCE(@title::text, title),
+    subtitle = COALESCE(@subtitle::text, subtitle),
     location = COALESCE(@location::text, location),
     start_date = COALESCE(@start_date::date, start_date),
-    optional_end_date = COALESCE(@optional_end_date::date, optional_end_date),
-    is_current = CASE 
-        WHEN @optional_end_date::date IS NOT NULL THEN false 
-        ELSE COALESCE(@is_current::boolean, is_current)
-    END,
-    description = COALESCE(@description::text, description),
-    priority = COALESCE(@priority::integer, priority),
-    tags = COALESCE(@tags::text[], tags),
-    metadata = COALESCE(@metadata::jsonb, metadata)
-WHERE 
-    experience_id = @experience_id::bigint 
-    AND user_id = @user_id::uuid;
-
--- name: DeleteExperience :exec
-DELETE FROM public.experiences
-WHERE 
-    experience_id = @experience_id::bigint 
-    AND user_id = @user_id::uuid;
-
--- name: GetExperiencesByUserId :many
-SELECT 
-    experience_id,
-    company_name,
-    job_title,
-    location,
-    start_date,
-    optional_end_date,
-    is_current,
-    is_visible,
-    priority,
-    description,
-    tags,
-    (
-        SELECT array_agg(json_build_object(
-                'note_id', note_id,
-                'note_type', note_type,
-                'content', content,
-                'created_at', created_at,
-                'updated_at', updated_at
-            ) ORDER BY created_at DESC)
-        FROM public.experience_notes
-        WHERE experience_notes.experience_id = experiences.experience_id
-    ) as notes
-FROM public.experiences
-WHERE user_id = @user_id::uuid
-ORDER BY 
-    COALESCE(priority, 0) DESC,
-    COALESCE(optional_end_date, '9999-12-31'::date) DESC,
-    start_date DESC;
-
--- name: GetExperienceById :one
-SELECT 
-    experience_id,
-    company_name,
-    job_title,
-    location,
-    start_date,
-    optional_end_date,
-    is_current,
-    description,
-    priority,
-    is_visible,
-    tags,
-    (
-        SELECT array_agg(json_build_object(
-                'note_id', note_id,
-                'note_type', note_type,
-                'content', content,
-                'created_at', created_at,
-                'updated_at', updated_at
-            ) ORDER BY created_at DESC)
-        FROM public.experience_notes
-        WHERE experience_notes.experience_id = experiences.experience_id
-    ) as notes,
-    metadata,
-    created_at,
-    updated_at
-FROM public.experiences
-WHERE 
-    experience_id = @experience_id::bigint 
-    AND user_id = @user_id::uuid;
-
-
--- name: ToggleExperienceVisibility :one
-UPDATE public.experiences
-SET
-    is_visible = NOT is_visible
-WHERE 
-    experience_id = @experience_id::bigint 
-    AND user_id = @user_id::uuid
-RETURNING is_visible;
-
--- name: ReorderExperience :exec
-WITH moved_experience AS (
-    -- Get the current priority of the experience being moved
-    SELECT priority as old_priority
-    FROM public.experiences 
-    WHERE experience_id = @experience_id::bigint
-    AND user_id = @user_id::uuid
-),
-target AS (
-    -- Get the priority of the experience we're moving after
-    SELECT priority as after_priority
-    FROM public.experiences
-    WHERE experience_id = @after_id::bigint
-    AND user_id = @user_id::uuid
-),
-updates AS (
-    -- Update priorities of experiences between old and new position
-    UPDATE public.experiences
-    SET priority = 
-        CASE 
-            -- Moving down (current priority < target priority)
-            WHEN (SELECT old_priority FROM moved_experience) < (SELECT after_priority FROM target)
-            THEN priority - 1
-            -- Moving up (current priority > target priority)
-            ELSE priority + 1
-        END
-    WHERE user_id = @user_id::uuid
-    AND CASE 
-        -- Moving up: affect items between old position (exclusive) and target position (inclusive)
-        WHEN (SELECT old_priority FROM moved_experience) < (SELECT after_priority FROM target)
-        THEN priority > (SELECT old_priority FROM moved_experience) 
-            AND priority <= (SELECT after_priority FROM target)
-        -- Moving down: affect items between target position (inclusive) and old position (exclusive)
-        ELSE priority >= (SELECT after_priority FROM target)
-            AND priority < (SELECT old_priority FROM moved_experience)
-    END
-    RETURNING priority
-)
--- Finally, update the priority of the moved experience
-UPDATE public.experiences
-SET priority = (SELECT after_priority FROM target) 
-WHERE experience_id = @experience_id::bigint
-AND user_id = @user_id::uuid;
-
-/**
-* Educations
-* 
-*/
--- name: CreateEducation :one
-INSERT INTO public.educations (
-    user_id,
-    school,
-    degree,
-    location,
-    start_date,
-    optional_end_date,
-    is_current,
-    description,
-    priority,
-    tags,
-    metadata
-) VALUES (
-    @user_id::uuid,
-    @school::text,
-    @degree::text,
-    @location::text,
-    @start_date::date,
-    @optional_end_date::date,
-    @is_current::boolean,
-    @description::text,
-    @priority::integer,
-    COALESCE(@tags::text[], ARRAY[]::text[]),
-    COALESCE(@metadata::jsonb, '{}'::jsonb)
-)
-RETURNING education_id;
-
--- name: UpdateEducation :exec
-UPDATE public.educations
-SET
-    school = COALESCE(@school::text, school),
-    degree = COALESCE(@degree::text, degree),
-    location = COALESCE(@location::text, location),
-    start_date = COALESCE(@start_date::date, start_date),
-    optional_end_date = COALESCE(@optional_end_date::date, optional_end_date),
+    end_date = COALESCE(@end_date::date, end_date),
     is_current = CASE 
         WHEN @end_date::date IS NOT NULL THEN false 
         ELSE COALESCE(@is_current::boolean, is_current)
@@ -224,28 +47,31 @@ SET
     tags = COALESCE(@tags::text[], tags),
     metadata = COALESCE(@metadata::jsonb, metadata)
 WHERE 
-    education_id = @education_id::bigint 
+    item_id = @item_id::bigint 
     AND user_id = @user_id::uuid;
 
--- name: DeleteEducation :exec
-DELETE FROM public.educations
+-- Delete a resume item
+-- name: DeleteResumeItem :exec
+DELETE FROM public.resume_items
 WHERE 
-    education_id = @education_id::bigint 
+    item_id = @item_id::bigint 
     AND user_id = @user_id::uuid;
 
--- name: GetEducationsByUserId :many
+-- name: GetResumeItemsByType :many
 SELECT 
-    education_id,
-    school,
-    degree,
+    item_id,
+    item_type,
+    title,
+    subtitle,
     location,
     start_date,
-    optional_end_date,
+    end_date,
     is_current,
+    description,
     priority,
     is_visible,
-    description,
     tags,
+    metadata::json::text as metadata,
     (
         SELECT array_agg(json_build_object(
                 'note_id', note_id,
@@ -254,29 +80,35 @@ SELECT
                 'created_at', created_at,
                 'updated_at', updated_at
             ) ORDER BY created_at DESC)
-        FROM public.education_notes
-        WHERE education_notes.education_id = educations.education_id
+        FROM public.resume_item_notes
+        WHERE resume_item_notes.item_id = resume_items.item_id
     ) as notes
-FROM public.educations
-WHERE user_id = @user_id::uuid
+FROM public.resume_items
+WHERE 
+    user_id = @user_id::uuid 
+    AND item_type = @item_type::text
+    AND version = (SELECT current_resume_version FROM public.users WHERE id = @user_id::uuid)
 ORDER BY 
     COALESCE(priority, 0) DESC,
-    COALESCE(optional_end_date, '9999-12-31'::date) DESC,
-    start_date DESC;
+    COALESCE(end_date, '9999-12-31'::date) DESC,
+    COALESCE(start_date, '1900-01-01'::date) DESC,
+    title ASC;
 
--- name: GetEducationById :one
+-- name: GetResumeItemById :one
 SELECT 
-    education_id,
-    school,
-    degree,
+    item_id,
+    item_type,
+    title,
+    subtitle,
     location,
     start_date,
-    optional_end_date,
+    end_date,
     is_current,
     description,
     priority,
     is_visible,
     tags,
+    metadata::json::text as metadata,
     (
         SELECT array_agg(json_build_object(
                 'note_id', note_id,
@@ -285,871 +117,360 @@ SELECT
                 'created_at', created_at,
                 'updated_at', updated_at
             ) ORDER BY created_at DESC)
-        FROM public.education_notes
-        WHERE education_notes.education_id = educations.education_id
+        FROM public.resume_item_notes
+        WHERE resume_item_notes.item_id = resume_items.item_id
     ) as notes,
-    metadata,
     created_at,
     updated_at
-FROM public.educations
+FROM public.resume_items
 WHERE 
-    education_id = @education_id::bigint 
+    item_id = @item_id::bigint 
     AND user_id = @user_id::uuid;
 
--- name: ToggleEducationVisibility :one
-UPDATE public.educations
+-- name: ToggleResumeItemVisibility :one
+UPDATE public.resume_items
 SET
     is_visible = NOT is_visible
 WHERE 
-    education_id = @education_id::bigint 
+    item_id = @item_id::bigint 
     AND user_id = @user_id::uuid
 RETURNING is_visible;
 
-
--- name: ReorderEducation :exec
-WITH moved_education AS (
-    -- Get the current priority of the education being moved
-    SELECT priority as old_priority
-    FROM public.educations 
-    WHERE education_id = @education_id::bigint
+-- name: ReorderResumeItem :exec
+WITH moved_item AS (
+    -- Get the current priority and type of the item being moved
+    SELECT priority as old_priority, item_type
+    FROM public.resume_items 
+    WHERE item_id = @item_id::bigint
     AND user_id = @user_id::uuid
 ),
 target AS (
-    -- Get the priority of the education we're moving after
+    -- Get the priority of the item we're moving after
     SELECT priority as after_priority
-    FROM public.educations
-    WHERE education_id = @after_id::bigint
+    FROM public.resume_items
+    WHERE item_id = @after_id::bigint
     AND user_id = @user_id::uuid
 ),
 updates AS (
-    -- Update priorities of educations between old and new position
-    UPDATE public.educations
+    -- Update priorities of items between old and new position, within the same item type
+    UPDATE public.resume_items
     SET priority = 
         CASE 
             -- Moving down (current priority < target priority)
-            WHEN (SELECT old_priority FROM moved_education) < (SELECT after_priority FROM target)
+            WHEN (SELECT old_priority FROM moved_item) < (SELECT after_priority FROM target)
             THEN priority - 1
             -- Moving up (current priority > target priority)
             ELSE priority + 1
         END
-    WHERE user_id = @user_id::uuid
-    AND CASE 
-        -- Moving up: affect items between old position (exclusive) and target position (inclusive)
-        WHEN (SELECT old_priority FROM moved_education) < (SELECT after_priority FROM target)
-        THEN priority > (SELECT old_priority FROM moved_education) 
-            AND priority <= (SELECT after_priority FROM target)
-        -- Moving down: affect items between target position (inclusive) and old position (exclusive)
-        ELSE priority >= (SELECT after_priority FROM target)
-            AND priority < (SELECT old_priority FROM moved_education)
-    END
+    WHERE 
+        user_id = @user_id::uuid
+        AND item_type = (SELECT item_type FROM moved_item)
+        AND CASE 
+            -- Moving up: affect items between old position (exclusive) and target position (inclusive)
+            WHEN (SELECT old_priority FROM moved_item) < (SELECT after_priority FROM target)
+            THEN priority > (SELECT old_priority FROM moved_item) 
+                AND priority <= (SELECT after_priority FROM target)
+            -- Moving down: affect items between target position (inclusive) and old position (exclusive)
+            ELSE priority >= (SELECT after_priority FROM target)
+                AND priority < (SELECT old_priority FROM moved_item)
+        END
     RETURNING priority
 )
-UPDATE public.educations
+-- Finally, update the priority of the moved item
+UPDATE public.resume_items
 SET priority = (SELECT after_priority FROM target) 
-WHERE education_id = @education_id::bigint
+WHERE item_id = @item_id::bigint
 AND user_id = @user_id::uuid;
 
-/**
-* Skills
-* 
-*/
--- name: CreateSkill :one
-INSERT INTO public.skills (
-    user_id,
-    skill_name,
-    optional_skill_type,
-    optional_skill_level,
-    description,
-    priority,
-    tags,
-    metadata
+-- Note operations
+-- name: CreateNoteOnResumeItem :exec
+INSERT INTO public.resume_item_notes (
+    note_type,
+    content,
+    item_id,
+    user_id
 ) VALUES (
-    @user_id::uuid,
-    @skill_name::text,
-    @optional_skill_type::text,
-    @optional_skill_level::skill_level,
-    @description::text,
-    @priority::integer,
-    COALESCE(@tags::text[], ARRAY[]::text[]),
-    COALESCE(@metadata::jsonb, '{}'::jsonb)
-)
-RETURNING skill_id;
+    @note_type::text,
+    @content::text,
+    @item_id::bigint,
+    @user_id::uuid
+);
 
--- name: UpdateSkill :exec
-UPDATE public.skills
+-- name: UpdateNote :exec
+UPDATE public.resume_item_notes 
 SET
-    skill_name = COALESCE(@skill_name::text, skill_name),
-    optional_skill_type = COALESCE(@optional_skill_type::skill_type, optional_skill_type),
-    optional_skill_level = COALESCE(@optional_skill_level::skill_level, optional_skill_level),
-    description = COALESCE(@description::text, description),
-    priority = COALESCE(@priority::integer, priority),
-    tags = COALESCE(@tags::text[], tags),
-    metadata = COALESCE(@metadata::jsonb, metadata)
-WHERE 
-    skill_id = @skill_id::bigint 
+    note_type = COALESCE(@note_type::text, note_type),
+    content = COALESCE(@content::text, content)
+WHERE
+    note_id = @note_id::bigint
+    AND item_id = @item_id::bigint 
     AND user_id = @user_id::uuid;
 
--- name: DeleteSkill :exec
-DELETE FROM public.skills
+-- name: DeleteNote :exec
+DELETE FROM public.resume_item_notes
 WHERE 
-    skill_id = @skill_id::bigint 
+    note_id = @note_id::bigint
+    AND item_id = @item_id::bigint 
     AND user_id = @user_id::uuid;
-
--- name: GetSkillsByUserId :many
-SELECT 
-    skill_id,
-    skill_name,
-    optional_skill_type,
-    COALESCE(optional_skill_level, 'amateur'),
-    description,
-    priority,
-    is_visible,
-    tags,
-    (
-        SELECT array_agg(json_build_object(
-                'note_id', note_id,
-                'note_type', note_type,
-                'content', content,
-                'created_at', created_at,
-                'updated_at', updated_at
-            ) ORDER BY created_at DESC)
-        FROM public.skill_notes
-        WHERE skill_notes.skill_id = skills.skill_id
-    ) as notes
-FROM public.skills
-WHERE user_id = @user_id::uuid
-ORDER BY 
-    COALESCE(priority, 0) DESC,
-    skill_name ASC;
-
--- name: GetSkillById :one
-SELECT 
-    skill_id,
-    skill_name,
-    optional_skill_type,
-    COALESCE(optional_skill_level, 'amateur'),
-    description,
-    priority,
-    is_visible,
-    tags,
-    (
-        SELECT array_agg(json_build_object(
-                'note_id', note_id,
-                'note_type', note_type,
-                'content', content,
-                'created_at', created_at,
-                'updated_at', updated_at
-            ) ORDER BY created_at DESC)
-        FROM public.skill_notes
-        WHERE skill_notes.skill_id = skills.skill_id
-    ) as notes,
-    metadata,
-    created_at,
-    updated_at
-FROM public.skills
-WHERE 
-    skill_id = @skill_id::bigint 
-    AND user_id = @user_id::uuid;
-
--- name: ToggleSkillVisibility :one
-UPDATE public.skills
-SET
-    is_visible = NOT is_visible
-WHERE 
-    skill_id = @skill_id::bigint 
-    AND user_id = @user_id::uuid
-RETURNING is_visible;
-
-
--- name: ReorderSkill :exec
-WITH moved_skill AS (
-    -- Get the current priority of the skill being moved
-    SELECT priority as old_priority
-    FROM public.skills 
-    WHERE skill_id = @skill_id::bigint
-    AND user_id = @user_id::uuid
-),
-target AS (
-    -- Get the priority of the skill we're moving after
-    SELECT priority as after_priority
-    FROM public.skills
-    WHERE skill_id = @after_id::bigint
-    AND user_id = @user_id::uuid
-),
-updates AS (
-    -- Update priorities of skills between old and new position
-    UPDATE public.skills
-    SET priority = 
-        CASE 
-            -- Moving down (current priority < target priority)
-            WHEN (SELECT old_priority FROM moved_skill) < (SELECT after_priority FROM target)
-            THEN priority - 1
-            -- Moving up (current priority > target priority)
-            ELSE priority + 1
-        END
-    WHERE user_id = @user_id::uuid
-    AND CASE 
-        -- Moving up: affect items between old position (exclusive) and target position (inclusive)
-        WHEN (SELECT old_priority FROM moved_skill) < (SELECT after_priority FROM target)
-        THEN priority > (SELECT old_priority FROM moved_skill) 
-            AND priority <= (SELECT after_priority FROM target)
-        -- Moving down: affect items between target position (inclusive) and old position (exclusive)
-        ELSE priority >= (SELECT after_priority FROM target)
-            AND priority < (SELECT old_priority FROM moved_skill)
-    END
-    RETURNING priority
-)
-UPDATE public.skills
-SET priority = (SELECT after_priority FROM target) 
-WHERE skill_id = @skill_id::bigint
-AND user_id = @user_id::uuid;
-
-/**
-* Certificates
-* 
-*/
--- name: CreateCertificate :one
-INSERT INTO public.certificates (
-    user_id,
-    certificate_name,
-    optional_issuer,
-    optional_location,
-    optional_granted_date,
-    description,
-    priority,
-    tags,
-    metadata
-) VALUES (
-    @user_id::uuid,
-    @certificate_name::text,
-    @optional_issuer::text,
-    @optional_location::text,
-    @optional_granted_date::date,
-    @description::text,
-    @priority::integer,
-    COALESCE(@tags::text[], ARRAY[]::text[]),
-    COALESCE(@metadata::jsonb, '{}'::jsonb)
-)
-RETURNING certificate_id;
-
--- name: UpdateCertificate :exec
-UPDATE public.certificates
-SET
-    certificate_name = COALESCE(@certificate_name::text, certificate_name),
-    optional_issuer = COALESCE(@optional_issuer::text, optional_issuer),
-    optional_location = COALESCE(@optional_location::text, optional_location),
-    optional_granted_date = COALESCE(@optional_granted_date::date, optional_granted_date),
-    description = COALESCE(@description::text, description),
-    priority = COALESCE(@priority::integer, priority),
-    tags = COALESCE(@tags::text[], tags),
-    metadata = COALESCE(@metadata::jsonb, metadata)
-WHERE 
-    certificate_id = @certificate_id::bigint 
-    AND user_id = @user_id::uuid;
-
--- name: DeleteCertificate :exec
-DELETE FROM public.certificates
-WHERE 
-    certificate_id = @certificate_id::bigint 
-    AND user_id = @user_id::uuid;
-
--- name: GetCertificatesByUserId :many
-SELECT 
-    certificate_id,
-    certificate_name,
-    optional_issuer,
-    optional_location,
-    optional_granted_date,
-    description,
-    priority,
-    is_visible,
-    tags,
-
-    (
-        SELECT array_agg(json_build_object(
-                'note_id', note_id,
-                'note_type', note_type,
-                'content', content,
-                'created_at', created_at,
-                'updated_at', updated_at
-            ) ORDER BY created_at DESC)
-        FROM public.certificate_notes
-        WHERE certificate_notes.certificate_id = certificates.certificate_id
-    ) as notes
-FROM public.certificates
-WHERE user_id = @user_id::uuid
-ORDER BY 
-    COALESCE(priority, 0) DESC,
-    COALESCE(optional_granted_date, '1900-01-01'::date) DESC,
-    certificate_name ASC;
-
--- name: GetCertificateById :one
-SELECT 
-    certificate_id,
-    certificate_name,
-    optional_issuer,
-    optional_location,
-    optional_granted_date,
-    description,
-    priority,
-    is_visible,
-    tags,
-    (
-        SELECT array_agg(json_build_object(
-                'note_id', note_id,
-                'note_type', note_type,
-                'content', content,
-                'created_at', created_at,
-                'updated_at', updated_at
-            ) ORDER BY created_at DESC)
-        FROM public.certificate_notes
-        WHERE certificate_notes.certificate_id = certificates.certificate_id
-    ) as notes,
-    metadata,
-    created_at,
-    updated_at
-FROM public.certificates
-WHERE 
-    certificate_id = @certificate_id::bigint 
-    AND user_id = @user_id::uuid;
-
--- name: ToggleCertificateVisibility :one
-UPDATE public.certificates
-SET
-    is_visible = NOT is_visible
-WHERE 
-    certificate_id = @certificate_id::bigint 
-    AND user_id = @user_id::uuid
-RETURNING is_visible;
-
-
--- name: ReorderCertificate :exec
-WITH moved_certificate AS (
-    -- Get the current priority of the certificate being moved
-    SELECT priority as old_priority
-    FROM public.certificates 
-    WHERE certificate_id = @certificate_id::bigint
-    AND user_id = @user_id::uuid
-),
-target AS (
-    -- Get the priority of the certificate we're moving after
-    SELECT priority as after_priority
-    FROM public.certificates
-    WHERE certificate_id = @after_id::bigint
-    AND user_id = @user_id::uuid
-),
-updates AS (
-    -- Update priorities of certificates between old and new position
-    UPDATE public.certificates
-    SET priority = 
-        CASE 
-            -- Moving down (current priority < target priority)
-            WHEN (SELECT old_priority FROM moved_certificate) < (SELECT after_priority FROM target)
-            THEN priority - 1
-            -- Moving up (current priority > target priority)
-            ELSE priority + 1
-        END
-    WHERE user_id = @user_id::uuid
-    AND CASE 
-        -- Moving up: affect items between old position (exclusive) and target position (inclusive)
-        WHEN (SELECT old_priority FROM moved_certificate) < (SELECT after_priority FROM target)
-        THEN priority > (SELECT old_priority FROM moved_certificate) 
-            AND priority <= (SELECT after_priority FROM target)
-        -- Moving down: affect items between target position (inclusive) and old position (exclusive)
-        ELSE priority >= (SELECT after_priority FROM target)
-            AND priority < (SELECT old_priority FROM moved_certificate)
-    END
-    RETURNING priority
-)
-UPDATE public.certificates
-SET priority = (SELECT after_priority FROM target) 
-WHERE certificate_id = @certificate_id::bigint
-AND user_id = @user_id::uuid;
-
-/**
-* Projects
-* 
-*/
--- name: CreateProject :one
-INSERT INTO public.projects (
-    user_id,
-    project_title,
-    optional_project_subtitle,
-    optional_start_date,
-    optional_end_date,
-    is_current,
-    description,
-    priority,
-    tags,
-    metadata
-) VALUES (
-    @user_id::uuid,
-    @project_title::text,
-    @optional_project_subtitle::text,
-    @optional_start_date::date,
-    @optional_end_date::date,
-    @is_current::boolean,
-    @description::text,
-    @priority::integer,
-    COALESCE(@tags::text[], ARRAY[]::text[]),
-    COALESCE(@metadata::jsonb, '{}'::jsonb)
-)
-RETURNING project_id;
-
--- name: UpdateProject :exec
-UPDATE public.projects
-SET
-    project_title = COALESCE(@project_title::text, project_title),
-    optional_project_subtitle = COALESCE(@optional_project_subtitle::text, optional_project_subtitle),
-    optional_start_date = COALESCE(@optional_start_date::date, optional_start_date),
-    optional_end_date = COALESCE(@optional_end_date::date, optional_end_date),
-    is_current = CASE 
-        WHEN @end_date::date IS NOT NULL THEN false 
-        ELSE COALESCE(@is_current::boolean, is_current)
-    END,
-    description = COALESCE(@description::text, description),
-    priority = COALESCE(@priority::integer, priority),
-    tags = COALESCE(@tags::text[], tags),
-    metadata = COALESCE(@metadata::jsonb, metadata)
-WHERE 
-    project_id = @project_id::bigint 
-    AND user_id = @user_id::uuid;
-
--- name: DeleteProject :exec
-DELETE FROM public.projects
-WHERE 
-    project_id = @project_id::bigint 
-    AND user_id = @user_id::uuid;
-
--- name: GetProjectsByUserId :many
-SELECT 
-    project_id,
-    project_title,
-    optional_project_subtitle,
-    optional_start_date,
-    optional_end_date,
-    is_current,
-    description,
-    priority,
-    is_visible,
-    tags,
-
-    (
-        SELECT array_agg(json_build_object(
-                'note_id', note_id,
-                'note_type', note_type,
-                'content', content,
-                'created_at', created_at,
-                'updated_at', updated_at
-            ) ORDER BY created_at DESC)
-        FROM public.project_notes
-        WHERE project_notes.project_id = projects.project_id
-    ) as notes
-FROM public.projects
-WHERE user_id = @user_id::uuid
-ORDER BY 
-    COALESCE(priority, 0) DESC,
-    COALESCE(optional_end_date, '9999-12-31'::date) DESC,
-    COALESCE(optional_start_date, '9999-12-31'::date) DESC,
-    project_title ASC;
-
--- name: GetProjectById :one
-SELECT 
-    project_id,
-    project_title,
-    optional_project_subtitle,
-    optional_start_date,
-    optional_end_date,
-    is_current,
-    description,
-    priority,
-    is_visible,
-    tags,
-    (
-        SELECT array_agg(json_build_object(
-                'note_id', note_id,
-                'note_type', note_type,
-                'content', content,
-                'created_at', created_at,
-                'updated_at', updated_at
-            ) ORDER BY created_at DESC)
-        FROM public.project_notes
-        WHERE project_notes.project_id = projects.project_id
-    ) as notes,
-    metadata,
-    created_at,
-    updated_at
-FROM public.projects
-WHERE 
-    project_id = @project_id::bigint 
-    AND user_id = @user_id::uuid;
-
--- name: ToggleProjectVisibility :one
-UPDATE public.projects
-SET
-    is_visible = NOT is_visible
-WHERE 
-    project_id = @project_id::bigint 
-    AND user_id = @user_id::uuid
-RETURNING is_visible;
-
-
--- name: ReorderProject :exec
-WITH moved_project AS (
-    -- Get the current priority of the project being moved
-    SELECT priority as old_priority
-    FROM public.projects 
-    WHERE project_id = @project_id::bigint
-    AND user_id = @user_id::uuid
-),
-target AS (
-    -- Get the priority of the project we're moving after
-    SELECT priority as after_priority
-    FROM public.projects
-    WHERE project_id = @after_id::bigint
-    AND user_id = @user_id::uuid
-),
-updates AS (
-    -- Update priorities of projects between old and new position
-    UPDATE public.projects
-    SET priority = 
-        CASE 
-            -- Moving down (current priority < target priority)
-            WHEN (SELECT old_priority FROM moved_project) < (SELECT after_priority FROM target)
-            THEN priority - 1
-            -- Moving up (current priority > target priority)
-            ELSE priority + 1
-        END
-    WHERE user_id = @user_id::uuid
-    AND CASE 
-        -- Moving up: affect items between old position (exclusive) and target position (inclusive)
-        WHEN (SELECT old_priority FROM moved_project) < (SELECT after_priority FROM target)
-        THEN priority > (SELECT old_priority FROM moved_project) 
-            AND priority <= (SELECT after_priority FROM target)
-        -- Moving down: affect items between target position (inclusive) and old position (exclusive)
-        ELSE priority >= (SELECT after_priority FROM target)
-            AND priority < (SELECT old_priority FROM moved_project)
-    END
-    RETURNING priority
-)
-UPDATE public.projects
-SET priority = (SELECT after_priority FROM target) 
-WHERE project_id = @project_id::bigint
-AND user_id = @user_id::uuid;
 
 -- name: GetResumeData :one
-WITH resume_data AS (
-    -- Experiences
-    SELECT 
-        'experiences' as type,
-        jsonb_build_object(
-            'experience_id', e.experience_id,
-            'company_name', e.company_name,
-            'job_title', e.job_title,
-            'location', e.location,
-            'start_date', e.start_date,
-            'optional_end_date', e.optional_end_date,
-            'is_current', e.is_current,
-            'description', e.description,
-            'priority', e.priority,
-            'is_visible', e.is_visible,
-            'tags', e.tags,
-            'notes', COALESCE((
-                SELECT array_agg(json_build_object(
-                    'note_id', note_id,
-                    'note_type', note_type,
-                    'content', content,
-                    'created_at', created_at,
-                    'updated_at', updated_at
-                ) ORDER BY created_at DESC)
-                FROM public.experience_notes
-                WHERE experience_notes.experience_id = e.experience_id
-            ), '{}')
-        ) as data
-    FROM experiences e
-    WHERE e.user_id = @user_id::uuid 
-    AND e.is_visible = true
-
-    UNION ALL
-
-    -- Educations
-    SELECT 
-        'educations' as type,
-        jsonb_build_object(
-            'education_id', ed.education_id,
-            'school', ed.school,
-            'degree', ed.degree,
-            'location', ed.location,
-            'start_date', ed.start_date,
-            'optional_end_date', ed.optional_end_date,
-            'is_current', ed.is_current,
-            'description', ed.description,
-            'priority', ed.priority,
-            'is_visible', ed.is_visible,
-            'tags', ed.tags,
-            'notes', COALESCE((
-                SELECT array_agg(json_build_object(
-                    'note_id', note_id,
-                    'note_type', note_type,
-                    'content', content,
-                    'created_at', created_at,
-                    'updated_at', updated_at
-                ) ORDER BY created_at DESC)
-                FROM public.education_notes
-                WHERE education_notes.education_id = ed.education_id
-            ), '{}')
-        ) as data
-    FROM educations ed
-    WHERE ed.user_id = @user_id::uuid 
-    AND ed.is_visible = true
-
-    UNION ALL
-
-    -- Skills
-    SELECT 
-        'skills' as type,
-        jsonb_build_object(
-            'skill_id', s.skill_id,
-            'skill_name', s.skill_name,
-            'optional_skill_type', s.optional_skill_type,
-            'optional_skill_level', s.optional_skill_level,
-            'description', s.description,
-            'priority', s.priority,
-            'is_visible', s.is_visible,
-            'tags', s.tags,
-            'notes', COALESCE((
-                SELECT array_agg(json_build_object(
-                    'note_id', note_id,
-                    'note_type', note_type,
-                    'content', content,
-                    'created_at', created_at,
-                    'updated_at', updated_at
-                ) ORDER BY created_at DESC)
-                FROM public.skill_notes
-                WHERE skill_notes.skill_id = s.skill_id
-            ), '{}')
-        ) as data
-    FROM skills s
-    WHERE s.user_id = @user_id::uuid 
-    AND s.is_visible = true
-
-    UNION ALL
-
-    -- Certificates
-    SELECT 
-        'certificates' as type,
-        jsonb_build_object(
-            'certificate_id', c.certificate_id,
-            'certificate_name', c.certificate_name,
-            'optional_issuer', c.optional_issuer,
-            'optional_location', c.optional_location,
-            'optional_granted_date', c.optional_granted_date,
-            'description', c.description,
-            'priority', c.priority,
-            'is_visible', c.is_visible,
-            'tags', c.tags,
-            'notes', COALESCE((
-                SELECT array_agg(json_build_object(
-                    'note_id', note_id,
-                    'note_type', note_type,
-                    'content', content,
-                    'created_at', created_at,
-                    'updated_at', updated_at
-                ) ORDER BY created_at DESC)
-                FROM public.certificate_notes
-                WHERE certificate_notes.certificate_id = c.certificate_id
-            ), '{}')
-        ) as data
-    FROM certificates c
-    WHERE c.user_id = @user_id::uuid 
-    AND c.is_visible = true
-
-    UNION ALL
-
-    -- Projects
-    SELECT 
-        'projects' as type,
-        jsonb_build_object(
-            'project_id', p.project_id,
-            'project_title', p.project_title,
-            'optional_project_subtitle', p.optional_project_subtitle,
-            'optional_start_date', p.optional_start_date,
-            'optional_end_date', p.optional_end_date,
-            'is_current', p.is_current,
-            'description', p.description,
-            'priority', p.priority,
-            'is_visible', p.is_visible,
-            'tags', p.tags,
-            'notes', COALESCE((
-                SELECT array_agg(json_build_object(
-                    'note_id', note_id,
-                    'note_type', note_type,
-                    'content', content,
-                    'created_at', created_at,
-                    'updated_at', updated_at
-                ) ORDER BY created_at DESC)
-                FROM public.project_notes
-                WHERE project_notes.project_id = p.project_id
-            ), '{}')
-        ) as data
-    FROM projects p
-    WHERE p.user_id = @user_id::uuid 
-    AND p.is_visible = true
+WITH resume_version AS (
+    SELECT current_resume_version
+    FROM public.users
+    WHERE id = @user_id::uuid
 )
-SELECT 
-    (SELECT jsonb_build_object(
-        'experiences', COALESCE(jsonb_agg(data ORDER BY (data->>'priority')::int) FILTER (WHERE type = 'experiences'), '[]'),
-        'educations', COALESCE(jsonb_agg(data ORDER BY (data->>'priority')::int) FILTER (WHERE type = 'educations'), '[]'),
-        'skills', COALESCE(jsonb_agg(data ORDER BY (data->>'priority')::int) FILTER (WHERE type = 'skills'), '[]'),
-        'certificates', COALESCE(jsonb_agg(data ORDER BY (data->>'priority')::int) FILTER (WHERE type = 'certificates'), '[]'),
-        'projects', COALESCE(jsonb_agg(data ORDER BY (data->>'priority')::int) FILTER (WHERE type = 'projects'), '[]')
-    ) FROM resume_data) as resume_data;
+SELECT jsonb_build_object(
+    'experiences', (
+        SELECT COALESCE(jsonb_agg(
+            jsonb_build_object(
+                'experience_id', item_id,
+                'job_title', title,
+                'company_name', subtitle,
+                'location', location,
+                'start_date', start_date,
+                'optional_end_date', end_date,
+                'is_current', is_current,
+                'description', description,
+                'priority', priority,
+                'is_visible', is_visible,
+                'tags', tags,
+                'metadata', metadata,
+                'notes', COALESCE((
+                    SELECT array_agg(json_build_object(
+                        'note_id', note_id,
+                        'note_type', note_type,
+                        'content', content,
+                        'created_at', created_at,
+                        'updated_at', updated_at
+                    ) ORDER BY created_at DESC)
+                    FROM public.resume_item_notes
+                    WHERE resume_item_notes.item_id = resume_items.item_id
+                ), '{}')
+            ) ORDER BY priority DESC
+        ), '[]')
+        FROM resume_items, resume_version
+        WHERE resume_items.user_id = @user_id::uuid 
+        AND resume_items.item_type = 'experience'
+        AND resume_items.is_visible = true
+        AND resume_items.version = resume_version.current_resume_version
+    ),
+    'educations', (
+        SELECT COALESCE(jsonb_agg(
+            jsonb_build_object(
+                'education_id', item_id,
+                'degree', title,
+                'school', subtitle,
+                'location', location,
+                'start_date', start_date,
+                'optional_end_date', end_date,
+                'is_current', is_current,
+                'description', description,
+                'priority', priority,
+                'is_visible', is_visible,
+                'tags', tags,
+                'metadata', metadata,
+                'notes', COALESCE((
+                    SELECT array_agg(json_build_object(
+                        'note_id', note_id,
+                        'note_type', note_type,
+                        'content', content,
+                        'created_at', created_at,
+                        'updated_at', updated_at
+                    ) ORDER BY created_at DESC)
+                    FROM public.resume_item_notes
+                    WHERE resume_item_notes.item_id = resume_items.item_id
+                ), '{}')
+            ) ORDER BY priority DESC
+        ), '[]')
+        FROM resume_items, resume_version
+        WHERE resume_items.user_id = @user_id::uuid 
+        AND resume_items.item_type = 'education'
+        AND resume_items.is_visible = true
+        AND resume_items.version = resume_version.current_resume_version
+    ),
+    'skills', (
+        SELECT COALESCE(jsonb_agg(
+            jsonb_build_object(
+                'skill_id', item_id,
+                'skill_name', title,
+                'optional_skill_type', subtitle,
+                'optional_skill_level', metadata->>'skill_level',
+                'description', description,
+                'priority', priority,
+                'is_visible', is_visible,
+                'tags', tags,
+                'notes', COALESCE((
+                    SELECT array_agg(json_build_object(
+                        'note_id', note_id,
+                        'note_type', note_type,
+                        'content', content,
+                        'created_at', created_at,
+                        'updated_at', updated_at
+                    ) ORDER BY created_at DESC)
+                    FROM public.resume_item_notes
+                    WHERE resume_item_notes.item_id = resume_items.item_id
+                ), '{}')
+            ) ORDER BY priority DESC
+        ), '[]')
+        FROM resume_items, resume_version
+        WHERE resume_items.user_id = @user_id::uuid 
+        AND resume_items.item_type = 'skill'
+        AND resume_items.is_visible = true
+        AND resume_items.version = resume_version.current_resume_version
+    ),
+    'certificates', (
+        SELECT COALESCE(jsonb_agg(
+            jsonb_build_object(
+                'certificate_id', item_id,
+                'certificate_name', title,
+                'optional_issuer', subtitle,
+                'optional_location', location,
+                'optional_granted_date', start_date,
+                'description', description,
+                'priority', priority,
+                'is_visible', is_visible,
+                'tags', tags,
+                'notes', COALESCE((
+                    SELECT array_agg(json_build_object(
+                        'note_id', note_id,
+                        'note_type', note_type,
+                        'content', content,
+                        'created_at', created_at,
+                        'updated_at', updated_at
+                    ) ORDER BY created_at DESC)
+                    FROM public.resume_item_notes
+                    WHERE resume_item_notes.item_id = resume_items.item_id
+                ), '{}')
+            ) ORDER BY priority DESC
+        ), '[]')
+        FROM resume_items, resume_version
+        WHERE resume_items.user_id = @user_id::uuid 
+        AND resume_items.item_type = 'certificate'
+        AND resume_items.is_visible = true
+        AND resume_items.version = resume_version.current_resume_version
+    ),
+    'projects', (
+        SELECT COALESCE(jsonb_agg(
+            jsonb_build_object(
+                'project_id', item_id,
+                'project_title', title,
+                'project_subtitle', subtitle,
+                'optional_start_date', start_date,
+                'optional_end_date', end_date,
+                'is_current', is_current,
+                'description', description,
+                'priority', priority,
+                'is_visible', is_visible,
+                'tags', tags,
+                'notes', COALESCE((
+                    SELECT array_agg(json_build_object(
+                        'note_id', note_id,
+                        'note_type', note_type,
+                        'content', content,
+                        'created_at', created_at,
+                        'updated_at', updated_at
+                    ) ORDER BY created_at DESC)
+                    FROM public.resume_item_notes
+                    WHERE resume_item_notes.item_id = resume_items.item_id
+                ), '{}')
+            ) ORDER BY priority DESC
+        ), '[]')
+        FROM resume_items, resume_version
+        WHERE resume_items.user_id = @user_id::uuid 
+        AND resume_items.item_type = 'project'
+        AND resume_items.is_visible = true
+        AND resume_items.version = resume_version.current_resume_version
+    )
+) as resume_data;
 
-
--- name: CreateNoteOnExperience :exec
-INSERT INTO public.experience_notes (
-    note_type,
-    content,
-    experience_id,
-    user_id
-) VALUES (
-    @note_type::text,
-    @content::text,
-    @experience_id::bigint,
-    @user_id::uuid
-);
-
--- name: UpdateNoteOnExperience :exec
-UPDATE public.experience_notes 
-SET
-    note_type = COALESCE(@note_type::text, note_type),
-    content = COALESCE(@content::text, content)
-WHERE
-    note_id = @note_id::bigint
-    AND experience_id = @experience_id::bigint 
-    AND user_id = @user_id::uuid;
-
--- name: DeleteNoteOnExperience :exec
-DELETE FROM public.experience_notes
+-- name: GetUserResumeVersions :one
+SELECT
+    u.current_resume_version,
+    ARRAY(
+        SELECT rv.version 
+        FROM public.resume_versions rv 
+        WHERE rv.user_id = u.id
+        ORDER BY rv.version
+    )::text[] AS all_versions
+FROM 
+    public.users u
 WHERE 
-    note_id = @note_id::bigint
-    AND experience_id = @experience_id::bigint 
-    AND user_id = @user_id::uuid;
+    u.id = @user_id::uuid;
 
--- name: CreateNoteOnCertificate :exec
-INSERT INTO public.certificate_notes (
-    note_type,
-    content,
-    certificate_id,
-    user_id
-) VALUES (
-    @note_type::text,
-    @content::text,
-    @certificate_id::bigint,
-    @user_id::uuid
-);
-
--- name: UpdateNoteOnCertificate :exec
-UPDATE public.certificate_notes 
-SET
-    note_type = COALESCE(@note_type::text, note_type),
-    content = COALESCE(@content::text, content)
-WHERE
-    note_id = @note_id::bigint
-    AND certificate_id = @certificate_id::bigint 
-    AND user_id = @user_id::uuid;
-
--- name: DeleteNoteOnCertificate :exec
-DELETE FROM public.certificate_notes
+-- name: ChangeResumeVersion :exec
+UPDATE public.users
+SET 
+    current_resume_version = @version::text
 WHERE 
-    note_id = @note_id::bigint
-    AND certificate_id = @certificate_id::bigint 
-    AND user_id = @user_id::uuid;
+    id = @user_id::uuid;
 
--- name: CreateNoteOnSkill :exec
-INSERT INTO public.skill_notes (
-    note_type,
-    content,
-    skill_id,
-    user_id
-) VALUES (
-    @note_type::text,
-    @content::text,
-    @skill_id::bigint,
-    @user_id::uuid
-);
+-- name: AddResumeVersion :exec
+INSERT INTO public.resume_versions (user_id, version)
+VALUES (@user_id::uuid, @new_version::text);
 
--- name: UpdateNoteOnSkill :exec
-UPDATE public.skill_notes 
-SET
-    note_type = COALESCE(@note_type::text, note_type),
-    content = COALESCE(@content::text, content)
-WHERE
-    note_id = @note_id::bigint
-    AND skill_id = @skill_id::bigint 
-    AND user_id = @user_id::uuid;
-
--- name: DeleteNoteOnSkill :exec
-DELETE FROM public.skill_notes
+-- name: DeleteResumeVersion :exec
+WITH delete_version AS (
+    -- First delete the version from resume_versions
+    DELETE FROM public.resume_versions 
+    WHERE 
+        user_id = @user_id::uuid 
+        AND version = @version::text
+    RETURNING user_id, version
+),
+find_next_version AS (
+    -- Find another version to use if deleting the current version
+    SELECT version 
+    FROM public.resume_versions
+    WHERE 
+        user_id = @user_id::uuid 
+        AND version != @version::text
+    ORDER BY 
+        CASE WHEN version = 'main' THEN 0 ELSE 1 END, -- Prefer 'main' if available
+        version
+    LIMIT 1
+),
+update_current_version AS (
+    -- If this is the current version, reset to another available version or 'main'
+    UPDATE public.users
+    SET 
+        current_resume_version = COALESCE((SELECT version FROM find_next_version), 'main'),
+        updated_at = current_timestamp
+    WHERE 
+        id = @user_id::uuid
+        AND current_resume_version = @version::text
+)
+-- Delete all resume items with this version
+DELETE FROM public.resume_items
 WHERE 
-    note_id = @note_id::bigint
-    AND skill_id = @skill_id::bigint 
-    AND user_id = @user_id::uuid;
+    user_id = @user_id::uuid
+    AND version = @version::text;
 
--- name: CreateNoteOnProject :exec
-INSERT INTO public.project_notes (
-    note_type,
-    content,
-    project_id,
-    user_id
-) VALUES (
-    @note_type::text,
-    @content::text,
-    @project_id::bigint,
-    @user_id::uuid
-);
--- name: UpdateNoteOnProject :exec
-UPDATE public.project_notes 
-SET
-    note_type = COALESCE(@note_type::text, note_type),
-    content = COALESCE(@content::text, content)
-WHERE
-    note_id = @note_id::bigint
-    AND project_id = @project_id::bigint 
-    AND user_id = @user_id::uuid;
-
--- name: DeleteNoteOnProject :exec
-DELETE FROM public.project_notes
+-- name: RenameResumeVersion :exec
+WITH rename_version AS (
+    -- Update the version in resume_versions
+    UPDATE public.resume_versions
+    SET 
+        version = @new_name::text
+    WHERE 
+        user_id = @user_id::uuid 
+        AND version = @old_name::text
+    RETURNING user_id, version
+),
+update_current_version AS (
+    -- Update the current_resume_version in users if it matches
+    UPDATE public.users
+    SET 
+        current_resume_version = @new_name::text,
+        updated_at = current_timestamp
+    WHERE 
+        id = @user_id::uuid
+        AND current_resume_version = @old_name::text
+)
+-- Update all resume items with this version
+UPDATE public.resume_items
+SET 
+    version = @new_name::text,
+    updated_at = current_timestamp
 WHERE 
-    note_id = @note_id::bigint
-    AND project_id = @project_id::bigint 
-    AND user_id = @user_id::uuid;
-
--- name: CreateNoteOnEducation :exec
-INSERT INTO public.education_notes (
-    note_type,
-    content,
-    education_id,
-    user_id
-) VALUES (
-    @note_type::text,
-    @content::text,
-    @education_id::bigint,
-    @user_id::uuid
-);
--- name: UpdateNoteOnEducation :exec
-UPDATE public.education_notes 
-SET
-    note_type = COALESCE(@note_type::text, note_type),
-    content = COALESCE(@content::text, content)
-WHERE
-    note_id = @note_id::bigint
-    AND education_id = @education_id::bigint 
-    AND user_id = @user_id::uuid;
-
--- name: DeleteNoteOnEducation :exec
-DELETE FROM public.Education_notes
-WHERE 
-    note_id = @note_id::bigint
-    AND education_id = @education_id::bigint 
-    AND user_id = @user_id::uuid;
+    user_id = @user_id::uuid
+    AND version = @old_name::text;

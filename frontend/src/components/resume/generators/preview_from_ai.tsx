@@ -7,12 +7,18 @@ import { AxiosError } from "axios";
 import { ExecutiveTemplate } from "./templates/default.template";
 import DownloadIcon from "@assets/icons/download.svg?component-solid";
 import { getProfile } from "@utils/profile";
+import EditIcon from "@assets/icons/edit.svg?component-solid";
+import { FormCheckbox } from "../utils/form.input";
+import { DB_JOB_SPECIFIC_RESUMES } from "@utils/db/resume.db";
+import { db } from "@utils/db/db";
+import { useNavigate } from "@solidjs/router";
 
 interface ResumePreviewProps {
 	template_name?: string;
 }
 
 function ResumeAIPreview(props: ResumePreviewProps) {
+	const navigate = useNavigate();
 	const fault = useFault();
 
 	let cv_ref: HTMLDivElement | undefined = undefined;
@@ -20,7 +26,10 @@ function ResumeAIPreview(props: ResumePreviewProps) {
 
 	// Fetch resume data
 	const [resume_data, set_resume_data] = createSignal<TemplateData>();
+	const [resume_title, set_resume_title] = createSignal<string>();
 	const [job_description, set_job_description] = createSignal<string>("");
+	const [with_cover_letter, set_with_cover_letter] =
+		createSignal<boolean>(false);
 
 	return (
 		<section class="w-full h-full flex flex-col gap-4">
@@ -34,15 +43,26 @@ function ResumeAIPreview(props: ResumePreviewProps) {
 				placeholder="paste the job description"
 			/>
 			<div class="flex flex-col gap-2 self-center">
+				<FormCheckbox
+					label="with cover letter"
+					on_input={(value) => {
+						set_with_cover_letter(value);
+					}}
+					value={with_cover_letter()}
+				/>
 				<button
 					class="bg-night-200 px-4 py-2 rounded text-snow-100 font-bold"
 					onClick={async () => {
 						if (!job_description()) return;
 						try {
 							toGenerating(true);
+
 							const res = await api.post("/ai/session/resume", {
 								job_description: job_description(),
+								with_cover_letter: with_cover_letter(),
 							});
+
+							const uuid = crypto.randomUUID();
 							set_resume_data({
 								resume_data: res.data.result as ResumeData,
 								contact: {
@@ -50,9 +70,30 @@ function ResumeAIPreview(props: ResumePreviewProps) {
 									email: "test@test.com",
 								},
 							});
-						} catch (error) {
-							console.log(error);
+							set_resume_title(uuid);
+							const resume_data = res.data.result as ResumeData;
+							// resume_data.certificates.forEach(
+							// 	(v, i) => (v.certificate_id = i)
+							// );
+							// resume_data.experiences.forEach(
+							// 	(v, i) => (v.experience_id = i)
+							// );
+							// resume_data.educations.forEach(
+							// 	(v, i) => (v.education_id = i)
+							// );
+							// resume_data.projects.forEach(
+							// 	(v, i) => (v.project_id = i)
+							// );
+							// resume_data.skills.forEach(
+							// 	(v, i) => (v.skill_id = i)
+							// );
 
+							DB_JOB_SPECIFIC_RESUMES.upsert(db, uuid, {
+								resume_data: resume_data,
+								job_description: job_description(),
+								title: resume_data.title,
+							});
+						} catch (error) {
 							fault.major({
 								message: "Failed to generate the resume",
 							});
@@ -102,6 +143,14 @@ function ResumeAIPreview(props: ResumePreviewProps) {
 			</div>
 			<section class="w-full grow overflow-auto flex flex-col gap-4">
 				<Show when={resume_data()}>
+					<button
+						title="Edit"
+						onclick={() => {
+							navigate(`/resume/${resume_title()}`);
+						}}
+					>
+						<EditIcon class="fill-night-900" />
+					</button>
 					<div
 						ref={cv_ref}
 						class="max-w-[210mm] min-h-[297mm] h-[297mm]"
@@ -131,6 +180,10 @@ function ResumeAIPreview(props: ResumePreviewProps) {
 							}}
 						/>
 					</div>
+
+					<Show when={resume_data()?.resume_data.letter}>
+						<div>{resume_data()?.resume_data.letter}</div>
+					</Show>
 				</Show>
 			</section>
 

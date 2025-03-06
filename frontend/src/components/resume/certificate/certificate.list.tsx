@@ -15,10 +15,25 @@ export function CertificateList(props: CertificateListProps) {
 
 	const [certificates, { mutate, refetch }] = createResource(async () => {
 		try {
-			const response = await api.get("/resume/certificate/all");
-			const result: CertificatesResponse =
-				response.data as CertificatesResponse;
-			return result.certificates;
+			const response = await api.get(
+				"/resume/items/by-type?item_type=certificate"
+			);
+			const result = response.data.items as ResumeItem[];
+
+			const certificateItems = result.map((item) => ({
+				certificate_id: item.item_id,
+				certificate_name: item.title,
+				optional_issuer: item.subtitle,
+				optional_location: item.location,
+				optional_granted_date: item.start_date,
+				description: item.description,
+				priority: item.priority,
+				is_visible: item.is_visible,
+				tags: item.tags,
+				notes: item.notes,
+			}));
+
+			return certificateItems as Certificate[];
 		} catch (error) {
 			fault.minor({
 				message:
@@ -33,7 +48,6 @@ export function CertificateList(props: CertificateListProps) {
 		[] as number[]
 	);
 
-	const [creating_new, createNew] = createSignal(false);
 	const [dragged_id, set_dragged_id] = createSignal<number | null>(null);
 
 	return (
@@ -68,7 +82,7 @@ export function CertificateList(props: CertificateListProps) {
 									editing_certificates.includes(id)
 								}
 								id={certificate.certificate_id}
-								getId={(e: Certificate) => e.certificate_id}
+								getId={(e) => e.certificate_id}
 								list={certificates}
 								onSubmit={async (
 									new_list,
@@ -78,10 +92,11 @@ export function CertificateList(props: CertificateListProps) {
 									mutate(new_list);
 									try {
 										await api.post(
-											"/resume/certificate/reorder",
+											"/resume/items/reorder",
 											{
-												certificate_id: source_id,
+												item_id: source_id,
 												after_id: target_id,
+												item_type: "certificate", // Specify the item type
 											}
 										);
 									} catch (error) {
@@ -124,10 +139,12 @@ export function CertificateList(props: CertificateListProps) {
 										delete={async () => {
 											try {
 												await api.post(
-													"/resume/certificate/delete",
+													"/resume/items/delete",
 													{
-														certificate_id:
+														item_id:
 															certificate.certificate_id,
+														item_type:
+															"certificate", // Specify the item type
 													}
 												);
 												refetch();
@@ -164,6 +181,130 @@ export function CertificateList(props: CertificateListProps) {
 												)
 											);
 										}}
+									/>
+								</Show>
+							</Ordered>
+						);
+					}}
+				</For>
+			</Suspense>
+		</section>
+	);
+}
+
+interface OfflineCertificateListProps {
+	certificates: Certificate[];
+	add: (certificate: Certificate) => void;
+	update: (certificate: Certificate) => void;
+	delete: (id: number) => void;
+	reorder: (new_list: Certificate[]) => void;
+	toggle_visibility: (id: number) => void;
+}
+
+export function OfflineCertificateList(props: OfflineCertificateListProps) {
+	const fault = useFault();
+
+	const [editing_certificates, updateEditingCertificates] = createStore(
+		[] as number[]
+	);
+
+	const [dragged_id, set_dragged_id] = createSignal<number | null>(null);
+
+	return (
+		<section class="w-full flex flex-col gap-4 justify-items-center">
+			<SectionHeader
+				add={() => {}}
+				section_title="Certifications and Licenses"
+				section_name="certification"
+				form={(p) => (
+					<CertificateForm
+						delete={() => {}}
+						onCancel={() => {
+							p.cancel();
+						}}
+						onSubmit={(i, v) => {
+							p.submit();
+							props.add(v);
+						}}
+						is_new
+						offline
+					/>
+				)}
+			/>
+
+			<Suspense fallback={<LoadingSpinner />}>
+				<For each={props.certificates}>
+					{(certificate) => {
+						return (
+							<Ordered
+								set_dragged_id={set_dragged_id}
+								dragged_id={dragged_id}
+								draggable={(id) =>
+									editing_certificates.includes(id)
+								}
+								id={certificate.certificate_id}
+								getId={(e) => e.certificate_id}
+								list={() => props.certificates}
+								onSubmit={async (
+									new_list,
+									source_id,
+									target_id
+								) => {
+									props.reorder(new_list);
+								}}
+							>
+								<Show
+									when={editing_certificates.includes(
+										certificate.certificate_id
+									)}
+									fallback={
+										<CertificateView
+											refetch={() => {}}
+											set_dragged_id={set_dragged_id}
+											draggable={(id) =>
+												editing_certificates.includes(
+													id
+												)
+											}
+											certificate={certificate}
+											toggle_visibility={
+												props.toggle_visibility
+											}
+											edit={(certificate_id) => {
+												updateEditingCertificates([
+													...editing_certificates,
+													certificate_id,
+												]);
+											}}
+											offline
+										/>
+									}
+								>
+									<CertificateForm
+										certificate={certificate}
+										delete={(id) => {
+											props.delete(id);
+										}}
+										onCancel={() => {
+											updateEditingCertificates(
+												editing_certificates.filter(
+													(id) =>
+														id !==
+														certificate.certificate_id
+												)
+											);
+										}}
+										onSubmit={(id, v) => {
+											props.update(v);
+											updateEditingCertificates(
+												editing_certificates.filter(
+													(id) =>
+														id !==
+														certificate.certificate_id
+												)
+											);
+										}}
+										offline
 									/>
 								</Show>
 							</Ordered>
