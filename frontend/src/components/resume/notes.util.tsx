@@ -123,7 +123,7 @@ export function NoteView(props: NoteViewProps) {
 						}
 					}}
 				>
-					<CloseIcon class="w-6 h-6 [&_path]:stroke-night-900" />
+					<CloseIcon class="fill-night-900" />
 				</button>
 			</span>
 			<p class="text-gray-700">{props.content}</p>
@@ -153,7 +153,7 @@ export function NoteList(props: NoteListProps) {
 					class="flex flex-row items-center gap-2"
 				>
 					<p class="text-2xl text-night-900">+</p>
-					<NoteIcon class="w-8 h-8 [&_path]:stroke-night-900" />
+					<NoteIcon class="fill-night-900" />
 				</button>
 			</header>
 

@@ -13,7 +13,7 @@ function SectionTitle(props: SectionTitleProps) {
 				{props.children}
 			</h2>
 			<button onClick={() => props.add()} title="add a new experience">
-				<AddIcon class="w-8 h-8 [&_path]:stroke-night-900" />
+				<AddIcon class="fill-night-900" />
 			</button>
 		</span>
 	);

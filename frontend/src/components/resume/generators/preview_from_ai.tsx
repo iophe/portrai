@@ -142,7 +142,7 @@ function ResumeAIPreview(props: ResumePreviewProps) {
 							navigate(`/resume/${resume_title()}`);
 						}}
 					>
-						<EditIcon class="w-8 h-8 [&_path]:stroke-night-900" />
+						<EditIcon class="fill-night-900" />
 					</button>
 					<div
 						ref={cv_ref}

@@ -73,7 +73,7 @@ function ResumePreview(props: ResumePreviewProps) {
 									edit_title(true);
 								}}
 							>
-								<EditIcon class="w-8 h-8 [&_path]:stroke-night-900" />
+								<EditIcon class="fill-night-900" />
 							</button>
 							<button
 								title="delete"
@@ -90,7 +90,7 @@ function ResumePreview(props: ResumePreviewProps) {
 									}
 								}}
 							>
-								<DeleteIcon class="m-1 w-6 h-6 [&_path]:stroke-night-900" />
+								<DeleteIcon class="fill-night-900" />
 							</button>
 						</div>
 					</div>
@@ -119,7 +119,7 @@ function ResumePreview(props: ResumePreviewProps) {
 							edit_title(false);
 						}}
 					>
-						<CloseIcon class="w-8 h-8 [&_path]:stroke-night-900" />
+						<CloseIcon class="fill-night-900" />
 					</button>
 				</div>
 			</Show>
