@@ -746,11 +746,11 @@ WHERE
 `
 
 type UpdateNoteParams struct {
-	NoteType string    `json:"note_type"`
-	Content  string    `json:"content"`
-	NoteID   int64     `json:"note_id"`
-	ItemID   int64     `json:"item_id"`
-	UserID   uuid.UUID `json:"user_id"`
+	NoteType pgtype.Text `json:"note_type"`
+	Content  pgtype.Text `json:"content"`
+	NoteID   int64       `json:"note_id"`
+	ItemID   int64       `json:"item_id"`
+	UserID   uuid.UUID   `json:"user_id"`
 }
 
 func (q *Queries) UpdateNote(ctx context.Context, arg UpdateNoteParams) error {
@@ -786,14 +786,14 @@ WHERE
 `
 
 type UpdateResumeItemParams struct {
-	Title       string      `json:"title"`
-	Subtitle    string      `json:"subtitle"`
-	Location    string      `json:"location"`
+	Title       pgtype.Text `json:"title"`
+	Subtitle    pgtype.Text `json:"subtitle"`
+	Location    pgtype.Text `json:"location"`
 	StartDate   pgtype.Date `json:"start_date"`
 	EndDate     pgtype.Date `json:"end_date"`
-	IsCurrent   bool        `json:"is_current"`
-	Description string      `json:"description"`
-	Priority    int32       `json:"priority"`
+	IsCurrent   pgtype.Bool `json:"is_current"`
+	Description pgtype.Text `json:"description"`
+	Priority    pgtype.Int4 `json:"priority"`
 	Tags        []string    `json:"tags"`
 	Metadata    []byte      `json:"metadata"`
 	ItemID      int64       `json:"item_id"`

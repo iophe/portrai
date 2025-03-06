@@ -15,42 +15,37 @@ import (
 const createProfile = `-- name: CreateProfile :exec
 INSERT INTO public.profiles (
     user_id,
-    name,
-    email,
-    phone,
-    location,
     linkedin,
-    website
+    website,
+    version,
+    metadata,
+    description
 ) VALUES (
     $1::uuid,
     $2::text,
     $3::text,
-    $4::text,
-    $5::text,
-    $6::text,
-    $7::text
+    (SELECT current_resume_version FROM public.users WHERE id = $1::uuid),
+    COALESCE($4::jsonb, '{}'::jsonb),
+    $5::text
 )
+RETURNING profile_id
 `
 
 type CreateProfileParams struct {
-	UserID   uuid.UUID `json:"user_id"`
-	Name     string    `json:"name"`
-	Email    string    `json:"email"`
-	Phone    string    `json:"phone"`
-	Location string    `json:"location"`
-	Linkedin string    `json:"linkedin"`
-	Website  string    `json:"website"`
+	UserID      uuid.UUID `json:"user_id"`
+	Linkedin    string    `json:"linkedin"`
+	Website     string    `json:"website"`
+	Metadata    []byte    `json:"metadata"`
+	Description string    `json:"description"`
 }
 
 func (q *Queries) CreateProfile(ctx context.Context, arg CreateProfileParams) error {
 	_, err := q.db.Exec(ctx, createProfile,
 		arg.UserID,
-		arg.Name,
-		arg.Email,
-		arg.Phone,
-		arg.Location,
 		arg.Linkedin,
 		arg.Website,
+		arg.Metadata,
+		arg.Description,
 	)
 	return err
 }
@@ -58,29 +53,22 @@ func (q *Queries) CreateProfile(ctx context.Context, arg CreateProfileParams) er
 const getProfileByUserId = `-- name: GetProfileByUserId :one
 SELECT 
     profile_id,
-    name,
-    email,
-    phone,
-    location,
     linkedin,
     website,
-    cv_photo_path,
+    description,
     metadata,
     created_at,
     updated_at
 FROM public.profiles
 WHERE user_id = $1::uuid
+AND version = (SELECT current_resume_version FROM public.users WHERE id = $1::uuid)
 `
 
 type GetProfileByUserIdRow struct {
 	ProfileID   int64              `json:"profile_id"`
-	Name        string             `json:"name"`
-	Email       string             `json:"email"`
-	Phone       string             `json:"phone"`
-	Location    string             `json:"location"`
 	Linkedin    string             `json:"linkedin"`
 	Website     string             `json:"website"`
-	CvPhotoPath string             `json:"cv_photo_path"`
+	Description string             `json:"description"`
 	Metadata    []byte             `json:"metadata"`
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
@@ -91,14 +79,48 @@ func (q *Queries) GetProfileByUserId(ctx context.Context, userID uuid.UUID) (Get
 	var i GetProfileByUserIdRow
 	err := row.Scan(
 		&i.ProfileID,
-		&i.Name,
+		&i.Linkedin,
+		&i.Website,
+		&i.Description,
+		&i.Metadata,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getUserById = `-- name: GetUserById :one
+SELECT 
+    full_name,
+    email,
+    phone,
+    location,
+    current_resume_version,
+    created_at,
+    updated_at
+FROM public.users
+WHERE id = $1::uuid
+`
+
+type GetUserByIdRow struct {
+	FullName             string             `json:"full_name"`
+	Email                string             `json:"email"`
+	Phone                string             `json:"phone"`
+	Location             string             `json:"location"`
+	CurrentResumeVersion string             `json:"current_resume_version"`
+	CreatedAt            pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt            pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) GetUserById(ctx context.Context, userID uuid.UUID) (GetUserByIdRow, error) {
+	row := q.db.QueryRow(ctx, getUserById, userID)
+	var i GetUserByIdRow
+	err := row.Scan(
+		&i.FullName,
 		&i.Email,
 		&i.Phone,
 		&i.Location,
-		&i.Linkedin,
-		&i.Website,
-		&i.CvPhotoPath,
-		&i.Metadata,
+		&i.CurrentResumeVersion,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -108,53 +130,59 @@ func (q *Queries) GetProfileByUserId(ctx context.Context, userID uuid.UUID) (Get
 const updateProfile = `-- name: UpdateProfile :exec
 UPDATE public.profiles
 SET
-    name = $1::text,
-    email = $2::text,
-    phone = $3::text,
-    location = $4::text,
-    linkedin = $5::text,
-    website = $6::text,
-    cv_photo_path = $7::text
-WHERE user_id = $8::uuid
+    linkedin = COALESCE($1::text, linkedin),
+    description = COALESCE($2::text, description),
+    metadata = COALESCE($3::jsonb, metadata),
+    website = COALESCE($4::text, website)
+WHERE user_id = $5::uuid AND profile_id = $6::bigint
 `
 
 type UpdateProfileParams struct {
-	Name        string    `json:"name"`
-	Email       string    `json:"email"`
-	Phone       string    `json:"phone"`
-	Location    string    `json:"location"`
-	Linkedin    string    `json:"linkedin"`
-	Website     string    `json:"website"`
-	CvPhotoPath string    `json:"cv_photo_path"`
-	UserID      uuid.UUID `json:"user_id"`
+	Linkedin    pgtype.Text `json:"linkedin"`
+	Description pgtype.Text `json:"description"`
+	Metadata    []byte      `json:"metadata"`
+	Website     pgtype.Text `json:"website"`
+	UserID      uuid.UUID   `json:"user_id"`
+	ProfileID   int64       `json:"profile_id"`
 }
 
 func (q *Queries) UpdateProfile(ctx context.Context, arg UpdateProfileParams) error {
 	_, err := q.db.Exec(ctx, updateProfile,
-		arg.Name,
-		arg.Email,
-		arg.Phone,
-		arg.Location,
 		arg.Linkedin,
+		arg.Description,
+		arg.Metadata,
 		arg.Website,
-		arg.CvPhotoPath,
 		arg.UserID,
+		arg.ProfileID,
 	)
 	return err
 }
 
-const updateProfileAvatar = `-- name: UpdateProfileAvatar :exec
-UPDATE public.profiles
-SET cv_photo_path = $1
-WHERE user_id = $2
+const updateUser = `-- name: UpdateUser :exec
+UPDATE public.users
+SET
+    full_name = COALESCE($1::text, full_name),
+    email = COALESCE($2::text, email),
+    phone = COALESCE($3::text, phone),
+    location = COALESCE($4::text, location)
+WHERE id = $5::uuid
 `
 
-type UpdateProfileAvatarParams struct {
-	CvPhotoPath string    `json:"cv_photo_path"`
-	UserID      uuid.UUID `json:"user_id"`
+type UpdateUserParams struct {
+	FullName pgtype.Text `json:"full_name"`
+	Email    pgtype.Text `json:"email"`
+	Phone    pgtype.Text `json:"phone"`
+	Location pgtype.Text `json:"location"`
+	UserID   uuid.UUID   `json:"user_id"`
 }
 
-func (q *Queries) UpdateProfileAvatar(ctx context.Context, arg UpdateProfileAvatarParams) error {
-	_, err := q.db.Exec(ctx, updateProfileAvatar, arg.CvPhotoPath, arg.UserID)
+func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) error {
+	_, err := q.db.Exec(ctx, updateUser,
+		arg.FullName,
+		arg.Email,
+		arg.Phone,
+		arg.Location,
+		arg.UserID,
+	)
 	return err
 }

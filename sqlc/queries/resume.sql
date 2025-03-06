@@ -24,7 +24,7 @@ INSERT INTO public.resume_items (
     @is_current::boolean,
     @description::text,
     @priority::integer,
-    COALESCE(@tags::text[], ARRAY[]::text[]),
+    COALESCE(sqlc.narg(tags)::text[], ARRAY[]::text[]),
     (SELECT current_resume_version FROM public.users WHERE id = @user_id::uuid),
     COALESCE(@metadata::jsonb, '{}'::jsonb) -- Store type-specific fields in metadata
 )
@@ -33,19 +33,19 @@ RETURNING item_id;
 -- name: UpdateResumeItem :exec
 UPDATE public.resume_items
 SET
-    title = COALESCE(@title::text, title),
-    subtitle = COALESCE(@subtitle::text, subtitle),
-    location = COALESCE(@location::text, location),
-    start_date = COALESCE(@start_date::date, start_date),
-    end_date = COALESCE(@end_date::date, end_date),
+    title = COALESCE(sqlc.narg(title)::text, title),
+    subtitle = COALESCE(sqlc.narg(subtitle)::text, subtitle),
+    location = COALESCE(sqlc.narg(location)::text, location),
+    start_date = COALESCE(sqlc.narg(start_date)::date, start_date),
+    end_date = COALESCE(sqlc.narg(end_date)::date, end_date),
     is_current = CASE 
         WHEN @end_date::date IS NOT NULL THEN false 
-        ELSE COALESCE(@is_current::boolean, is_current)
+        ELSE COALESCE(sqlc.narg(is_current)::boolean, is_current)
     END,
-    description = COALESCE(@description::text, description),
-    priority = COALESCE(@priority::integer, priority),
-    tags = COALESCE(@tags::text[], tags),
-    metadata = COALESCE(@metadata::jsonb, metadata)
+    description = COALESCE(sqlc.narg(description)::text, description),
+    priority = COALESCE(sqlc.narg(priority)::integer, priority),
+    tags = COALESCE(sqlc.narg(tags)::text[], tags),
+    metadata = COALESCE(sqlc.narg(metadata)::jsonb, metadata)
 WHERE 
     item_id = @item_id::bigint 
     AND user_id = @user_id::uuid;
@@ -199,8 +199,8 @@ INSERT INTO public.resume_item_notes (
 -- name: UpdateNote :exec
 UPDATE public.resume_item_notes 
 SET
-    note_type = COALESCE(@note_type::text, note_type),
-    content = COALESCE(@content::text, content)
+    note_type = COALESCE(sqlc.narg(note_type)::text, note_type),
+    content = COALESCE(sqlc.narg(content)::text, content)
 WHERE
     note_id = @note_id::bigint
     AND item_id = @item_id::bigint 

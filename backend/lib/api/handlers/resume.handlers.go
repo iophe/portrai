@@ -208,14 +208,14 @@ func HandleResumeItemCreation(data ResumeItemCreationData, c *fiber.Ctx, db *dat
 type ResumeItemUpdateData struct {
 	ItemID      int64                  `json:"item_id"`
 	ItemType    string                 `json:"item_type"`  // experience, education, skill, certificate, project
-	Title       string                 `json:"title"`      // job_title, degree, skill_name, certificate_name, project_title
-	Subtitle    string                 `json:"subtitle"`   // company_name, school, skill_type, issuer, project_subtitle
-	Location    string                 `json:"location"`   // not used for all types
-	StartDate   string                 `json:"start_date"` // not used for all types
-	EndDate     string                 `json:"end_date"`   // not used for all types
-	IsCurrent   bool                   `json:"is_current"` // not used for all types
-	Description string                 `json:"description"`
-	Priority    int32                  `json:"priority"`
+	Title       pgtype.Text            `json:"title"`      // job_title, degree, skill_name, certificate_name, project_title
+	Subtitle    pgtype.Text            `json:"subtitle"`   // company_name, school, skill_type, issuer, project_subtitle
+	Location    pgtype.Text            `json:"location"`   // not used for all types
+	StartDate   pgtype.Text            `json:"start_date"` // not used for all types
+	EndDate     pgtype.Text            `json:"end_date"`   // not used for all types
+	IsCurrent   pgtype.Bool            `json:"is_current"` // not used for all types
+	Description pgtype.Text            `json:"description"`
+	Priority    pgtype.Int4            `json:"priority"`
 	Tags        []string               `json:"tags"`
 	Metadata    map[string]interface{} `json:"metadata"` // Type-specific fields
 }
@@ -234,8 +234,8 @@ func HandleResumeItemUpdate(data ResumeItemUpdateData, c *fiber.Ctx, db *db.Data
 
 	// Process dates
 	var start_date pgtype.Date
-	if len(data.StartDate) > 0 {
-		start_date, err = database.StringToDate(data.StartDate)
+	if data.StartDate.Valid {
+		start_date, err = database.StringToDate(data.StartDate.String)
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 				"error": fmt.Sprintf("invalid start date %s", err),
@@ -244,8 +244,8 @@ func HandleResumeItemUpdate(data ResumeItemUpdateData, c *fiber.Ctx, db *db.Data
 	}
 
 	var end_date pgtype.Date
-	if len(data.EndDate) > 0 {
-		end_date, err = database.StringToDate(data.EndDate)
+	if data.EndDate.Valid {
+		end_date, err = database.StringToDate(data.EndDate.String)
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 				"error": fmt.Sprintf("invalid end date %s", err),

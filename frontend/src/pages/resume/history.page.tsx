@@ -47,12 +47,12 @@ function HistoryPage(props: HistoryPageProps) {
 			<Header />
 			<section
 				class="grid grid-cols-2 gap-4 justify-start h-full overflow-hidden
-         items-start text-night-900"
+         items-start text-forest-900"
 			>
 				<section class="overflow-y-hidden pr-4 h-full">
 					<div class="overflow-y-hidden h-full flex flex-col gap-4">
 						<Suspense fallback={<LoadingSpinner />}>
-							<h2 class="w-full border-b-2 border-night-900 pb-2">
+							<h2 class="w-full border-b-2 border-forest-900 pb-2">
 								Recently created resumes :
 							</h2>
 							<ol class="overflow-y-auto flex flex-col gap-4">
@@ -67,7 +67,7 @@ function HistoryPage(props: HistoryPageProps) {
 											<li
 												class="flex flex-row gap-2 items-center group"
 												classList={{
-													"p-2 bg-night-50 rounded":
+													"p-2 bg-forest-50 rounded":
 														selected_resume_id() ===
 														resume.id,
 												}}
@@ -83,7 +83,7 @@ function HistoryPage(props: HistoryPageProps) {
 														class=" overflow-clip w-full text-start flex flex-row gap-1"
 													>
 														<span class="overflow-hidden text-ellipsis whitespace-nowrap">
-                                                        - {resume.title}
+															- {resume.title}
 														</span>
 														<span class="whitespace-nowrap">
 															|{" "}
@@ -95,7 +95,7 @@ function HistoryPage(props: HistoryPageProps) {
 													href={`/resume/${resume.id}`}
 													class="flex-shrink-0 hidden group-hover:block"
 												>
-													<EditIcon class="fill-night-900" />
+													<EditIcon class="fill-forest-900" />
 												</A>
 											</li>
 										);

@@ -51,7 +51,7 @@ function ResumeAIPreview(props: ResumePreviewProps) {
 					value={with_cover_letter()}
 				/>
 				<button
-					class="bg-night-200 px-4 py-2 rounded text-snow-100 font-bold"
+					class="bg-forest-200 px-4 py-2 rounded text-snow-100 font-bold"
 					onClick={async () => {
 						if (!job_description()) return;
 						try {
@@ -111,8 +111,8 @@ function ResumeAIPreview(props: ResumePreviewProps) {
 					onClick={async () => {
 						try {
 							toGenerating(true);
-							            // Récupérer les données de profil
-										const profile = await getProfile();
+							// Récupérer les données de profil
+							const profile = await getProfile();
 							const res = await api.get("/resume/data");
 
 							set_resume_data({
@@ -149,7 +149,7 @@ function ResumeAIPreview(props: ResumePreviewProps) {
 							navigate(`/resume/${resume_title()}`);
 						}}
 					>
-						<EditIcon class="fill-night-900" />
+						<EditIcon class="fill-forest-900" />
 					</button>
 					<div
 						ref={cv_ref}

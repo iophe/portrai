@@ -111,7 +111,7 @@ func HandleWebhook(c *fiber.Ctx, DB *db.Database) error {
 
 	event, err := webhook.ConstructEvent(webhook_payload, signature, webhook_secret)
 	if err != nil {
-		slog.Error("Error verifying webhook signature", "err", err)
+		slog.Error("verifying webhook signature", "err", err)
 		return c.Status(fiber.StatusBadRequest).Send([]byte("Webhook signature verification failed"))
 	}
 
@@ -131,31 +131,15 @@ func HandleWebhook(c *fiber.Ctx, DB *db.Database) error {
 
 		customer, err := queries.GetCustomerByStripeID(query_ctx, session_obj.Customer.ID)
 		if err != nil {
-			slog.Error("Error getting customer", "err", err)
+			slog.Error("getting customer", "err", err)
 			return c.Status(fiber.StatusBadRequest).Send([]byte("Error parsing webhook payload"))
 		}
 		metadata, err := json.Marshal(session_obj)
 		if err != nil {
-			slog.Error("error marshaling metadata", "err", err)
+			slog.Error("marshaling metadata", "err", err)
 			return c.Status(fiber.StatusBadRequest).Send([]byte("Error parsing webhook payload"))
 		}
 
-		err2 := queries.CreateProfile(query_ctx, sqlc_gen.CreateProfileParams{
-			UserID:   customer.ID,
-			Name:     "",
-			Email:    "",
-			Phone:    "",
-			Location: "",
-			Linkedin: "",
-			Website:  "",
-		})
-		if err2 != nil {
-			slog.Error("error CreateProfile", "err", err)
-
-			return c.Status(fiber.StatusInternalServerError).Send([]byte("Error create profile "))
-
-		}
-		slog.Info("Profile successsfully created: ", "good", "ok")
 		err = queries.InsertPayment(query_ctx, sqlc_gen.InsertPaymentParams{
 			PaymentID: session_obj.PaymentIntent.ID,
 			UserID:    customer.ID,
@@ -166,17 +150,15 @@ func HandleWebhook(c *fiber.Ctx, DB *db.Database) error {
 			CreatedAt: db.Int64ToTimestamptz(session_obj.Created),
 		})
 		if err != nil {
-			slog.Error("error InsertPayment", "err", err)
+			slog.Error("InsertPayment", "err", err)
 			return c.Status(fiber.StatusInternalServerError).Send([]byte("Error processing webhook"))
 		}
-		/* 		period, err := queries.GetValidityPeroidByProductID(query_ctx, session_obj.Metadata["product_id"])
-		   		if err != nil {
-		   			slog.Error("error GetValidityPeroidByProductID", "err", err)
-		   			return c.Status(fiber.StatusInternalServerError).Send([]byte("Error processing webhook"))
-		   		} */
-		/* 		period_duration := db.IntervalToDuration(period) */
-
-		var period_duration time.Duration = 90 * 24 * time.Hour
+		period, err := queries.GetValidityPeroidByProductID(query_ctx, session_obj.Metadata["product_id"])
+		if err != nil {
+			slog.Error("GetValidityPeroidByProductID", "err", err)
+			return c.Status(fiber.StatusInternalServerError).Send([]byte("Error processing webhook"))
+		}
+		period_duration := db.IntervalToDuration(period)
 
 		err = queries.UpsertPaymentValidity(query_ctx, sqlc_gen.UpsertPaymentValidityParams{
 			PaymentID: session_obj.PaymentIntent.ID,
@@ -186,7 +168,7 @@ func HandleWebhook(c *fiber.Ctx, DB *db.Database) error {
 			Metadata:  metadata,
 		})
 		if err != nil {
-			slog.Error("error UpsertPaymentValidity", "err", err)
+			slog.Error("UpsertPaymentValidity", "err", err)
 			return c.Status(fiber.StatusInternalServerError).Send([]byte("Error processing webhook"))
 		}
 

@@ -57,7 +57,7 @@ function ResumeSettings(props: ResumeSettingsProps) {
 									<div class="flex flex-row items-center justify-between">
 										<span>
 											Current version:{" "}
-											<span class="text-night-800">
+											<span class="text-forest-800">
 												{
 													versions()
 														?.current_resume_version
@@ -71,7 +71,7 @@ function ResumeSettings(props: ResumeSettingsProps) {
 													edit_version(true);
 												}}
 											>
-												<EditIcon class="fill-night-900" />
+												<EditIcon class="fill-forest-900" />
 											</button>
 											<button
 												title="delete"
@@ -120,7 +120,7 @@ function ResumeSettings(props: ResumeSettingsProps) {
 													}
 												}}
 											>
-												<DeleteIcon class="fill-night-900" />
+												<DeleteIcon class="fill-forest-900" />
 											</button>
 										</div>
 									</div>
@@ -182,7 +182,7 @@ function ResumeSettings(props: ResumeSettingsProps) {
 											edit_version(false);
 										}}
 									>
-										<CloseIcon class="fill-night-900" />
+										<CloseIcon class="fill-forest-900" />
 									</button>
 								</div>
 							</Show>
@@ -229,7 +229,7 @@ function ResumeSettings(props: ResumeSettingsProps) {
 									}}
 									title="add a new version"
 								>
-									<AddIcon class="fill-night-900" />
+									<AddIcon class="fill-forest-900" />
 								</button>
 							</div>
 						</FormLabeledInput>
@@ -281,7 +281,7 @@ function ResumeSettings(props: ResumeSettingsProps) {
 											}}
 											title="add a new version"
 										>
-											<AddIcon class="fill-night-900" />
+											<AddIcon class="fill-forest-900" />
 										</button>
 									</Show>
 									<button
@@ -290,7 +290,7 @@ function ResumeSettings(props: ResumeSettingsProps) {
 											add_version(false);
 										}}
 									>
-										<CloseIcon class="fill-night-900" />
+										<CloseIcon class="fill-forest-900" />
 									</button>
 								</div>
 							</div>

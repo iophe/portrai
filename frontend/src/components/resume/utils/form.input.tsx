@@ -13,7 +13,7 @@ interface FormLabeledInputProps {
 export function FormLabeledInput(props: FormLabeledInputProps) {
 	return (
 		<div class="space-y-2">
-			<label class="block text-lg font-medium text-night-900">
+			<label class="block text-lg font-medium text-forest-900">
 				<span class="flex flex-row gap-2">
 					{props.label}
 					<Show when={props.optional}>
@@ -47,6 +47,26 @@ export function FormInputText(props: FormInputTextProps) {
 	);
 }
 
+interface FormInputTelephoneProps {
+	value: string;
+	placeholder: string;
+	on_input: (value: string) => void;
+	required?: boolean;
+	disabled?: boolean;
+}
+
+export function FormInputTelephone(props: FormInputTelephoneProps) {
+	return (
+		<input
+			type="tel"
+			value={props.value}
+			placeholder={props.placeholder}
+			onInput={(e) => props.on_input(e.currentTarget.value)}
+			class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-gray-500"
+			required={props.required}
+		/>
+	);
+}
 interface FormTextAreaProps {
 	value: string;
 	placeholder: string;
@@ -151,7 +171,7 @@ export function FormSubmitButton(props: FormSubmitProps) {
 	return (
 		<button
 			type="submit"
-			class="px-4 py-2 bg-night-900 text-white rounded hover:bg-gray-800"
+			class="px-4 py-2 w-fit bg-forest-900 text-white rounded hover:bg-forest-500"
 		>
 			Save
 		</button>
@@ -176,7 +196,7 @@ export function FormDeleteButton(props: FormDeleteButtonProps) {
 					}
 				}}
 			>
-				<DeleteIcon class="fill-night-900" />
+				<DeleteIcon class="fill-forest-900" />
 			</button>
 		</div>
 	);

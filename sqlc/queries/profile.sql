@@ -1,51 +1,60 @@
--- name: GetProfileByUserId :one
+-- name: GetUserById :one
 SELECT 
-    profile_id,
-    name,
+    full_name,
     email,
     phone,
     location,
+    current_resume_version,
+    created_at,
+    updated_at
+FROM public.users
+WHERE id = @user_id::uuid;
+
+-- name: UpdateUser :exec
+UPDATE public.users
+SET
+    full_name = COALESCE(sqlc.narg(full_name)::text, full_name),
+    email = COALESCE(sqlc.narg(email)::text, email),
+    phone = COALESCE(sqlc.narg(phone)::text, phone),
+    location = COALESCE(sqlc.narg(location)::text, location)
+WHERE id = @user_id::uuid;
+
+-- name: GetProfileByUserId :one
+SELECT 
+    profile_id,
     linkedin,
     website,
-    cv_photo_path,
+    description,
     metadata,
     created_at,
     updated_at
 FROM public.profiles
-WHERE user_id = @user_id::uuid;
+WHERE user_id = @user_id::uuid
+AND version = (SELECT current_resume_version FROM public.users WHERE id = @user_id::uuid);
 
 -- name: UpdateProfile :exec
 UPDATE public.profiles
 SET
-    name = @name::text,
-    email = @email::text,
-    phone = @phone::text,
-    location = @location::text,
-    linkedin = @linkedin::text,
-    website = @website::text,
-    cv_photo_path = @cv_photo_path::text
-WHERE user_id = @user_id::uuid;
+    linkedin = COALESCE(sqlc.narg(linkedin)::text, linkedin),
+    description = COALESCE(sqlc.narg(description)::text, description),
+    metadata = COALESCE(sqlc.narg(metadata)::jsonb, metadata),
+    website = COALESCE(sqlc.narg(website)::text, website)
+WHERE user_id = @user_id::uuid AND profile_id = @profile_id::bigint;
 
 -- name: CreateProfile :exec
 INSERT INTO public.profiles (
     user_id,
-    name,
-    email,
-    phone,
-    location,
     linkedin,
-    website
+    website,
+    version,
+    metadata,
+    description
 ) VALUES (
     @user_id::uuid,
-    @name::text,
-    @email::text,
-    @phone::text,
-    @location::text,
     @linkedin::text,
-    @website::text
-);
-
--- name: UpdateProfileAvatar :exec
-UPDATE public.profiles
-SET cv_photo_path = $1
-WHERE user_id = $2;
+    @website::text,
+    (SELECT current_resume_version FROM public.users WHERE id = @user_id::uuid),
+    COALESCE(sqlc.narg(metadata)::jsonb, '{}'::jsonb),
+    @description::text
+)
+RETURNING profile_id;

@@ -150,13 +150,10 @@ type PaymentValidity struct {
 type Profile struct {
 	ProfileID   int64              `json:"profile_id"`
 	UserID      uuid.UUID          `json:"user_id"`
-	Name        string             `json:"name"`
-	Email       string             `json:"email"`
-	Phone       string             `json:"phone"`
-	Location    string             `json:"location"`
 	Linkedin    string             `json:"linkedin"`
 	Website     string             `json:"website"`
-	CvPhotoPath string             `json:"cv_photo_path"`
+	Version     string             `json:"version"`
+	Description string             `json:"description"`
 	Metadata    []byte             `json:"metadata"`
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
@@ -199,7 +196,10 @@ type ResumeVersion struct {
 
 type User struct {
 	ID                   uuid.UUID          `json:"id"`
-	FullName             pgtype.Text        `json:"full_name"`
+	FullName             string             `json:"full_name"`
+	Email                string             `json:"email"`
+	Phone                string             `json:"phone"`
+	Location             string             `json:"location"`
 	CurrentResumeVersion string             `json:"current_resume_version"`
 	BillingAddress       []byte             `json:"billing_address"`
 	PaymentMethod        []byte             `json:"payment_method"`

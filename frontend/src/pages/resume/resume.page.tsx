@@ -69,27 +69,25 @@ function Resume(props: ResumeProps) {
 			<Header />
 			<section
 				class="grid grid-cols-2 gap-4 justify-start h-full overflow-hidden
-			 items-start text-night-900"
+			 items-start text-forest-900"
 			>
 				<section class="overflow-y-auto pr-4 h-full">
-					<aside class="flex gap-4 justify-between text-sm pb-2 border-b-2 border-night-900">
+					<aside class="flex gap-4 justify-between text-sm pb-2 border-b-2 border-forest-900">
 						<button
 							onclick={() => {
 								set_section("settings");
 							}}
 							class="flex flex-wrap gap-2 items-center rounded opacity-70 hover:opacity-100 transition duration-200 ease-in-out"
 							classList={{
-								"bg-night-50 px-4 py-2 opacity-100":
+								"bg-forest-50 px-4 py-2 opacity-100":
 									section() === "settings",
 							}}
 						>
 							<SettingsIcon
 								class=""
 								classList={{
-									"fill-night-900":
-										section() === "settings",
-									"fill-night-700":
-										section() !== "settings",
+									"fill-forest-900": section() === "settings",
+									"fill-forest-700": section() !== "settings",
 								}}
 							/>
 						</button>
@@ -99,15 +97,15 @@ function Resume(props: ResumeProps) {
 							}}
 							class="flex flex-wrap gap-2 items-center rounded opacity-70 hover:opacity-100 transition-opacity duration-200 ease-in-out"
 							classList={{
-								"bg-night-50 px-4 py-2 opacity-100":
+								"bg-forest-50 px-4 py-2 opacity-100":
 									section() === "experience",
 							}}
 						>
 							<label
 								classList={{
-									"text-night-900":
+									"text-forest-900":
 										section() === "experience",
-									"text-night-700":
+									"text-forest-700":
 										section() !== "experience",
 								}}
 							>
@@ -116,9 +114,9 @@ function Resume(props: ResumeProps) {
 							<ExperienceIcon
 								class=""
 								classList={{
-									"fill-night-900":
+									"fill-forest-900":
 										section() === "experience",
-									"fill-night-700":
+									"fill-forest-700":
 										section() !== "experience",
 								}}
 							/>
@@ -129,14 +127,16 @@ function Resume(props: ResumeProps) {
 							}}
 							class="flex flex-wrap gap-2 items-center rounded opacity-70 hover:opacity-100 transition-opacity duration-200 ease-in-out"
 							classList={{
-								"bg-night-50 px-4 py-2 opacity-100":
+								"bg-forest-50 px-4 py-2 opacity-100":
 									section() === "education",
 							}}
 						>
 							<label
 								classList={{
-									"text-night-900": section() === "education",
-									"text-night-700": section() !== "education",
+									"text-forest-900":
+										section() === "education",
+									"text-forest-700":
+										section() !== "education",
 								}}
 							>
 								Educations
@@ -144,9 +144,9 @@ function Resume(props: ResumeProps) {
 							<EducationIcon
 								class=""
 								classList={{
-									"fill-night-900":
+									"fill-forest-900":
 										section() === "education",
-									"fill-night-700":
+									"fill-forest-700":
 										section() !== "education",
 								}}
 							/>
@@ -157,15 +157,15 @@ function Resume(props: ResumeProps) {
 							}}
 							class="flex flex-wrap gap-2 items-center rounded opacity-70 hover:opacity-100 transition-opacity duration-200 ease-in-out"
 							classList={{
-								"bg-night-50 px-4 py-2 opacity-100":
+								"bg-forest-50 px-4 py-2 opacity-100":
 									section() === "certificate",
 							}}
 						>
 							<label
 								classList={{
-									"text-night-900":
+									"text-forest-900":
 										section() === "certificate",
-									"text-night-700":
+									"text-forest-700":
 										section() !== "certificate",
 								}}
 							>
@@ -174,9 +174,9 @@ function Resume(props: ResumeProps) {
 							<CertificateIcon
 								class=""
 								classList={{
-									"fill-night-900":
+									"fill-forest-900":
 										section() === "certificate",
-									"fill-night-700":
+									"fill-forest-700":
 										section() !== "certificate",
 								}}
 							/>
@@ -187,14 +187,14 @@ function Resume(props: ResumeProps) {
 							}}
 							class="flex flex-wrap gap-2 items-center rounded opacity-70 hover:opacity-100 transition-opacity duration-200 ease-in-out"
 							classList={{
-								"bg-night-50 px-4 py-2 opacity-100":
+								"bg-forest-50 px-4 py-2 opacity-100":
 									section() === "project",
 							}}
 						>
 							<label
 								classList={{
-									"text-night-900": section() === "project",
-									"text-night-700": section() !== "project",
+									"text-forest-900": section() === "project",
+									"text-forest-700": section() !== "project",
 								}}
 							>
 								Projects
@@ -202,10 +202,8 @@ function Resume(props: ResumeProps) {
 							<ProjectIcon
 								class=""
 								classList={{
-									"fill-night-900":
-										section() === "project",
-									"fill-night-700":
-										section() !== "project",
+									"fill-forest-900": section() === "project",
+									"fill-forest-700": section() !== "project",
 								}}
 							/>
 						</button>
@@ -215,14 +213,14 @@ function Resume(props: ResumeProps) {
 							}}
 							class="flex flex-wrap gap-2 items-center rounded opacity-70 hover:opacity-100 transition-opacity duration-200 ease-in-out"
 							classList={{
-								"bg-night-50 px-4 py-2 opacity-100":
+								"bg-forest-50 px-4 py-2 opacity-100":
 									section() === "skill",
 							}}
 						>
 							<label
 								classList={{
-									"text-night-900": section() === "skill",
-									"text-night-700": section() !== "skill",
+									"text-forest-900": section() === "skill",
+									"text-forest-700": section() !== "skill",
 								}}
 							>
 								Skills
@@ -230,10 +228,8 @@ function Resume(props: ResumeProps) {
 							<SkillIcon
 								class=""
 								classList={{
-									"fill-night-900":
-										section() === "skill",
-									"fill-night-700":
-										section() !== "skill",
+									"fill-forest-900": section() === "skill",
+									"fill-forest-700": section() !== "skill",
 								}}
 							/>
 						</button>

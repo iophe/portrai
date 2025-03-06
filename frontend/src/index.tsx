@@ -16,7 +16,6 @@ const Signin = lazy(() => import("./pages/auth/signin.page"));
 const Signup = lazy(() => import("./pages/auth/signup.page"));
 const Pricing = lazy(() => import("./pages/pricing/pricing.page"));
 
-
 // Protected Pages
 const Home = Protected({ fallback: Landing })(
 	lazy(() => import("./pages/home/home.page"))

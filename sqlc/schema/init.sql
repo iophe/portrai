@@ -20,9 +20,10 @@ $$ language 'plpgsql';
 create table public.users (
   -- UUID from auth.users
   id uuid references auth.users not null primary key,
-
-  full_name text,
-
+  full_name text NOT NULL DEFAULT '',
+  email text NOT NULL DEFAULT '',
+  phone text NOT NULL DEFAULT '',
+  location text NOT NULL DEFAULT '',
   current_resume_version text not null default 'main',
 
   -- The customer's billing address, stored in JSON format.
@@ -40,6 +41,47 @@ CREATE TRIGGER update_users_updated_at
     EXECUTE FUNCTION update_updated_at_column();
 
 CREATE SCHEMA IF NOT EXISTS payment;
+
+-- Function to handle new user creation
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.users (id, email)
+  VALUES (NEW.id, COALESCE(NEW.email,''));
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Trigger to fire when a user is created in auth.users
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW
+  EXECUTE FUNCTION public.handle_new_user();
+
+/**
+* Profile
+* 
+*/
+CREATE TABLE public.profiles (
+    profile_id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    user_id uuid not null references auth.users on delete cascade,
+    linkedin text NOT NULL DEFAULT '',
+    website text NOT NULL DEFAULT '',
+    version text NOT NULL DEFAULT 'main',
+    description text NOT NULL DEFAULT '',
+    metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
+    created_at timestamp with time zone DEFAULT current_timestamp,
+    updated_at timestamp with time zone DEFAULT current_timestamp,
+    CONSTRAINT unique_profile_version UNIQUE (user_id, version)
+);
+
+CREATE TRIGGER update_profiles_updated_at
+    BEFORE UPDATE ON public.profiles
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE INDEX profiles_user_idx ON public.profiles(user_id);
+
 /**
 * CUSTOMERS
 * Note: this is a private table that contains a mapping of user IDs to Stripe customer IDs.
@@ -193,6 +235,22 @@ CREATE TABLE public.resume_versions (
   CONSTRAINT unique_user_version UNIQUE (user_id, version)
 );
 
+-- Function to handle new user creation
+CREATE OR REPLACE FUNCTION public.handle_new_user_version()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.resume_versions (user_id)
+  VALUES (NEW.id);
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Trigger to fire when a user is created in auth.users
+CREATE TRIGGER on_user_created
+  AFTER INSERT ON public.users
+  FOR EACH ROW
+  EXECUTE FUNCTION public.handle_new_user_version();
+
 -- Set priority based on item type and user
 CREATE OR REPLACE FUNCTION set_resume_item_priority()
 RETURNS TRIGGER AS $$
@@ -228,31 +286,3 @@ EXECUTE FUNCTION update_updated_at_column();
 CREATE INDEX resume_items_user_idx ON public.resume_items(user_id);
 CREATE INDEX resume_items_type_idx ON public.resume_items(item_type);
 CREATE INDEX resume_items_user_type_idx ON public.resume_items(user_id, item_type);
-
-
-/**
-* Profile
-* 
-*/
-CREATE TABLE public.profiles (
-    profile_id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    user_id uuid not null references auth.users on delete cascade,
-    name text NOT NULL DEFAULT '',
-    email text NOT NULL DEFAULT '',
-    phone text NOT NULL DEFAULT '',
-    location text NOT NULL DEFAULT '',
-    linkedin text NOT NULL DEFAULT '',
-    website text NOT NULL DEFAULT '',
-    cv_photo_path text NOT NULL DEFAULT '',
-    metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
-    created_at timestamp with time zone DEFAULT current_timestamp,
-    updated_at timestamp with time zone DEFAULT current_timestamp,
-    UNIQUE(user_id)
-);
-
-CREATE TRIGGER update_profiles_updated_at
-    BEFORE UPDATE ON public.profiles
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
-
-CREATE INDEX profiles_user_idx ON public.profiles(user_id);

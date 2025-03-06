@@ -34,6 +34,7 @@ type Querier interface {
 	GetResumeData(ctx context.Context, userID uuid.UUID) ([]byte, error)
 	GetResumeItemById(ctx context.Context, arg GetResumeItemByIdParams) (GetResumeItemByIdRow, error)
 	GetResumeItemsByType(ctx context.Context, arg GetResumeItemsByTypeParams) ([]GetResumeItemsByTypeRow, error)
+	GetUserById(ctx context.Context, userID uuid.UUID) (GetUserByIdRow, error)
 	GetUserResumeVersions(ctx context.Context, userID uuid.UUID) (GetUserResumeVersionsRow, error)
 	GetValidityPeroidByProductID(ctx context.Context, productID string) (pgtype.Interval, error)
 	InsertPayment(ctx context.Context, arg InsertPaymentParams) error
@@ -44,8 +45,8 @@ type Querier interface {
 	ToggleResumeItemVisibility(ctx context.Context, arg ToggleResumeItemVisibilityParams) (pgtype.Bool, error)
 	UpdateNote(ctx context.Context, arg UpdateNoteParams) error
 	UpdateProfile(ctx context.Context, arg UpdateProfileParams) error
-	UpdateProfileAvatar(ctx context.Context, arg UpdateProfileAvatarParams) error
 	UpdateResumeItem(ctx context.Context, arg UpdateResumeItemParams) error
+	UpdateUser(ctx context.Context, arg UpdateUserParams) error
 	UpsertPaymentValidity(ctx context.Context, arg UpsertPaymentValidityParams) error
 }
 

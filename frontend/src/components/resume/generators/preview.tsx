@@ -73,7 +73,7 @@ function ResumePreview(props: ResumePreviewProps) {
 									edit_title(true);
 								}}
 							>
-								<EditIcon class="fill-night-900" />
+								<EditIcon class="fill-forest-900" />
 							</button>
 							<button
 								title="delete"
@@ -90,7 +90,7 @@ function ResumePreview(props: ResumePreviewProps) {
 									}
 								}}
 							>
-								<DeleteIcon class="fill-night-900" />
+								<DeleteIcon class="fill-forest-900" />
 							</button>
 						</div>
 					</div>
@@ -119,7 +119,7 @@ function ResumePreview(props: ResumePreviewProps) {
 							edit_title(false);
 						}}
 					>
-						<CloseIcon class="fill-night-900" />
+						<CloseIcon class="fill-forest-900" />
 					</button>
 				</div>
 			</Show>

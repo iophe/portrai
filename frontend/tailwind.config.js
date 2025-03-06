@@ -4,7 +4,7 @@ export default {
 	theme: {
 		extend: {
 			colors: {
-				night: {
+				forest: {
 					50: "#D3F2E1",
 					100: "#08AF53",
 					200: "#079D4A",

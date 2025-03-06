@@ -36,46 +36,46 @@ export function ExecutiveTemplate(props: TemplateProps) {
 		<div class="p-8 font-serif h-full w-full text-black bg-white">
 			{/* Header Section */}
 			<header class="text-center mb-8">
-    <h1
-        class="font-bold uppercase tracking-wide"
-        style={{ 
-            color: "#333333" 
-        }}
-    >
-        {props.data.contact.name}
-    </h1>
-    <div class="mt-2 text-sm text-gray-700">
-        <div class="flex justify-center items-center gap-4 mb-1">
-            <span>{props.data.contact.email}</span>
-            <span>•</span>
-            <span>{props.data.contact.phone}</span>
-            <span>•</span>
-            <span>{props.data.contact.location}</span>
-        </div>
-        <div class="flex justify-center gap-4">
-            {props.data.contact.linkedin && (
-                <a 
-                    href={props.data.contact.linkedin} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    class="hover:text-blue-600 transition-colors"
-                >
-                    LinkedIn
-                </a>
-            )}
-            {props.data.contact.website && (
-                <a 
-                    href={props.data.contact.website} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    class="hover:text-blue-600 transition-colors"
-                >
-                    Website
-                </a>
-            )}
-        </div>
-    </div>
-</header>
+				<h1
+					class="font-bold uppercase tracking-wide"
+					style={{
+						color: "#333333",
+					}}
+				>
+					{props.data.contact.name}
+				</h1>
+				<div class="mt-2 text-sm text-gray-700">
+					<div class="flex justify-center items-center gap-4 mb-1">
+						<span>{props.data.contact.email}</span>
+						<span>•</span>
+						<span>{props.data.contact.phone}</span>
+						<span>•</span>
+						<span>{props.data.contact.location}</span>
+					</div>
+					<div class="flex justify-center gap-4">
+						{props.data.contact.linkedin && (
+							<a
+								href={props.data.contact.linkedin}
+								target="_blank"
+								rel="noopener noreferrer"
+								class="hover:text-blue-600 transition-colors"
+							>
+								LinkedIn
+							</a>
+						)}
+						{props.data.contact.website && (
+							<a
+								href={props.data.contact.website}
+								target="_blank"
+								rel="noopener noreferrer"
+								class="hover:text-blue-600 transition-colors"
+							>
+								Website
+							</a>
+						)}
+					</div>
+				</div>
+			</header>
 
 			{/* Professional Summary */}
 			<Show

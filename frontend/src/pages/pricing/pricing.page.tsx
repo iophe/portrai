@@ -38,7 +38,7 @@ function Pricing(props: PricingProps) {
 			<section class="md:py-16 py-8 flex flex-col gap-16 items-center">
 				{/* Header */}
 				<header class="text-center">
-					<h1 class="text-3xl font-extrabold text-night-900 sm:text-4xl">
+					<h1 class="text-3xl font-extrabold text-forest-900 sm:text-4xl">
 						Simple, Transparent Pricing
 					</h1>
 					<p class="mt-4 text-xl text-gray-600">
@@ -50,14 +50,14 @@ function Pricing(props: PricingProps) {
 				<section class="" aria-label="Pricing plans">
 					<article class="rounded shadow-lg divide-y divide-gray-200">
 						<section class="p-6 flex flex-col gap-8">
-							<h2 class="text-2xl text-center font-semibold text-night-900">
+							<h2 class="text-2xl text-center font-semibold text-forest-900">
 								3-Month Access Plan
 							</h2>
 							<p class="text-center">
 								<span class="text-base font-medium text-gray-500">
 									Only{" "}
 								</span>
-								<strong class="text-4xl font-extrabold text-night-900">
+								<strong class="text-4xl font-extrabold text-forest-900">
 									20€
 								</strong>
 								<span class="text-base font-medium text-gray-500">
@@ -89,7 +89,7 @@ function Pricing(props: PricingProps) {
 							</ul>
 							<button
 								onClick={() => handlePayment("3month")}
-								class=" bg-night-600 w-full px-6 py-3 rounded-md text-snow-100 text-center font-medium"
+								class=" bg-forest-600 w-full px-6 py-3 rounded-md text-snow-100 text-center font-medium"
 								classList={{
 									"opacity-75 cursor-not-allowed": loading(),
 								}}
