@@ -42,6 +42,19 @@ func Protected() fiber.Handler {
 		}
 
 		if token_str == "" {
+			// Try to refresh using refresh token
+			refresh_token := c.Cookies("refresh_token")
+			if refresh_token != "" {
+				new_tokens, err := refreshSession(refresh_token)
+				if err == nil {
+					token_str = new_tokens.AccessToken
+					SetAuthCookies(c, new_tokens)
+				}
+			} else {
+				return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+					"error": "token expired",
+				})
+			}
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 				"error": "unauthorized: no token provided",
 			})
@@ -83,6 +96,11 @@ func Protected() fiber.Handler {
 							}
 							return []byte(secret), nil
 						})
+						if err != nil {
+							return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+								"error": "unexpected error while creating auth tokens",
+							})
+						}
 						SetAuthCookies(c, new_tokens)
 					}
 				} else {
