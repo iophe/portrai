@@ -13,7 +13,7 @@ import ProjectIcon from "@assets/icons/project.svg?component-solid";
 import SkillIcon from "@assets/icons/skill.svg?component-solid";
 import SettingsIcon from "@assets/icons/settings.svg?component-solid";
 import { createSignal, Match, Switch } from "solid-js";
-import ResumeAIPreview from "@components/resume/generators/preview_from_ai";
+import ResumeAIPreview from "@components/resume/generators/generator.view";
 import ResumeSettings from "@components/resume/resume.settings";
 
 interface HomeProps {}

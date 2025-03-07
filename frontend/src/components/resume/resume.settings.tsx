@@ -28,23 +28,25 @@ interface ResumeSettingsProps {
 function ResumeSettings(props: ResumeSettingsProps) {
 	const fault = useFault();
 
-	const [versions, { mutate, refetch:refetch_version }] = createResource(async () => {
-		if (props.offline) return;
-		try {
-			const response = await api.get("/resume/versions");
-			const result = response.data as UserResumeVersions;
+	const [versions, { mutate, refetch: refetch_version }] = createResource(
+		async () => {
+			if (props.offline) return;
+			try {
+				const response = await api.get("/resume/versions");
+				const result = response.data as UserResumeVersions;
 
-			update_version_form_data("current_version", result.version);
-			return result;
-		} catch (error) {
-			fault.minor({
-				message:
-					((error as AxiosError).response?.data as any).error ??
-					(error as AxiosError).message,
-			});
-			return;
+				update_version_form_data("current_version", result.version);
+				return result;
+			} catch (error) {
+				fault.minor({
+					message:
+						((error as AxiosError).response?.data as any).error ??
+						(error as AxiosError).message,
+				});
+				return;
+			}
 		}
-	});
+	);
 
 	const [profile, { mutate: mutate_profile, refetch: refetch_profile }] =
 		createResource(async () => {
@@ -427,7 +429,7 @@ function ResumeSettings(props: ResumeSettingsProps) {
 							e.preventDefault();
 							try {
 								console.log(profile_form_data.description);
-								
+
 								await api.post(
 									"/account/profile/update",
 									profile_form_data
@@ -444,7 +446,7 @@ function ResumeSettings(props: ResumeSettingsProps) {
 									update_profile_form_data(
 										"description",
 										value
-									)
+									);
 								}}
 								placeholder="Write your description"
 							/>

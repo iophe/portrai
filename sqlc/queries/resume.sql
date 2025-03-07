@@ -415,10 +415,9 @@ WHERE
     AND version = @version::text;
 
 -- name: RenameResumeVersion :exec
-UPDATE public.resume_items
+UPDATE public.resume_versions
 SET 
-    version = @new_name::text,
-    updated_at = current_timestamp
+    version = @new_name::text
 WHERE 
     user_id = @user_id::uuid
     AND version = @old_name::text;

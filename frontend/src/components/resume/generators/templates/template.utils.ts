@@ -1,15 +1,6 @@
-export interface ContactInfo {
-	name: string;
-	email: string;
-	phone?: string;
-	location?: string;
-	linkedin?: string;
-	website?: string;
-}
-
 export interface TemplateData {
-	contact: ContactInfo;
-	professional_summary?: string;
+	profile?: Profile;
+	user?: User;
 	resume_data: ResumeData;
 }
 

@@ -582,10 +582,9 @@ func (q *Queries) GetUserResumeVersions(ctx context.Context, userID uuid.UUID) (
 }
 
 const renameResumeVersion = `-- name: RenameResumeVersion :exec
-UPDATE public.resume_items
+UPDATE public.resume_versions
 SET 
-    version = $1::text,
-    updated_at = current_timestamp
+    version = $1::text
 WHERE 
     user_id = $2::uuid
     AND version = $3::text

@@ -139,7 +139,7 @@ CREATE TABLE public.profiles (
     user_id uuid not null references auth.users on delete cascade,
     linkedin text NOT NULL DEFAULT '',
     website text NOT NULL DEFAULT '',
-    version_id bigint NOT NULL references public.resume_versions on delete cascade on update cascade,
+    version_id bigint NOT NULL references public.resume_versions on delete cascade,
     description text NOT NULL DEFAULT '',
     metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
     created_at timestamp with time zone DEFAULT current_timestamp,
@@ -295,7 +295,7 @@ CREATE TABLE public.resume_items (
   priority integer NOT NULL DEFAULT 0,
   is_visible boolean DEFAULT true,
   tags text[] NOT NULL DEFAULT ARRAY[]::text[],
-  version_id bigint NOT NULL references public.resume_versions on delete cascade on update cascade,
+  version_id bigint NOT NULL references public.resume_versions on delete cascade,
   
   -- Type-specific fields stored in JSONB
   metadata jsonb NOT NULL DEFAULT '{}'::jsonb,

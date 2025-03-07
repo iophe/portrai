@@ -35,27 +35,26 @@ export function ExecutiveTemplate(props: TemplateProps) {
 	return (
 		<div class="p-8 font-serif h-full w-full text-black bg-white">
 			{/* Header Section */}
-			<header class="text-center mb-8">
-				<h1
-					class="font-bold uppercase tracking-wide"
-					style={{
-						color: "#333333",
-					}}
-				>
-					{props.data.contact.name}
+			<header class="text-center mb-4">
+				<h1 class="font-bold uppercase tracking-wide">
+					{props.data.user?.full_name}
 				</h1>
 				<div class="mt-2 text-sm text-gray-700">
 					<div class="flex justify-center items-center gap-4 mb-1">
-						<span>{props.data.contact.email}</span>
-						<span>•</span>
-						<span>{props.data.contact.phone}</span>
-						<span>•</span>
-						<span>{props.data.contact.location}</span>
+						<span>{props.data.user?.email}</span>
+						<Show when={props.data.user?.phone}>
+							<span>•</span>
+							<span>{props.data.user?.phone}</span>
+						</Show>
+						<Show when={props.data.user?.location}>
+							<span>•</span>
+							<span>{props.data.user?.location}</span>
+						</Show>
 					</div>
 					<div class="flex justify-center gap-4">
-						{props.data.contact.linkedin && (
+						{props.data.profile?.linkedin && (
 							<a
-								href={props.data.contact.linkedin}
+								href={props.data.profile?.linkedin}
 								target="_blank"
 								rel="noopener noreferrer"
 								class="hover:text-blue-600 transition-colors"
@@ -63,9 +62,9 @@ export function ExecutiveTemplate(props: TemplateProps) {
 								LinkedIn
 							</a>
 						)}
-						{props.data.contact.website && (
+						{props.data.profile?.website && (
 							<a
-								href={props.data.contact.website}
+								href={props.data.profile?.website}
 								target="_blank"
 								rel="noopener noreferrer"
 								class="hover:text-blue-600 transition-colors"
@@ -76,31 +75,6 @@ export function ExecutiveTemplate(props: TemplateProps) {
 					</div>
 				</div>
 			</header>
-
-			{/* Professional Summary */}
-			<Show
-				when={
-					settings.show_sections.summary &&
-					props.data.professional_summary
-				}
-			>
-				<section class="mb-6">
-					<h2
-						class="font-bold border-b border-black pb-1 mb-3"
-						style={{
-							"font-size": settings.font_size.section_title,
-						}}
-					>
-						Professional Summary
-					</h2>
-					<p
-						class="text-justify"
-						style={{ "font-size": settings.font_size.body }}
-					>
-						{props.data.professional_summary}
-					</p>
-				</section>
-			</Show>
 
 			{/* Experience Section */}
 			<Show
@@ -113,7 +87,33 @@ export function ExecutiveTemplate(props: TemplateProps) {
 			>
 				<section class="mb-6">
 					<h2
-						class="font-bold border-b border-black pb-1 mb-3"
+						class="font-bold border-b border-black pb-1 mb-3 uppercase"
+						style={{
+							"font-size": settings.font_size.section_title,
+						}}
+					>
+						Profile
+					</h2>
+					<p
+						class="text-justify"
+						style={{ "font-size": settings.font_size.body }}
+					>
+						{props.data.profile?.description}
+					</p>
+				</section>
+			</Show>
+			{/* Experience Section */}
+			<Show
+				when={
+					settings.show_sections.experience &&
+					props.data.resume_data.experiences.filter(
+						(v) => v.is_visible
+					).length > 0
+				}
+			>
+				<section class="mb-6">
+					<h2
+						class="font-bold border-b border-black pb-1 mb-3 uppercase"
 						style={{
 							"font-size": settings.font_size.section_title,
 						}}
@@ -178,7 +178,7 @@ export function ExecutiveTemplate(props: TemplateProps) {
 			>
 				<section class="mb-6">
 					<h2
-						class="font-bold border-b border-black pb-1 mb-3"
+						class="font-bold border-b border-black pb-1 mb-3 uppercase"
 						style={{
 							"font-size": settings.font_size.section_title,
 						}}
@@ -243,7 +243,7 @@ export function ExecutiveTemplate(props: TemplateProps) {
 			>
 				<section class="mb-6">
 					<h2
-						class="font-bold border-b border-black pb-1 mb-3"
+						class="font-bold border-b border-black pb-1 mb-3 uppercase"
 						style={{
 							"font-size": settings.font_size.section_title,
 						}}
@@ -293,7 +293,7 @@ export function ExecutiveTemplate(props: TemplateProps) {
 			>
 				<section class="mb-6">
 					<h2
-						class="font-bold border-b border-black pb-1 mb-3"
+						class="font-bold border-b border-black pb-1 mb-3 uppercase"
 						style={{
 							"font-size": settings.font_size.section_title,
 						}}
@@ -362,7 +362,7 @@ export function ExecutiveTemplate(props: TemplateProps) {
 			>
 				<section class="mb-6">
 					<h2
-						class="font-bold border-b border-black pb-1 mb-3"
+						class="font-bold border-b border-black pb-1 mb-3 uppercase"
 						style={{
 							"font-size": settings.font_size.section_title,
 						}}

@@ -21,7 +21,7 @@ import {
 	OfflineProjectList,
 	ProjectList,
 } from "@components/resume/project/project.list";
-import ResumePreview from "@components/resume/generators/preview";
+import ResumePreview from "@components/resume/generators/offline.view";
 import ExperienceIcon from "@assets/icons/briefcase.svg?component-solid";
 import EducationIcon from "@assets/icons/graduation.svg?component-solid";
 import CertificateIcon from "@assets/icons/diploma.svg?component-solid";

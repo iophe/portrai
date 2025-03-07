@@ -57,6 +57,30 @@ function ResumePreview(props: ResumePreviewProps) {
 		props.job_specific_resume.title
 	);
 
+	const [account, { refetch }] = createResource(async () => {
+		try {
+			const res = await api.get("/account/user");
+			const user = res.data.user as User;
+			return user;
+		} catch (error) {}
+	});
+	const [profile, { mutate: mutate_profile, refetch: refetch_profile }] =
+		createResource(async () => {
+			try {
+				const response = await api.get("/account/profile");
+				const result = response.data.profile as Profile;
+				console.log(result);
+
+				return result;
+			} catch (error) {
+				fault.minor({
+					message:
+						((error as AxiosError).response?.data as any).error ??
+						(error as AxiosError).message,
+				});
+				return;
+			}
+		});
 	return (
 		<section class="w-full  flex flex-col gap-4">
 			<Show
@@ -162,10 +186,8 @@ function ResumePreview(props: ResumePreviewProps) {
 				<ExecutiveTemplate
 					data={{
 						resume_data: props.job_specific_resume.resume_data,
-						contact: {
-							name: "Test",
-							email: "test@test.com",
-						},
+						profile: profile(),
+						user: account(),
 					}}
 					settings={{
 						font_size: {

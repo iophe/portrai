@@ -565,7 +565,7 @@ func HandleDeleteResumeVersion(data DeleteResumeVersionData, c *fiber.Ctx, db *d
 	})
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error":   "could not get all the versions",
+			"error":   "could not delete this version",
 			"details": err.Error(),
 		})
 	}
@@ -597,7 +597,8 @@ func HandleRenameResumeVersion(data RenameResumeVersionData, c *fiber.Ctx, db *d
 	})
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "could not get all the versions",
+			"error":   "could not rename this version",
+			"details": err.Error(),
 		})
 	}
 

@@ -1,7 +1,7 @@
 import { useFault } from "@components/fault";
 import Header from "@components/header.autherized";
 import LoadingSpinner from "@components/loading.spinner";
-import ResumePreview from "@components/resume/generators/preview";
+import ResumePreview from "@components/resume/generators/offline.view";
 import { A } from "@solidjs/router";
 import { db } from "@utils/db/db";
 import {

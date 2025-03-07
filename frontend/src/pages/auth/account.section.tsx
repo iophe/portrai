@@ -1,4 +1,3 @@
-import { getProfile, updateProfile, uploadAvatar } from "@utils/profile";
 import { Show, createResource, createSignal, onMount } from "solid-js";
 import { A } from "@solidjs/router";
 import AccountIcon from "@assets/icons/account.svg?component-solid";
