@@ -163,7 +163,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Trigger to fire when a user is created in auth.users
 CREATE TRIGGER on_version_created
   AFTER INSERT ON public.resume_versions
   FOR EACH ROW
@@ -274,6 +273,74 @@ create table payment.payments (
     -- Time at which the payment was created.
     created_at timestamp with time zone default current_timestamp
 );
+
+create table payment.usage_analytics (
+  user_id uuid not null references auth.users on delete cascade,
+  total_cost_per_payment decimal not null default 0,
+  all_time_cost decimal not null default 0
+);
+
+-- Function to handle new user creation
+CREATE OR REPLACE FUNCTION public.handle_new_usage_analytics()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO payment.usage_analytics (user_id)
+  VALUES (NEW.id);
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER on_auth_user_created_for_usage_analytics
+  AFTER INSERT ON auth.users
+  FOR EACH ROW
+  EXECUTE FUNCTION public.handle_new_usage_analytics();
+
+CREATE OR REPLACE FUNCTION public.handle_refill_usage_analytics()
+RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE payment.usage_analytics
+    SET 
+        total_cost_per_payment = 0
+    WHERE user_id = NEW.user_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER on_user_payment_creation
+  AFTER INSERT ON payment.payments
+  FOR EACH ROW
+  EXECUTE FUNCTION public.handle_refill_usage_analytics();
+
+
+create table payment.usage_history (
+  user_id uuid not null references auth.users on delete cascade,
+  input_token_used bigint not null default 0,
+  price_rate_input_token decimal not null,
+  output_token_used bigint not null default 0,
+  price_rate_output_token decimal not null,
+  model text not null,
+  duration interval not null,
+  valid boolean not null,
+  date timestamp with time zone default current_timestamp
+);
+
+CREATE OR REPLACE FUNCTION payment.update_usage_analytics()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE payment.usage_analytics
+    SET 
+        total_cost_per_payment = total_cost_per_payment + (NEW.input_token_used * NEW.price_rate_input_token) + (NEW.output_token_used * NEW.price_rate_output_token),
+        all_time_cost = all_time_cost + (NEW.input_token_used * NEW.price_rate_input_token) + (NEW.output_token_used * NEW.price_rate_output_token)
+    WHERE user_id = NEW.user_id;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create the trigger
+CREATE TRIGGER update_usage_analytics_trigger
+AFTER INSERT ON payment.usage_history
+FOR EACH ROW
+EXECUTE FUNCTION payment.update_usage_analytics();
 
 /******************************************************************************************/
 /******************************** SECTION : RESUME ****************************************/

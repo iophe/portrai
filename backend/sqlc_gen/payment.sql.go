@@ -13,6 +13,55 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const addProductUsage = `-- name: AddProductUsage :exec
+INSERT INTO payment.usage_history (
+   user_id,
+   input_token_used,
+   price_rate_input_token,
+   output_token_used,
+   price_rate_output_token,
+   model,
+   duration,
+   valid,
+   date
+) VALUES (
+   $1::uuid,
+   $2::bigint,
+   $3::decimal,
+   $4::bigint,
+   $5::decimal,
+   $6::text,
+   $7::interval,
+   $8::boolean,
+   CURRENT_TIMESTAMP
+)
+`
+
+type AddProductUsageParams struct {
+	UserID               uuid.UUID       `json:"user_id"`
+	InputTokenUsed       int64           `json:"input_token_used"`
+	PriceRateInputToken  pgtype.Numeric  `json:"price_rate_input_token"`
+	OutputTokenUsed      int64           `json:"output_token_used"`
+	PriceRateOutputToken pgtype.Numeric  `json:"price_rate_output_token"`
+	Model                string          `json:"model"`
+	Duration             pgtype.Interval `json:"duration"`
+	Valid                bool            `json:"valid"`
+}
+
+func (q *Queries) AddProductUsage(ctx context.Context, arg AddProductUsageParams) error {
+	_, err := q.db.Exec(ctx, addProductUsage,
+		arg.UserID,
+		arg.InputTokenUsed,
+		arg.PriceRateInputToken,
+		arg.OutputTokenUsed,
+		arg.PriceRateOutputToken,
+		arg.Model,
+		arg.Duration,
+		arg.Valid,
+	)
+	return err
+}
+
 const createCustomer = `-- name: CreateCustomer :exec
 INSERT INTO payment.customers (
     id,
@@ -41,6 +90,20 @@ WHERE payment_id = $1::text
 func (q *Queries) DeletePayment(ctx context.Context, paymentID string) error {
 	_, err := q.db.Exec(ctx, deletePayment, paymentID)
 	return err
+}
+
+const getConsumptionCost = `-- name: GetConsumptionCost :one
+SELECT
+    total_cost_per_payment
+FROM payment.usage_analytics 
+WHERE user_id = $1::uuid
+`
+
+func (q *Queries) GetConsumptionCost(ctx context.Context, userID uuid.UUID) (pgtype.Numeric, error) {
+	row := q.db.QueryRow(ctx, getConsumptionCost, userID)
+	var total_cost_per_payment pgtype.Numeric
+	err := row.Scan(&total_cost_per_payment)
+	return total_cost_per_payment, err
 }
 
 const getCustomerByStripeID = `-- name: GetCustomerByStripeID :one
@@ -87,26 +150,6 @@ func (q *Queries) GetPaymentValidity(ctx context.Context, userID uuid.UUID) (pgt
 	return expired_at, err
 }
 
-const getPriceByAmount = `-- name: GetPriceByAmount :one
-SELECT id 
-FROM payment.prices 
-WHERE unit_amount = $1::int
-AND currency = $2::text
-LIMIT 1
-`
-
-type GetPriceByAmountParams struct {
-	UnitAmount int32  `json:"unit_amount"`
-	Currency   string `json:"currency"`
-}
-
-func (q *Queries) GetPriceByAmount(ctx context.Context, arg GetPriceByAmountParams) (string, error) {
-	row := q.db.QueryRow(ctx, getPriceByAmount, arg.UnitAmount, arg.Currency)
-	var id string
-	err := row.Scan(&id)
-	return id, err
-}
-
 const getPriceByPlan = `-- name: GetPriceByPlan :one
 SELECT 
     id,
@@ -143,6 +186,21 @@ func (q *Queries) GetPriceByPlan(ctx context.Context, plan string) (GetPriceByPl
 		&i.IntervalCount,
 	)
 	return i, err
+}
+
+const getPriceForPayment = `-- name: GetPriceForPayment :one
+SELECT p.unit_amount
+FROM payment.validity v
+JOIN payment.prices p ON v.price_id = p.id
+WHERE v.user_id = $1::uuid
+LIMIT 1
+`
+
+func (q *Queries) GetPriceForPayment(ctx context.Context, userID uuid.UUID) (pgtype.Int8, error) {
+	row := q.db.QueryRow(ctx, getPriceForPayment, userID)
+	var unit_amount pgtype.Int8
+	err := row.Scan(&unit_amount)
+	return unit_amount, err
 }
 
 const getValidityPeroidByProductID = `-- name: GetValidityPeroidByProductID :one

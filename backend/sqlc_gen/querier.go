@@ -12,6 +12,7 @@ import (
 )
 
 type Querier interface {
+	AddProductUsage(ctx context.Context, arg AddProductUsageParams) error
 	AddResumeVersion(ctx context.Context, arg AddResumeVersionParams) error
 	ChangeResumeVersion(ctx context.Context, arg ChangeResumeVersionParams) error
 	CreateCustomer(ctx context.Context, arg CreateCustomerParams) error
@@ -24,11 +25,12 @@ type Querier interface {
 	// Delete a resume item
 	DeleteResumeItem(ctx context.Context, arg DeleteResumeItemParams) error
 	DeleteResumeVersion(ctx context.Context, arg DeleteResumeVersionParams) error
+	GetConsumptionCost(ctx context.Context, userID uuid.UUID) (pgtype.Numeric, error)
 	GetCustomerByStripeID(ctx context.Context, stripeCustomerID string) (PaymentCustomer, error)
 	GetCustomerByUserID(ctx context.Context, userID uuid.UUID) (PaymentCustomer, error)
 	GetPaymentValidity(ctx context.Context, userID uuid.UUID) (pgtype.Timestamptz, error)
-	GetPriceByAmount(ctx context.Context, arg GetPriceByAmountParams) (string, error)
 	GetPriceByPlan(ctx context.Context, plan string) (GetPriceByPlanRow, error)
+	GetPriceForPayment(ctx context.Context, userID uuid.UUID) (pgtype.Int8, error)
 	GetProfileByUserId(ctx context.Context, userID uuid.UUID) (GetProfileByUserIdRow, error)
 	GetResumeData(ctx context.Context, userID uuid.UUID) ([]byte, error)
 	GetResumeItemById(ctx context.Context, arg GetResumeItemByIdParams) (GetResumeItemByIdRow, error)

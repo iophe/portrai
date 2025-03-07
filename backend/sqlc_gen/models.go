@@ -138,6 +138,24 @@ type PaymentProduct struct {
 	Metadata       []byte          `json:"metadata"`
 }
 
+type PaymentUsageAnalytic struct {
+	UserID              uuid.UUID      `json:"user_id"`
+	TotalCostPerPayment pgtype.Numeric `json:"total_cost_per_payment"`
+	AllTimeCost         pgtype.Numeric `json:"all_time_cost"`
+}
+
+type PaymentUsageHistory struct {
+	UserID               uuid.UUID          `json:"user_id"`
+	InputTokenUsed       int64              `json:"input_token_used"`
+	PriceRateInputToken  pgtype.Numeric     `json:"price_rate_input_token"`
+	OutputTokenUsed      int64              `json:"output_token_used"`
+	PriceRateOutputToken pgtype.Numeric     `json:"price_rate_output_token"`
+	Model                string             `json:"model"`
+	Duration             pgtype.Interval    `json:"duration"`
+	Valid                bool               `json:"valid"`
+	Date                 pgtype.Timestamptz `json:"date"`
+}
+
 type PaymentValidity struct {
 	UserID    uuid.UUID          `json:"user_id"`
 	PaymentID string             `json:"payment_id"`
