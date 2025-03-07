@@ -25,12 +25,11 @@ SELECT
     linkedin,
     website,
     description,
-    metadata,
     created_at,
     updated_at
 FROM public.profiles
 WHERE user_id = @user_id::uuid
-AND version = (SELECT current_resume_version FROM public.users WHERE id = @user_id::uuid);
+AND version_id = (SELECT current_resume_version FROM public.users WHERE id = @user_id::uuid);
 
 -- name: UpdateProfile :exec
 UPDATE public.profiles
@@ -39,14 +38,14 @@ SET
     description = COALESCE(sqlc.narg(description)::text, description),
     metadata = COALESCE(sqlc.narg(metadata)::jsonb, metadata),
     website = COALESCE(sqlc.narg(website)::text, website)
-WHERE user_id = @user_id::uuid AND profile_id = @profile_id::bigint;
+WHERE user_id = @user_id::uuid AND version_id = (SELECT current_resume_version FROM public.users WHERE id = @user_id::uuid);
 
 -- name: CreateProfile :exec
 INSERT INTO public.profiles (
     user_id,
     linkedin,
     website,
-    version,
+    version_id,
     metadata,
     description
 ) VALUES (

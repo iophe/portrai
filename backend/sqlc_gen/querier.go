@@ -23,7 +23,6 @@ type Querier interface {
 	DeletePayment(ctx context.Context, paymentID string) error
 	// Delete a resume item
 	DeleteResumeItem(ctx context.Context, arg DeleteResumeItemParams) error
-	// Delete all resume items with this version
 	DeleteResumeVersion(ctx context.Context, arg DeleteResumeVersionParams) error
 	GetCustomerByStripeID(ctx context.Context, stripeCustomerID string) (PaymentCustomer, error)
 	GetCustomerByUserID(ctx context.Context, userID uuid.UUID) (PaymentCustomer, error)
@@ -38,7 +37,6 @@ type Querier interface {
 	GetUserResumeVersions(ctx context.Context, userID uuid.UUID) (GetUserResumeVersionsRow, error)
 	GetValidityPeroidByProductID(ctx context.Context, productID string) (pgtype.Interval, error)
 	InsertPayment(ctx context.Context, arg InsertPaymentParams) error
-	// Update all resume items with this version
 	RenameResumeVersion(ctx context.Context, arg RenameResumeVersionParams) error
 	// Finally, update the priority of the moved item
 	ReorderResumeItem(ctx context.Context, arg ReorderResumeItemParams) error

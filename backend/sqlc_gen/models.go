@@ -152,7 +152,7 @@ type Profile struct {
 	UserID      uuid.UUID          `json:"user_id"`
 	Linkedin    string             `json:"linkedin"`
 	Website     string             `json:"website"`
-	Version     string             `json:"version"`
+	VersionID   int64              `json:"version_id"`
 	Description string             `json:"description"`
 	Metadata    []byte             `json:"metadata"`
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
@@ -173,7 +173,7 @@ type ResumeItem struct {
 	Priority    int32              `json:"priority"`
 	IsVisible   pgtype.Bool        `json:"is_visible"`
 	Tags        []string           `json:"tags"`
-	Version     string             `json:"version"`
+	VersionID   int64              `json:"version_id"`
 	Metadata    []byte             `json:"metadata"`
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
@@ -190,8 +190,9 @@ type ResumeItemNote struct {
 }
 
 type ResumeVersion struct {
-	UserID  uuid.UUID `json:"user_id"`
-	Version string    `json:"version"`
+	VersionID int64     `json:"version_id"`
+	UserID    uuid.UUID `json:"user_id"`
+	Version   string    `json:"version"`
 }
 
 type User struct {
@@ -200,7 +201,7 @@ type User struct {
 	Email                string             `json:"email"`
 	Phone                string             `json:"phone"`
 	Location             string             `json:"location"`
-	CurrentResumeVersion string             `json:"current_resume_version"`
+	CurrentResumeVersion int64              `json:"current_resume_version"`
 	BillingAddress       []byte             `json:"billing_address"`
 	PaymentMethod        []byte             `json:"payment_method"`
 	CreatedAt            pgtype.Timestamptz `json:"created_at"`

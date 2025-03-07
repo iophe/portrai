@@ -565,7 +565,8 @@ func HandleDeleteResumeVersion(data DeleteResumeVersionData, c *fiber.Ctx, db *d
 	})
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "could not get all the versions",
+			"error":   "could not get all the versions",
+			"details": err.Error(),
 		})
 	}
 

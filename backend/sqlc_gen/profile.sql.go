@@ -17,7 +17,7 @@ INSERT INTO public.profiles (
     user_id,
     linkedin,
     website,
-    version,
+    version_id,
     metadata,
     description
 ) VALUES (
@@ -56,12 +56,11 @@ SELECT
     linkedin,
     website,
     description,
-    metadata,
     created_at,
     updated_at
 FROM public.profiles
 WHERE user_id = $1::uuid
-AND version = (SELECT current_resume_version FROM public.users WHERE id = $1::uuid)
+AND version_id = (SELECT current_resume_version FROM public.users WHERE id = $1::uuid)
 `
 
 type GetProfileByUserIdRow struct {
@@ -69,7 +68,6 @@ type GetProfileByUserIdRow struct {
 	Linkedin    string             `json:"linkedin"`
 	Website     string             `json:"website"`
 	Description string             `json:"description"`
-	Metadata    []byte             `json:"metadata"`
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
 }
@@ -82,7 +80,6 @@ func (q *Queries) GetProfileByUserId(ctx context.Context, userID uuid.UUID) (Get
 		&i.Linkedin,
 		&i.Website,
 		&i.Description,
-		&i.Metadata,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -107,7 +104,7 @@ type GetUserByIdRow struct {
 	Email                string             `json:"email"`
 	Phone                string             `json:"phone"`
 	Location             string             `json:"location"`
-	CurrentResumeVersion string             `json:"current_resume_version"`
+	CurrentResumeVersion int64              `json:"current_resume_version"`
 	CreatedAt            pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt            pgtype.Timestamptz `json:"updated_at"`
 }
@@ -134,7 +131,7 @@ SET
     description = COALESCE($2::text, description),
     metadata = COALESCE($3::jsonb, metadata),
     website = COALESCE($4::text, website)
-WHERE user_id = $5::uuid AND profile_id = $6::bigint
+WHERE user_id = $5::uuid AND version_id = (SELECT current_resume_version FROM public.users WHERE id = $5::uuid)
 `
 
 type UpdateProfileParams struct {
@@ -143,7 +140,6 @@ type UpdateProfileParams struct {
 	Metadata    []byte      `json:"metadata"`
 	Website     pgtype.Text `json:"website"`
 	UserID      uuid.UUID   `json:"user_id"`
-	ProfileID   int64       `json:"profile_id"`
 }
 
 func (q *Queries) UpdateProfile(ctx context.Context, arg UpdateProfileParams) error {
@@ -153,7 +149,6 @@ func (q *Queries) UpdateProfile(ctx context.Context, arg UpdateProfileParams) er
 		arg.Metadata,
 		arg.Website,
 		arg.UserID,
-		arg.ProfileID,
 	)
 	return err
 }

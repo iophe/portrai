@@ -7,23 +7,16 @@ import CancelIcon from "@assets/icons/cancel.svg?component-solid";
 import { createStore } from "solid-js/store";
 import api from "@utils/api";
 import {
-    FormInputTelephone,
+	FormInputTelephone,
 	FormInputText,
 	FormLabeledInput,
-    FormSubmitButton,
+	FormSubmitButton,
 } from "@components/resume/utils/form.input";
-
-interface User {
-	full_name?: string;
-	email?: string;
-	phone?: string;
-	location?: string;
-}
 
 interface AccountSectionProps {}
 
 export function AccountSection(props: AccountSectionProps) {
-	const [is_editing, set_is_editing] = createSignal(false);
+	const [editing, edit_user] = createSignal(false);
 
 	const [account, { refetch }] = createResource(async () => {
 		try {
@@ -56,11 +49,11 @@ export function AccountSection(props: AccountSectionProps) {
 				</div>
 
 				<Show
-					when={is_editing()}
+					when={editing()}
 					fallback={
 						<button
-							disabled={is_editing()}
-							onclick={() => set_is_editing(true)}
+							disabled={editing()}
+							onclick={() => edit_user(true)}
 						>
 							<EditIcon class="fill-forest-500" />
 						</button>
@@ -70,7 +63,7 @@ export function AccountSection(props: AccountSectionProps) {
 						type="button"
 						class="text-gray-500 hover:text-gray-600 text-sm font-medium"
 						onclick={() => {
-							set_is_editing(false);
+							edit_user(false);
 							// Reset form data
 							set_form_data({
 								full_name: account()?.full_name || undefined,
@@ -86,7 +79,7 @@ export function AccountSection(props: AccountSectionProps) {
 			</header>
 
 			<Show
-				when={is_editing()}
+				when={editing()}
 				fallback={
 					<div class="flex flex-col gap-4">
 						<article class="flex flex-col gap-1">
@@ -133,8 +126,8 @@ export function AccountSection(props: AccountSectionProps) {
 						e.preventDefault();
 						try {
 							await api.post("/account/user/update", form_data);
-                            set_is_editing(false);
-                            refetch();
+							edit_user(false);
+							refetch();
 						} catch (error) {}
 					}}
 				>
@@ -151,18 +144,14 @@ export function AccountSection(props: AccountSectionProps) {
 					<FormLabeledInput label="Email">
 						<FormInputText
 							value={form_data.email ?? ""}
-							on_input={(value) =>
-								set_form_data("email", value)
-							}
+							on_input={(value) => set_form_data("email", value)}
 							placeholder="Write your email"
 						/>
 					</FormLabeledInput>
 					<FormLabeledInput label="Phone">
 						<FormInputTelephone
 							value={form_data.phone ?? ""}
-							on_input={(value) =>
-								set_form_data("phone", value)
-							}
+							on_input={(value) => set_form_data("phone", value)}
 							placeholder="Write your phone number"
 						/>
 					</FormLabeledInput>
@@ -176,9 +165,9 @@ export function AccountSection(props: AccountSectionProps) {
 							placeholder="Write your location"
 						/>
 					</FormLabeledInput>
-                    <div class="self-end">
-                        <FormSubmitButton />
-                    </div>
+					<div class="self-end">
+						<FormSubmitButton />
+					</div>
 				</form>
 			</Show>
 		</section>

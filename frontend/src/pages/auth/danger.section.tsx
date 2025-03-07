@@ -17,11 +17,7 @@ export function DangerZone(props: DangerZoneProps) {
 					class="w-fit py-2 px-4 text-snow-100 bg-lapis-400 hover:bg-lapis-200 rounded"
 					onclick={() => {
 						// Delete account handler directly in the onclick
-						if (
-							confirm(
-								"Are you sure you want to log out ?"
-							)
-						) {
+						if (confirm("Are you sure you want to log out ?")) {
 						}
 					}}
 				>
