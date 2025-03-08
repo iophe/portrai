@@ -6,6 +6,8 @@ import { lazy } from "solid-js";
 import { Route, Router } from "@solidjs/router";
 import { FaultProvider } from "@components/fault";
 import Protected from "@components/protected";
+import Templates from "@pages/home/template.page";
+import Blog from "@pages/home/blog.page";
 
 const root = document.getElementById("root");
 
@@ -39,6 +41,8 @@ render(
 				<Route path={"/welcolm"} component={Landing} />
 				<Route path={"/signin"} component={Signin} />
 				<Route path={"/signup"} component={Signup} />
+				<Route path={"/template"} component={Templates} />
+				<Route path={"/blog"} component={Blog} />
 				<Route path={"/pricing"} component={Pricing} />
 				<Route path={"/success"} component={Success} />
 				<Route path={"/account"} component={Account} />

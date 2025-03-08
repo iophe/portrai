@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/anthropics/anthropic-sdk-go"
 	"github.com/anthropics/anthropic-sdk-go/option"
@@ -236,10 +237,28 @@ const (
 	MAX_HISTORY_MESSAGES = 2
 )
 
-func GenerateResume(ctx context.Context, user_id uuid.UUID, resume_data ca.ResumeCachedData, job_description string, with_cover_letter bool, claude *anthropic.Client, cache *ca.Cache) (OutputResumeData, error) {
+type Usage struct {
+	InputTokenUsed  int
+	OutputTokenUsed int
+	Duration        time.Duration
+	Valid           bool
+}
+
+func GenerateResume(
+	ctx context.Context,
+	user_id uuid.UUID,
+	resume_data ca.ResumeCachedData,
+	job_description string,
+	with_cover_letter bool,
+	model anthropic.Model,
+	claude *anthropic.Client,
+	cache *ca.Cache) (OutputResumeData, Usage, error) {
+	start_time := time.Now()
+
 	resume_data_json, err := json.Marshal(resume_data)
 	if err != nil {
-		return OutputResumeData{}, fmt.Errorf("failed to marshal user data: %w", err)
+		response_time := time.Since(start_time)
+		return OutputResumeData{}, Usage{Duration: response_time, Valid: false}, fmt.Errorf("failed to marshal user data: %w", err)
 	}
 	prompt := fmt.Sprintf(`Based on the following job description, create an optimized resume. 
 	Job Description:
@@ -251,7 +270,8 @@ func GenerateResume(ctx context.Context, user_id uuid.UUID, resume_data ca.Resum
 	resume_hash := utils.Hash(resume_data_json)
 	cached_resume_hash, err := ca.GetResumeHash(user_id, ctx, cache)
 	if err != nil && err != redis.Nil {
-		return OutputResumeData{}, err
+		response_time := time.Since(start_time)
+		return OutputResumeData{}, Usage{Duration: response_time, Valid: false}, err
 	}
 
 	ascii_resume_cache := hex.EncodeToString(resume_hash[:])
@@ -269,7 +289,8 @@ func GenerateResume(ctx context.Context, user_id uuid.UUID, resume_data ca.Resum
 		history_json, err := ca.GetJsonConversation(user_id, ctx, cache)
 		if err != nil && err != redis.Nil {
 			ca.DelConversation(user_id, ctx, cache)
-			return OutputResumeData{}, err
+			response_time := time.Since(start_time)
+			return OutputResumeData{}, Usage{Duration: response_time, Valid: false}, err
 		} else if err == redis.Nil {
 			history = []anthropic.MessageParam{
 				anthropic.NewAssistantMessage(anthropic.NewTextBlock(EN_SYSTEM_PROMPTS)),
@@ -279,7 +300,8 @@ func GenerateResume(ctx context.Context, user_id uuid.UUID, resume_data ca.Resum
 			history, err = deserializeHistory(history_json)
 			if err != nil {
 				ca.DelConversation(user_id, ctx, cache)
-				return OutputResumeData{}, fmt.Errorf("failed to unmarshal cached conversation history: %w,\nhistory: %s", err, history_json)
+				response_time := time.Since(start_time)
+				return OutputResumeData{}, Usage{Duration: response_time, Valid: false}, fmt.Errorf("failed to unmarshal cached conversation history: %w,\nhistory: %s", err, history_json)
 			}
 		}
 	}
@@ -292,12 +314,17 @@ func GenerateResume(ctx context.Context, user_id uuid.UUID, resume_data ca.Resum
 	}
 
 	message, err := claude.Messages.New(ctx, anthropic.MessageNewParams{
-		Model:     anthropic.F(anthropic.ModelClaude3_5HaikuLatest),
+		Model:     anthropic.F(model),
 		MaxTokens: anthropic.F(int64(4096)), // Increased token limit for larger responses
 		Messages:  anthropic.F(history),
 	})
+	inputTokenUsed :=
+		int(message.Usage.InputTokens)
+	outputTokenUsed :=
+		int(message.Usage.OutputTokens)
 	if err != nil {
-		return OutputResumeData{}, fmt.Errorf("failed to generate resume: %w", err)
+		response_time := time.Since(start_time)
+		return OutputResumeData{}, Usage{InputTokenUsed: inputTokenUsed, OutputTokenUsed: outputTokenUsed, Duration: response_time, Valid: false}, fmt.Errorf("failed to generate resume: %w", err)
 	}
 
 	history_json, err := serializeHistory(history)
@@ -308,12 +335,14 @@ func GenerateResume(ctx context.Context, user_id uuid.UUID, resume_data ca.Resum
 	content := message.Content[0].Text
 	json_content, err := extractJSONFromString(content)
 	if err != nil {
-		return OutputResumeData{}, fmt.Errorf("failed to extract JSON from response: %w", err)
+		response_time := time.Since(start_time)
+		return OutputResumeData{}, Usage{InputTokenUsed: inputTokenUsed, OutputTokenUsed: outputTokenUsed, Duration: response_time, Valid: false}, fmt.Errorf("failed to extract JSON from response: %w", err)
 	}
 
 	var outputResume OutputResumeData
 	if err := json.Unmarshal([]byte(json_content), &outputResume); err != nil {
-		return OutputResumeData{}, fmt.Errorf("failed to parse AI response: %w", err)
+		response_time := time.Since(start_time)
+		return OutputResumeData{}, Usage{InputTokenUsed: inputTokenUsed, OutputTokenUsed: outputTokenUsed, Duration: response_time, Valid: false}, fmt.Errorf("failed to parse AI response: %w", err)
 	}
 	if with_cover_letter {
 		cover_letter_prompt := fmt.Sprintf(`The profile of the user is : %s
@@ -326,30 +355,38 @@ func GenerateResume(ctx context.Context, user_id uuid.UUID, resume_data ca.Resum
 		history = append(history, message.ToParam())
 		history = append(history, anthropic.NewUserMessage(anthropic.NewTextBlock(cover_letter_prompt)))
 		cover_letter_message, err := claude.Messages.New(ctx, anthropic.MessageNewParams{
-			Model:     anthropic.F(anthropic.ModelClaude3_5HaikuLatest),
+			Model:     anthropic.F(model),
 			MaxTokens: anthropic.F(int64(4096)),
 			Messages:  anthropic.F(history),
 		})
+		inputTokenUsed +=
+			int(cover_letter_message.Usage.InputTokens)
+		outputTokenUsed +=
+			int(cover_letter_message.Usage.OutputTokens)
 		if err != nil {
-			return OutputResumeData{}, fmt.Errorf("failed to generate resume: %w", err)
+			response_time := time.Since(start_time)
+			return OutputResumeData{}, Usage{InputTokenUsed: inputTokenUsed, OutputTokenUsed: outputTokenUsed, Duration: response_time, Valid: false}, fmt.Errorf("failed to generate resume: %w", err)
 		}
 
 		content := cover_letter_message.Content[0].Text
 		json_content, err = extractJSONFromString(content)
 		if err != nil {
-			return OutputResumeData{}, fmt.Errorf("failed to extract JSON from response: %w", err)
+			response_time := time.Since(start_time)
+			return OutputResumeData{}, Usage{InputTokenUsed: inputTokenUsed, OutputTokenUsed: outputTokenUsed, Duration: response_time, Valid: false}, fmt.Errorf("failed to extract JSON from response: %w", err)
 		}
 
 		var letter struct {
 			Letter string `json:"letter"`
 		}
 		if err := json.Unmarshal([]byte(json_content), &letter); err != nil {
-			return OutputResumeData{}, fmt.Errorf("failed to parse AI response: %w", err)
+			response_time := time.Since(start_time)
+			return OutputResumeData{}, Usage{InputTokenUsed: inputTokenUsed, OutputTokenUsed: outputTokenUsed, Duration: response_time, Valid: false}, fmt.Errorf("failed to parse AI response: %w", err)
 		}
 		outputResume.Letter = letter.Letter
 	}
 
-	return outputResume, nil
+	response_time := time.Since(start_time)
+	return outputResume, Usage{InputTokenUsed: inputTokenUsed, OutputTokenUsed: outputTokenUsed, Duration: response_time, Valid: true}, nil
 }
 
 func extractJSONFromString(s string) (string, error) {

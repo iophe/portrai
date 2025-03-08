@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  portrai_vault:
+    image: hashicorp/vault:latest
+    container_name: portrai_vault
+    profiles: [vault]
+    ports:
+      - "8200:8200"
+    environment:
+      VAULT_ADDR: http://0.0.0.0:8200
+      VAULT_API_ADDR: http://0.0.0.0:8200
+      VAULT_DEV_LISTEN_ADDRESS: http://0.0.0.0:8200
+    cap_add:
+      - IPC_LOCK
+    command: vault server -config=/vault/config/config.hcl
+    volumes:
+      - portrai_vault_data_integration:/vault/file
+      - ./vault.integration.config.hcl:/vault/config/config.hcl
+    restart: unless-stopped
+
+volumes:
+  portrai_vault_data_integration:

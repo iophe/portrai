@@ -1,7 +1,7 @@
 import { useFault } from "@components/fault";
 import Header from "@components/header.autherized";
 import LoadingSpinner from "@components/loading.spinner";
-import ResumePreview from "@components/resume/generators/preview";
+import ResumePreview from "@components/resume/generators/offline.view";
 import { A } from "@solidjs/router";
 import { db } from "@utils/db/db";
 import {
@@ -23,7 +23,9 @@ function HistoryPage(props: HistoryPageProps) {
 	const [resumes, { refetch, mutate }] = createResource(async () => {
 		try {
 			const res = await DB_JOB_SPECIFIC_RESUMES.all_titles(db);
-			select_resume_id(res[0].id);
+			if (res.length > 0) {
+				select_resume_id(res[0].id);
+			}
 			return res;
 		} catch (err) {
 			fault.major({
@@ -47,12 +49,12 @@ function HistoryPage(props: HistoryPageProps) {
 			<Header />
 			<section
 				class="grid grid-cols-2 gap-4 justify-start h-full overflow-hidden
-         items-start text-night-900"
+         items-start text-forest-900"
 			>
 				<section class="overflow-y-hidden pr-4 h-full">
 					<div class="overflow-y-hidden h-full flex flex-col gap-4">
 						<Suspense fallback={<LoadingSpinner />}>
-							<h2 class="w-full border-b-2 border-night-900 pb-2">
+							<h2 class="w-full border-b-2 border-forest-900 pb-2">
 								Recently created resumes :
 							</h2>
 							<ol class="overflow-y-auto flex flex-col gap-4">
@@ -67,7 +69,7 @@ function HistoryPage(props: HistoryPageProps) {
 											<li
 												class="flex flex-row gap-2 items-center group"
 												classList={{
-													"p-2 bg-night-50 rounded":
+													"p-2 bg-forest-50 rounded":
 														selected_resume_id() ===
 														resume.id,
 												}}
@@ -83,7 +85,7 @@ function HistoryPage(props: HistoryPageProps) {
 														class=" overflow-clip w-full text-start flex flex-row gap-1"
 													>
 														<span class="overflow-hidden text-ellipsis whitespace-nowrap">
-                                                        - {resume.title}
+															- {resume.title}
 														</span>
 														<span class="whitespace-nowrap">
 															|{" "}
@@ -95,7 +97,7 @@ function HistoryPage(props: HistoryPageProps) {
 													href={`/resume/${resume.id}`}
 													class="flex-shrink-0 hidden group-hover:block"
 												>
-													<EditIcon class="fill-night-900" />
+													<EditIcon class="fill-forest-900" />
 												</A>
 											</li>
 										);
@@ -106,8 +108,28 @@ function HistoryPage(props: HistoryPageProps) {
 					</div>
 				</section>
 				<section class="rounded bg-lapis-10 overflow-y-auto p-4 h-full">
-					<Show when={resume()} fallback={<LoadingSpinner />}>
-						<ResumePreview job_specific_resume={resume()!} />
+					<Show
+						when={selected_resume_id()}
+						fallback={
+							<div class="w-full h-full flex flex-col items-center justify-center">
+								<div class="items-center flex flex-col gap-4">
+									<h2>
+										No resume to display, Start creating
+										resumes for your next dream job
+									</h2>
+									<A
+										href="/"
+										class="w-fit text-center px-4 py-2 bg-lapis-200 hover:bg-lapis-100 text-snow-100 rounded"
+									>
+										Return to home page
+									</A>
+								</div>
+							</div>
+						}
+					>
+						<Suspense fallback={<LoadingSpinner />}>
+							<ResumePreview job_specific_resume={resume()!} />
+						</Suspense>
 					</Show>
 				</section>
 			</section>

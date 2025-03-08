@@ -111,7 +111,7 @@ func HandleWebhook(c *fiber.Ctx, DB *db.Database) error {
 
 	event, err := webhook.ConstructEvent(webhook_payload, signature, webhook_secret)
 	if err != nil {
-		slog.Error("Error verifying webhook signature", "err", err)
+		slog.Error("verifying webhook signature", "err", err)
 		return c.Status(fiber.StatusBadRequest).Send([]byte("Webhook signature verification failed"))
 	}
 
@@ -121,7 +121,9 @@ func HandleWebhook(c *fiber.Ctx, DB *db.Database) error {
 
 	switch event.Type {
 	case "checkout.session.completed":
+
 		var session_obj stripe.CheckoutSession
+
 		err := json.Unmarshal(event.Data.Raw, &session_obj)
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).Send([]byte("Error parsing webhook payload"))
@@ -129,14 +131,15 @@ func HandleWebhook(c *fiber.Ctx, DB *db.Database) error {
 
 		customer, err := queries.GetCustomerByStripeID(query_ctx, session_obj.Customer.ID)
 		if err != nil {
-			slog.Error("Error getting customer", "err", err)
+			slog.Error("getting customer", "err", err)
 			return c.Status(fiber.StatusBadRequest).Send([]byte("Error parsing webhook payload"))
 		}
 		metadata, err := json.Marshal(session_obj)
 		if err != nil {
-			slog.Error("error marshaling metadata", "err", err)
+			slog.Error("marshaling metadata", "err", err)
 			return c.Status(fiber.StatusBadRequest).Send([]byte("Error parsing webhook payload"))
 		}
+
 		err = queries.InsertPayment(query_ctx, sqlc_gen.InsertPaymentParams{
 			PaymentID: session_obj.PaymentIntent.ID,
 			UserID:    customer.ID,
@@ -147,12 +150,12 @@ func HandleWebhook(c *fiber.Ctx, DB *db.Database) error {
 			CreatedAt: db.Int64ToTimestamptz(session_obj.Created),
 		})
 		if err != nil {
-			slog.Error("error InsertPayment", "err", err)
+			slog.Error("InsertPayment", "err", err)
 			return c.Status(fiber.StatusInternalServerError).Send([]byte("Error processing webhook"))
 		}
 		period, err := queries.GetValidityPeroidByProductID(query_ctx, session_obj.Metadata["product_id"])
 		if err != nil {
-			slog.Error("error GetValidityPeroidByProductID", "err", err)
+			slog.Error("GetValidityPeroidByProductID", "err", err)
 			return c.Status(fiber.StatusInternalServerError).Send([]byte("Error processing webhook"))
 		}
 		period_duration := db.IntervalToDuration(period)
@@ -165,7 +168,7 @@ func HandleWebhook(c *fiber.Ctx, DB *db.Database) error {
 			Metadata:  metadata,
 		})
 		if err != nil {
-			slog.Error("error UpsertPaymentValidity", "err", err)
+			slog.Error("UpsertPaymentValidity", "err", err)
 			return c.Status(fiber.StatusInternalServerError).Send([]byte("Error processing webhook"))
 		}
 
@@ -179,4 +182,52 @@ func HandleWebhook(c *fiber.Ctx, DB *db.Database) error {
 	}
 
 	return c.SendString("Webhook processed successfully")
+}
+
+func HandlePaymentValidityStatus(c *fiber.Ctx, DB *db.Database) error {
+	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	queries := sqlc_gen.New(DB.Pool)
+
+	user_id, err := middlewares.GetUserID(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized access",
+		})
+	}
+
+	validity_status, err := queries.GetUserValidityStatus(query_ctx, user_id)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error":   "Could not get profile",
+			"details": err.Error(),
+		})
+	}
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"validity_status": validity_status,
+	})
+}
+
+func HandlePaymentHistory(c *fiber.Ctx, DB *db.Database) error {
+	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	queries := sqlc_gen.New(DB.Pool)
+
+	user_id, err := middlewares.GetUserID(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized access",
+		})
+	}
+
+	payment_history, err := queries.GetUserPaymentHistory(query_ctx, user_id)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error":   "Could not get profile",
+			"details": err.Error(),
+		})
+	}
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"payment_history": payment_history,
+	})
 }

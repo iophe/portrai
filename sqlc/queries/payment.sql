@@ -10,12 +10,6 @@ SELECT
 FROM payment.prices 
 WHERE plan = @plan::text;
 
--- name: GetPriceByAmount :one
-SELECT id 
-FROM payment.prices 
-WHERE unit_amount = @unit_amount::int
-AND currency = @currency::text
-LIMIT 1;
 
 -- name: GetCustomerByUserID :one
 SELECT 
@@ -93,3 +87,60 @@ INSERT INTO payment.payments (
 -- name: DeletePayment :exec
 DELETE FROM payment.payments 
 WHERE payment_id = @payment_id::text;
+
+-- name: GetConsumptionCost :one
+SELECT
+    total_cost_per_payment
+FROM payment.usage_analytics 
+WHERE user_id = @user_id::uuid;
+
+-- name: AddProductUsage :exec
+INSERT INTO payment.usage_history (
+   user_id,
+   input_token_used,
+   price_rate_input_token,
+   output_token_used,
+   price_rate_output_token,
+   model,
+   duration,
+   valid,
+   date
+) VALUES (
+   @user_id::uuid,
+   @input_token_used::bigint,
+   @price_rate_input_token::decimal,
+   @output_token_used::bigint,
+   @price_rate_output_token::decimal,
+   @model::text,
+   @duration::interval,
+   @valid::boolean,
+   CURRENT_TIMESTAMP
+);
+
+-- name: GetPriceForPayment :one
+SELECT p.unit_amount
+FROM payment.validity v
+JOIN payment.prices p ON v.price_id = p.id
+WHERE v.user_id = @user_id::uuid
+LIMIT 1;
+
+-- name: GetUserValidityStatus :one
+SELECT 
+    created_at,
+    expired_at,
+    CASE 
+        WHEN expired_at IS NULL THEN false
+        WHEN expired_at > current_timestamp THEN true
+        ELSE false
+    END AS is_valid
+FROM payment.validity
+WHERE user_id = @user_id::uuid;
+
+-- name: GetUserPaymentHistory :many
+SELECT 
+    amount,
+    currency,
+    created_at
+FROM payment.payments
+WHERE user_id = @user_id::uuid
+ORDER BY created_at DESC;

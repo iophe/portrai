@@ -14,7 +14,7 @@ function ItemHeader(props: ItemHeaderProps) {
 		<header class="flex flex-row gap-4 justify-between">
 			<div class="flex flex-row gap-4">
 				<div class="flex flex-col gap-2">
-					<h3 class="text-lg font-medium text-night-900">
+					<h3 class="text-lg font-medium text-forest-900">
 						{props.title}
 					</h3>
 					<Show when={props.subtitle}>

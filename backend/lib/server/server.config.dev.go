@@ -39,10 +39,16 @@ func ConfigureServer(app *fiber.App, cfg *ServerCfg) {
 
 	// CORS configuration
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "http://localhost:5050",
+		AllowOrigins:     "http://localhost:5050,http://localhost:3000",
 		AllowCredentials: true,
-		AllowMethods:     "GET,POST",
-		AllowHeaders:     "Origin,Content-Type,Accept,Authorization,X-CSRF-Token",
+		AllowMethods:     "GET,POST,OPTIONS",
+		AllowHeaders:     "Origin,Content-Type,Accept,Authorization,X-CSRF-Token,X-Requested-With",
 	}))
+
+	app.Use(func(c *fiber.Ctx) error {
+		c.Set("Cross-Origin-Resource-Policy", "cross-origin")
+		c.Set("Cross-Origin-Opener-Policy", "same-origin")
+		return c.Next()
+	})
 
 }

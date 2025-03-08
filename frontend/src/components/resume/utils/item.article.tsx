@@ -44,7 +44,7 @@ function ItemArticle(props: ItemArticleProps) {
 					class="cursor-move pr-4 py-4 hover:bg-gray-100"
 					title="Drag to reorder"
 				>
-					<DragIcon class="fill-night-900" />
+					<DragIcon class="fill-forest-900" />
 				</button>
 				<div class="flex flex-row gap-4">
 					<button
@@ -55,10 +55,10 @@ function ItemArticle(props: ItemArticleProps) {
 					>
 						<Switch>
 							<Match when={props.is_visible}>
-								<EyeOpenIcon class="fill-night-900" />
+								<EyeOpenIcon class="fill-forest-900" />
 							</Match>
 							<Match when={!props.is_visible}>
-								<EyeCloseIcon class="fill-night-900" />
+								<EyeCloseIcon class="fill-forest-900" />
 							</Match>
 						</Switch>
 					</button>
@@ -68,7 +68,7 @@ function ItemArticle(props: ItemArticleProps) {
 							props.edit(props.item_id);
 						}}
 					>
-						<EditIcon class="fill-night-900" />
+						<EditIcon class="fill-forest-900" />
 					</button>
 				</div>
 			</header>

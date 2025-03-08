@@ -30,6 +30,28 @@ function ResumeAIPreview(props: ResumePreviewProps) {
 	const [with_cover_letter, set_with_cover_letter] =
 		createSignal<boolean>(false);
 
+	const [account, { refetch }] = createResource(async () => {
+		try {
+			const res = await api.get("/account/user");
+			const user = res.data.user as User;
+			return user;
+		} catch (error) {}
+	});
+	const [profile, { mutate: mutate_profile, refetch: refetch_profile }] =
+		createResource(async () => {
+			try {
+				const response = await api.get("/account/profile");
+				const result = response.data.profile as Profile;
+				return result;
+			} catch (error) {
+				fault.minor({
+					message:
+						((error as AxiosError).response?.data as any).error ??
+						(error as AxiosError).message,
+				});
+				return;
+			}
+		});
 	return (
 		<section class="w-full h-full flex flex-col gap-4">
 			<textarea
@@ -50,7 +72,7 @@ function ResumeAIPreview(props: ResumePreviewProps) {
 					value={with_cover_letter()}
 				/>
 				<button
-					class="bg-night-200 px-4 py-2 rounded text-snow-100 font-bold"
+					class="bg-forest-200 px-4 py-2 rounded text-snow-100 font-bold"
 					onClick={async () => {
 						if (!job_description()) return;
 						try {
@@ -64,28 +86,26 @@ function ResumeAIPreview(props: ResumePreviewProps) {
 							const uuid = crypto.randomUUID();
 							set_resume_data({
 								resume_data: res.data.result as ResumeData,
-								contact: {
-									name: "Test",
-									email: "test@test.com",
-								},
+								profile: profile(),
+								user: account(),
 							});
 							set_resume_title(uuid);
 							const resume_data = res.data.result as ResumeData;
-							// resume_data.certificates.forEach(
-							// 	(v, i) => (v.certificate_id = i)
-							// );
-							// resume_data.experiences.forEach(
-							// 	(v, i) => (v.experience_id = i)
-							// );
-							// resume_data.educations.forEach(
-							// 	(v, i) => (v.education_id = i)
-							// );
-							// resume_data.projects.forEach(
-							// 	(v, i) => (v.project_id = i)
-							// );
-							// resume_data.skills.forEach(
-							// 	(v, i) => (v.skill_id = i)
-							// );
+							resume_data.certificates.forEach(
+								(v, i) => (v.certificate_id = i)
+							);
+							resume_data.experiences.forEach(
+								(v, i) => (v.experience_id = i)
+							);
+							resume_data.educations.forEach(
+								(v, i) => (v.education_id = i)
+							);
+							resume_data.projects.forEach(
+								(v, i) => (v.project_id = i)
+							);
+							resume_data.skills.forEach(
+								(v, i) => (v.skill_id = i)
+							);
 
 							DB_JOB_SPECIFIC_RESUMES.upsert(db, uuid, {
 								resume_data: resume_data,
@@ -114,10 +134,8 @@ function ResumeAIPreview(props: ResumePreviewProps) {
 
 							set_resume_data({
 								resume_data: res.data.resume_data as ResumeData,
-								contact: {
-									name: "Test",
-									email: "test@test.com",
-								},
+								profile: profile(),
+								user: account(),
 							});
 						} catch (error) {
 							console.log(error);
@@ -142,7 +160,7 @@ function ResumeAIPreview(props: ResumePreviewProps) {
 							navigate(`/resume/${resume_title()}`);
 						}}
 					>
-						<EditIcon class="fill-night-900" />
+						<EditIcon class="fill-forest-900" />
 					</button>
 					<div
 						ref={cv_ref}

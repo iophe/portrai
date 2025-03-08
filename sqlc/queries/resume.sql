@@ -11,7 +11,7 @@ INSERT INTO public.resume_items (
     description,
     priority,
     tags,
-    version,
+    version_id,
     metadata
 ) VALUES (
     @user_id::uuid,
@@ -24,7 +24,7 @@ INSERT INTO public.resume_items (
     @is_current::boolean,
     @description::text,
     @priority::integer,
-    COALESCE(@tags::text[], ARRAY[]::text[]),
+    COALESCE(sqlc.narg(tags)::text[], ARRAY[]::text[]),
     (SELECT current_resume_version FROM public.users WHERE id = @user_id::uuid),
     COALESCE(@metadata::jsonb, '{}'::jsonb) -- Store type-specific fields in metadata
 )
@@ -33,19 +33,19 @@ RETURNING item_id;
 -- name: UpdateResumeItem :exec
 UPDATE public.resume_items
 SET
-    title = COALESCE(@title::text, title),
-    subtitle = COALESCE(@subtitle::text, subtitle),
-    location = COALESCE(@location::text, location),
-    start_date = COALESCE(@start_date::date, start_date),
-    end_date = COALESCE(@end_date::date, end_date),
+    title = COALESCE(sqlc.narg(title)::text, title),
+    subtitle = COALESCE(sqlc.narg(subtitle)::text, subtitle),
+    location = COALESCE(sqlc.narg(location)::text, location),
+    start_date = COALESCE(sqlc.narg(start_date)::date, start_date),
+    end_date = COALESCE(sqlc.narg(end_date)::date, end_date),
     is_current = CASE 
         WHEN @end_date::date IS NOT NULL THEN false 
-        ELSE COALESCE(@is_current::boolean, is_current)
+        ELSE COALESCE(sqlc.narg(is_current)::boolean, is_current)
     END,
-    description = COALESCE(@description::text, description),
-    priority = COALESCE(@priority::integer, priority),
-    tags = COALESCE(@tags::text[], tags),
-    metadata = COALESCE(@metadata::jsonb, metadata)
+    description = COALESCE(sqlc.narg(description)::text, description),
+    priority = COALESCE(sqlc.narg(priority)::integer, priority),
+    tags = COALESCE(sqlc.narg(tags)::text[], tags),
+    metadata = COALESCE(sqlc.narg(metadata)::jsonb, metadata)
 WHERE 
     item_id = @item_id::bigint 
     AND user_id = @user_id::uuid;
@@ -87,7 +87,7 @@ FROM public.resume_items
 WHERE 
     user_id = @user_id::uuid 
     AND item_type = @item_type::text
-    AND version = (SELECT current_resume_version FROM public.users WHERE id = @user_id::uuid)
+    AND version_id = (SELECT current_resume_version FROM public.users WHERE id = @user_id::uuid)
 ORDER BY 
     COALESCE(priority, 0) DESC,
     COALESCE(end_date, '9999-12-31'::date) DESC,
@@ -199,8 +199,8 @@ INSERT INTO public.resume_item_notes (
 -- name: UpdateNote :exec
 UPDATE public.resume_item_notes 
 SET
-    note_type = COALESCE(@note_type::text, note_type),
-    content = COALESCE(@content::text, content)
+    note_type = COALESCE(sqlc.narg(note_type)::text, note_type),
+    content = COALESCE(sqlc.narg(content)::text, content)
 WHERE
     note_id = @note_id::bigint
     AND item_id = @item_id::bigint 
@@ -252,7 +252,7 @@ SELECT jsonb_build_object(
         WHERE resume_items.user_id = @user_id::uuid 
         AND resume_items.item_type = 'experience'
         AND resume_items.is_visible = true
-        AND resume_items.version = resume_version.current_resume_version
+        AND resume_items.version_id = resume_version.current_resume_version
     ),
     'educations', (
         SELECT COALESCE(jsonb_agg(
@@ -286,7 +286,7 @@ SELECT jsonb_build_object(
         WHERE resume_items.user_id = @user_id::uuid 
         AND resume_items.item_type = 'education'
         AND resume_items.is_visible = true
-        AND resume_items.version = resume_version.current_resume_version
+        AND resume_items.version_id = resume_version.current_resume_version
     ),
     'skills', (
         SELECT COALESCE(jsonb_agg(
@@ -316,7 +316,7 @@ SELECT jsonb_build_object(
         WHERE resume_items.user_id = @user_id::uuid 
         AND resume_items.item_type = 'skill'
         AND resume_items.is_visible = true
-        AND resume_items.version = resume_version.current_resume_version
+        AND resume_items.version_id = resume_version.current_resume_version
     ),
     'certificates', (
         SELECT COALESCE(jsonb_agg(
@@ -347,7 +347,7 @@ SELECT jsonb_build_object(
         WHERE resume_items.user_id = @user_id::uuid 
         AND resume_items.item_type = 'certificate'
         AND resume_items.is_visible = true
-        AND resume_items.version = resume_version.current_resume_version
+        AND resume_items.version_id = resume_version.current_resume_version
     ),
     'projects', (
         SELECT COALESCE(jsonb_agg(
@@ -379,13 +379,13 @@ SELECT jsonb_build_object(
         WHERE resume_items.user_id = @user_id::uuid 
         AND resume_items.item_type = 'project'
         AND resume_items.is_visible = true
-        AND resume_items.version = resume_version.current_resume_version
+        AND resume_items.version_id = resume_version.current_resume_version
     )
 ) as resume_data;
 
 -- name: GetUserResumeVersions :one
 SELECT
-    u.current_resume_version,
+    (SELECT version from public.resume_versions rv where rv.version_id = u.current_resume_version),
     ARRAY(
         SELECT rv.version 
         FROM public.resume_versions rv 
@@ -400,7 +400,7 @@ WHERE
 -- name: ChangeResumeVersion :exec
 UPDATE public.users
 SET 
-    current_resume_version = @version::text
+    current_resume_version = (SELECT version_id from public.resume_versions rv where rv.version = @version::text)
 WHERE 
     id = @user_id::uuid;
 
@@ -409,68 +409,15 @@ INSERT INTO public.resume_versions (user_id, version)
 VALUES (@user_id::uuid, @new_version::text);
 
 -- name: DeleteResumeVersion :exec
-WITH delete_version AS (
-    -- First delete the version from resume_versions
-    DELETE FROM public.resume_versions 
-    WHERE 
-        user_id = @user_id::uuid 
-        AND version = @version::text
-    RETURNING user_id, version
-),
-find_next_version AS (
-    -- Find another version to use if deleting the current version
-    SELECT version 
-    FROM public.resume_versions
-    WHERE 
-        user_id = @user_id::uuid 
-        AND version != @version::text
-    ORDER BY 
-        CASE WHEN version = 'main' THEN 0 ELSE 1 END, -- Prefer 'main' if available
-        version
-    LIMIT 1
-),
-update_current_version AS (
-    -- If this is the current version, reset to another available version or 'main'
-    UPDATE public.users
-    SET 
-        current_resume_version = COALESCE((SELECT version FROM find_next_version), 'main'),
-        updated_at = current_timestamp
-    WHERE 
-        id = @user_id::uuid
-        AND current_resume_version = @version::text
-)
--- Delete all resume items with this version
-DELETE FROM public.resume_items
+DELETE FROM public.resume_versions
 WHERE 
     user_id = @user_id::uuid
     AND version = @version::text;
 
 -- name: RenameResumeVersion :exec
-WITH rename_version AS (
-    -- Update the version in resume_versions
-    UPDATE public.resume_versions
-    SET 
-        version = @new_name::text
-    WHERE 
-        user_id = @user_id::uuid 
-        AND version = @old_name::text
-    RETURNING user_id, version
-),
-update_current_version AS (
-    -- Update the current_resume_version in users if it matches
-    UPDATE public.users
-    SET 
-        current_resume_version = @new_name::text,
-        updated_at = current_timestamp
-    WHERE 
-        id = @user_id::uuid
-        AND current_resume_version = @old_name::text
-)
--- Update all resume items with this version
-UPDATE public.resume_items
+UPDATE public.resume_versions
 SET 
-    version = @new_name::text,
-    updated_at = current_timestamp
+    version = @new_name::text
 WHERE 
     user_id = @user_id::uuid
     AND version = @old_name::text;

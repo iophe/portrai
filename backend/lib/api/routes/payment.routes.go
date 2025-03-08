@@ -30,6 +30,18 @@ func RegisterPaymentRoutes(group fiber.Router) {
 		},
 	)
 
+	payment_group.Get("/status",
+		middlewares.Protected(),
+		func(c *fiber.Ctx) error {
+			return handlers.HandlePaymentValidityStatus(c, &db.DB)
+		},
+	)
+	payment_group.Get("/history",
+		middlewares.Protected(),
+		func(c *fiber.Ctx) error {
+			return handlers.HandlePaymentHistory(c, &db.DB)
+		},
+	)
 	payment_group.Get("/refresh",
 		middlewares.Protected(),
 		func(c *fiber.Ctx) error {

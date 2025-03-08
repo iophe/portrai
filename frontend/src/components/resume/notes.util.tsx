@@ -123,7 +123,7 @@ export function NoteView(props: NoteViewProps) {
 						}
 					}}
 				>
-					<CloseIcon class="fill-night-900" />
+					<CloseIcon class="fill-forest-900" />
 				</button>
 			</span>
 			<p class="text-gray-700">{props.content}</p>
@@ -152,8 +152,8 @@ export function NoteList(props: NoteListProps) {
 					disabled={showing_note_form()}
 					class="flex flex-row items-center gap-2"
 				>
-					<p class="text-2xl text-night-900">+</p>
-					<NoteIcon class="fill-night-900" />
+					<p class="text-2xl text-forest-900">+</p>
+					<NoteIcon class="fill-forest-900" />
 				</button>
 			</header>
 

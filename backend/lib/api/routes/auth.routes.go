@@ -3,6 +3,8 @@ package routes
 import (
 	"backend/lib/api/handlers"
 	"backend/lib/api/middlewares"
+	"backend/lib/services/cache"
+	"backend/lib/services/db"
 	"log/slog"
 
 	"github.com/gofiber/fiber/v2"
@@ -19,7 +21,7 @@ func RegisterAuthRoutes(group fiber.Router) {
 					"error": "Invalid request body",
 				})
 			}
-			res, err := handlers.HandleEmailSignup(c, data)
+			res, err := handlers.HandleEmailSignup(c, data, &db.DB)
 			if err != nil {
 				slog.Error("signup failed", "err", err)
 				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -63,6 +65,6 @@ func RegisterAuthRoutes(group fiber.Router) {
 	auth_group.Post("/delete",
 		middlewares.Protected(),
 		func(c *fiber.Ctx) error {
-			return handlers.HandleDeleteAccount(c)
+			return handlers.HandleDeleteAccount(c, &cache.CACHE, &db.DB)
 		})
 }

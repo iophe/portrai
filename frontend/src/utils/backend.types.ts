@@ -138,6 +138,30 @@ interface ProjectsResponse {
 }
 
 interface UserResumeVersions {
-	current_resume_version: string;
+	version: string;
 	all_versions: string[];
+}
+
+interface User {
+	full_name?: string;
+	email?: string;
+	phone?: string;
+	location?: string;
+}
+interface Profile {
+	linkedin?: string;
+	website?: string;
+	description?: string;
+}
+
+interface UserValidityStatus {
+	created_at: string;
+	expired_at: string;
+	is_valid: boolean;
+}
+
+interface UserPaymentHistory {
+	amount: number;
+	currency: string;
+	created_at: string;
 }

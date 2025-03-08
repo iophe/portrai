@@ -8,7 +8,6 @@ export const api = axios.create({
 
 api.interceptors.request.use(
 	(config) => {
-		// Récupérer le token CSRF du cookie en convertissant en string et ajoutant '='
 		const csrfToken =
 			document.cookie
 				.split("; ")
@@ -16,7 +15,6 @@ api.interceptors.request.use(
 				?.split("=")[1]
 				?.toString() + "=";
 
-		// Ajouter les tokens aux en-têtes
 		if (csrfToken) {
 			config.headers["X-CSRF-Token"] = csrfToken;
 		}

@@ -138,6 +138,24 @@ type PaymentProduct struct {
 	Metadata       []byte          `json:"metadata"`
 }
 
+type PaymentUsageAnalytic struct {
+	UserID              uuid.UUID      `json:"user_id"`
+	TotalCostPerPayment pgtype.Numeric `json:"total_cost_per_payment"`
+	AllTimeCost         pgtype.Numeric `json:"all_time_cost"`
+}
+
+type PaymentUsageHistory struct {
+	UserID               uuid.UUID          `json:"user_id"`
+	InputTokenUsed       int64              `json:"input_token_used"`
+	PriceRateInputToken  pgtype.Numeric     `json:"price_rate_input_token"`
+	OutputTokenUsed      int64              `json:"output_token_used"`
+	PriceRateOutputToken pgtype.Numeric     `json:"price_rate_output_token"`
+	Model                string             `json:"model"`
+	Duration             pgtype.Interval    `json:"duration"`
+	Valid                bool               `json:"valid"`
+	Date                 pgtype.Timestamptz `json:"date"`
+}
+
 type PaymentValidity struct {
 	UserID    uuid.UUID          `json:"user_id"`
 	PaymentID string             `json:"payment_id"`
@@ -145,6 +163,18 @@ type PaymentValidity struct {
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 	ExpiredAt pgtype.Timestamptz `json:"expired_at"`
 	Metadata  []byte             `json:"metadata"`
+}
+
+type Profile struct {
+	ProfileID   int64              `json:"profile_id"`
+	UserID      uuid.UUID          `json:"user_id"`
+	Linkedin    string             `json:"linkedin"`
+	Website     string             `json:"website"`
+	VersionID   int64              `json:"version_id"`
+	Description string             `json:"description"`
+	Metadata    []byte             `json:"metadata"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
 }
 
 type ResumeItem struct {
@@ -161,7 +191,7 @@ type ResumeItem struct {
 	Priority    int32              `json:"priority"`
 	IsVisible   pgtype.Bool        `json:"is_visible"`
 	Tags        []string           `json:"tags"`
-	Version     string             `json:"version"`
+	VersionID   int64              `json:"version_id"`
 	Metadata    []byte             `json:"metadata"`
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
@@ -178,14 +208,18 @@ type ResumeItemNote struct {
 }
 
 type ResumeVersion struct {
-	UserID  uuid.UUID `json:"user_id"`
-	Version string    `json:"version"`
+	VersionID int64     `json:"version_id"`
+	UserID    uuid.UUID `json:"user_id"`
+	Version   string    `json:"version"`
 }
 
 type User struct {
 	ID                   uuid.UUID          `json:"id"`
-	FullName             pgtype.Text        `json:"full_name"`
-	CurrentResumeVersion string             `json:"current_resume_version"`
+	FullName             string             `json:"full_name"`
+	Email                string             `json:"email"`
+	Phone                string             `json:"phone"`
+	Location             string             `json:"location"`
+	CurrentResumeVersion int64              `json:"current_resume_version"`
 	BillingAddress       []byte             `json:"billing_address"`
 	PaymentMethod        []byte             `json:"payment_method"`
 	CreatedAt            pgtype.Timestamptz `json:"created_at"`
