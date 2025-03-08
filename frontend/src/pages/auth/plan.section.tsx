@@ -58,15 +58,13 @@ export function PlanSection(props: PlanSectionProps) {
 						<UnverifiedIcon class="fill-forest-900" />
 						<p>Your account is deactivated</p>
 					</span>
-					<span class="self-center">
-						to activate your account :{" "}
-					</span>
-						<A
-							href="/pricing"
-							class="self-center w-fit px-4 py-2 bg-forest-300 hover:bg-forest-100 text-snow-100 rounded transition-all duration-100 ease-in-out "
-						>
-							buy here
-						</A>
+					<span class="self-center">to activate your account : </span>
+					<A
+						href="/pricing"
+						class="self-center w-fit px-4 py-2 bg-forest-300 hover:bg-forest-100 text-snow-100 rounded transition-all duration-100 ease-in-out "
+					>
+						buy here
+					</A>
 				</div>
 			</Show>
 			<section class="overflow-hidden h-fit max-h-32">
