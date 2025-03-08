@@ -183,3 +183,51 @@ func HandleWebhook(c *fiber.Ctx, DB *db.Database) error {
 
 	return c.SendString("Webhook processed successfully")
 }
+
+func HandlePaymentValidityStatus(c *fiber.Ctx, DB *db.Database) error {
+	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	queries := sqlc_gen.New(DB.Pool)
+
+	user_id, err := middlewares.GetUserID(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized access",
+		})
+	}
+
+	validity_status, err := queries.GetUserValidityStatus(query_ctx, user_id)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error":   "Could not get profile",
+			"details": err.Error(),
+		})
+	}
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"validity_status": validity_status,
+	})
+}
+
+func HandlePaymentHistory(c *fiber.Ctx, DB *db.Database) error {
+	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	queries := sqlc_gen.New(DB.Pool)
+
+	user_id, err := middlewares.GetUserID(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized access",
+		})
+	}
+
+	payment_history, err := queries.GetUserPaymentHistory(query_ctx, user_id)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error":   "Could not get profile",
+			"details": err.Error(),
+		})
+	}
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"payment_history": payment_history,
+	})
+}

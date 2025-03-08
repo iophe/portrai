@@ -1,5 +1,4 @@
 import Header from "@components/header.autherized";
-import { getProfile, updateProfile, uploadAvatar } from "@utils/profile";
 import { Component, For, Show, createSignal, onMount } from "solid-js";
 import { A } from "@solidjs/router";
 import AccountIcon from "@assets/icons/account.svg?component-solid";
@@ -27,7 +26,7 @@ function Account(props: AccountPageProps) {
 					<AccountSection />
 					<section class="flex flex-col gap-4">
 						<AvatarSection />
-						<PlanSection plan={{ type: "paid", features: [] }} />
+						<PlanSection />
 					</section>
 				</section>
 

@@ -28,7 +28,7 @@ CREATE TABLE public.resume_versions (
 */
 create table public.users (
   -- UUID from auth.users
-  id uuid references auth.users not null primary key ON DELETE CASCADE,
+  id uuid primary key not null references auth.users on delete cascade,
   full_name text NOT NULL DEFAULT '',
   email text NOT NULL DEFAULT '',
   phone text NOT NULL DEFAULT '',

@@ -203,6 +203,68 @@ func (q *Queries) GetPriceForPayment(ctx context.Context, userID uuid.UUID) (pgt
 	return unit_amount, err
 }
 
+const getUserPaymentHistory = `-- name: GetUserPaymentHistory :many
+SELECT 
+    amount,
+    currency,
+    created_at
+FROM payment.payments
+WHERE user_id = $1::uuid
+ORDER BY created_at DESC
+`
+
+type GetUserPaymentHistoryRow struct {
+	Amount    pgtype.Int4        `json:"amount"`
+	Currency  string             `json:"currency"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
+func (q *Queries) GetUserPaymentHistory(ctx context.Context, userID uuid.UUID) ([]GetUserPaymentHistoryRow, error) {
+	rows, err := q.db.Query(ctx, getUserPaymentHistory, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetUserPaymentHistoryRow{}
+	for rows.Next() {
+		var i GetUserPaymentHistoryRow
+		if err := rows.Scan(&i.Amount, &i.Currency, &i.CreatedAt); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getUserValidityStatus = `-- name: GetUserValidityStatus :one
+SELECT 
+    created_at,
+    expired_at,
+    CASE 
+        WHEN expired_at IS NULL THEN false
+        WHEN expired_at > current_timestamp THEN true
+        ELSE false
+    END AS is_valid
+FROM payment.validity
+WHERE user_id = $1::uuid
+`
+
+type GetUserValidityStatusRow struct {
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	ExpiredAt pgtype.Timestamptz `json:"expired_at"`
+	IsValid   bool               `json:"is_valid"`
+}
+
+func (q *Queries) GetUserValidityStatus(ctx context.Context, userID uuid.UUID) (GetUserValidityStatusRow, error) {
+	row := q.db.QueryRow(ctx, getUserValidityStatus, userID)
+	var i GetUserValidityStatusRow
+	err := row.Scan(&i.CreatedAt, &i.ExpiredAt, &i.IsValid)
+	return i, err
+}
+
 const getValidityPeroidByProductID = `-- name: GetValidityPeroidByProductID :one
 SELECT 
     validity_period

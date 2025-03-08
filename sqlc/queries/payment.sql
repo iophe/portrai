@@ -123,3 +123,24 @@ FROM payment.validity v
 JOIN payment.prices p ON v.price_id = p.id
 WHERE v.user_id = @user_id::uuid
 LIMIT 1;
+
+-- name: GetUserValidityStatus :one
+SELECT 
+    created_at,
+    expired_at,
+    CASE 
+        WHEN expired_at IS NULL THEN false
+        WHEN expired_at > current_timestamp THEN true
+        ELSE false
+    END AS is_valid
+FROM payment.validity
+WHERE user_id = @user_id::uuid;
+
+-- name: GetUserPaymentHistory :many
+SELECT 
+    amount,
+    currency,
+    created_at
+FROM payment.payments
+WHERE user_id = @user_id::uuid
+ORDER BY created_at DESC;

@@ -36,7 +36,9 @@ type Querier interface {
 	GetResumeItemById(ctx context.Context, arg GetResumeItemByIdParams) (GetResumeItemByIdRow, error)
 	GetResumeItemsByType(ctx context.Context, arg GetResumeItemsByTypeParams) ([]GetResumeItemsByTypeRow, error)
 	GetUserById(ctx context.Context, userID uuid.UUID) (GetUserByIdRow, error)
+	GetUserPaymentHistory(ctx context.Context, userID uuid.UUID) ([]GetUserPaymentHistoryRow, error)
 	GetUserResumeVersions(ctx context.Context, userID uuid.UUID) (GetUserResumeVersionsRow, error)
+	GetUserValidityStatus(ctx context.Context, userID uuid.UUID) (GetUserValidityStatusRow, error)
 	GetValidityPeroidByProductID(ctx context.Context, productID string) (pgtype.Interval, error)
 	InsertPayment(ctx context.Context, arg InsertPaymentParams) error
 	RenameResumeVersion(ctx context.Context, arg RenameResumeVersionParams) error

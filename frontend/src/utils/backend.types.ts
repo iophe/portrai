@@ -153,3 +153,15 @@ interface Profile {
 	website?: string;
 	description?: string;
 }
+
+interface UserValidityStatus {
+	created_at: string;
+	expired_at: string;
+	is_valid: boolean;
+}
+
+interface UserPaymentHistory {
+	amount: number;
+	currency: string;
+	created_at: string;
+}
