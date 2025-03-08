@@ -8,7 +8,7 @@ const SuccessPage = () => {
 	createEffect(() => {
 		// Redirect after 3 seconds
 		const timer = setTimeout(() => {
-			navigate("/resume");
+			navigate("/");
 		}, 5000);
 
 		// Cleanup timeout if component unmounts

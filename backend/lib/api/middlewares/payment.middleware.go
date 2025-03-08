@@ -94,6 +94,16 @@ func SetPaymentCookies(c *fiber.Ctx, token string) {
 	})
 }
 
+func ClearPaymentCookies(c *fiber.Ctx) {
+	c.Cookie(&fiber.Cookie{
+		Name:     "payment_token",
+		Value:    "",
+		Expires:  time.Now().Add(-24 * time.Hour),
+		Secure:   true,
+		HTTPOnly: true,
+		SameSite: "Strict",
+	})
+}
 func RefreshPaymentToken(user_id uuid.UUID, DB *db.Database) (string, error) {
 	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

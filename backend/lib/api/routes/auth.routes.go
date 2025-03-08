@@ -3,6 +3,7 @@ package routes
 import (
 	"backend/lib/api/handlers"
 	"backend/lib/api/middlewares"
+	"backend/lib/services/cache"
 	"backend/lib/services/db"
 	"log/slog"
 
@@ -64,6 +65,6 @@ func RegisterAuthRoutes(group fiber.Router) {
 	auth_group.Post("/delete",
 		middlewares.Protected(),
 		func(c *fiber.Ctx) error {
-			return handlers.HandleDeleteAccount(c)
+			return handlers.HandleDeleteAccount(c, &cache.CACHE, &db.DB)
 		})
 }

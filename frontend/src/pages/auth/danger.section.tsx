@@ -1,4 +1,7 @@
 import DangerIcon from "@assets/icons/danger.svg?component-solid";
+import api from "@utils/api";
+import { db } from "@utils/db/db";
+import { DB_JOB_SPECIFIC_RESUMES } from "@utils/db/resume.db";
 
 interface DangerZoneProps {}
 
@@ -15,9 +18,16 @@ export function DangerZone(props: DangerZoneProps) {
 				</p>
 				<button
 					class="w-fit py-2 px-4 text-snow-100 bg-lapis-400 hover:bg-lapis-200 rounded"
-					onclick={() => {
-						// Delete account handler directly in the onclick
+					onclick={async () => {
 						if (confirm("Are you sure you want to log out ?")) {
+							try {
+								await api.post("/auth/logout");
+								localStorage.clear();
+								await DB_JOB_SPECIFIC_RESUMES.clear(db);
+								window.location.reload();
+							} catch (error) {
+								console.error(error);
+							}
 						}
 					}}
 				>
@@ -29,13 +39,21 @@ export function DangerZone(props: DangerZoneProps) {
 				</p>
 				<button
 					class="w-fit py-2  text-red-500 hover:text-red-600 font-medium"
-					onclick={() => {
+					onclick={async () => {
 						// Delete account handler directly in the onclick
 						if (
 							confirm(
 								"Are you sure you want to delete your account? This action cannot be undone."
 							)
 						) {
+							try {
+								await api.post("/auth/delete");
+								localStorage.clear();
+								await DB_JOB_SPECIFIC_RESUMES.clear(db);
+								window.location.reload();
+							} catch (error) {
+								console.error(error);
+							}
 						}
 					}}
 				>

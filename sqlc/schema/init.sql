@@ -28,12 +28,12 @@ CREATE TABLE public.resume_versions (
 */
 create table public.users (
   -- UUID from auth.users
-  id uuid references auth.users not null primary key,
+  id uuid references auth.users not null primary key ON DELETE CASCADE,
   full_name text NOT NULL DEFAULT '',
   email text NOT NULL DEFAULT '',
   phone text NOT NULL DEFAULT '',
   location text NOT NULL DEFAULT '',
-  current_resume_version bigint NOT NULL,
+  current_resume_version bigint not null,
 
   -- The customer's billing address, stored in JSON format.
   billing_address jsonb,
@@ -61,24 +61,28 @@ CREATE OR REPLACE FUNCTION public.handle_resume_version_deletion()
 RETURNS TRIGGER AS $$
 DECLARE
   next_version_id bigint;
+  user_exists boolean;
 BEGIN
+  SELECT EXISTS(SELECT 1 FROM auth.users WHERE id = OLD.user_id) INTO user_exists;
   -- Check if the deleted version was the current version for any user
-  IF EXISTS (SELECT 1 FROM public.users WHERE current_resume_version = OLD.version_id) THEN
-    -- Find another version for this user if available
-    SELECT version_id INTO next_version_id
-    FROM public.resume_versions
-    WHERE user_id = OLD.user_id AND version_id <> OLD.version_id
-    ORDER BY version_id DESC
-    LIMIT 1;
-    
-    IF next_version_id IS NOT NULL THEN
-      -- Update the user's current_resume_version
-      UPDATE public.users
-      SET current_resume_version = next_version_id
-      WHERE id = OLD.user_id AND current_resume_version = OLD.version_id;
-    ELSE
-      -- If no other versions exist, prevent deletion
-      RAISE EXCEPTION 'Cannot delete the last resume version for a user';
+  IF user_exists THEN
+    IF EXISTS (SELECT 1 FROM public.users WHERE current_resume_version = OLD.version_id) THEN
+      -- Find another version for this user if available
+      SELECT version_id INTO next_version_id
+      FROM public.resume_versions
+      WHERE user_id = OLD.user_id AND version_id <> OLD.version_id
+      ORDER BY version_id DESC
+      LIMIT 1;
+      
+      IF next_version_id IS NOT NULL THEN
+        -- Update the user's current_resume_version
+        UPDATE public.users
+        SET current_resume_version = next_version_id
+        WHERE id = OLD.user_id AND current_resume_version = OLD.version_id;
+      ELSE
+        -- If no other versions exist, prevent deletion
+        RAISE EXCEPTION 'Cannot delete the last resume version for a user';
+      END IF;
     END IF;
   END IF;
   
@@ -174,7 +178,7 @@ CREATE TRIGGER on_version_created
 */
 create table payment.customers (
   -- UUID from auth.users
-  id uuid primary key not null references auth.users on delete cascade,
+  id uuid primary key not null references auth.users on delete set null,
   -- The user's customer ID in Stripe. User must not be able to update this.
   stripe_customer_id text
 );
@@ -260,7 +264,7 @@ create table payment.payments (
     -- Payment ID from Stripe, e.g. pi_1234.
     payment_id text primary key,
 
-    user_id uuid not null references auth.users on delete cascade,
+    user_id uuid not null references auth.users on delete set null,
 
     -- Set of key-value pairs, used to store additional information about the object in a structured format.
     metadata jsonb,
@@ -275,7 +279,7 @@ create table payment.payments (
 );
 
 create table payment.usage_analytics (
-  user_id uuid not null references auth.users on delete cascade,
+  user_id uuid not null references auth.users on delete set null,
   total_cost_per_payment decimal not null default 0,
   all_time_cost decimal not null default 0
 );
@@ -302,6 +306,7 @@ BEGIN
     SET 
         total_cost_per_payment = 0
     WHERE user_id = NEW.user_id;
+  RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
