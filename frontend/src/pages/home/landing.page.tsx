@@ -9,6 +9,7 @@ import {
 	onMount,
 } from "solid-js";
 import { A } from "@solidjs/router";
+import Footer from "@components/footer.default";
 
 interface LandingProps {}
 
@@ -555,6 +556,7 @@ function Landing(props: LandingProps) {
 					</section>
 				</section>
 			</section>
+			<Footer />
 		</main>
 	);
 }

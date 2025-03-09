@@ -3,6 +3,7 @@ import Header from "../../components/header.default";
 import { api } from "@utils/api";
 import { useLocation, useNavigate } from "@solidjs/router";
 import { Pay } from "@utils/payment";
+import Footer from "@components/footer.default";
 
 interface SignupPageProps {}
 
@@ -37,16 +38,16 @@ function SignupPage(props: SignupPageProps) {
 						Create your account
 					</h2>
 
-					<button class="w-full flex justify-center py-2 px-4 border border-gray-300 rounded shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+					<button class="w-full flex justify-center py-2 px-4 border border-lapis-300 rounded shadow-sm bg-white text-sm font-medium text-lapis-700 hover:bg-lapis-50">
 						Sign up with Google
 					</button>
 
 					<div class="relative my-6">
 						<div class="absolute inset-0 flex items-center">
-							<div class="w-full border-t border-gray-300"></div>
+							<div class="w-full border-t border-lapis-300"></div>
 						</div>
 						<div class="relative flex justify-center text-sm">
-							<span class="px-2 bg-gray-50 text-gray-500">
+							<span class="px-2 bg-forest-50 text-forest-500">
 								Or continue with
 							</span>
 						</div>
@@ -78,21 +79,6 @@ function SignupPage(props: SignupPageProps) {
 					>
 						<div class="rounded shadow-sm -space-y-px">
 							<div>
-								<label for="name" class="sr-only">
-									Full name
-								</label>
-								<input
-									id="name"
-									name="name"
-									type="text"
-									required
-									value={email_signup_data.name}
-									onInput={handle_input}
-									class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-forest-900 rounded-t-md focus:outline-none focus:ring-gray-500 focus:border-gray-500 focus:z-10 sm:text-sm"
-									placeholder="Full name"
-								/>
-							</div>
-							<div>
 								<label for="email" class="sr-only">
 									Email address
 								</label>
@@ -103,7 +89,7 @@ function SignupPage(props: SignupPageProps) {
 									required
 									value={email_signup_data.email}
 									onInput={handle_input}
-									class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-forest-900 focus:outline-none focus:ring-gray-500 focus:border-gray-500 focus:z-10 sm:text-sm"
+									class="appearance-none rounded-none relative block w-full px-3 py-2 border border-lapis-300 placeholder-lapis-500 text-forest-900 focus:outline-none focus:ring-lapis-500 focus:border-lapis-500 focus:z-10 sm:text-sm"
 									placeholder="Email address"
 								/>
 							</div>
@@ -118,7 +104,7 @@ function SignupPage(props: SignupPageProps) {
 									required
 									value={email_signup_data.password}
 									onInput={handle_input}
-									class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-forest-900 focus:outline-none focus:ring-gray-500 focus:border-gray-500 focus:z-10 sm:text-sm"
+									class="appearance-none rounded-none relative block w-full px-3 py-2 border border-lapis-300 placeholder-lapis-500 text-forest-900 focus:outline-none focus:ring-lapis-500 focus:border-lapis-500 focus:z-10 sm:text-sm"
 									placeholder="Password"
 								/>
 							</div>
@@ -133,14 +119,14 @@ function SignupPage(props: SignupPageProps) {
 									required
 									value={email_signup_data.confirm_password}
 									onInput={handle_input}
-									class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-forest-900 rounded-b-md focus:outline-none focus:ring-gray-500 focus:border-gray-500 focus:z-10 sm:text-sm"
+									class="appearance-none rounded-none relative block w-full px-3 py-2 border border-lapis-300 placeholder-lapis-500 text-forest-900 rounded-b-md focus:outline-none focus:ring-lapis-500 focus:border-lapis-500 focus:z-10 sm:text-sm"
 									placeholder="Confirm password"
 								/>
 							</div>
 						</div>
 						<button
 							type="submit"
-							class="w-full flex justify-center py-2 px-4 border border-transparent rounded shadow-sm text-sm font-medium text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+							class="w-full flex justify-center py-2 px-4 border border-transparent rounded shadow-sm text-sm font-medium text-white bg-forest-600 hover:bg-forest-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-forest-500"
 						>
 							Create account
 						</button>
@@ -149,13 +135,14 @@ function SignupPage(props: SignupPageProps) {
 					<div class="flex justify-center">
 						<a
 							href="/signin"
-							class="text-sm font-medium text-gray-600 hover:text-gray-500"
+							class="text-sm font-medium text-lapis-600 hover:text-lapis-500"
 						>
 							Already have an account? Sign in
 						</a>
 					</div>
 				</section>
 			</section>
+			<Footer />
 		</main>
 	);
 }

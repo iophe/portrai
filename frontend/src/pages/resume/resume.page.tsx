@@ -44,6 +44,7 @@ import {
 } from "@utils/db/resume.db";
 import { db } from "@utils/db/db";
 import LoadingSpinner from "@components/loading.spinner";
+import Footer from "@components/footer.default";
 
 interface ResumeProps {}
 
@@ -65,13 +66,13 @@ function Resume(props: ResumeProps) {
 	const [section, set_section] = createSignal("experience");
 
 	return (
-		<main class="md:px-48 px-8 mx-auto justify-items-center  p-4 flex flex-col gap-4 h-screen max-h-screen">
+		<main class="md:px-48 px-6 mx-auto justify-items-center py-4 flex flex-col gap-4 md:h-screen md:max-h-screen">
 			<Header />
 			<section
-				class="grid grid-cols-2 gap-4 justify-start h-full overflow-hidden
+				class="md:grid md:grid-cols-2 flex flex-col-reverse md:gap-4 gap-16 justify-start h-full overflow-hidden
 			 items-start text-forest-900"
 			>
-				<section class="overflow-y-auto pr-4 h-full">
+				<section class="md:overflow-y-auto md:pr-4 md:h-full w-full">
 					<aside class="flex gap-4 justify-between text-sm pb-2 border-b-2 border-forest-900">
 						<button
 							onclick={() => {
@@ -102,6 +103,7 @@ function Resume(props: ResumeProps) {
 							}}
 						>
 							<label
+								class="hidden md:block"
 								classList={{
 									"text-forest-900":
 										section() === "experience",
@@ -132,6 +134,7 @@ function Resume(props: ResumeProps) {
 							}}
 						>
 							<label
+								class="hidden md:block"
 								classList={{
 									"text-forest-900":
 										section() === "education",
@@ -162,6 +165,7 @@ function Resume(props: ResumeProps) {
 							}}
 						>
 							<label
+								class="hidden md:block"
 								classList={{
 									"text-forest-900":
 										section() === "certificate",
@@ -192,6 +196,7 @@ function Resume(props: ResumeProps) {
 							}}
 						>
 							<label
+								class="hidden md:block"
 								classList={{
 									"text-forest-900": section() === "project",
 									"text-forest-700": section() !== "project",
@@ -218,6 +223,7 @@ function Resume(props: ResumeProps) {
 							}}
 						>
 							<label
+								class="hidden md:block"
 								classList={{
 									"text-forest-900": section() === "skill",
 									"text-forest-700": section() !== "skill",
@@ -995,12 +1001,11 @@ function Resume(props: ResumeProps) {
 						</Switch>
 					</Show>
 				</section>
-				<section class="rounded bg-lapis-10 overflow-y-auto p-4 h-full">
-					<Show when={resume()} fallback={<LoadingSpinner />}>
-						<ResumePreview job_specific_resume={resume()!} />
-					</Show>
-				</section>
+				<Show when={resume()} fallback={<LoadingSpinner />}>
+					<ResumePreview job_specific_resume={resume()!} />
+				</Show>
 			</section>
+			<Footer />
 		</main>
 	);
 }

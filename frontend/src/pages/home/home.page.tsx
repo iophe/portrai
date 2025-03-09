@@ -15,6 +15,7 @@ import SettingsIcon from "@assets/icons/settings.svg?component-solid";
 import { createSignal, Match, Switch } from "solid-js";
 import ResumeAIPreview from "@components/resume/generators/generator.view";
 import ResumeSettings from "@components/resume/resume.settings";
+import Footer from "@components/footer.default";
 
 interface HomeProps {}
 
@@ -24,13 +25,13 @@ function Home(props: HomeProps) {
 	const [section, set_section] = createSignal("experience");
 
 	return (
-		<main class="md:px-48 px-8 mx-auto justify-items-center  p-4 flex flex-col gap-4 h-screen max-h-screen">
+		<main class="md:px-48 px-6 mx-auto justify-items-center py-4 flex flex-col gap-4 md:h-screen md:max-h-screen">
 			<Header />
 			<section
-				class="grid grid-cols-2 gap-4 justify-start h-full overflow-hidden
+				class="md:grid md:grid-cols-2 flex flex-col-reverse md:gap-4 gap-16 justify-start h-full overflow-hidden
 			 items-start text-forest-900"
 			>
-				<section class="overflow-y-auto pr-4 h-full">
+				<section class="md:overflow-y-auto md:pr-4 md:h-full w-full">
 					<aside class="flex gap-4 justify-between text-sm pb-2 border-b-2 border-forest-900">
 						<button
 							onclick={() => {
@@ -61,6 +62,7 @@ function Home(props: HomeProps) {
 							}}
 						>
 							<label
+								class="hidden md:block"
 								classList={{
 									"text-forest-900":
 										section() === "experience",
@@ -91,6 +93,7 @@ function Home(props: HomeProps) {
 							}}
 						>
 							<label
+								class="hidden md:block"
 								classList={{
 									"text-forest-900":
 										section() === "education",
@@ -121,6 +124,7 @@ function Home(props: HomeProps) {
 							}}
 						>
 							<label
+								class="hidden md:block"
 								classList={{
 									"text-forest-900":
 										section() === "certificate",
@@ -151,6 +155,7 @@ function Home(props: HomeProps) {
 							}}
 						>
 							<label
+								class="hidden md:block"
 								classList={{
 									"text-forest-900": section() === "project",
 									"text-forest-700": section() !== "project",
@@ -177,6 +182,7 @@ function Home(props: HomeProps) {
 							}}
 						>
 							<label
+								class="hidden md:block"
 								classList={{
 									"text-forest-900": section() === "skill",
 									"text-forest-700": section() !== "skill",
@@ -215,10 +221,11 @@ function Home(props: HomeProps) {
 						</Match>
 					</Switch>
 				</section>
-				<section class="rounded bg-lapis-10 overflow-y-auto p-4 h-full">
-					<ResumeAIPreview />
-				</section>
+
+				<ResumeAIPreview />
 			</section>
+
+			<Footer />
 		</main>
 	);
 }

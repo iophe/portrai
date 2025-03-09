@@ -9,7 +9,7 @@ interface SectionTitleProps {
 function SectionTitle(props: SectionTitleProps) {
 	return (
 		<span class="flex flex-row gap-4 items-center">
-			<h2 class="text-2xl font-semibold text-forest-900">
+			<h2 class="md:text-2xl text-xl font-semibold text-forest-900">
 				{props.children}
 			</h2>
 			<button onClick={() => props.add()} title="add a new experience">

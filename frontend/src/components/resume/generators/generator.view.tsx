@@ -25,7 +25,7 @@ function ResumeAIPreview(props: ResumePreviewProps) {
 
 	// Fetch resume data
 	const [resume_data, set_resume_data] = createSignal<TemplateData>();
-	const [resume_title, set_resume_title] = createSignal<string>();
+	const [resume_id, set_resume_id] = createSignal<string>();
 	const [job_description, set_job_description] = createSignal<string>("");
 	const [with_cover_letter, set_with_cover_letter] =
 		createSignal<boolean>(false);
@@ -53,118 +53,166 @@ function ResumeAIPreview(props: ResumePreviewProps) {
 			}
 		});
 	return (
-		<section class="w-full h-full flex flex-col gap-4">
-			<textarea
-				value={job_description()}
-				oninput={(e) => {
-					set_job_description(e.target.value);
-				}}
-				class="w-full bg-gradient-to-br from-lapis-10 to-white rounded border border-lapis-50 p-4 outline-none hover:shadow-md transition-all"
-				rows={4}
-				placeholder="paste the job description"
-			/>
-			<div class="flex flex-col gap-2 self-center">
-				<FormCheckbox
-					label="with cover letter"
-					on_input={(value) => {
-						set_with_cover_letter(value);
+		<section class="overflow-y-auto w-full h-full flex flex-col gap-4">
+			<section class="rounded w-full p-4 bg-lapis-10 h-full flex flex-col gap-4">
+				<h2>
+					Paste the job description here to generate tailor made
+					resume
+				</h2>
+				<textarea
+					value={job_description()}
+					oninput={(e) => {
+						set_job_description(e.target.value);
 					}}
-					value={with_cover_letter()}
+					class="w-full bg-gradient-to-br from-lapis-10 to-white rounded border border-lapis-50 p-4 outline-none hover:shadow-md transition-all"
+					rows={4}
+					placeholder="paste the job description"
 				/>
-				<button
-					class="bg-forest-200 px-4 py-2 rounded text-snow-100 font-bold"
-					onClick={async () => {
-						if (!job_description()) return;
-						try {
-							toGenerating(true);
-
-							const res = await api.post("/ai/session/resume", {
-								job_description: job_description(),
-								with_cover_letter: with_cover_letter(),
-							});
-
-							const uuid = crypto.randomUUID();
-							set_resume_data({
-								resume_data: res.data.result as ResumeData,
-								profile: profile(),
-								user: account(),
-							});
-							set_resume_title(uuid);
-							const resume_data = res.data.result as ResumeData;
-							resume_data.certificates.forEach(
-								(v, i) => (v.certificate_id = i)
-							);
-							resume_data.experiences.forEach(
-								(v, i) => (v.experience_id = i)
-							);
-							resume_data.educations.forEach(
-								(v, i) => (v.education_id = i)
-							);
-							resume_data.projects.forEach(
-								(v, i) => (v.project_id = i)
-							);
-							resume_data.skills.forEach(
-								(v, i) => (v.skill_id = i)
-							);
-
-							DB_JOB_SPECIFIC_RESUMES.upsert(db, uuid, {
-								resume_data: resume_data,
-								job_description: job_description(),
-								title: resume_data.title,
-							});
-						} catch (error) {
-							fault.major({
-								message: "Failed to generate the resume",
-							});
-						} finally {
-							toGenerating(false);
-						}
-					}}
-					disabled={is_generating()}
-				>
-					Generate resume
-				</button>
-
-				<button
-					class=""
-					onClick={async () => {
-						try {
-							toGenerating(true);
-							const res = await api.get("/resume/data");
-
-							set_resume_data({
-								resume_data: res.data.resume_data as ResumeData,
-								profile: profile(),
-								user: account(),
-							});
-						} catch (error) {
-							console.log(error);
-
-							fault.major({
-								message: "Failed to generate the resume",
-							});
-						} finally {
-							toGenerating(false);
-						}
-					}}
-					disabled={is_generating()}
-				>
-					or build resume from profile
-				</button>
-			</div>
-			<section class="w-full grow overflow-auto flex flex-col gap-4">
-				<Show when={resume_data()}>
-					<button
-						title="Edit"
-						onclick={() => {
-							navigate(`/resume/${resume_title()}`);
+				<div class="flex flex-col gap-2 self-center">
+					<FormCheckbox
+						label="with cover letter"
+						on_input={(value) => {
+							set_with_cover_letter(value);
 						}}
+						value={with_cover_letter()}
+					/>
+					<button
+						class="bg-forest-200 px-4 py-2 rounded text-snow-100 font-bold"
+						onClick={async () => {
+							if (!job_description()) return;
+							try {
+								toGenerating(true);
+
+								const res = await api.post(
+									"/ai/session/resume",
+									{
+										job_description: job_description(),
+										with_cover_letter: with_cover_letter(),
+									}
+								);
+
+								const uuid = crypto.randomUUID();
+								set_resume_data({
+									resume_data: res.data.result as ResumeData,
+									profile: profile(),
+									user: account(),
+								});
+								set_resume_id(uuid);
+								const resume_data = res.data
+									.result as ResumeData;
+								resume_data.certificates.forEach(
+									(v, i) => (v.certificate_id = i)
+								);
+								resume_data.experiences.forEach(
+									(v, i) => (v.experience_id = i)
+								);
+								resume_data.educations.forEach(
+									(v, i) => (v.education_id = i)
+								);
+								resume_data.projects.forEach(
+									(v, i) => (v.project_id = i)
+								);
+								resume_data.skills.forEach(
+									(v, i) => (v.skill_id = i)
+								);
+
+								DB_JOB_SPECIFIC_RESUMES.upsert(db, uuid, {
+									resume_data: resume_data,
+									job_description: job_description(),
+									title: resume_data.title,
+								});
+							} catch (error) {
+								fault.major({
+									message: "Failed to generate the resume",
+								});
+							} finally {
+								toGenerating(false);
+							}
+						}}
+						disabled={is_generating()}
 					>
-						<EditIcon class="fill-forest-900" />
+						Generate resume
 					</button>
+
+					<button
+						class=""
+						onClick={async () => {
+							try {
+								toGenerating(true);
+								const res = await api.get("/resume/data");
+								const data = res.data.resume_data as ResumeData;
+								data.title = `${account()?.full_name?.replace(" ", "_")}_resume_${new Date().toISOString().slice(0, 10).replace(/-/g, "_")}`;
+								set_resume_data({
+									resume_data: data,
+									profile: profile(),
+									user: account(),
+								});
+							} catch (error) {
+								console.log(error);
+								fault.major({
+									message: "Failed to generate the resume",
+								});
+							} finally {
+								toGenerating(false);
+							}
+						}}
+						disabled={is_generating()}
+					>
+						or build resume from profile
+					</button>
+				</div>
+			</section>
+
+			<Show when={resume_data()}>
+				<section class="rounded w-full  p-4 bg-lapis-10 h-fit flex flex-col gap-4">
+					<div class="w-full flex flex-row gap-4">
+						<h3>{`${account()?.full_name?.replace(" ", "_")}_resume_${new Date().toISOString().slice(0, 10).replace(/-/g, "_")}`}</h3>
+						<button
+							title="Edit"
+							onclick={() => {
+								navigate(`/resume/${resume_id()}`);
+							}}
+						>
+							<EditIcon class="fill-forest-900" />
+						</button>
+					</div>
+					<div class="flex flex-row self-center gap-4">
+						<button
+							class="bg-lapis-100 rounded text-snow-100 py-2 px-4"
+							onClick={async () => {
+								if (!cv_ref) return;
+								try {
+									toGenerating(true);
+									generatePDF(cv_ref, {
+										name: `${account()?.full_name?.replace(" ", "_")}_resume_${new Date().toISOString().slice(0, 10).replace(/-/g, "_")}.pdf`,
+									});
+									fault.info({
+										message:
+											"successfully generated the PDF",
+									});
+								} catch (error) {
+									fault.major({
+										message: "Failed to generate the PDF",
+									});
+								} finally {
+									toGenerating(false);
+								}
+							}}
+							disabled={
+								is_generating() && resume_data() !== undefined
+							}
+						>
+							<Show
+								when={!is_generating()}
+								fallback={"Generating PDF..."}
+							>
+								Download PDF
+							</Show>
+						</button>
+					</div>
 					<div
 						ref={cv_ref}
-						class="max-w-[210mm] min-h-[297mm] h-[297mm]"
+						class="max-w-[210mm] min-h-[297mm] md:block hidden"
 					>
 						<ExecutiveTemplate
 							data={resume_data()!}
@@ -191,44 +239,14 @@ function ResumeAIPreview(props: ResumePreviewProps) {
 							}}
 						/>
 					</div>
+				</section>
+			</Show>
 
-					<Show when={resume_data()?.resume_data.letter}>
-						<div>{resume_data()?.resume_data.letter}</div>
-					</Show>
-				</Show>
-			</section>
-
-			<div class="flex flex-row self-end gap-4">
-				<button
-					class="bg-lapis-100 rounded text-snow-100 py-2 px-4"
-					onClick={async () => {
-						if (!cv_ref) return;
-						try {
-							toGenerating(true);
-							generatePDF(cv_ref, {
-								name: "my_cv.pdf",
-							});
-							fault.info({
-								message: "successfully generated the PDF",
-							});
-						} catch (error) {
-							fault.major({
-								message: "Failed to generate the PDF",
-							});
-						} finally {
-							toGenerating(false);
-						}
-					}}
-					disabled={is_generating() && resume_data() !== undefined}
-				>
-					<Show
-						when={!is_generating()}
-						fallback={"Generating PDF..."}
-					>
-						Download PDF
-					</Show>
-				</button>
-			</div>
+			<Show when={resume_data()?.resume_data.letter}>
+				<section class="rounded w-full  p-4 bg-lapis-10 h-fit flex flex-col gap-4">
+					<div>{resume_data()?.resume_data.letter}</div>
+				</section>
+			</Show>
 		</section>
 	);
 }

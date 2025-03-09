@@ -2,30 +2,22 @@ import { Component, Show } from "solid-js";
 import { A } from "@solidjs/router";
 import { api } from "@utils/api";
 
-const Header: Component = () => {
+function Header() {
 	return (
-		<header class="flex md:flex-row flex-col gap-4 justify-between items-center">
+		<header class="w-full flex md:flex-row flex-col gap-4 justify-between items-center">
 			<A href="/">
 				<h1 class="text-2xl tracking-widest">
 					PORTR<span class="alice-regular text-forest-900">AI</span>
 				</h1>
 			</A>
-			<div class="flex flex-row gap-8 items-center">
-				<A
+			<div class="md:w-fit w-full flex flex-row md:gap-16 md:justify-center justify-between items-center">
+				{/* <A
 					href="/blog"
 					class="tracking-widest"
 					activeClass="text-forest-600"
 				>
 					<h2>Blog</h2>
-				</A>
-
-				<A
-					href="/template"
-					class="tracking-widest"
-					activeClass="text-forest-600"
-				>
-					<h2>Templates</h2>
-				</A>
+				</A> */}
 				<A
 					href="/pricing"
 					class="tracking-widest"
@@ -50,6 +42,6 @@ const Header: Component = () => {
 			</div>
 		</header>
 	);
-};
+}
 
 export default Header;

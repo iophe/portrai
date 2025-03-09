@@ -13,8 +13,6 @@ export function PlanSection(props: PlanSectionProps) {
 			const res = await api.get("/payment/status");
 			const validity_status = res.data
 				.validity_status as UserValidityStatus;
-			console.log(validity_status);
-
 			return validity_status;
 		} catch (error) {}
 	});
