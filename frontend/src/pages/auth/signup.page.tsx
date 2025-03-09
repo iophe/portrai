@@ -1,9 +1,10 @@
 import { createStore } from "solid-js/store";
 import Header from "../../components/header.default";
 import { api } from "@utils/api";
-import { useLocation, useNavigate } from "@solidjs/router";
+import { A, useLocation, useNavigate } from "@solidjs/router";
 import { Pay } from "@utils/payment";
 import Footer from "@components/footer.default";
+import { Match, Switch } from "solid-js";
 
 interface SignupPageProps {}
 
@@ -133,12 +134,25 @@ function SignupPage(props: SignupPageProps) {
 					</form>
 
 					<div class="flex justify-center">
-						<a
-							href="/signin"
-							class="text-sm font-medium text-lapis-600 hover:text-lapis-500"
-						>
+
+						<Switch>
+							<Match when={location.query.payment}>
+								<A
+									href={`/signin?payment=${location.query.payment}`}
+									class="text-sm font-medium text-lapis-600 hover:text-lapis-500"
+								>
 							Already have an account? Sign in
-						</a>
+								</A>
+							</Match>
+							<Match when={!location.query.payment}>
+								<A
+									href="/signin"
+									class="text-sm font-medium text-lapis-600 hover:text-lapis-500"
+								>
+							Already have an account? Sign in
+								</A>
+							</Match>
+						</Switch>
 					</div>
 				</section>
 			</section>
