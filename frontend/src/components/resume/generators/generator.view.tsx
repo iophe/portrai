@@ -22,7 +22,6 @@ function ResumeAIPreview(props: ResumePreviewProps) {
 
 	let cv_ref: HTMLDivElement | undefined = undefined;
 	const [is_generating, toGenerating] = createSignal(false);
-
 	// Fetch resume data
 	const [resume_data, set_resume_data] = createSignal<TemplateData>();
 	const [resume_id, set_resume_id] = createSignal<string>();

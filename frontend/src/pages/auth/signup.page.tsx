@@ -134,14 +134,13 @@ function SignupPage(props: SignupPageProps) {
 					</form>
 
 					<div class="flex justify-center">
-
 						<Switch>
 							<Match when={location.query.payment}>
 								<A
 									href={`/signin?payment=${location.query.payment}`}
 									class="text-sm font-medium text-lapis-600 hover:text-lapis-500"
 								>
-							Already have an account? Sign in
+									Already have an account? Sign in
 								</A>
 							</Match>
 							<Match when={!location.query.payment}>
@@ -149,7 +148,7 @@ function SignupPage(props: SignupPageProps) {
 									href="/signin"
 									class="text-sm font-medium text-lapis-600 hover:text-lapis-500"
 								>
-							Already have an account? Sign in
+									Already have an account? Sign in
 								</A>
 							</Match>
 						</Switch>

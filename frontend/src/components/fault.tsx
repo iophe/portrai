@@ -8,6 +8,7 @@ import {
 	onMount,
 	useContext,
 } from "solid-js";
+import CloseIcon from "@assets/icons/close.svg?component-solid";
 import { Portal } from "solid-js/web";
 
 type fault_type =
@@ -126,18 +127,19 @@ function FaultPopup(props: FaultProps) {
 				ref.onanimationend = () => {
 					props.remove();
 				};
-			}, props.timeout ?? 10000);
+			}, props.timeout ?? 2000);
 		}
 	});
 	return (
 		<div
 			ref={ref}
-			class="flex gap-4 justify-between h-fit border-2 border-gray-500 text-gray-50 font-normal show text-wrap transition-opacity duration-500"
+			class="flex gap-4 justify-between h-fit rounded text-snow-100 font-normal show text-wrap transition-opacity duration-500"
 			classList={{
-				"bg-indigo-600": props.severity === INFO,
-				"bg-purple-600": props.severity === MINOR,
-				"bg-rose-600": props.severity === MAJOR,
-				"bg-red-600": props.severity === CRITICAL,
+				"bg-snow-100": props.severity === INFO,
+				"bg-red-500":
+					props.severity === MINOR ||
+					props.severity === MAJOR ||
+					props.severity === CRITICAL,
 			}}
 		>
 			<span class="p-4">{props.children}</span>
@@ -151,7 +153,7 @@ function FaultPopup(props: FaultProps) {
 					};
 				}}
 			>
-				X
+				<CloseIcon class="fill-snow-100" />
 			</button>
 		</div>
 	);
@@ -189,7 +191,7 @@ export function FaultHandler(props: FaultHandlerProps) {
 
 	return (
 		<Portal>
-			<div class="z-50 absolute bottom-0 my-8 left-1/2 -translate-x-1/2 h-fit w-[min(600px,90%)] flex flex-col gap-4">
+			<div class="z-50 absolute top-0 my-8 left-1/2 -translate-x-1/2 h-fit w-[min(600px,90%)] flex flex-col gap-4">
 				<For each={get_faults()}>
 					{({ event: fault, id: own_id }) => {
 						if (fault.detail.element) {
