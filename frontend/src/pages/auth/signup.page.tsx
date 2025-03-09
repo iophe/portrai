@@ -32,7 +32,7 @@ function SignupPage(props: SignupPageProps) {
 	return (
 		<main class="md:px-48 px-8 mx-auto justify-items-center  p-4 flex flex-col gap-4 h-screen max-h-screen">
 			<Header />
-			<section class="md:py-16 py-8 flex flex-col gap-16 items-center">
+			<section class="md:py-16 py-8 h-full flex flex-col gap-16 items-center">
 				<section class="max-w-md w-full space-y-8 grow">
 					<h2 class="text-center text-3xl text-forest-900">
 						Create your account
