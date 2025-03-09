@@ -281,7 +281,7 @@ class Seal(Cmd):
 
         with open(initialization_tokens_path,"r") as f:
             root_tokens = json.load(f)
-        return unseal_vault(container_name=container_name, root_token=root_tokens["root_token"])
+        return seal_vault(container_name=container_name, root_token=root_tokens["root_token"])
 
 
 @dataclass
@@ -379,6 +379,81 @@ class Gen(Cmd):
             else :
                 pass
         
+        if "env" == self.output :
+            with open(output_path+".env","w") as f:
+                for secret_name, secret in secrets.items():
+                    f.write(f"{secret_name}={secret}\n")
+            logger.info(f"saved secrets at {output_path}")
+            
+        elif self.dev and "json" == self.output :
+            with open(output_path+".json","w") as f:
+                f.write(json.dumps(secrets,indent=4))
+            logger.info(f"saved secrets at {output_path}")
+
+        return True
+
+
+@dataclass
+class Read(Cmd):
+    dev : bool
+    output : str
+
+    @staticmethod
+    def parse(subparser:argparse._SubParsersAction):
+        parser = subparser.add_parser('read', help="read secret from the vault")
+        parser.add_argument('--dev', action='store_true', help="Set dev mode")
+        parser.add_argument('-o','--output',dest="output", choices=["json","env"],default="env", help="output of the generated secrets")
+        parser.set_defaults(func=lambda args : Read(
+            dev=args.dev,
+            output=args.output,
+        ))
+
+    def run(self, cfg:Dict[str,Dict[str,any]]) :
+        logger.info("Reading secrets from vault ...")
+
+        url = cfg.get("vault",{}).get("url","http://127.0.0.1:8200")
+        output_path = cfg.get("vault",{}).get("output_path","secrets")
+        initialization_tokens_path = cfg.get("vault",{}).get("initialization_tokens_path",os.path.join(vault_dir,"root_tokens.json"))
+
+        logger.debug(initialization_tokens_path)
+        secrets_cfg = cfg.get("vault",{}).get("secrets", {})
+
+        with open(initialization_tokens_path,"r") as f:
+            root_tokens = json.load(f)
+
+        client = hvac.Client(
+            url=url,
+            token=root_tokens["root_token"]
+        )
+        if not client.is_authenticated():
+            logger.error("vault authentication failed")
+            return
+        
+        secrets = {}
+
+        for secret_name, secret_cfg in secrets_cfg.items() :
+            secret_type =  secret_cfg.get("type","pwd").lower()
+            engine =  secret_cfg.get("engine").lower()
+            name =  secret_cfg.get("name").lower()
+            mount =  secret_cfg.get("mount").lower()
+            try:
+                # Read secret from vault
+                secret_path = f"{mount}/{name}"
+                response = client.secrets.kv.v2.read_secret_version(
+                    path=secret_path,
+                    mount_point=engine
+                )
+                
+                if "data" in response and "data" in response["data"] and "value" in response["data"]["data"]:
+                    secret_value = response["data"]["data"]["value"]
+                    secrets[secret_name] = secret_value
+                    logger.info(f"Secret '{secret_name}' read successfully from path '{engine}/{secret_path}'")
+                else:
+                    logger.warning(f"Secret '{secret_name}' not found or has unexpected format at path '{engine}/{secret_path}'")
+            except Exception as e:
+                logger.error(f"Error reading secret '{secret_name}': {str(e)}")
+                # Continue with other secrets even if one fails
+        print(secrets)
         if "env" == self.output :
             with open(output_path+".env","w") as f:
                 for secret_name, secret in secrets.items():
@@ -527,6 +602,7 @@ class Arg:
         Seal.parse(subparsers)
         Unseal.parse(subparsers)
         Gen.parse(subparsers)
+        Read.parse(subparsers)
         Init.parse(subparsers)
 
         args = parser.parse_args()
