@@ -11,6 +11,7 @@ import { FormCheckbox } from "../utils/form.input";
 import { DB_JOB_SPECIFIC_RESUMES } from "@utils/db/resume.db";
 import { db } from "@utils/db/db";
 import { useNavigate } from "@solidjs/router";
+import LoadingSpinner from "@components/loading.spinner";
 
 interface ResumePreviewProps {
 	template_name?: string;
@@ -131,6 +132,9 @@ function ResumeAIPreview(props: ResumePreviewProps) {
 						disabled={is_generating()}
 					>
 						Generate resume
+						<Show when={is_generating()}>
+							<LoadingSpinner />
+						</Show>
 					</button>
 
 					<button
