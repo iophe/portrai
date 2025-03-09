@@ -32,17 +32,31 @@ interface FormInputTextProps {
 	on_input: (value: string) => void;
 	required?: boolean;
 	disabled?: boolean;
+	max_length?: number;
 }
 
 export function FormInputText(props: FormInputTextProps) {
+	const handleInput = (e: Event) => {
+		const target = e.currentTarget as HTMLInputElement;
+		const max_length = props.max_length ?? 144;
+
+		if (target.value.length > max_length) {
+			target.value = target.value.slice(0, max_length);
+		}
+
+		props.on_input(target.value);
+	};
+
 	return (
 		<input
 			type="text"
 			value={props.value}
 			placeholder={props.placeholder}
-			onInput={(e) => props.on_input(e.currentTarget.value)}
+			onInput={handleInput}
 			class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-gray-500"
 			required={props.required}
+			disabled={props.disabled}
+			maxLength={props.max_length ?? 144}
 		/>
 	);
 }
@@ -67,6 +81,7 @@ export function FormInputTelephone(props: FormInputTelephoneProps) {
 		/>
 	);
 }
+
 interface FormTextAreaProps {
 	value: string;
 	placeholder: string;
@@ -74,16 +89,31 @@ interface FormTextAreaProps {
 	rows?: number;
 	required?: boolean;
 	disabled?: boolean;
+	max_length?: number;
 }
 
 export function FormTextArea(props: FormTextAreaProps) {
+	const handleInput = (e: Event) => {
+		const target = e.currentTarget as HTMLTextAreaElement;
+		const max_length = props.max_length ?? 500;
+
+		if (target.value.length > max_length) {
+			target.value = target.value.slice(0, max_length);
+		}
+
+		props.on_input(target.value);
+	};
+
 	return (
 		<textarea
 			value={props.value}
 			placeholder={props.placeholder}
-			onInput={(e) => props.on_input(e.currentTarget.value)}
+			onInput={handleInput}
 			class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-gray-500"
 			rows={props.rows ?? 4}
+			required={props.required}
+			disabled={props.disabled}
+			maxLength={props.max_length ?? 144}
 		/>
 	);
 }

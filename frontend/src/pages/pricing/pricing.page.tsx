@@ -11,6 +11,7 @@ import Header from "../../components/header.default";
 import { api } from "@utils/api";
 import { AxiosError } from "axios";
 import { useNavigate } from "@solidjs/router";
+import Footer from "@components/footer.default";
 
 interface PricingProps {}
 
@@ -126,6 +127,7 @@ function Pricing(props: PricingProps) {
 					</article>
 				</section>
 			</section>
+			<Footer />
 		</main>
 	);
 }

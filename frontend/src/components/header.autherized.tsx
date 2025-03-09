@@ -7,13 +7,13 @@ interface HeaderProps {}
 
 function Header(props: HeaderProps) {
 	return (
-		<header class="flex flex-row justify-between">
+		<header class="w-full flex md:flex-row flex-col gap-4 justify-between items-center">
 			<A href="/">
 				<h1 class="text-2xl tracking-widest">
 					PORTR<span class="alice-regular text-forest-900">AI</span>
 				</h1>
 			</A>
-			<div class="flex flex-row gap-8 items-center">
+			<div class="md:w-fit w-full flex flex-row md:gap-16 md:justify-center justify-between items-center">
 				<A
 					href="/history"
 					class="tracking-widest"
@@ -43,13 +43,13 @@ function Header(props: HeaderProps) {
 
 export function AccountHeader(props: HeaderProps) {
 	return (
-		<header class="flex flex-row justify-between">
+		<header class="w-full flex md:flex-row flex-col gap-4 justify-between items-center">
 			<A href="/">
 				<h1 class="text-2xl tracking-widest">
 					PORTR<span class="alice-regular text-forest-900">AI</span>
 				</h1>
 			</A>
-			<div class="flex flex-row gap-8 items-center">
+			<div class="md:w-fit w-full flex flex-row md:gap-16 md:justify-center justify-between items-center">
 				<A
 					href="/blog"
 					class="tracking-widest"

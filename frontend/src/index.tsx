@@ -12,9 +12,13 @@ import Blog from "@pages/home/blog.page";
 const root = document.getElementById("root");
 
 const Landing = lazy(() => import("./pages/home/landing.page"));
+const Support = lazy(() => import("./pages/support/support.page"));
+const AboutUs = lazy(() => import("./pages/support/aboutus.page"));
 const Signin = lazy(() => import("./pages/auth/signin.page"));
 const Signup = lazy(() => import("./pages/auth/signup.page"));
 const Pricing = lazy(() => import("./pages/pricing/pricing.page"));
+const Error404 = lazy(() => import("./pages/error/error.404.page"));
+const ErrorPayment = lazy(() => import("./pages/error/error.payment.page"));
 
 // Protected Pages
 const Home = Protected({ fallback: Landing })(
@@ -22,9 +26,6 @@ const Home = Protected({ fallback: Landing })(
 );
 const Account = Protected({ redirect: "/" })(
 	lazy(() => import("./pages/auth/account.page"))
-);
-const Success = Protected({ redirect: "/" })(
-	lazy(() => import("./pages/payment/success.page"))
 );
 const Resume = Protected({ redirect: "/" })(
 	lazy(() => import("./pages/resume/resume.page"))
@@ -39,15 +40,18 @@ render(
 			<Router>
 				<Route path={["/", "/home"]} component={Home} />
 				<Route path={"/welcolm"} component={Landing} />
+				<Route path={"/support"} component={Support} />
+				<Route path={"/about-us"} component={AboutUs} />
 				<Route path={"/signin"} component={Signin} />
 				<Route path={"/signup"} component={Signup} />
 				<Route path={"/template"} component={Templates} />
 				<Route path={"/blog"} component={Blog} />
 				<Route path={"/pricing"} component={Pricing} />
-				<Route path={"/success"} component={Success} />
+				<Route path={"/fail"} component={ErrorPayment} />
 				<Route path={"/account"} component={Account} />
 				<Route path={"/history"} component={History} />
 				<Route path={"/resume/:id"} component={Resume} />
+				<Route path={"*"} component={Error404} />
 			</Router>
 		</FaultProvider>
 	),
