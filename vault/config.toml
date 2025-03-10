@@ -9,6 +9,7 @@ portrai_common={backend_type="kv",path="portrai_common",options={"version"=2}}
 [vault.secrets]
 POSTGRES_PASSWORD={name="POSTGRES_PASSWORD",engine="portrai_supabase",mount="db", type="pwd_urlsafe"}
 JWT_SECRET={name="JWT_SECRET",engine="portrai_supabase",mount="auth", type="key"}
+COOKIES_ENCRIPTION_KEY={name="COOKIES_ENCRIPTION_KEY",engine="portrai_supabase",mount="auth", type="key"}
 PAYMENT_SECRET={name="PAYMENT_SECRET",engine="portrai_supabase",mount="auth", type="key"}
 ANON_KEY={name="ANON_KEY",engine="portrai_supabase",mount="auth", type="key"}
 SERVICE_ROLE_KEY={name="SERVICE_ROLE_KEY",engine="portrai_supabase",mount="auth", type="key"}

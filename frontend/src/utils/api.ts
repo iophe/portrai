@@ -6,17 +6,28 @@ export const api = axios.create({
 	adapter: "fetch",
 });
 
+function getCSRFToken(): string | null {
+	const cookies = document.cookie.split(";");
+	
+	const csrfCookie = cookies.find((cookie) =>
+		cookie.trim().startsWith("csrf_=")
+	);
+
+	if (csrfCookie) {
+		return csrfCookie.split("csrf_=")[1];
+	}
+
+	return null;
+}
+
 api.interceptors.request.use(
 	(config) => {
-		const csrfToken =
-			document.cookie
-				.split("; ")
-				.find((row) => row.startsWith("csrf_token="))
-				?.split("=")[1]
-				?.toString() + "=";
-
-		if (csrfToken) {
-			config.headers["X-CSRF-Token"] = csrfToken;
+		if (config.method === "post") {
+			const csrfToken = getCSRFToken();
+	
+			if (csrfToken) {
+				config.headers["X-Csrf-Token"] = csrfToken;
+			}
 		}
 
 		return config;
