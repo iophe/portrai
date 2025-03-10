@@ -35,52 +35,59 @@ function ResumeSettings(props: ResumeSettingsProps) {
 	});
 	const [profile_form_data, update_profile_form_data] = createStore<Profile>({
 		linkedin: undefined,
-		website:  undefined,
-		description:  undefined,
+		website: undefined,
+		description: undefined,
 	});
 	const [versions, { mutate, refetch: refetch_version }] =
-		createCachedResource(async () => {
-			if (props.offline) return;
-			try {
-				const response = await api.get("/resume/versions");
-				const result = response.data as UserResumeVersions;
+		createCachedResource(
+			async () => {
+				if (props.offline) return;
+				try {
+					const response = await api.get("/resume/versions");
+					const result = response.data as UserResumeVersions;
 
-				return result;
-			} catch (error) {
-				fault.minor({
-					message:
-						((error as AxiosError).response?.data as any).error ??
-						(error as AxiosError).message,
-				});
-				return;
+					return result;
+				} catch (error) {
+					fault.minor({
+						message:
+							((error as AxiosError).response?.data as any)
+								.error ?? (error as AxiosError).message,
+					});
+					return;
+				}
+			},
+			{ cache_key: "ResumeSettings:/resume/versions" },
+			(result) => {
+				if (result) {
+					update_version_form_data("current_version", result.version);
+				}
 			}
-		},{cache_key:"ResumeSettings:/resume/versions"},(result) => {
-			if (result) {
-				update_version_form_data("current_version", result.version);
-			}
-		});
+		);
 
 	const [profile, { mutate: mutate_profile, refetch: refetch_profile }] =
-		createCachedResource(async () => {
-			try {
-				const response = await api.get("/account/profile");
-				const result = response.data.profile as Profile;
+		createCachedResource(
+			async () => {
+				try {
+					const response = await api.get("/account/profile");
+					const result = response.data.profile as Profile;
 
-				return result;
-			} catch (error) {
-				fault.minor({
-					message:
-						((error as AxiosError).response?.data as any).error ??
-						(error as AxiosError).message,
-				});
-				return;
+					return result;
+				} catch (error) {
+					fault.minor({
+						message:
+							((error as AxiosError).response?.data as any)
+								.error ?? (error as AxiosError).message,
+					});
+					return;
+				}
+			},
+			{ cache_key: "/account/profile" },
+			(result) => {
+				if (result) {
+					update_profile_form_data(result);
+				}
 			}
-		},
-		{ cache_key:"/account/profile" },(result) => {
-			if (result) {
-				update_profile_form_data(result);
-			}
-		});
+		);
 	const [editing_version, edit_version] = createSignal(false);
 	const [adding_version, add_version] = createSignal(false);
 

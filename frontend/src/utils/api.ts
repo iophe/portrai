@@ -8,7 +8,7 @@ export const api = axios.create({
 
 function getCSRFToken(): string | null {
 	const cookies = document.cookie.split(";");
-	
+
 	const csrfCookie = cookies.find((cookie) =>
 		cookie.trim().startsWith("csrf_=")
 	);
@@ -24,7 +24,7 @@ api.interceptors.request.use(
 	(config) => {
 		if (config.method === "post") {
 			const csrfToken = getCSRFToken();
-	
+
 			if (csrfToken) {
 				config.headers["X-Csrf-Token"] = csrfToken;
 			}

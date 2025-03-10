@@ -35,6 +35,7 @@ export async function generatePDF(ref: HTMLElement, cfg: GeneratePDFCfg) {
 			allowTaint: true,
 			backgroundColor: cfg.background_color ?? "#ffffff",
 			removeContainer: true,
+			logging:false,
 		});
 
 		const pdf = new jsPDF({

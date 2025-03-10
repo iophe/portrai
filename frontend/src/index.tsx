@@ -6,7 +6,6 @@ import { lazy } from "solid-js";
 import { Route, Router } from "@solidjs/router";
 import { FaultProvider } from "@components/fault";
 import Protected from "@components/protected";
-import Templates from "@pages/home/template.page";
 import Blog from "@pages/home/blog.page";
 
 const root = document.getElementById("root");
@@ -17,6 +16,9 @@ const AboutUs = lazy(() => import("./pages/support/aboutus.page"));
 const Signin = lazy(() => import("./pages/auth/signin.page"));
 const Signup = lazy(() => import("./pages/auth/signup.page"));
 const Pricing = lazy(() => import("./pages/pricing/pricing.page"));
+const TemplatesDefault = lazy(
+	() => import("./pages/home/template.default.page")
+);
 const Error404 = lazy(() => import("./pages/error/error.404.page"));
 const ErrorPayment = lazy(() => import("./pages/error/error.payment.page"));
 
@@ -33,6 +35,9 @@ const Resume = Protected({ redirect: "/" })(
 const History = Protected({ redirect: "/" })(
 	lazy(() => import("./pages/resume/history.page"))
 );
+const Templates = Protected({ redirect: "/all-templates" })(
+	lazy(() => import("./pages/home/template.page"))
+);
 
 render(
 	() => (
@@ -44,7 +49,8 @@ render(
 				<Route path={"/about-us"} component={AboutUs} />
 				<Route path={"/signin"} component={Signin} />
 				<Route path={"/signup"} component={Signup} />
-				<Route path={"/template"} component={Templates} />
+				<Route path={"/my-templates"} component={Templates} />
+				<Route path={"/all-templates"} component={TemplatesDefault} />
 				<Route path={"/blog"} component={Blog} />
 				<Route path={"/pricing"} component={Pricing} />
 				<Route path={"/fail"} component={ErrorPayment} />

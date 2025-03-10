@@ -13,6 +13,10 @@ import { db } from "@utils/db/db";
 import { useNavigate } from "@solidjs/router";
 import LoadingSpinner from "@components/loading.spinner";
 import { createCachedResource } from "@utils/cache";
+import { CreativeTemplate } from "./templates/creative.template";
+import { SimpleBlueTemplate } from "./templates/blue_minimalist.template";
+import { HunterGreenTemplate } from "./templates/hunter_green.template";
+import { MintyMinimalistTemplate } from "./templates/minty_minimalist.template";
 
 interface ResumePreviewProps {
 	template_name?: string;
@@ -39,24 +43,26 @@ function ResumeAIPreview(props: ResumePreviewProps) {
 				return user;
 			} catch (error) {}
 		},
-		{ cache_key:"/account/user" }
+		{ cache_key: "/account/user" }
 	);
 	const [profile, { mutate: mutate_profile, refetch: refetch_profile }] =
-	createCachedResource(async () => {
-			try {
-				const response = await api.get("/account/profile");
-				const result = response.data.profile as Profile;
-				return result;
-			} catch (error) {
-				fault.minor({
-					message:
-						((error as AxiosError).response?.data as any).error ??
-						(error as AxiosError).message,
-				});
-				return;
-			}
-		},
-		{ cache_key:"/account/profile" });
+		createCachedResource(
+			async () => {
+				try {
+					const response = await api.get("/account/profile");
+					const result = response.data.profile as Profile;
+					return result;
+				} catch (error) {
+					fault.minor({
+						message:
+							((error as AxiosError).response?.data as any)
+								.error ?? (error as AxiosError).message,
+					});
+					return;
+				}
+			},
+			{ cache_key: "/account/profile" }
+		);
 	return (
 		<section class="overflow-y-auto w-full h-full flex flex-col gap-4">
 			<section class="rounded w-full p-4 bg-lapis-10 h-full flex flex-col gap-4">

@@ -23,7 +23,7 @@ function Header(props: HeaderProps) {
 				</A>
 
 				<A
-					href="/blog"
+					href="/my-templates"
 					class="tracking-widest"
 					activeClass="text-forest-600"
 				>

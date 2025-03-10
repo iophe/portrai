@@ -19,28 +19,30 @@ export function AccountSection(props: AccountSectionProps) {
 	const [editing, edit_user] = createSignal(false);
 	const [form_data, set_form_data] = createStore<User>({
 		full_name: undefined,
-		email:  undefined,
+		email: undefined,
 		phone: undefined,
 		location: undefined,
 	});
 
-	const [account, { refetch }] = createCachedResource(async () => {
-		try {
-			const res = await api.get("/account/user");
-			const user = res.data.user as User;
+	const [account, { refetch }] = createCachedResource(
+		async () => {
+			try {
+				const res = await api.get("/account/user");
+				const user = res.data.user as User;
 
-			return user;
-		} catch (error) {}
-	},
-	{ cache_key:"/account/user" },
-	(user) => {
-		set_form_data({
-			full_name: user?.full_name || "",
-			email: user?.email || "",
-			phone: user?.phone || "",
-			location: user?.location || "",
-		});
-	});
+				return user;
+			} catch (error) {}
+		},
+		{ cache_key: "/account/user" },
+		(user) => {
+			set_form_data({
+				full_name: user?.full_name || "",
+				email: user?.email || "",
+				phone: user?.phone || "",
+				location: user?.location || "",
+			});
+		}
+	);
 
 	return (
 		<section class="w-full bg-white rounded p-6 shadow-sm flex flex-col gap-4">

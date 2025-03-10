@@ -419,20 +419,3 @@ export function ExecutiveTemplate(props: TemplateProps) {
 		</div>
 	);
 }
-
-// Helper function to group skills by type
-function groupSkillsByType(skills: Skill[]): [string, Skill[]][] {
-	const grouped = skills.reduce(
-		(acc, skill) => {
-			const type = skill.optional_skill_type || "Other";
-			if (!acc[type]) {
-				acc[type] = [];
-			}
-			acc[type].push(skill);
-			return acc;
-		},
-		{} as Record<string, Skill[]>
-	);
-
-	return Object.entries(grouped).sort();
-}

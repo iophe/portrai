@@ -55,9 +55,6 @@ func Protected() fiber.Handler {
 					"error": "token expired",
 				})
 			}
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-				"error": "unauthorized: no token provided",
-			})
 		}
 
 		// Parse and validate the JWT token

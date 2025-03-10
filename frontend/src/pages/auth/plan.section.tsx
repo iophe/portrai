@@ -9,22 +9,28 @@ import { createCachedResource } from "@utils/cache";
 interface PlanSectionProps {}
 
 export function PlanSection(props: PlanSectionProps) {
-	const [status] = createCachedResource(async () => {
-		try {
-			const res = await api.get("/payment/status");
-			const validity_status = res.data
-				.validity_status as UserValidityStatus;
-			return validity_status;
-		} catch (error) {}
-	},{cache_key:"PlanSection:/payment/status"});
-	const [history] = createCachedResource(async () => {
-		try {
-			const res = await api.get("/payment/history");
-			const payment_history = res.data
-				.payment_history as UserPaymentHistory[];
-			return payment_history;
-		} catch (error) {}
-	},{cache_key:"PlanSection:/payment/history"});
+	const [status] = createCachedResource(
+		async () => {
+			try {
+				const res = await api.get("/payment/status");
+				const validity_status = res.data
+					.validity_status as UserValidityStatus;
+				return validity_status;
+			} catch (error) {}
+		},
+		{ cache_key: "PlanSection:/payment/status" }
+	);
+	const [history] = createCachedResource(
+		async () => {
+			try {
+				const res = await api.get("/payment/history");
+				const payment_history = res.data
+					.payment_history as UserPaymentHistory[];
+				return payment_history;
+			} catch (error) {}
+		},
+		{ cache_key: "PlanSection:/payment/history" }
+	);
 	return (
 		<section class="overflow-hidden w-full bg-white rounded p-6 shadow-sm flex flex-col gap-4">
 			<header class="flex flex-row gap-4 border-b-2 border-forest-900 pb-2">

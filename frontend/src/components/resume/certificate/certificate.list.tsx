@@ -44,7 +44,11 @@ export function CertificateList(props: CertificateListProps) {
 				});
 				return [];
 			}
-		},{cache_key:"CertificateList:/resume/items/by-type?item_type=certificate"}
+		},
+		{
+			cache_key:
+				"CertificateList:/resume/items/by-type?item_type=certificate",
+		}
 	);
 
 	const [editing_certificates, updateEditingCertificates] = createStore(
