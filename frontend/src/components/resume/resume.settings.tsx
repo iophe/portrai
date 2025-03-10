@@ -20,6 +20,7 @@ import api from "@utils/api";
 import { AxiosError } from "axios";
 import LoadingSpinner from "@components/loading.spinner";
 import { ItemText } from "./utils/item.content";
+import { createCachedResource } from "@utils/cache";
 
 interface ResumeSettingsProps {
 	offline?: boolean;
@@ -27,57 +28,64 @@ interface ResumeSettingsProps {
 
 function ResumeSettings(props: ResumeSettingsProps) {
 	const fault = useFault();
-
-	const [versions, { mutate, refetch: refetch_version }] = createResource(
-		async () => {
-			if (props.offline) return;
-			try {
-				const response = await api.get("/resume/versions");
-				const result = response.data as UserResumeVersions;
-
-				update_version_form_data("current_version", result.version);
-				return result;
-			} catch (error) {
-				fault.minor({
-					message:
-						((error as AxiosError).response?.data as any).error ??
-						(error as AxiosError).message,
-				});
-				return;
-			}
-		}
-	);
-
-	const [profile, { mutate: mutate_profile, refetch: refetch_profile }] =
-		createResource(async () => {
-			try {
-				const response = await api.get("/account/profile");
-				const result = response.data.profile as Profile;
-
-				update_profile_form_data(result);
-				return result;
-			} catch (error) {
-				fault.minor({
-					message:
-						((error as AxiosError).response?.data as any).error ??
-						(error as AxiosError).message,
-				});
-				return;
-			}
-		});
-	const [editing_version, edit_version] = createSignal(false);
-	const [adding_version, add_version] = createSignal(false);
 	const [version_form_data, update_version_form_data] = createStore({
 		current_version: "",
 		selected_version: "",
 		new_version: "",
 	});
-	const [editing_profile, edit_profile] = createSignal(false);
 	const [profile_form_data, update_profile_form_data] = createStore<Profile>({
-		linkedin: profile()?.linkedin || undefined,
-		website: profile()?.website || undefined,
-		description: profile()?.description || undefined,
+		linkedin: undefined,
+		website:  undefined,
+		description:  undefined,
 	});
+	const [versions, { mutate, refetch: refetch_version }] =
+		createCachedResource(async () => {
+			if (props.offline) return;
+			try {
+				const response = await api.get("/resume/versions");
+				const result = response.data as UserResumeVersions;
+
+				return result;
+			} catch (error) {
+				fault.minor({
+					message:
+						((error as AxiosError).response?.data as any).error ??
+						(error as AxiosError).message,
+				});
+				return;
+			}
+		},{cache_key:"ResumeSettings:/resume/versions"},(result) => {
+			if (result) {
+				update_version_form_data("current_version", result.version);
+			}
+		});
+
+	const [profile, { mutate: mutate_profile, refetch: refetch_profile }] =
+		createCachedResource(async () => {
+			try {
+				const response = await api.get("/account/profile");
+				const result = response.data.profile as Profile;
+
+				return result;
+			} catch (error) {
+				fault.minor({
+					message:
+						((error as AxiosError).response?.data as any).error ??
+						(error as AxiosError).message,
+				});
+				return;
+			}
+		},
+		{ cache_key:"/account/profile" },(result) => {
+			if (result) {
+				update_profile_form_data(result);
+			}
+		});
+	const [editing_version, edit_version] = createSignal(false);
+	const [adding_version, add_version] = createSignal(false);
+
+	const [editing_profile, edit_profile] = createSignal(false);
+
 	return (
 		<section class="flex flex-col gap-4">
 			<Show when={!props.offline}>

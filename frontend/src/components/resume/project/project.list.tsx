@@ -7,13 +7,14 @@ import { ProjectForm, ProjectView } from "./project.view";
 import { Ordered } from "../ordered.util";
 import SectionHeader from "../utils/section.header";
 import LoadingSpinner from "@components/loading.spinner";
+import { createCachedResource } from "@utils/cache";
 
 interface ProjectListProps {}
 
 export function ProjectList(props: ProjectListProps) {
 	const fault = useFault();
 
-	const [projects, { mutate, refetch }] = createResource(async () => {
+	const [projects, { mutate, refetch }] = createCachedResource(async () => {
 		try {
 			const response = await api.get(
 				"/resume/items/by-type?item_type=project"
@@ -43,7 +44,7 @@ export function ProjectList(props: ProjectListProps) {
 			});
 			return [];
 		}
-	});
+	},{cache_key:"ProjectList:/resume/items/by-type?item_type=project"});
 
 	const [editing_projects, updateEditingProjects] = createStore(
 		[] as number[]

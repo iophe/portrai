@@ -7,13 +7,14 @@ import { EducationForm, EducationView } from "./education.view";
 import { Ordered } from "../ordered.util";
 import SectionHeader from "../utils/section.header";
 import LoadingSpinner from "@components/loading.spinner";
+import { createCachedResource } from "@utils/cache";
 
 interface EducationListProps {}
 
 export function EducationList(props: EducationListProps) {
 	const fault = useFault();
 
-	const [educations, { mutate, refetch }] = createResource(async () => {
+	const [educations, { mutate, refetch }] = createCachedResource(async () => {
 		try {
 			const response = await api.get(
 				"/resume/items/by-type?item_type=education"
@@ -44,7 +45,7 @@ export function EducationList(props: EducationListProps) {
 			});
 			return [];
 		}
-	});
+	},{cache_key:"EducationList:/resume/items/by-type?item_type=education"});
 
 	const [editing_educations, updateEditingEducations] = createStore(
 		[] as number[]

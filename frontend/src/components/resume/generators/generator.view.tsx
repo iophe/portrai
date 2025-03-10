@@ -12,6 +12,7 @@ import { DB_JOB_SPECIFIC_RESUMES } from "@utils/db/resume.db";
 import { db } from "@utils/db/db";
 import { useNavigate } from "@solidjs/router";
 import LoadingSpinner from "@components/loading.spinner";
+import { createCachedResource } from "@utils/cache";
 
 interface ResumePreviewProps {
 	template_name?: string;
@@ -30,15 +31,18 @@ function ResumeAIPreview(props: ResumePreviewProps) {
 	const [with_cover_letter, set_with_cover_letter] =
 		createSignal<boolean>(false);
 
-	const [account, { refetch }] = createResource(async () => {
-		try {
-			const res = await api.get("/account/user");
-			const user = res.data.user as User;
-			return user;
-		} catch (error) {}
-	});
+	const [account, { refetch }] = createCachedResource(
+		async () => {
+			try {
+				const res = await api.get("/account/user");
+				const user = res.data.user as User;
+				return user;
+			} catch (error) {}
+		},
+		{ cache_key:"/account/user" }
+	);
 	const [profile, { mutate: mutate_profile, refetch: refetch_profile }] =
-		createResource(async () => {
+	createCachedResource(async () => {
 			try {
 				const response = await api.get("/account/profile");
 				const result = response.data.profile as Profile;
@@ -51,7 +55,8 @@ function ResumeAIPreview(props: ResumePreviewProps) {
 				});
 				return;
 			}
-		});
+		},
+		{ cache_key:"/account/profile" });
 	return (
 		<section class="overflow-y-auto w-full h-full flex flex-col gap-4">
 			<section class="rounded w-full p-4 bg-lapis-10 h-full flex flex-col gap-4">
@@ -168,7 +173,7 @@ function ResumeAIPreview(props: ResumePreviewProps) {
 
 			<Show when={resume_data()}>
 				<section class="rounded w-full  p-4 bg-lapis-10 h-fit flex flex-col gap-4">
-					<div class="w-full flex flex-row gap-4">
+					<div class="self-center flex flex-row gap-4">
 						<h3>{`${account()?.full_name?.replace(" ", "_")}_resume_${new Date().toISOString().slice(0, 10).replace(/-/g, "_")}`}</h3>
 						<button
 							title="Edit"

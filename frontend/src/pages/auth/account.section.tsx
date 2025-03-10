@@ -11,32 +11,35 @@ import {
 	FormLabeledInput,
 	FormSubmitButton,
 } from "@components/resume/utils/form.input";
+import { createCachedResource } from "@utils/cache";
 
 interface AccountSectionProps {}
 
 export function AccountSection(props: AccountSectionProps) {
 	const [editing, edit_user] = createSignal(false);
+	const [form_data, set_form_data] = createStore<User>({
+		full_name: undefined,
+		email:  undefined,
+		phone: undefined,
+		location: undefined,
+	});
 
-	const [account, { refetch }] = createResource(async () => {
+	const [account, { refetch }] = createCachedResource(async () => {
 		try {
 			const res = await api.get("/account/user");
 			const user = res.data.user as User;
-			set_form_data({
-				full_name: user.full_name || "",
-				email: user.email || "",
-				phone: user.phone || "",
-				location: user.location || "",
-			});
+
 			return user;
 		} catch (error) {}
-	});
-
-	// Using createStore instead of createSignal for form data
-	const [form_data, set_form_data] = createStore<User>({
-		full_name: account()?.full_name || undefined,
-		email: account()?.email || undefined,
-		phone: account()?.phone || undefined,
-		location: account()?.location || undefined,
+	},
+	{ cache_key:"/account/user" },
+	(user) => {
+		set_form_data({
+			full_name: user?.full_name || "",
+			email: user?.email || "",
+			phone: user?.phone || "",
+			location: user?.location || "",
+		});
 	});
 
 	return (

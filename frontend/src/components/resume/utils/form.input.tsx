@@ -36,9 +36,10 @@ interface FormInputTextProps {
 }
 
 export function FormInputText(props: FormInputTextProps) {
+	const max_length = props.max_length ?? 144;
+
 	const handleInput = (e: Event) => {
 		const target = e.currentTarget as HTMLInputElement;
-		const max_length = props.max_length ?? 144;
 
 		if (target.value.length > max_length) {
 			target.value = target.value.slice(0, max_length);
@@ -93,9 +94,9 @@ interface FormTextAreaProps {
 }
 
 export function FormTextArea(props: FormTextAreaProps) {
+	const max_length = props.max_length ?? 1024;
 	const handleInput = (e: Event) => {
 		const target = e.currentTarget as HTMLTextAreaElement;
-		const max_length = props.max_length ?? 500;
 
 		if (target.value.length > max_length) {
 			target.value = target.value.slice(0, max_length);
@@ -113,7 +114,7 @@ export function FormTextArea(props: FormTextAreaProps) {
 			rows={props.rows ?? 4}
 			required={props.required}
 			disabled={props.disabled}
-			maxLength={props.max_length ?? 144}
+			maxLength={props.max_length ?? 1024}
 		/>
 	);
 }

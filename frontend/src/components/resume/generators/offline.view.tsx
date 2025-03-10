@@ -11,6 +11,7 @@ import DeleteIcon from "@assets/icons/delete.svg?component-solid";
 import CloseIcon from "@assets/icons/close.svg?component-solid";
 import { FormInputText } from "../utils/form.input";
 import { DB_JOB_SPECIFIC_RESUMES } from "@utils/db/resume.db";
+import { createCachedResource } from "@utils/cache";
 
 function formatText(text: string) {
 	if (!text) return null;
@@ -57,15 +58,16 @@ function ResumePreview(props: ResumePreviewProps) {
 		props.job_specific_resume.title
 	);
 
-	const [account, { refetch }] = createResource(async () => {
+	const [account, { refetch }] = createCachedResource(async () => {
 		try {
 			const res = await api.get("/account/user");
 			const user = res.data.user as User;
 			return user;
 		} catch (error) {}
-	});
+	},
+	{ cache_key:"/account/user" });
 	const [profile, { mutate: mutate_profile, refetch: refetch_profile }] =
-		createResource(async () => {
+	createCachedResource(async () => {
 			try {
 				const response = await api.get("/account/profile");
 				const result = response.data.profile as Profile;
@@ -78,7 +80,8 @@ function ResumePreview(props: ResumePreviewProps) {
 				});
 				return;
 			}
-		});
+		},
+		{ cache_key:"/account/profile" });
 	return (
 		<section class="overflow-y-auto w-full h-full flex flex-col gap-4">
 			<section class="rounded w-full p-4 bg-lapis-10 h-full flex flex-col gap-4">

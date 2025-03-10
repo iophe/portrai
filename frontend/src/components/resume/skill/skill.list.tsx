@@ -7,13 +7,14 @@ import { SkillForm, SkillView } from "./skill.view";
 import { Ordered } from "../ordered.util";
 import SectionHeader from "../utils/section.header";
 import LoadingSpinner from "@components/loading.spinner";
+import { createCachedResource } from "@utils/cache";
 
 interface SkillListProps {}
 
 export function SkillList(props: SkillListProps) {
 	const fault = useFault();
 
-	const [skills, { mutate, refetch }] = createResource(async () => {
+	const [skills, { mutate, refetch }] = createCachedResource(async () => {
 		try {
 			const response = await api.get(
 				"/resume/items/by-type?item_type=skill"
@@ -42,7 +43,7 @@ export function SkillList(props: SkillListProps) {
 			});
 			return [];
 		}
-	});
+	},{cache_key:"SkillList:/resume/items/by-type?item_type=skill"});
 
 	const [editing_skills, updateEditingSkills] = createStore([] as number[]);
 

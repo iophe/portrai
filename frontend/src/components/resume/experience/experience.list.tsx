@@ -7,6 +7,7 @@ import { ExperienceForm, ExperienceView } from "./experience.view";
 import { Ordered } from "../ordered.util";
 import SectionHeader from "../utils/section.header";
 import LoadingSpinner from "@components/loading.spinner";
+import { createCachedResource } from "@utils/cache";
 
 interface ExperienceListProps {
 	onOrder?: (experienceIds: number[]) => void;
@@ -15,41 +16,43 @@ interface ExperienceListProps {
 export function ExperienceList(props: ExperienceListProps) {
 	const fault = useFault();
 
-	const [experiences, { mutate, refetch }] = createResource(async () => {
-		try {
-			const response = await api.get(
-				"/resume/items/by-type?item_type=experience"
-			);
-			const result = response.data.items as ResumeItem[];
+	const [experiences, { mutate, refetch }] = createCachedResource(
+		async () => {
+			try {
+				const response = await api.get(
+					"/resume/items/by-type?item_type=experience"
+				);
+				const result = response.data.items as ResumeItem[];
 
-			const experienceItems: Experience[] = result.map(
-				(item) =>
-					({
-						experience_id: item.item_id,
-						job_title: item.title,
-						company_name: item.subtitle,
-						location: item.location,
-						start_date: item.start_date,
-						optional_end_date: item.end_date,
-						is_current: item.is_current,
-						description: item.description,
-						priority: item.priority,
-						is_visible: item.is_visible,
-						tags: item.tags,
-						notes: item.notes,
-					}) as Experience
-			);
+				const experienceItems: Experience[] = result.map(
+					(item) =>
+						({
+							experience_id: item.item_id,
+							job_title: item.title,
+							company_name: item.subtitle,
+							location: item.location,
+							start_date: item.start_date,
+							optional_end_date: item.end_date,
+							is_current: item.is_current,
+							description: item.description,
+							priority: item.priority,
+							is_visible: item.is_visible,
+							tags: item.tags,
+							notes: item.notes,
+						}) as Experience
+				);
 
-			return experienceItems;
-		} catch (error) {
-			fault.minor({
-				message:
-					((error as AxiosError).response?.data as any).error ??
-					(error as AxiosError).message,
-			});
-			return [];
-		}
-	});
+				return experienceItems;
+			} catch (error) {
+				fault.minor({
+					message:
+						((error as AxiosError).response?.data as any).error ??
+						(error as AxiosError).message,
+				});
+				return [];
+			}
+		},{cache_key:"ExperienceList:/resume/items/by-type?item_type=experience"}
+	);
 
 	const [editing_experiences, updateEditingExperiences] = createStore(
 		[] as number[]

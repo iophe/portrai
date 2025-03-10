@@ -7,42 +7,45 @@ import { CertificateForm, CertificateView } from "./certificate.view";
 import { Ordered } from "../ordered.util";
 import SectionHeader from "../utils/section.header";
 import LoadingSpinner from "@components/loading.spinner";
+import { createCachedResource } from "@utils/cache";
 
 interface CertificateListProps {}
 
 export function CertificateList(props: CertificateListProps) {
 	const fault = useFault();
 
-	const [certificates, { mutate, refetch }] = createResource(async () => {
-		try {
-			const response = await api.get(
-				"/resume/items/by-type?item_type=certificate"
-			);
-			const result = response.data.items as ResumeItem[];
+	const [certificates, { mutate, refetch }] = createCachedResource(
+		async () => {
+			try {
+				const response = await api.get(
+					"/resume/items/by-type?item_type=certificate"
+				);
+				const result = response.data.items as ResumeItem[];
 
-			const certificateItems = result.map((item) => ({
-				certificate_id: item.item_id,
-				certificate_name: item.title,
-				optional_issuer: item.subtitle,
-				optional_location: item.location,
-				optional_granted_date: item.start_date,
-				description: item.description,
-				priority: item.priority,
-				is_visible: item.is_visible,
-				tags: item.tags,
-				notes: item.notes,
-			}));
+				const certificateItems = result.map((item) => ({
+					certificate_id: item.item_id,
+					certificate_name: item.title,
+					optional_issuer: item.subtitle,
+					optional_location: item.location,
+					optional_granted_date: item.start_date,
+					description: item.description,
+					priority: item.priority,
+					is_visible: item.is_visible,
+					tags: item.tags,
+					notes: item.notes,
+				}));
 
-			return certificateItems as Certificate[];
-		} catch (error) {
-			fault.minor({
-				message:
-					((error as AxiosError).response?.data as any).error ??
-					(error as AxiosError).message,
-			});
-			return [];
-		}
-	});
+				return certificateItems as Certificate[];
+			} catch (error) {
+				fault.minor({
+					message:
+						((error as AxiosError).response?.data as any).error ??
+						(error as AxiosError).message,
+				});
+				return [];
+			}
+		},{cache_key:"CertificateList:/resume/items/by-type?item_type=certificate"}
+	);
 
 	const [editing_certificates, updateEditingCertificates] = createStore(
 		[] as number[]

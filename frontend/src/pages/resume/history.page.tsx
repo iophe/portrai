@@ -57,10 +57,10 @@ function HistoryPage(props: HistoryPageProps) {
 	});
 
 	return (
-		<main class="md:px-48 px-6 mx-auto justify-items-center py-4 flex flex-col gap-4 md:h-screen md:max-h-screen">
+		<main class="md:px-48 px-6 mx-auto justify-items-center py-4 flex flex-col gap-4 min-h-screen md:max-h-screen dbg-2">
 			<Header />
 			<section
-				class="md:grid md:grid-cols-2 flex flex-col md:gap-4 gap-16 justify-start h-full overflow-hidden
+				class="md:grid md:grid-cols-2 flex flex-col md:gap-4 gap-16 justify-start h-full grow dbg-1 overflow-hidden
 			 items-start text-forest-900"
 			>
 				<section class="overflow-y-hidden pr-4 md:h-full  md:max-h-full max-h-96 w-full">

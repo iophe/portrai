@@ -16,6 +16,6 @@ rule "charset" {
 }
 
 rule "charset" {
-  charset = "!*+,-._~"
+  charset = "!*+,._~"
   min-chars = 1
 }
