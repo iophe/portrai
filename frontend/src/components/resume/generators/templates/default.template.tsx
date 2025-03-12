@@ -1,5 +1,5 @@
 import { For, Show } from "solid-js";
-import { TemplateData, TemplateSettings } from "./template.utils";
+import { PDFText, TemplateData, TemplateSettings } from "./template.utils";
 
 interface TemplateProps {
 	data: TemplateData;
@@ -33,9 +33,9 @@ export function ExecutiveTemplate(props: TemplateProps) {
 	};
 
 	return (
-		<div class="p-8 font-serif h-full w-full text-black bg-white">
+		<div class="p-8 font-serif h-full w-full text-black bg-white pdf-outline">
 			{/* Header Section */}
-			<header class="text-center mb-4">
+			<header class="text-center mb-4 pdf-outline">
 				<h1 class="font-bold uppercase tracking-wide">
 					{props.data.user?.full_name}
 				</h1>
@@ -85,7 +85,7 @@ export function ExecutiveTemplate(props: TemplateProps) {
 					).length > 0
 				}
 			>
-				<section class="mb-6">
+				<section class="mb-6 pdf-outline">
 					<h2
 						class="font-bold border-b border-black pb-1 mb-3 uppercase"
 						style={{
@@ -94,12 +94,11 @@ export function ExecutiveTemplate(props: TemplateProps) {
 					>
 						Profile
 					</h2>
-					<p
-						class="text-justify"
-						style={{ "font-size": settings.font_size.body }}
-					>
-						{props.data.profile?.description}
-					</p>
+
+					<PDFText
+						src={props.data.profile?.description ?? ""}
+						font_size={settings.font_size.body}
+					/>
 				</section>
 			</Show>
 			{/* Experience Section */}
@@ -111,9 +110,9 @@ export function ExecutiveTemplate(props: TemplateProps) {
 					).length > 0
 				}
 			>
-				<section class="mb-6">
+				<section class="mb-6 pdf-outline">
 					<h2
-						class="font-bold border-b border-black pb-1 mb-3 uppercase"
+						class="font-bold border-b border-black pb-1 mb-3 uppercase pdf-boxup"
 						style={{
 							"font-size": settings.font_size.section_title,
 						}}
@@ -125,9 +124,12 @@ export function ExecutiveTemplate(props: TemplateProps) {
 							(v) => v.is_visible
 						)}
 					>
-						{(experience) => (
-							<div class="mb-4">
-								<div class="flex justify-between items-baseline">
+						{(experience, i) => (
+							<div
+								class="mb-4 pdf-container"
+								classList={{ "pdf-containerup": i() === 0 }}
+							>
+								<div class="flex justify-between items-baseline pdf-boxup">
 									<h3
 										class="font-bold"
 										style={{
@@ -145,7 +147,7 @@ export function ExecutiveTemplate(props: TemplateProps) {
 											: experience.optional_end_date}
 									</span>
 								</div>
-								<div class="flex justify-between items-baseline">
+								<div class="flex justify-between items-baseline pdf-boxup">
 									<h4 class="italic">
 										{experience.company_name}
 									</h4>
@@ -153,14 +155,11 @@ export function ExecutiveTemplate(props: TemplateProps) {
 										{experience.location}
 									</span>
 								</div>
-								<p
-									class="mt-2 text-justify"
-									style={{
-										"font-size": settings.font_size.body,
-									}}
-								>
-									{experience.description}
-								</p>
+
+								<PDFText
+									src={experience.description}
+									font_size={settings.font_size.body}
+								/>
 							</div>
 						)}
 					</For>
@@ -176,9 +175,9 @@ export function ExecutiveTemplate(props: TemplateProps) {
 					).length > 0
 				}
 			>
-				<section class="mb-6">
+				<section class="mb-6 pdf-outline pdf-container">
 					<h2
-						class="font-bold border-b border-black pb-1 mb-3 uppercase"
+						class="font-bold border-b border-black pb-1 mb-3 uppercase pdf-boxup"
 						style={{
 							"font-size": settings.font_size.section_title,
 						}}
@@ -190,9 +189,12 @@ export function ExecutiveTemplate(props: TemplateProps) {
 							(v) => v.is_visible
 						)}
 					>
-						{(education) => (
-							<div class="mb-4">
-								<div class="flex justify-between items-baseline">
+						{(education, i) => (
+							<div
+								class="mb-4 pdf-container"
+								classList={{ "pdf-containerup": i() === 0 }}
+							>
+								<div class="flex justify-between items-baseline pdf-boxup">
 									<h3
 										class="font-bold"
 										style={{
@@ -210,22 +212,17 @@ export function ExecutiveTemplate(props: TemplateProps) {
 											: education.optional_end_date}
 									</span>
 								</div>
-								<div class="flex justify-between items-baseline">
+								<div class="flex justify-between items-baseline pdf-boxup">
 									<h4 class="italic">{education.school}</h4>
 									<span class="text-sm">
 										{education.location}
 									</span>
 								</div>
 								<Show when={education.description}>
-									<p
-										class="mt-2 text-justify"
-										style={{
-											"font-size":
-												settings.font_size.body,
-										}}
-									>
-										{education.description}
-									</p>
+									<PDFText
+										src={education.description}
+										font_size={settings.font_size.body}
+									/>
 								</Show>
 							</div>
 						)}
@@ -241,7 +238,7 @@ export function ExecutiveTemplate(props: TemplateProps) {
 						.length > 0
 				}
 			>
-				<section class="mb-6">
+				<section class="mb-6 pdf-outline">
 					<h2
 						class="font-bold border-b border-black pb-1 mb-3 uppercase"
 						style={{
@@ -256,10 +253,13 @@ export function ExecutiveTemplate(props: TemplateProps) {
 								(v) => v.is_visible
 							)}
 						>
-							{(skill) => (
-								<div>
+							{(skill, i) => (
+								<div
+									class=" pdf-container"
+									classList={{ "pdf-containerup": i() === 0 }}
+								>
 									<h3
-										class="font-bold mb-2"
+										class="font-bold mb-2 pdf-boxup"
 										style={{
 											"font-size":
 												settings.font_size
@@ -268,14 +268,10 @@ export function ExecutiveTemplate(props: TemplateProps) {
 									>
 										{skill.skill_name}
 									</h3>
-									<p
-										style={{
-											"font-size":
-												settings.font_size.body,
-										}}
-									>
-										{skill.description}
-									</p>
+									<PDFText
+										src={skill.description}
+										font_size={settings.font_size.body}
+									/>
 								</div>
 							)}
 						</For>
@@ -291,7 +287,7 @@ export function ExecutiveTemplate(props: TemplateProps) {
 						.length > 0
 				}
 			>
-				<section class="mb-6">
+				<section class="mb-6 pdf-outline">
 					<h2
 						class="font-bold border-b border-black pb-1 mb-3 uppercase"
 						style={{
@@ -305,9 +301,12 @@ export function ExecutiveTemplate(props: TemplateProps) {
 							(v) => v.is_visible
 						)}
 					>
-						{(project) => (
-							<div class="mb-4">
-								<div class="flex justify-between items-baseline">
+						{(project, i) => (
+							<div
+								class="mb-4 pdf-container"
+								classList={{ "pdf-containerup": i() === 0 }}
+							>
+								<div class="flex justify-between items-baseline pdf-boxup">
 									<h3
 										class="font-bold"
 										style={{
@@ -320,12 +319,12 @@ export function ExecutiveTemplate(props: TemplateProps) {
 									</h3>
 									<Show
 										when={
-											project.start_date ||
+											project.optional_start_date ||
 											project.optional_end_date
 										}
 									>
 										<span class="text-sm">
-											{project.start_date} -{" "}
+											{project.optional_start_date} -{" "}
 											{project.is_current
 												? "Present"
 												: project.optional_end_date}
@@ -333,18 +332,14 @@ export function ExecutiveTemplate(props: TemplateProps) {
 									</Show>
 								</div>
 								<Show when={project.optional_project_subtitle}>
-									<h4 class="italic">
+									<h4 class="italic pdf-boxup">
 										{project.optional_project_subtitle}
 									</h4>
 								</Show>
-								<p
-									class="mt-2 text-justify"
-									style={{
-										"font-size": settings.font_size.body,
-									}}
-								>
-									{project.description}
-								</p>
+								<PDFText
+									src={project.description}
+									font_size={settings.font_size.body}
+								/>
 							</div>
 						)}
 					</For>
@@ -360,7 +355,7 @@ export function ExecutiveTemplate(props: TemplateProps) {
 					).length > 0
 				}
 			>
-				<section class="mb-6">
+				<section class="mb-6 pdf-outline">
 					<h2
 						class="font-bold border-b border-black pb-1 mb-3 uppercase"
 						style={{
@@ -374,9 +369,12 @@ export function ExecutiveTemplate(props: TemplateProps) {
 							(v) => v.is_visible
 						)}
 					>
-						{(certificate) => (
-							<div class="mb-4">
-								<div class="flex justify-between items-baseline">
+						{(certificate, i) => (
+							<div
+								class="mb-4 pdf-container"
+								classList={{ "pdf-containerup": i() === 0 }}
+							>
+								<div class="flex justify-between items-baseline pdf-boxup">
 									<h3
 										class="font-bold"
 										style={{
@@ -396,20 +394,15 @@ export function ExecutiveTemplate(props: TemplateProps) {
 									</Show>
 								</div>
 								<Show when={certificate.optional_issuer}>
-									<h4 class="italic">
+									<h4 class="italic pdf-boxup">
 										{certificate.optional_issuer}
 									</h4>
 								</Show>
 								<Show when={certificate.description}>
-									<p
-										class="mt-2 text-justify"
-										style={{
-											"font-size":
-												settings.font_size.body,
-										}}
-									>
-										{certificate.description}
-									</p>
+									<PDFText
+										src={certificate.description}
+										font_size={settings.font_size.body}
+									/>
 								</Show>
 							</div>
 						)}

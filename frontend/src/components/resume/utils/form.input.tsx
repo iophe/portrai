@@ -98,9 +98,9 @@ export function FormTextArea(props: FormTextAreaProps) {
 	const handleInput = (e: Event) => {
 		const target = e.currentTarget as HTMLTextAreaElement;
 
-		if (target.value.length > max_length) {
-			target.value = target.value.slice(0, max_length);
-		}
+		// if (target.value.length > max_length) {
+		// 	target.value = target.value.slice(0, max_length);
+		// }
 
 		props.on_input(target.value);
 	};
@@ -114,7 +114,7 @@ export function FormTextArea(props: FormTextAreaProps) {
 			rows={props.rows ?? 4}
 			required={props.required}
 			disabled={props.disabled}
-			maxLength={props.max_length ?? 1024}
+			// maxLength={props.max_length ?? 1024}
 		/>
 	);
 }

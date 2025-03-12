@@ -17,6 +17,7 @@ import { CreativeTemplate } from "./templates/creative.template";
 import { SimpleBlueTemplate } from "./templates/blue_minimalist.template";
 import { HunterGreenTemplate } from "./templates/hunter_green.template";
 import { MintyMinimalistTemplate } from "./templates/minty_minimalist.template";
+import { TestTemplate } from "./templates/test.template";
 
 interface ResumePreviewProps {
 	template_name?: string;

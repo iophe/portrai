@@ -75,7 +75,7 @@ interface Project {
 	project_id: number;
 	project_title: string;
 	optional_project_subtitle: string;
-	start_date: string;
+	optional_start_date: string;
 	optional_end_date: string;
 	is_current: boolean;
 	description: string;

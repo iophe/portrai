@@ -63,7 +63,11 @@ func ConfigureServer(app *fiber.App, cfg *ServerCfg) {
 		HandlerContextKey: "fiber.csrf.handler",
 	}))
 
-	app.Use(limiter.New())
+	app.Use(limiter.New(limiter.Config{
+		Max:               50,
+		Expiration:        1 * time.Minute,
+		LimiterMiddleware: limiter.SlidingWindow{},
+	}))
 
 	err := logs.InitLogger(cfg.LogFilepath)
 	if err == nil {
