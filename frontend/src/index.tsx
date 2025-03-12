@@ -16,9 +16,6 @@ const AboutUs = lazy(() => import("./pages/support/aboutus.page"));
 const Signin = lazy(() => import("./pages/auth/signin.page"));
 const Signup = lazy(() => import("./pages/auth/signup.page"));
 const Pricing = lazy(() => import("./pages/pricing/pricing.page"));
-const TemplatesDefault = lazy(
-	() => import("./pages/home/template.default.page")
-);
 const Error404 = lazy(() => import("./pages/error/error.404.page"));
 const ErrorPayment = lazy(() => import("./pages/error/error.payment.page"));
 
@@ -35,7 +32,7 @@ const Resume = Protected({ redirect: "/" })(
 const History = Protected({ redirect: "/" })(
 	lazy(() => import("./pages/resume/history.page"))
 );
-const Templates = Protected({ redirect: "/all-templates" })(
+const Templates = Protected({ redirect: "/" })(
 	lazy(() => import("./pages/home/template.page"))
 );
 
@@ -50,7 +47,6 @@ render(
 				<Route path={"/signin"} component={Signin} />
 				<Route path={"/signup"} component={Signup} />
 				<Route path={"/my-templates"} component={Templates} />
-				<Route path={"/all-templates"} component={TemplatesDefault} />
 				<Route path={"/blog"} component={Blog} />
 				<Route path={"/pricing"} component={Pricing} />
 				<Route path={"/fail"} component={ErrorPayment} />

@@ -2,9 +2,9 @@ import Footer from "@components/footer.default";
 import Header from "@components/header.autherized";
 import { createSignal, For, Show, Switch, Match } from "solid-js";
 import { createStore } from "solid-js/store";
-import EXECUTING_RESUME from '@assets/templates/executive.jpg';
+import EXECUTING_RESUME from "@assets/templates/executive.jpg";
 
-interface TemplatesPage { }
+interface TemplatesPage {}
 
 function TemplatesPage(props: TemplatesPage) {
 	const [selected_template_id, set_selected_template_id] =
@@ -163,7 +163,6 @@ function TemplatesPage(props: TemplatesPage) {
 										handle_template_select(template.id)
 									}
 								>
-									
 									<div class="flex flex-col gap-2">
 										<h3 class="font-medium text-lg">
 											{template.name}
@@ -190,7 +189,8 @@ function TemplatesPage(props: TemplatesPage) {
 												</button>
 											</div>
 										</Show>
-									</div><figure class="flex-1">
+									</div>
+									<figure class="flex-1">
 										<img
 											src={template.image_url}
 											alt={`${template.name} template preview`}

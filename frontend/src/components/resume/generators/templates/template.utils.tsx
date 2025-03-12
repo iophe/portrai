@@ -29,7 +29,6 @@ export interface TemplateSettings {
 	};
 }
 
-
 interface PDFTextProps {
 	src: string;
 	font_size: string;
