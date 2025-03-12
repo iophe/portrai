@@ -14,38 +14,41 @@ interface EducationListProps {}
 export function EducationList(props: EducationListProps) {
 	const fault = useFault();
 
-	const [educations, { mutate, refetch }] = createCachedResource(async () => {
-		try {
-			const response = await api.get(
-				"/resume/items/by-type?item_type=education"
-			);
-			const result = response.data.items as ResumeItem[];
+	const [educations, { mutate, refetch }] = createCachedResource(
+		async () => {
+			try {
+				const response = await api.get(
+					"/resume/items/by-type?item_type=education"
+				);
+				const result = response.data.items as ResumeItem[];
 
-			const educationItems = result.map((item) => ({
-				education_id: item.item_id,
-				degree: item.title,
-				school: item.subtitle,
-				location: item.location,
-				start_date: item.start_date,
-				optional_end_date: item.end_date,
-				is_current: item.is_current,
-				description: item.description,
-				priority: item.priority,
-				is_visible: item.is_visible,
-				tags: item.tags,
-				notes: item.notes,
-			}));
+				const educationItems = result.map((item) => ({
+					education_id: item.item_id,
+					degree: item.title,
+					school: item.subtitle,
+					location: item.location,
+					start_date: item.start_date,
+					optional_end_date: item.end_date,
+					is_current: item.is_current,
+					description: item.description,
+					priority: item.priority,
+					is_visible: item.is_visible,
+					tags: item.tags,
+					notes: item.notes,
+				}));
 
-			return educationItems as Education[];
-		} catch (error) {
-			fault.minor({
-				message:
-					((error as AxiosError).response?.data as any).error ??
-					(error as AxiosError).message,
-			});
-			return [];
-		}
-	},{cache_key:"EducationList:/resume/items/by-type?item_type=education"});
+				return educationItems as Education[];
+			} catch (error) {
+				fault.minor({
+					message:
+						((error as AxiosError).response?.data as any).error ??
+						(error as AxiosError).message,
+				});
+				return [];
+			}
+		},
+		{ cache_key: "EducationList:/resume/items/by-type?item_type=education" }
+	);
 
 	const [editing_educations, updateEditingEducations] = createStore(
 		[] as number[]

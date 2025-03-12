@@ -51,7 +51,11 @@ export function ExperienceList(props: ExperienceListProps) {
 				});
 				return [];
 			}
-		},{cache_key:"ExperienceList:/resume/items/by-type?item_type=experience"}
+		},
+		{
+			cache_key:
+				"ExperienceList:/resume/items/by-type?item_type=experience",
+		}
 	);
 
 	const [editing_experiences, updateEditingExperiences] = createStore(

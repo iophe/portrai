@@ -10,7 +10,6 @@ const CACHE_STORE = new Map<string, CacheEntry<any>>();
 interface cache_options {
 	ttl?: number; // Time to live in milliseconds (optional, if not provided, cache never expires)
 	cache_key?: string; // Custom cache key
-    
 }
 
 /**
@@ -22,7 +21,7 @@ interface cache_options {
 export function createCachedResource<T>(
 	fetcher: () => Promise<T>,
 	options: cache_options = {},
-    post_fn ?: (value:T) => void
+	post_fn?: (value: T) => void
 ): [
 	Resource<T>,
 	{
@@ -33,7 +32,7 @@ export function createCachedResource<T>(
 ] {
 	// Generate a unique cache key if none provided
 	const cache_key = options.cache_key ?? `resource_${crypto.randomUUID()}`;
-    
+
 	// Create a wrapper around the fetcher that checks the cache
 	const cached_fetcher = async () => {
 		// Check if we have a valid cached value
@@ -42,13 +41,13 @@ export function createCachedResource<T>(
 		if (cached) {
 			// If ttl is not set, cache never expires
 			if (!options.ttl) {
-                post_fn?.(cached.value);
+				post_fn?.(cached.value);
 				return cached.value;
 			}
 
 			// If ttl is set, check if cache is still valid
 			if (Date.now() - cached.timestamp < options.ttl) {
-                post_fn?.(cached.value);
+				post_fn?.(cached.value);
 				return cached.value;
 			} else {
 				// invalidate cache
@@ -65,7 +64,7 @@ export function createCachedResource<T>(
 			timestamp: Date.now(),
 		});
 
-        post_fn?.(result);
+		post_fn?.(result);
 		return result;
 	};
 
@@ -118,6 +117,6 @@ export function createCachedResource<T>(
 	];
 }
 
-export function invalidate(key:string) {
-    CACHE_STORE.delete(key);
+export function invalidate(key: string) {
+	CACHE_STORE.delete(key);
 }

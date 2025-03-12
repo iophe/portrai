@@ -58,30 +58,34 @@ function ResumePreview(props: ResumePreviewProps) {
 		props.job_specific_resume.title
 	);
 
-	const [account, { refetch }] = createCachedResource(async () => {
-		try {
-			const res = await api.get("/account/user");
-			const user = res.data.user as User;
-			return user;
-		} catch (error) {}
-	},
-	{ cache_key:"/account/user" });
-	const [profile, { mutate: mutate_profile, refetch: refetch_profile }] =
-	createCachedResource(async () => {
+	const [account, { refetch }] = createCachedResource(
+		async () => {
 			try {
-				const response = await api.get("/account/profile");
-				const result = response.data.profile as Profile;
-				return result;
-			} catch (error) {
-				fault.minor({
-					message:
-						((error as AxiosError).response?.data as any).error ??
-						(error as AxiosError).message,
-				});
-				return;
-			}
+				const res = await api.get("/account/user");
+				const user = res.data.user as User;
+				return user;
+			} catch (error) {}
 		},
-		{ cache_key:"/account/profile" });
+		{ cache_key: "/account/user" }
+	);
+	const [profile, { mutate: mutate_profile, refetch: refetch_profile }] =
+		createCachedResource(
+			async () => {
+				try {
+					const response = await api.get("/account/profile");
+					const result = response.data.profile as Profile;
+					return result;
+				} catch (error) {
+					fault.minor({
+						message:
+							((error as AxiosError).response?.data as any)
+								.error ?? (error as AxiosError).message,
+					});
+					return;
+				}
+			},
+			{ cache_key: "/account/profile" }
+		);
 	return (
 		<section class="overflow-y-auto w-full h-full flex flex-col gap-4">
 			<section class="rounded w-full p-4 bg-lapis-10 h-full flex flex-col gap-4">

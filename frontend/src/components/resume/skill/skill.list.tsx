@@ -14,36 +14,39 @@ interface SkillListProps {}
 export function SkillList(props: SkillListProps) {
 	const fault = useFault();
 
-	const [skills, { mutate, refetch }] = createCachedResource(async () => {
-		try {
-			const response = await api.get(
-				"/resume/items/by-type?item_type=skill"
-			);
-			const result = response.data.items as ResumeItem[];
+	const [skills, { mutate, refetch }] = createCachedResource(
+		async () => {
+			try {
+				const response = await api.get(
+					"/resume/items/by-type?item_type=skill"
+				);
+				const result = response.data.items as ResumeItem[];
 
-			const skillItems = result.map((item) => ({
-				skill_id: item.item_id,
-				skill_name: item.title,
-				optional_skill_type: item.subtitle,
-				optional_skill_level:
-					JSON.parse(item.metadata ?? "{}").skill_level || "",
-				description: item.description,
-				priority: item.priority,
-				is_visible: item.is_visible,
-				tags: item.tags,
-				notes: item.notes,
-			}));
+				const skillItems = result.map((item) => ({
+					skill_id: item.item_id,
+					skill_name: item.title,
+					optional_skill_type: item.subtitle,
+					optional_skill_level:
+						JSON.parse(item.metadata ?? "{}").skill_level || "",
+					description: item.description,
+					priority: item.priority,
+					is_visible: item.is_visible,
+					tags: item.tags,
+					notes: item.notes,
+				}));
 
-			return skillItems as Skill[];
-		} catch (error) {
-			fault.minor({
-				message:
-					((error as AxiosError).response?.data as any).error ??
-					(error as AxiosError).message,
-			});
-			return [];
-		}
-	},{cache_key:"SkillList:/resume/items/by-type?item_type=skill"});
+				return skillItems as Skill[];
+			} catch (error) {
+				fault.minor({
+					message:
+						((error as AxiosError).response?.data as any).error ??
+						(error as AxiosError).message,
+				});
+				return [];
+			}
+		},
+		{ cache_key: "SkillList:/resume/items/by-type?item_type=skill" }
+	);
 
 	const [editing_skills, updateEditingSkills] = createStore([] as number[]);
 

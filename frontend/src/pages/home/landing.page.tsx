@@ -10,6 +10,7 @@ import {
 } from "solid-js";
 import { A } from "@solidjs/router";
 import Footer from "@components/footer.default";
+import EXECUTING_RESUME from "@assets/templates/executive.jpg";
 
 interface LandingProps {}
 
@@ -460,7 +461,7 @@ function Landing(props: LandingProps) {
 						</li>
 						<li class="text-center">
 							<strong class="text-4xl font-bold text-forest-900">
-								92%
+								97%
 							</strong>
 							<p class="text-gray-600">ATS pass-through rate</p>
 						</li>
@@ -537,18 +538,33 @@ function Landing(props: LandingProps) {
 							</h3>
 						</header>
 
-						<ul class="flex flex-col md:flex-row gap-8">
-							<For each={[1, 2, 3]}>
+						<ul class="flex flex-col md:flex-row md:justify-center gap-8">
+							<For each={[EXECUTING_RESUME]}>
 								{(template) => (
-									<li class="bg-white rounded-xl shadow-lg shadow-lapis-50 p-8 border border-gray-100 group hover:shadow-xl transition-all">
-										<figure class="aspect-[3/4] bg-gradient-to-br from-lapis-10 to-white rounded-lg pb-6 group-hover:shadow-md transition-all" />
-										<h4 class="font-medium text-lg text-forest-900">
-											Modern Professional
-										</h4>
-										<p class="text-gray-600 pt-2">
-											Clean and contemporary design for
-											tech and creative roles
-										</p>
+									<li class="bg-white rounded-xl flex flex-col items-center gap-4 shadow-lg shadow-lapis-50 p-8 border border-gray-100 group hover:shadow-xl transition-all">
+										{/* <figure class="aspect-[3/4] bg-gradient-to-br from-lapis-10 to-white rounded-lg pb-6 group-hover:shadow-md transition-all" /> */}
+										<figure class="md:w-96 w-64 aspect-[3/4]">
+											<img
+												src={template}
+												alt={`template preview`}
+												class="object-cover w-full h-full"
+												onError={(e) => {
+													// Fallback for missing images
+													const target =
+														e.target as HTMLImageElement;
+													// target.src = "/templates/placeholder.jpg";
+												}}
+											/>
+										</figure>
+										<div>
+											<h4 class="font-medium text-lg text-forest-900">
+												Modern Professional
+											</h4>
+											<p class="text-gray-600 pt-2">
+												Clean and contemporary design
+												for tech and creative roles
+											</p>
+										</div>
 									</li>
 								)}
 							</For>

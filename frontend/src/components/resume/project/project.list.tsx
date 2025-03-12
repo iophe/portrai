@@ -14,37 +14,40 @@ interface ProjectListProps {}
 export function ProjectList(props: ProjectListProps) {
 	const fault = useFault();
 
-	const [projects, { mutate, refetch }] = createCachedResource(async () => {
-		try {
-			const response = await api.get(
-				"/resume/items/by-type?item_type=project"
-			);
-			const result = response.data.items as ResumeItem[];
+	const [projects, { mutate, refetch }] = createCachedResource(
+		async () => {
+			try {
+				const response = await api.get(
+					"/resume/items/by-type?item_type=project"
+				);
+				const result = response.data.items as ResumeItem[];
 
-			const projectItems = result.map((item) => ({
-				project_id: item.item_id,
-				project_title: item.title,
-				optional_project_subtitle: item.subtitle,
-				start_date: item.start_date,
-				optional_end_date: item.end_date,
-				is_current: item.is_current,
-				description: item.description,
-				priority: item.priority,
-				is_visible: item.is_visible,
-				tags: item.tags,
-				notes: item.notes,
-			}));
+				const projectItems = result.map((item) => ({
+					project_id: item.item_id,
+					project_title: item.title,
+					optional_project_subtitle: item.subtitle,
+					start_date: item.start_date,
+					optional_end_date: item.end_date,
+					is_current: item.is_current,
+					description: item.description,
+					priority: item.priority,
+					is_visible: item.is_visible,
+					tags: item.tags,
+					notes: item.notes,
+				}));
 
-			return projectItems as Project[];
-		} catch (error) {
-			fault.minor({
-				message:
-					((error as AxiosError).response?.data as any).error ??
-					(error as AxiosError).message,
-			});
-			return [];
-		}
-	},{cache_key:"ProjectList:/resume/items/by-type?item_type=project"});
+				return projectItems as Project[];
+			} catch (error) {
+				fault.minor({
+					message:
+						((error as AxiosError).response?.data as any).error ??
+						(error as AxiosError).message,
+				});
+				return [];
+			}
+		},
+		{ cache_key: "ProjectList:/resume/items/by-type?item_type=project" }
+	);
 
 	const [editing_projects, updateEditingProjects] = createStore(
 		[] as number[]

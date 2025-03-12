@@ -6,7 +6,6 @@ import { lazy } from "solid-js";
 import { Route, Router } from "@solidjs/router";
 import { FaultProvider } from "@components/fault";
 import Protected from "@components/protected";
-import Templates from "@pages/home/template.page";
 import Blog from "@pages/home/blog.page";
 
 const root = document.getElementById("root");
@@ -33,6 +32,9 @@ const Resume = Protected({ redirect: "/" })(
 const History = Protected({ redirect: "/" })(
 	lazy(() => import("./pages/resume/history.page"))
 );
+const Templates = Protected({ redirect: "/" })(
+	lazy(() => import("./pages/home/template.page"))
+);
 
 render(
 	() => (
@@ -44,7 +46,7 @@ render(
 				<Route path={"/about-us"} component={AboutUs} />
 				<Route path={"/signin"} component={Signin} />
 				<Route path={"/signup"} component={Signup} />
-				<Route path={"/template"} component={Templates} />
+				<Route path={"/my-templates"} component={Templates} />
 				<Route path={"/blog"} component={Blog} />
 				<Route path={"/pricing"} component={Pricing} />
 				<Route path={"/fail"} component={ErrorPayment} />
