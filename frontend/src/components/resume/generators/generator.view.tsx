@@ -13,11 +13,11 @@ import { db } from "@utils/db/db";
 import { useNavigate } from "@solidjs/router";
 import LoadingSpinner from "@components/loading.spinner";
 import { createCachedResource } from "@utils/cache";
-import { CreativeTemplate } from "./templates/creative.template";
-import { SimpleBlueTemplate } from "./templates/blue_minimalist.template";
-import { HunterGreenTemplate } from "./templates/hunter_green.template";
-import { MintyMinimalistTemplate } from "./templates/minty_minimalist.template";
-import { TestTemplate } from "./templates/test.template";
+import {
+	CACHED_IMAGE_KEY,
+	CACHED_IMAGE_TTL,
+	CachedImage,
+} from "@pages/auth/avatar.section";
 
 interface ResumePreviewProps {
 	template_name?: string;
@@ -64,6 +64,49 @@ function ResumeAIPreview(props: ResumePreviewProps) {
 			},
 			{ cache_key: "/account/profile" }
 		);
+
+	const [avatar] = createResource(async () => {
+		const cached = window.localStorage.getItem(CACHED_IMAGE_KEY);
+		if (cached) {
+			const cached_data = JSON.parse(cached) as CachedImage;
+			const cache_date = new Date(cached_data.date);
+			const now = new Date();
+			const elapsed_time = now.getTime() - cache_date.getTime();
+
+			if (elapsed_time < cached_data.ttl) {
+				// if the data is valid
+				return cached_data.img;
+			} else {
+				window.localStorage.removeItem(CACHED_IMAGE_KEY);
+			}
+		}
+		try {
+			const res = await api.get("/account/profile/avatar", {
+				responseType: "blob",
+			});
+			const url = URL.createObjectURL(res.data);
+			const base64_url = (await new Promise((resolve) => {
+				const reader = new FileReader();
+				reader.onloadend = () => resolve(reader.result as string);
+				reader.readAsDataURL(res.data);
+			})) as string;
+			window.localStorage.setItem(
+				CACHED_IMAGE_KEY,
+				JSON.stringify({
+					img: base64_url,
+					date: new Date(),
+					ttl: CACHED_IMAGE_TTL,
+				} as CachedImage)
+			);
+			return base64_url;
+		} catch (error) {
+			fault.minor({
+				message:
+					((error as AxiosError).response?.data as any).error ??
+					(error as AxiosError).message,
+			});
+		}
+	});
 	return (
 		<section class="overflow-y-auto w-full h-full flex flex-col gap-4">
 			<section class="rounded w-full p-4 bg-lapis-10 h-full flex flex-col gap-4">

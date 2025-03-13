@@ -9,8 +9,6 @@ import (
 func RegisterRoutes(server *fiber.App) {
 	monitor.RegisterMonitoringRoutes(server)
 
-	// Dans votre configuration de routes principale
-
 	api_group := server.Group("/api")
 
 	v1_group := api_group.Group("/v1")
@@ -21,8 +19,6 @@ func RegisterRoutes(server *fiber.App) {
 			return c.SendStatus(fiber.StatusOK)
 		},
 	)
-
-	v1_group.Static("/uploads", "./static/uploads")
 
 	RegisterAuthRoutes(v1_group)
 	RegisterPaymentRoutes(v1_group)
