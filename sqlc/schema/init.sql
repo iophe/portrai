@@ -157,6 +157,12 @@ CREATE TRIGGER update_profiles_updated_at
 
 CREATE INDEX profiles_user_idx ON public.profiles(user_id);
 
+-- Add avatar bucket for the profile picture
+insert into storage.buckets
+  (id, name)
+values
+  ('avatars', 'avatars');
+
 -- Function to handle new user creation
 CREATE OR REPLACE FUNCTION public.handle_new_profile_version()
 RETURNS TRIGGER AS $$

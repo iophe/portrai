@@ -42,4 +42,27 @@ func RegisterAccountRoutes(group fiber.Router) {
 		}
 		return handlers.HandleProfileUpdate(data, c, &db.DB)
 	})
+
+	// avatar_cache := cache.New(cache.Config{
+	// 	Next: func(c *fiber.Ctx) bool {
+	// 		return c.Method() != "GET"
+	// 	},
+	// 	Expiration:           24 * time.Hour,
+	// 	CacheControl:         true,
+	// 	StoreResponseHeaders: true,
+	// 	KeyGenerator: func(c *fiber.Ctx) string {
+	// 		userID, err := middlewares.GetUserID(c)
+	// 		if err != nil {
+	// 			return c.Path() // Fallback
+	// 		}
+	// 		return c.Path() + "-" + string(userID[:])
+	// 	},
+	// })
+	account_group.Get("/profile/avatar", func(c *fiber.Ctx) error {
+		return handlers.HandleGetProfileAvatar(c)
+	})
+
+	account_group.Post("/profile/avatar/update", func(c *fiber.Ctx) error {
+		return handlers.HandleUploadProfileAvatar(c)
+	})
 }

@@ -1,11 +1,84 @@
-import { Component, For, Show, createSignal, onMount } from "solid-js";
+import {
+	Component,
+	For,
+	Match,
+	Show,
+	Switch,
+	createResource,
+	createSignal,
+	onCleanup,
+	onMount,
+} from "solid-js";
 import AvatarIcon from "@assets/icons/avatar.svg?component-solid";
+import api from "@utils/api";
+import { useFault } from "@components/fault";
+import { AxiosError } from "axios";
+import LoadingSpinner from "@components/loading.spinner";
+import EditIcon from "@assets/icons/edit.svg?component-solid";
 
 interface AvatarSectionProps {}
 
+export interface CachedImage {
+	img: string;
+	date: Date;
+	ttl: number;
+}
+export const CACHED_IMAGE_TTL = 24 * 60 * 60 * 1000;
+export const CACHED_IMAGE_KEY = "/account/profile/avatar";
+
 export function AvatarSection(props: AvatarSectionProps) {
+	const fault = useFault();
 	const [is_uploading, set_is_uploading] = createSignal(false);
-	const [upload_error, set_upload_error] = createSignal<string | null>(null);
+
+	const [avatar, { refetch }] = createResource(async () => {
+		const cached = window.localStorage.getItem(CACHED_IMAGE_KEY);
+		if (cached) {
+			const cached_data = JSON.parse(cached) as CachedImage;
+			const cache_date = new Date(cached_data.date);
+			const now = new Date();
+			const elapsed_time = now.getTime() - cache_date.getTime();
+
+			if (elapsed_time < cached_data.ttl) {
+				// if the data is valid
+				return cached_data.img;
+			} else {
+				window.localStorage.removeItem(CACHED_IMAGE_KEY);
+			}
+		}
+		try {
+			const res = await api.get("/account/profile/avatar", {
+				responseType: "blob",
+			});
+			const url = URL.createObjectURL(res.data);
+			const base64_url = (await new Promise((resolve) => {
+				const reader = new FileReader();
+				reader.onloadend = () => resolve(reader.result as string);
+				reader.readAsDataURL(res.data);
+			})) as string;
+			window.localStorage.setItem(
+				CACHED_IMAGE_KEY,
+				JSON.stringify({
+					img: base64_url,
+					date: new Date(),
+					ttl: CACHED_IMAGE_TTL,
+				} as CachedImage)
+			);
+			return base64_url;
+		} catch (error) {
+			fault.minor({
+				message:
+					((error as AxiosError).response?.data as any).error ??
+					(error as AxiosError).message,
+			});
+		}
+	});
+
+	onCleanup(() => {
+		const url = avatar();
+		if (url) {
+			URL.revokeObjectURL(url);
+		}
+	});
 
 	return (
 		<section class="w-full bg-white rounded p-6 shadow-sm">
@@ -13,117 +86,111 @@ export function AvatarSection(props: AvatarSectionProps) {
 				<AvatarIcon class="fill-forest-900 w-6 h-6" />
 				<h2 class="text-sm text-gray-500 uppercase">Profile Picture</h2>
 			</header>
-			<article class="flex items-center gap-4 pt-4">
+			<article class="flex flex-row items-center gap-4 pt-4">
 				<figure class="flex flex-col items-center">
-					<div class="w-24 h-24 rounded-full overflow-hidden bg-forest-50 flex items-center justify-center">
-						<AvatarIcon class=" w-20 h-20 fill-forest-700" />
-					</div>
-					<div class="w-full mt-2">
-						<label
-							for="avatar-upload"
-							class="text-sm text-blue-500 hover:text-blue-600 cursor-pointer"
+					<div
+						class="w-24 h-24 rounded-full overflow-hidden  flex items-center justify-center"
+						classList={{
+							"bg-none": avatar() !== undefined,
+							"bg-forest-50": !avatar(),
+						}}
+					>
+						<Switch
+							fallback={
+								<AvatarIcon class=" w-20 h-20 fill-forest-700" />
+							}
 						>
-							Change
-						</label>
+							<Match when={avatar.loading}>
+								<LoadingSpinner />
+							</Match>
+							<Match when={avatar()}>
+								<img
+									src={avatar()}
+									alt="Profile Avatar"
+									class="w-full h-full"
+								/>
+							</Match>
+						</Switch>
+					</div>
+				</figure>
+				<aside class="flex-1 flex flex-col gap-2">
+					<p class="text-sm text-forest-700">
+						Upload a profile picture. Max file size 5MB.
+					</p>
+					<p class="text-xs text-gray-500">
+						Supported formats: JPG, PNG, WEBP
+					</p>
+					<div class="px-4 self-center">
 						<input
 							id="avatar-upload"
 							type="file"
 							accept="image/*"
 							class="hidden"
-							onChange={(e) => {
+							onChange={async (e) => {
 								const input = e.target as HTMLInputElement;
 								if (!input.files?.length) return;
 
 								const file = input.files[0];
 
 								if (!file.type.startsWith("image/")) {
-									set_upload_error(
-										"Please upload an image file (JPG, PNG, or GIF)"
-									);
+									fault.major({
+										message:
+											"Please upload an image file (JPG, PNG, or WEBP)",
+									});
 									return;
 								}
 
 								if (file.size > 5 * 1024 * 1024) {
-									set_upload_error(
-										"File size exceeds 5MB limit"
-									);
+									fault.major({
+										message: "File size exceeds 5MB limit",
+									});
 									return;
 								}
-
-								set_upload_error(null);
 
 								const object_url = URL.createObjectURL(file);
 
 								set_is_uploading(true);
 
-								// Upload handler inside the onChange event
-								const upload_avatar_file = async (
-									file: File
-								) => {
-									const form_data = new FormData();
-									form_data.append("avatar", file);
+								const form_data = new FormData();
+								form_data.append("image", file);
 
-									try {
-										const response = await fetch(
-											"/api/account_group/avatar/upload",
-											{
-												method: "POST",
-												body: form_data,
-											}
-										);
-
-										if (!response.ok) {
-											const error_data =
-												await response.json();
-											throw new Error(
-												error_data.error ||
-													"Upload failed"
-											);
-										}
-
-										const data = await response.json();
-										return data.path;
-									} catch (error) {
-										console.error(
-											"Avatar upload error:",
-											error
-										);
-										throw error;
-									}
-								};
-
-								upload_avatar_file(file)
-									.then((avatar_url) => {
-										const backend_avatar_url = `http://localhost:3000/api/v1${avatar_url}`;
-										set_is_uploading(false);
-									})
-									.catch((error) => {
-										set_is_uploading(false);
-										set_upload_error(
-											"Failed to upload image. Please try again."
-										);
+								try {
+									await api.post(
+										"/account/profile/avatar/update",
+										form_data
+									);
+									window.localStorage.removeItem(
+										CACHED_IMAGE_KEY
+									);
+									refetch();
+								} catch (error) {
+									fault.minor({
+										message:
+											(
+												(error as AxiosError).response
+													?.data as any
+											).error ??
+											(error as AxiosError).message,
 									});
+								} finally {
+									set_is_uploading(false);
+									URL.revokeObjectURL(object_url);
+								}
 							}}
 							disabled={is_uploading()}
 							aria-label="Upload profile picture"
 						/>
+						<label
+							for="avatar-upload"
+							class="text-sm flex flex-row gap-4 items-center text-lapis-500 hover:text-lapis-300 cursor-pointer"
+						>
+							Change
+							<EditIcon class="fill-forest-900" />
+							<Show when={is_uploading()}>
+								<LoadingSpinner />
+							</Show>
+						</label>
 					</div>
-				</figure>
-				<aside class="flex-1">
-					<p class="text-sm text-forest-700">
-						Upload a profile picture. Max file size 5MB.
-					</p>
-					<p class="text-xs text-gray-500">
-						Supported formats: JPG, PNG, GIF
-					</p>
-
-					<Show when={is_uploading()}>
-						<p class="text-sm text-blue-500">Uploading...</p>
-					</Show>
-
-					<Show when={upload_error()}>
-						<p class="text-sm text-red-500">{upload_error()}</p>
-					</Show>
 				</aside>
 			</article>
 		</section>
