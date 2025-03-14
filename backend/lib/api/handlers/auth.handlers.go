@@ -2,6 +2,9 @@ package handlers
 
 import (
 	"backend/lib/api/middlewares"
+	ca "backend/lib/services/cache"
+	"backend/lib/services/db"
+	database "backend/lib/services/db"
 	"backend/lib/utils"
 	"bytes"
 	"encoding/json"
@@ -12,6 +15,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 // Response structure from Supabase Auth
@@ -29,7 +33,7 @@ type EmailSignupData struct {
 	Password string `json:"password"`
 }
 
-func HandleEmailSignup(c *fiber.Ctx, data EmailSignupData) (AuthResponse, error) {
+func HandleEmailSignup(c *fiber.Ctx, data EmailSignupData, db *db.Database) (AuthResponse, error) {
 	// Validate input
 	if data.Email == "" || data.Password == "" {
 		return AuthResponse{}, fmt.Errorf("Email and password are required")
@@ -103,10 +107,12 @@ func HandleEmailSignin(c *fiber.Ctx, data EmailSigninData) (AuthResponse, error)
 		AccessToken:  auth_response.AccessToken,
 		RefreshToken: auth_response.RefreshToken,
 	})
+
 	slog.Info("successfully signed in",
 		"email", auth_response.User.Email,
 		"id", auth_response.User.Id,
 	)
+
 	return auth_response, nil
 }
 
@@ -142,62 +148,80 @@ func HandleLogout(c *fiber.Ctx) error {
 	defer response.Body.Close()
 
 	// Clear auth cookies regardless of Supabase response
-	c.Cookie(&fiber.Cookie{
-		Name:     "access_token",
-		Value:    "",
-		Expires:  time.Now().Add(-24 * time.Hour),
-		Secure:   true,
-		HTTPOnly: true,
-		SameSite: "Strict",
-	})
-	c.Cookie(&fiber.Cookie{
-		Name:     "refresh_token",
-		Value:    "",
-		Expires:  time.Now().Add(-24 * time.Hour),
-		Secure:   true,
-		HTTPOnly: true,
-		SameSite: "Strict",
-	})
+	middlewares.ClearAuthCookies(c)
+	middlewares.ClearPaymentCookies(c)
+
 	slog.Info("successfully signed out", "email", claims.Email, "id", claims.UserId)
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "successfully logged out",
 	})
 }
 
-func HandleDeleteAccount(c *fiber.Ctx) error {
-	// Get user from context (requires Protected middleware)
-	claims, err := middlewares.GetUserClaims(c)
+func HandleDeleteAccount(c *fiber.Ctx, cache *ca.Cache, db *database.Database) error {
+	user_id, err := middlewares.GetUserID(c)
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "unauthorized",
+			"error": "Unauthorized access",
 		})
 	}
-
 	// Delete users data from the storage, the cache and the database
-	// TODO
+	request, err := http.NewRequest("DELETE", fmt.Sprintf("%s/admin/users/%s", utils.KONG_AUTH_URL, user_id), nil)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "failed to create request",
+		})
+	}
+	bearer, err := createSupabaseAdminToken()
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "failed to create request",
+		})
+	}
+	request.Header.Set("Authorization", fmt.Sprintf("Bearer %s", bearer))
+	request.Header.Set("apikey", utils.SERVICE_ROLE_KEY)
 
+	client := &http.Client{}
+	response, err := client.Do(request)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "failed to delete account",
+		})
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "failed to delete account",
+		})
+	}
 	// Clear auth cookies after successful deletion
-	c.Cookie(&fiber.Cookie{
-		Name:     "access_token",
-		Value:    "",
-		Expires:  time.Now().Add(-24 * time.Hour),
-		Secure:   true,
-		HTTPOnly: true,
-		SameSite: "Strict",
-	})
-	c.Cookie(&fiber.Cookie{
-		Name:     "refresh_token",
-		Value:    "",
-		Expires:  time.Now().Add(-24 * time.Hour),
-		Secure:   true,
-		HTTPOnly: true,
-		SameSite: "Strict",
-	})
+	middlewares.ClearAuthCookies(c)
+	middlewares.ClearPaymentCookies(c)
 
-	slog.Info("successfully deleted", "email", claims.Email, "id", claims.UserId)
+	slog.Info("successfully deleted", "id", user_id)
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "account successfully deleted",
 	})
+}
+
+func createSupabaseAdminToken() (string, error) {
+	// Create claims with admin access
+	claims := jwt.MapClaims{
+		"role": "service_role",
+		"iss":  "supabase",
+		"iat":  time.Now().Unix(),
+		"exp":  time.Now().Add(time.Hour).Unix(), // Token valid for 1 hour
+	}
+
+	// Create the token with the claims
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	tokenString, err := token.SignedString([]byte(utils.JWT_SECRET))
+	if err != nil {
+		return "", err
+	}
+
+	return tokenString, nil
 }
 
 type SupabaseError struct {

@@ -23,4 +23,6 @@ func RegisterRoutes(server *fiber.App) {
 	RegisterAuthRoutes(v1_group)
 	RegisterPaymentRoutes(v1_group)
 	RegisterResumeRoutes(v1_group)
+	RegisterAIRoutes(v1_group)
+	RegisterAccountRoutes(v1_group)
 }

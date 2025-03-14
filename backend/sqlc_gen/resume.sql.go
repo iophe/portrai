@@ -12,11 +12,77 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const createExperience = `-- name: CreateExperience :one
-INSERT INTO public.experiences (
+const addResumeVersion = `-- name: AddResumeVersion :exec
+INSERT INTO public.resume_versions (user_id, version)
+VALUES ($1::uuid, $2::text)
+`
+
+type AddResumeVersionParams struct {
+	UserID     uuid.UUID `json:"user_id"`
+	NewVersion string    `json:"new_version"`
+}
+
+func (q *Queries) AddResumeVersion(ctx context.Context, arg AddResumeVersionParams) error {
+	_, err := q.db.Exec(ctx, addResumeVersion, arg.UserID, arg.NewVersion)
+	return err
+}
+
+const changeResumeVersion = `-- name: ChangeResumeVersion :exec
+UPDATE public.users
+SET 
+    current_resume_version = (SELECT version_id from public.resume_versions rv where rv.version = $1::text)
+WHERE 
+    id = $2::uuid
+`
+
+type ChangeResumeVersionParams struct {
+	Version string    `json:"version"`
+	UserID  uuid.UUID `json:"user_id"`
+}
+
+func (q *Queries) ChangeResumeVersion(ctx context.Context, arg ChangeResumeVersionParams) error {
+	_, err := q.db.Exec(ctx, changeResumeVersion, arg.Version, arg.UserID)
+	return err
+}
+
+const createNoteOnResumeItem = `-- name: CreateNoteOnResumeItem :exec
+INSERT INTO public.resume_item_notes (
+    note_type,
+    content,
+    item_id,
+    user_id
+) VALUES (
+    $1::text,
+    $2::text,
+    $3::bigint,
+    $4::uuid
+)
+`
+
+type CreateNoteOnResumeItemParams struct {
+	NoteType string    `json:"note_type"`
+	Content  string    `json:"content"`
+	ItemID   int64     `json:"item_id"`
+	UserID   uuid.UUID `json:"user_id"`
+}
+
+// Note operations
+func (q *Queries) CreateNoteOnResumeItem(ctx context.Context, arg CreateNoteOnResumeItemParams) error {
+	_, err := q.db.Exec(ctx, createNoteOnResumeItem,
+		arg.NoteType,
+		arg.Content,
+		arg.ItemID,
+		arg.UserID,
+	)
+	return err
+}
+
+const createResumeItem = `-- name: CreateResumeItem :one
+INSERT INTO public.resume_items (
     user_id,
-    company_name,
-    job_title,
+    item_type,
+    title,
+    subtitle,
     location,
     start_date,
     end_date,
@@ -24,29 +90,31 @@ INSERT INTO public.experiences (
     description,
     priority,
     tags,
-    notes,
+    version_id,
     metadata
 ) VALUES (
     $1::uuid,
-    $2::text,
-    $3::text,
-    $4::text,
-    $5::date,
+    $2::text, -- 'experience', 'education', 'skill', 'certificate', 'project'
+    $3::text, -- Primary name (job_title, school, skill_name, certificate_name, project_title)
+    $4::text, -- Secondary name (company_name, degree, skill_type, issuer, project_subtitle)
+    $5::text,
     $6::date,
-    $7::boolean,
-    $8::text,
-    $9::integer,
-    $10::text[],
-    $11::jsonb[],
-    $12::jsonb
+    $7::date,
+    $8::boolean,
+    $9::text,
+    $10::integer,
+    COALESCE($11::text[], ARRAY[]::text[]),
+    (SELECT current_resume_version FROM public.users WHERE id = $1::uuid),
+    COALESCE($12::jsonb, '{}'::jsonb) -- Store type-specific fields in metadata
 )
-RETURNING experience_id
+RETURNING item_id
 `
 
-type CreateExperienceParams struct {
+type CreateResumeItemParams struct {
 	UserID      uuid.UUID   `json:"user_id"`
-	CompanyName string      `json:"company_name"`
-	JobTitle    string      `json:"job_title"`
+	ItemType    string      `json:"item_type"`
+	Title       string      `json:"title"`
+	Subtitle    string      `json:"subtitle"`
 	Location    string      `json:"location"`
 	StartDate   pgtype.Date `json:"start_date"`
 	EndDate     pgtype.Date `json:"end_date"`
@@ -54,15 +122,15 @@ type CreateExperienceParams struct {
 	Description string      `json:"description"`
 	Priority    int32       `json:"priority"`
 	Tags        []string    `json:"tags"`
-	Notes       [][]byte    `json:"notes"`
 	Metadata    []byte      `json:"metadata"`
 }
 
-func (q *Queries) CreateExperience(ctx context.Context, arg CreateExperienceParams) (int64, error) {
-	row := q.db.QueryRow(ctx, createExperience,
+func (q *Queries) CreateResumeItem(ctx context.Context, arg CreateResumeItemParams) (int64, error) {
+	row := q.db.QueryRow(ctx, createResumeItem,
 		arg.UserID,
-		arg.CompanyName,
-		arg.JobTitle,
+		arg.ItemType,
+		arg.Title,
+		arg.Subtitle,
 		arg.Location,
 		arg.StartDate,
 		arg.EndDate,
@@ -70,149 +138,410 @@ func (q *Queries) CreateExperience(ctx context.Context, arg CreateExperiencePara
 		arg.Description,
 		arg.Priority,
 		arg.Tags,
-		arg.Notes,
 		arg.Metadata,
 	)
-	var experience_id int64
-	err := row.Scan(&experience_id)
-	return experience_id, err
+	var item_id int64
+	err := row.Scan(&item_id)
+	return item_id, err
 }
 
-const deleteExperience = `-- name: DeleteExperience :exec
-DELETE FROM public.experiences
+const deleteNote = `-- name: DeleteNote :exec
+DELETE FROM public.resume_item_notes
 WHERE 
-    experience_id = $1::bigint 
-    AND user_id = $2::uuid
+    note_id = $1::bigint
+    AND item_id = $2::bigint 
+    AND user_id = $3::uuid
 `
 
-type DeleteExperienceParams struct {
-	ExperienceID int64     `json:"experience_id"`
-	UserID       uuid.UUID `json:"user_id"`
+type DeleteNoteParams struct {
+	NoteID int64     `json:"note_id"`
+	ItemID int64     `json:"item_id"`
+	UserID uuid.UUID `json:"user_id"`
 }
 
-func (q *Queries) DeleteExperience(ctx context.Context, arg DeleteExperienceParams) error {
-	_, err := q.db.Exec(ctx, deleteExperience, arg.ExperienceID, arg.UserID)
+func (q *Queries) DeleteNote(ctx context.Context, arg DeleteNoteParams) error {
+	_, err := q.db.Exec(ctx, deleteNote, arg.NoteID, arg.ItemID, arg.UserID)
 	return err
 }
 
-const getExperienceById = `-- name: GetExperienceById :one
+const deleteResumeItem = `-- name: DeleteResumeItem :exec
+DELETE FROM public.resume_items
+WHERE 
+    item_id = $1::bigint 
+    AND user_id = $2::uuid
+`
+
+type DeleteResumeItemParams struct {
+	ItemID int64     `json:"item_id"`
+	UserID uuid.UUID `json:"user_id"`
+}
+
+// Delete a resume item
+func (q *Queries) DeleteResumeItem(ctx context.Context, arg DeleteResumeItemParams) error {
+	_, err := q.db.Exec(ctx, deleteResumeItem, arg.ItemID, arg.UserID)
+	return err
+}
+
+const deleteResumeVersion = `-- name: DeleteResumeVersion :exec
+DELETE FROM public.resume_versions
+WHERE 
+    user_id = $1::uuid
+    AND version = $2::text
+`
+
+type DeleteResumeVersionParams struct {
+	UserID  uuid.UUID `json:"user_id"`
+	Version string    `json:"version"`
+}
+
+func (q *Queries) DeleteResumeVersion(ctx context.Context, arg DeleteResumeVersionParams) error {
+	_, err := q.db.Exec(ctx, deleteResumeVersion, arg.UserID, arg.Version)
+	return err
+}
+
+const getResumeData = `-- name: GetResumeData :one
+WITH resume_version AS (
+    SELECT current_resume_version
+    FROM public.users
+    WHERE id = $1::uuid
+)
+SELECT jsonb_build_object(
+    'experiences', (
+        SELECT COALESCE(jsonb_agg(
+            jsonb_build_object(
+                'experience_id', item_id,
+                'job_title', title,
+                'company_name', subtitle,
+                'location', location,
+                'start_date', start_date,
+                'optional_end_date', end_date,
+                'is_current', is_current,
+                'description', description,
+                'priority', priority,
+                'is_visible', is_visible,
+                'tags', tags,
+                'metadata', metadata,
+                'notes', COALESCE((
+                    SELECT array_agg(json_build_object(
+                        'note_id', note_id,
+                        'note_type', note_type,
+                        'content', content,
+                        'created_at', created_at,
+                        'updated_at', updated_at
+                    ) ORDER BY created_at DESC)
+                    FROM public.resume_item_notes
+                    WHERE resume_item_notes.item_id = resume_items.item_id
+                ), '{}')
+            ) ORDER BY priority DESC
+        ), '[]')
+        FROM resume_items, resume_version
+        WHERE resume_items.user_id = $1::uuid 
+        AND resume_items.item_type = 'experience'
+        AND resume_items.is_visible = true
+        AND resume_items.version_id = resume_version.current_resume_version
+    ),
+    'educations', (
+        SELECT COALESCE(jsonb_agg(
+            jsonb_build_object(
+                'education_id', item_id,
+                'degree', title,
+                'school', subtitle,
+                'location', location,
+                'start_date', start_date,
+                'optional_end_date', end_date,
+                'is_current', is_current,
+                'description', description,
+                'priority', priority,
+                'is_visible', is_visible,
+                'tags', tags,
+                'metadata', metadata,
+                'notes', COALESCE((
+                    SELECT array_agg(json_build_object(
+                        'note_id', note_id,
+                        'note_type', note_type,
+                        'content', content,
+                        'created_at', created_at,
+                        'updated_at', updated_at
+                    ) ORDER BY created_at DESC)
+                    FROM public.resume_item_notes
+                    WHERE resume_item_notes.item_id = resume_items.item_id
+                ), '{}')
+            ) ORDER BY priority DESC
+        ), '[]')
+        FROM resume_items, resume_version
+        WHERE resume_items.user_id = $1::uuid 
+        AND resume_items.item_type = 'education'
+        AND resume_items.is_visible = true
+        AND resume_items.version_id = resume_version.current_resume_version
+    ),
+    'skills', (
+        SELECT COALESCE(jsonb_agg(
+            jsonb_build_object(
+                'skill_id', item_id,
+                'skill_name', title,
+                'optional_skill_type', subtitle,
+                'optional_skill_level', metadata->>'skill_level',
+                'description', description,
+                'priority', priority,
+                'is_visible', is_visible,
+                'tags', tags,
+                'notes', COALESCE((
+                    SELECT array_agg(json_build_object(
+                        'note_id', note_id,
+                        'note_type', note_type,
+                        'content', content,
+                        'created_at', created_at,
+                        'updated_at', updated_at
+                    ) ORDER BY created_at DESC)
+                    FROM public.resume_item_notes
+                    WHERE resume_item_notes.item_id = resume_items.item_id
+                ), '{}')
+            ) ORDER BY priority DESC
+        ), '[]')
+        FROM resume_items, resume_version
+        WHERE resume_items.user_id = $1::uuid 
+        AND resume_items.item_type = 'skill'
+        AND resume_items.is_visible = true
+        AND resume_items.version_id = resume_version.current_resume_version
+    ),
+    'certificates', (
+        SELECT COALESCE(jsonb_agg(
+            jsonb_build_object(
+                'certificate_id', item_id,
+                'certificate_name', title,
+                'optional_issuer', subtitle,
+                'optional_location', location,
+                'optional_granted_date', start_date,
+                'description', description,
+                'priority', priority,
+                'is_visible', is_visible,
+                'tags', tags,
+                'notes', COALESCE((
+                    SELECT array_agg(json_build_object(
+                        'note_id', note_id,
+                        'note_type', note_type,
+                        'content', content,
+                        'created_at', created_at,
+                        'updated_at', updated_at
+                    ) ORDER BY created_at DESC)
+                    FROM public.resume_item_notes
+                    WHERE resume_item_notes.item_id = resume_items.item_id
+                ), '{}')
+            ) ORDER BY priority DESC
+        ), '[]')
+        FROM resume_items, resume_version
+        WHERE resume_items.user_id = $1::uuid 
+        AND resume_items.item_type = 'certificate'
+        AND resume_items.is_visible = true
+        AND resume_items.version_id = resume_version.current_resume_version
+    ),
+    'projects', (
+        SELECT COALESCE(jsonb_agg(
+            jsonb_build_object(
+                'project_id', item_id,
+                'project_title', title,
+                'project_subtitle', subtitle,
+                'optional_start_date', start_date,
+                'optional_end_date', end_date,
+                'is_current', is_current,
+                'description', description,
+                'priority', priority,
+                'is_visible', is_visible,
+                'tags', tags,
+                'notes', COALESCE((
+                    SELECT array_agg(json_build_object(
+                        'note_id', note_id,
+                        'note_type', note_type,
+                        'content', content,
+                        'created_at', created_at,
+                        'updated_at', updated_at
+                    ) ORDER BY created_at DESC)
+                    FROM public.resume_item_notes
+                    WHERE resume_item_notes.item_id = resume_items.item_id
+                ), '{}')
+            ) ORDER BY priority DESC
+        ), '[]')
+        FROM resume_items, resume_version
+        WHERE resume_items.user_id = $1::uuid 
+        AND resume_items.item_type = 'project'
+        AND resume_items.is_visible = true
+        AND resume_items.version_id = resume_version.current_resume_version
+    )
+) as resume_data
+`
+
+func (q *Queries) GetResumeData(ctx context.Context, userID uuid.UUID) ([]byte, error) {
+	row := q.db.QueryRow(ctx, getResumeData, userID)
+	var resume_data []byte
+	err := row.Scan(&resume_data)
+	return resume_data, err
+}
+
+const getResumeItemById = `-- name: GetResumeItemById :one
 SELECT 
-    experience_id,
-    company_name,
-    job_title,
+    item_id,
+    item_type,
+    title,
+    subtitle,
     location,
     start_date,
     end_date,
     is_current,
     description,
     priority,
+    is_visible,
     tags,
-    notes,
-    metadata,
+    metadata::json::text as metadata,
+    (
+        SELECT array_agg(json_build_object(
+                'note_id', note_id,
+                'note_type', note_type,
+                'content', content,
+                'created_at', created_at,
+                'updated_at', updated_at
+            ) ORDER BY created_at DESC)
+        FROM public.resume_item_notes
+        WHERE resume_item_notes.item_id = resume_items.item_id
+    ) as notes,
     created_at,
     updated_at
-FROM public.experiences
+FROM public.resume_items
 WHERE 
-    experience_id = $1::bigint 
+    item_id = $1::bigint 
     AND user_id = $2::uuid
 `
 
-type GetExperienceByIdParams struct {
-	ExperienceID int64     `json:"experience_id"`
-	UserID       uuid.UUID `json:"user_id"`
+type GetResumeItemByIdParams struct {
+	ItemID int64     `json:"item_id"`
+	UserID uuid.UUID `json:"user_id"`
 }
 
-type GetExperienceByIdRow struct {
-	ExperienceID int64              `json:"experience_id"`
-	CompanyName  string             `json:"company_name"`
-	JobTitle     string             `json:"job_title"`
-	Location     string             `json:"location"`
-	StartDate    pgtype.Date        `json:"start_date"`
-	EndDate      pgtype.Date        `json:"end_date"`
-	IsCurrent    pgtype.Bool        `json:"is_current"`
-	Description  pgtype.Text        `json:"description"`
-	Priority     pgtype.Int4        `json:"priority"`
-	Tags         []string           `json:"tags"`
-	Notes        [][]byte           `json:"notes"`
-	Metadata     []byte             `json:"metadata"`
-	CreatedAt    pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+type GetResumeItemByIdRow struct {
+	ItemID      int64              `json:"item_id"`
+	ItemType    string             `json:"item_type"`
+	Title       string             `json:"title"`
+	Subtitle    pgtype.Text        `json:"subtitle"`
+	Location    pgtype.Text        `json:"location"`
+	StartDate   pgtype.Date        `json:"start_date"`
+	EndDate     pgtype.Date        `json:"end_date"`
+	IsCurrent   pgtype.Bool        `json:"is_current"`
+	Description pgtype.Text        `json:"description"`
+	Priority    int32              `json:"priority"`
+	IsVisible   pgtype.Bool        `json:"is_visible"`
+	Tags        []string           `json:"tags"`
+	Metadata    string             `json:"metadata"`
+	Notes       interface{}        `json:"notes"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
 }
 
-func (q *Queries) GetExperienceById(ctx context.Context, arg GetExperienceByIdParams) (GetExperienceByIdRow, error) {
-	row := q.db.QueryRow(ctx, getExperienceById, arg.ExperienceID, arg.UserID)
-	var i GetExperienceByIdRow
+func (q *Queries) GetResumeItemById(ctx context.Context, arg GetResumeItemByIdParams) (GetResumeItemByIdRow, error) {
+	row := q.db.QueryRow(ctx, getResumeItemById, arg.ItemID, arg.UserID)
+	var i GetResumeItemByIdRow
 	err := row.Scan(
-		&i.ExperienceID,
-		&i.CompanyName,
-		&i.JobTitle,
+		&i.ItemID,
+		&i.ItemType,
+		&i.Title,
+		&i.Subtitle,
 		&i.Location,
 		&i.StartDate,
 		&i.EndDate,
 		&i.IsCurrent,
 		&i.Description,
 		&i.Priority,
+		&i.IsVisible,
 		&i.Tags,
-		&i.Notes,
 		&i.Metadata,
+		&i.Notes,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
 	return i, err
 }
 
-const getExperiencesByUserId = `-- name: GetExperiencesByUserId :many
+const getResumeItemsByType = `-- name: GetResumeItemsByType :many
 SELECT 
-    experience_id,
-    company_name,
-    job_title,
+    item_id,
+    item_type,
+    title,
+    subtitle,
     location,
     start_date,
     end_date,
     is_current,
     description,
+    priority,
+    is_visible,
     tags,
-    notes
-FROM public.experiences
-WHERE user_id = $1::uuid
+    metadata::json::text as metadata,
+    (
+        SELECT array_agg(json_build_object(
+                'note_id', note_id,
+                'note_type', note_type,
+                'content', content,
+                'created_at', created_at,
+                'updated_at', updated_at
+            ) ORDER BY created_at DESC)
+        FROM public.resume_item_notes
+        WHERE resume_item_notes.item_id = resume_items.item_id
+    ) as notes
+FROM public.resume_items
+WHERE 
+    user_id = $1::uuid 
+    AND item_type = $2::text
+    AND version_id = (SELECT current_resume_version FROM public.users WHERE id = $1::uuid)
 ORDER BY 
-    COALESCE(priority, 999999) ASC,
+    COALESCE(priority, 0) DESC,
     COALESCE(end_date, '9999-12-31'::date) DESC,
-    start_date DESC
+    COALESCE(start_date, '1900-01-01'::date) DESC,
+    title ASC
 `
 
-type GetExperiencesByUserIdRow struct {
-	ExperienceID int64       `json:"experience_id"`
-	CompanyName  string      `json:"company_name"`
-	JobTitle     string      `json:"job_title"`
-	Location     string      `json:"location"`
-	StartDate    pgtype.Date `json:"start_date"`
-	EndDate      pgtype.Date `json:"end_date"`
-	IsCurrent    pgtype.Bool `json:"is_current"`
-	Description  pgtype.Text `json:"description"`
-	Tags         []string    `json:"tags"`
-	Notes        [][]byte    `json:"notes"`
+type GetResumeItemsByTypeParams struct {
+	UserID   uuid.UUID `json:"user_id"`
+	ItemType string    `json:"item_type"`
 }
 
-func (q *Queries) GetExperiencesByUserId(ctx context.Context, userID uuid.UUID) ([]GetExperiencesByUserIdRow, error) {
-	rows, err := q.db.Query(ctx, getExperiencesByUserId, userID)
+type GetResumeItemsByTypeRow struct {
+	ItemID      int64       `json:"item_id"`
+	ItemType    string      `json:"item_type"`
+	Title       string      `json:"title"`
+	Subtitle    pgtype.Text `json:"subtitle"`
+	Location    pgtype.Text `json:"location"`
+	StartDate   pgtype.Date `json:"start_date"`
+	EndDate     pgtype.Date `json:"end_date"`
+	IsCurrent   pgtype.Bool `json:"is_current"`
+	Description pgtype.Text `json:"description"`
+	Priority    int32       `json:"priority"`
+	IsVisible   pgtype.Bool `json:"is_visible"`
+	Tags        []string    `json:"tags"`
+	Metadata    string      `json:"metadata"`
+	Notes       interface{} `json:"notes"`
+}
+
+func (q *Queries) GetResumeItemsByType(ctx context.Context, arg GetResumeItemsByTypeParams) ([]GetResumeItemsByTypeRow, error) {
+	rows, err := q.db.Query(ctx, getResumeItemsByType, arg.UserID, arg.ItemType)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []GetExperiencesByUserIdRow{}
+	items := []GetResumeItemsByTypeRow{}
 	for rows.Next() {
-		var i GetExperiencesByUserIdRow
+		var i GetResumeItemsByTypeRow
 		if err := rows.Scan(
-			&i.ExperienceID,
-			&i.CompanyName,
-			&i.JobTitle,
+			&i.ItemID,
+			&i.ItemType,
+			&i.Title,
+			&i.Subtitle,
 			&i.Location,
 			&i.StartDate,
 			&i.EndDate,
 			&i.IsCurrent,
 			&i.Description,
+			&i.Priority,
+			&i.IsVisible,
 			&i.Tags,
+			&i.Metadata,
 			&i.Notes,
 		); err != nil {
 			return nil, err
@@ -225,11 +554,168 @@ func (q *Queries) GetExperiencesByUserId(ctx context.Context, userID uuid.UUID) 
 	return items, nil
 }
 
-const updateExperience = `-- name: UpdateExperience :exec
-UPDATE public.experiences
+const getUserResumeVersions = `-- name: GetUserResumeVersions :one
+SELECT
+    (SELECT version from public.resume_versions rv where rv.version_id = u.current_resume_version),
+    ARRAY(
+        SELECT rv.version 
+        FROM public.resume_versions rv 
+        WHERE rv.user_id = u.id
+        ORDER BY rv.version
+    )::text[] AS all_versions
+FROM 
+    public.users u
+WHERE 
+    u.id = $1::uuid
+`
+
+type GetUserResumeVersionsRow struct {
+	Version     string   `json:"version"`
+	AllVersions []string `json:"all_versions"`
+}
+
+func (q *Queries) GetUserResumeVersions(ctx context.Context, userID uuid.UUID) (GetUserResumeVersionsRow, error) {
+	row := q.db.QueryRow(ctx, getUserResumeVersions, userID)
+	var i GetUserResumeVersionsRow
+	err := row.Scan(&i.Version, &i.AllVersions)
+	return i, err
+}
+
+const renameResumeVersion = `-- name: RenameResumeVersion :exec
+UPDATE public.resume_versions
+SET 
+    version = $1::text
+WHERE 
+    user_id = $2::uuid
+    AND version = $3::text
+`
+
+type RenameResumeVersionParams struct {
+	NewName string    `json:"new_name"`
+	UserID  uuid.UUID `json:"user_id"`
+	OldName string    `json:"old_name"`
+}
+
+func (q *Queries) RenameResumeVersion(ctx context.Context, arg RenameResumeVersionParams) error {
+	_, err := q.db.Exec(ctx, renameResumeVersion, arg.NewName, arg.UserID, arg.OldName)
+	return err
+}
+
+const reorderResumeItem = `-- name: ReorderResumeItem :exec
+WITH moved_item AS (
+    -- Get the current priority and type of the item being moved
+    SELECT priority as old_priority, item_type
+    FROM public.resume_items 
+    WHERE item_id = $1::bigint
+    AND user_id = $2::uuid
+),
+target AS (
+    -- Get the priority of the item we're moving after
+    SELECT priority as after_priority
+    FROM public.resume_items
+    WHERE item_id = $3::bigint
+    AND user_id = $2::uuid
+),
+updates AS (
+    -- Update priorities of items between old and new position, within the same item type
+    UPDATE public.resume_items
+    SET priority = 
+        CASE 
+            -- Moving down (current priority < target priority)
+            WHEN (SELECT old_priority FROM moved_item) < (SELECT after_priority FROM target)
+            THEN priority - 1
+            -- Moving up (current priority > target priority)
+            ELSE priority + 1
+        END
+    WHERE 
+        user_id = $2::uuid
+        AND item_type = (SELECT item_type FROM moved_item)
+        AND CASE 
+            -- Moving up: affect items between old position (exclusive) and target position (inclusive)
+            WHEN (SELECT old_priority FROM moved_item) < (SELECT after_priority FROM target)
+            THEN priority > (SELECT old_priority FROM moved_item) 
+                AND priority <= (SELECT after_priority FROM target)
+            -- Moving down: affect items between target position (inclusive) and old position (exclusive)
+            ELSE priority >= (SELECT after_priority FROM target)
+                AND priority < (SELECT old_priority FROM moved_item)
+        END
+    RETURNING priority
+)
+UPDATE public.resume_items
+SET priority = (SELECT after_priority FROM target) 
+WHERE item_id = $1::bigint
+AND user_id = $2::uuid
+`
+
+type ReorderResumeItemParams struct {
+	ItemID  int64     `json:"item_id"`
+	UserID  uuid.UUID `json:"user_id"`
+	AfterID int64     `json:"after_id"`
+}
+
+// Finally, update the priority of the moved item
+func (q *Queries) ReorderResumeItem(ctx context.Context, arg ReorderResumeItemParams) error {
+	_, err := q.db.Exec(ctx, reorderResumeItem, arg.ItemID, arg.UserID, arg.AfterID)
+	return err
+}
+
+const toggleResumeItemVisibility = `-- name: ToggleResumeItemVisibility :one
+UPDATE public.resume_items
 SET
-    company_name = COALESCE($1::text, company_name),
-    job_title = COALESCE($2::text, job_title),
+    is_visible = NOT is_visible
+WHERE 
+    item_id = $1::bigint 
+    AND user_id = $2::uuid
+RETURNING is_visible
+`
+
+type ToggleResumeItemVisibilityParams struct {
+	ItemID int64     `json:"item_id"`
+	UserID uuid.UUID `json:"user_id"`
+}
+
+func (q *Queries) ToggleResumeItemVisibility(ctx context.Context, arg ToggleResumeItemVisibilityParams) (pgtype.Bool, error) {
+	row := q.db.QueryRow(ctx, toggleResumeItemVisibility, arg.ItemID, arg.UserID)
+	var is_visible pgtype.Bool
+	err := row.Scan(&is_visible)
+	return is_visible, err
+}
+
+const updateNote = `-- name: UpdateNote :exec
+UPDATE public.resume_item_notes 
+SET
+    note_type = COALESCE($1::text, note_type),
+    content = COALESCE($2::text, content)
+WHERE
+    note_id = $3::bigint
+    AND item_id = $4::bigint 
+    AND user_id = $5::uuid
+`
+
+type UpdateNoteParams struct {
+	NoteType pgtype.Text `json:"note_type"`
+	Content  pgtype.Text `json:"content"`
+	NoteID   int64       `json:"note_id"`
+	ItemID   int64       `json:"item_id"`
+	UserID   uuid.UUID   `json:"user_id"`
+}
+
+func (q *Queries) UpdateNote(ctx context.Context, arg UpdateNoteParams) error {
+	_, err := q.db.Exec(ctx, updateNote,
+		arg.NoteType,
+		arg.Content,
+		arg.NoteID,
+		arg.ItemID,
+		arg.UserID,
+	)
+	return err
+}
+
+const updateResumeItem = `-- name: UpdateResumeItem :exec
+UPDATE public.resume_items
+SET
+    title = COALESCE($1::text, title),
+    subtitle = COALESCE($2::text, subtitle),
     location = COALESCE($3::text, location),
     start_date = COALESCE($4::date, start_date),
     end_date = COALESCE($5::date, end_date),
@@ -240,33 +726,31 @@ SET
     description = COALESCE($7::text, description),
     priority = COALESCE($8::integer, priority),
     tags = COALESCE($9::text[], tags),
-    notes = COALESCE($10::jsonb[], notes),
-    metadata = COALESCE($11::jsonb, metadata)
+    metadata = COALESCE($10::jsonb, metadata)
 WHERE 
-    experience_id = $12::bigint 
-    AND user_id = $13::uuid
+    item_id = $11::bigint 
+    AND user_id = $12::uuid
 `
 
-type UpdateExperienceParams struct {
-	CompanyName  string      `json:"company_name"`
-	JobTitle     string      `json:"job_title"`
-	Location     string      `json:"location"`
-	StartDate    pgtype.Date `json:"start_date"`
-	EndDate      pgtype.Date `json:"end_date"`
-	IsCurrent    bool        `json:"is_current"`
-	Description  string      `json:"description"`
-	Priority     int32       `json:"priority"`
-	Tags         []string    `json:"tags"`
-	Notes        [][]byte    `json:"notes"`
-	Metadata     []byte      `json:"metadata"`
-	ExperienceID int64       `json:"experience_id"`
-	UserID       uuid.UUID   `json:"user_id"`
+type UpdateResumeItemParams struct {
+	Title       pgtype.Text `json:"title"`
+	Subtitle    pgtype.Text `json:"subtitle"`
+	Location    pgtype.Text `json:"location"`
+	StartDate   pgtype.Date `json:"start_date"`
+	EndDate     pgtype.Date `json:"end_date"`
+	IsCurrent   pgtype.Bool `json:"is_current"`
+	Description pgtype.Text `json:"description"`
+	Priority    pgtype.Int4 `json:"priority"`
+	Tags        []string    `json:"tags"`
+	Metadata    []byte      `json:"metadata"`
+	ItemID      int64       `json:"item_id"`
+	UserID      uuid.UUID   `json:"user_id"`
 }
 
-func (q *Queries) UpdateExperience(ctx context.Context, arg UpdateExperienceParams) error {
-	_, err := q.db.Exec(ctx, updateExperience,
-		arg.CompanyName,
-		arg.JobTitle,
+func (q *Queries) UpdateResumeItem(ctx context.Context, arg UpdateResumeItemParams) error {
+	_, err := q.db.Exec(ctx, updateResumeItem,
+		arg.Title,
+		arg.Subtitle,
 		arg.Location,
 		arg.StartDate,
 		arg.EndDate,
@@ -274,9 +758,8 @@ func (q *Queries) UpdateExperience(ctx context.Context, arg UpdateExperiencePara
 		arg.Description,
 		arg.Priority,
 		arg.Tags,
-		arg.Notes,
 		arg.Metadata,
-		arg.ExperienceID,
+		arg.ItemID,
 		arg.UserID,
 	)
 	return err

@@ -6,7 +6,6 @@ import (
 	"github.com/stripe/stripe-go/v81"
 	"github.com/stripe/stripe-go/v81/checkout/session"
 	"github.com/stripe/stripe-go/v81/customer"
-	"github.com/stripe/stripe-go/v81/subscription"
 )
 
 // CreateStripeCustomer creates a new customer in Stripe
@@ -22,11 +21,11 @@ func CreateStripeCustomer(email string, name string) (*stripe.Customer, error) {
 }
 
 // CreateCheckoutSession creates a new Stripe checkout session
-func CreateCheckoutSession(price_id string, customer_id string) (string, error) {
+func CreateCheckoutSession(product_id string, price_id string, customer_id string) (string, error) {
 	stripe.Key = utils.STRIPE_SECRET_KEY
 
 	params := &stripe.CheckoutSessionParams{
-		Mode: stripe.String(string(stripe.CheckoutSessionModeSubscription)),
+		Mode: stripe.String(string(stripe.CheckoutSessionModePayment)),
 		LineItems: []*stripe.CheckoutSessionLineItemParams{
 			{
 				Price:    stripe.String(price_id),
@@ -36,6 +35,10 @@ func CreateCheckoutSession(price_id string, customer_id string) (string, error) 
 		Customer:   stripe.String(customer_id),
 		SuccessURL: stripe.String(utils.STRIPE_SUCCESS_URL),
 		CancelURL:  stripe.String(utils.STRIPE_CANCEL_URL),
+		Metadata: map[string]string{
+			"price_id":   price_id,
+			"product_id": product_id,
+		},
 	}
 
 	session_obj, err := session.New(params)
@@ -44,12 +47,4 @@ func CreateCheckoutSession(price_id string, customer_id string) (string, error) 
 	}
 
 	return session_obj.URL, nil
-}
-
-// CancelStripeSubscription cancels a Stripe subscription
-func CancelStripeSubscription(subscription_id string) error {
-	stripe.Key = utils.STRIPE_SECRET_KEY
-
-	_, err := subscription.Cancel(subscription_id, nil)
-	return err
 }

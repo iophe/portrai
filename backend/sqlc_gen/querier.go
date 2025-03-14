@@ -8,23 +8,48 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Querier interface {
+	AddProductUsage(ctx context.Context, arg AddProductUsageParams) error
+	AddResumeVersion(ctx context.Context, arg AddResumeVersionParams) error
+	ChangeResumeVersion(ctx context.Context, arg ChangeResumeVersionParams) error
 	CreateCustomer(ctx context.Context, arg CreateCustomerParams) error
-	CreateExperience(ctx context.Context, arg CreateExperienceParams) (int64, error)
-	DeleteExperience(ctx context.Context, arg DeleteExperienceParams) error
-	DeleteSubscription(ctx context.Context, subscriptionID string) error
-	GetActiveSubscriptionByUserID(ctx context.Context, userID uuid.UUID) (GetActiveSubscriptionByUserIDRow, error)
+	// Note operations
+	CreateNoteOnResumeItem(ctx context.Context, arg CreateNoteOnResumeItemParams) error
+	CreateProfile(ctx context.Context, arg CreateProfileParams) error
+	CreateResumeItem(ctx context.Context, arg CreateResumeItemParams) (int64, error)
+	DeleteNote(ctx context.Context, arg DeleteNoteParams) error
+	DeletePayment(ctx context.Context, paymentID string) error
+	// Delete a resume item
+	DeleteResumeItem(ctx context.Context, arg DeleteResumeItemParams) error
+	DeleteResumeVersion(ctx context.Context, arg DeleteResumeVersionParams) error
+	GetConsumptionCost(ctx context.Context, userID uuid.UUID) (pgtype.Numeric, error)
 	GetCustomerByStripeID(ctx context.Context, stripeCustomerID string) (PaymentCustomer, error)
 	GetCustomerByUserID(ctx context.Context, userID uuid.UUID) (PaymentCustomer, error)
-	GetExperienceById(ctx context.Context, arg GetExperienceByIdParams) (GetExperienceByIdRow, error)
-	GetExperiencesByUserId(ctx context.Context, userID uuid.UUID) ([]GetExperiencesByUserIdRow, error)
-	GetPriceByID(ctx context.Context, priceID string) (GetPriceByIDRow, error)
-	GetSubscriptionByID(ctx context.Context, subscriptionID string) (GetSubscriptionByIDRow, error)
-	UpdateExperience(ctx context.Context, arg UpdateExperienceParams) error
-	UpdateSubscriptionStatus(ctx context.Context, arg UpdateSubscriptionStatusParams) error
-	UpsertSubscription(ctx context.Context, arg UpsertSubscriptionParams) error
+	GetPaymentValidity(ctx context.Context, userID uuid.UUID) (pgtype.Timestamptz, error)
+	GetPriceByPlan(ctx context.Context, plan string) (GetPriceByPlanRow, error)
+	GetPriceForPayment(ctx context.Context, userID uuid.UUID) (pgtype.Int8, error)
+	GetProfileByUserId(ctx context.Context, userID uuid.UUID) (GetProfileByUserIdRow, error)
+	GetResumeData(ctx context.Context, userID uuid.UUID) ([]byte, error)
+	GetResumeItemById(ctx context.Context, arg GetResumeItemByIdParams) (GetResumeItemByIdRow, error)
+	GetResumeItemsByType(ctx context.Context, arg GetResumeItemsByTypeParams) ([]GetResumeItemsByTypeRow, error)
+	GetUserById(ctx context.Context, userID uuid.UUID) (GetUserByIdRow, error)
+	GetUserPaymentHistory(ctx context.Context, userID uuid.UUID) ([]GetUserPaymentHistoryRow, error)
+	GetUserResumeVersions(ctx context.Context, userID uuid.UUID) (GetUserResumeVersionsRow, error)
+	GetUserValidityStatus(ctx context.Context, userID uuid.UUID) (GetUserValidityStatusRow, error)
+	GetValidityPeroidByProductID(ctx context.Context, productID string) (pgtype.Interval, error)
+	InsertPayment(ctx context.Context, arg InsertPaymentParams) error
+	RenameResumeVersion(ctx context.Context, arg RenameResumeVersionParams) error
+	// Finally, update the priority of the moved item
+	ReorderResumeItem(ctx context.Context, arg ReorderResumeItemParams) error
+	ToggleResumeItemVisibility(ctx context.Context, arg ToggleResumeItemVisibilityParams) (pgtype.Bool, error)
+	UpdateNote(ctx context.Context, arg UpdateNoteParams) error
+	UpdateProfile(ctx context.Context, arg UpdateProfileParams) error
+	UpdateResumeItem(ctx context.Context, arg UpdateResumeItemParams) error
+	UpdateUser(ctx context.Context, arg UpdateUserParams) error
+	UpsertPaymentValidity(ctx context.Context, arg UpsertPaymentValidityParams) error
 }
 
 var _ Querier = (*Queries)(nil)

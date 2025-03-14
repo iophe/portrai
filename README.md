@@ -78,3 +78,8 @@ npm run dev
 ```
 docker compose --env-file .env --profile frontend --file docker-compose.dev.yml up -d --build
 ```
+
+## Use the stripe cli
+```
+stripe listen --forward-to localhost:3000/api/v1/payment/webhook
+```
