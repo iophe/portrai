@@ -353,6 +353,8 @@ class Gen(Cmd):
         secrets = {}
 
         for secret_name, secret_cfg in secrets_cfg.items() :
+            is_read_only =  secret_cfg.get("read_only",False)
+            if is_read_only : continue
             secret_type =  secret_cfg.get("type","pwd").lower()
             engine =  secret_cfg.get("engine").lower()
             name =  secret_cfg.get("name").lower()
