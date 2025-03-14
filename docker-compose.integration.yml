@@ -7,6 +7,20 @@ include:
   - cache/docker-compose.cache.yml
 
 services:
+  nginx:
+    image: nginx:alpine
+    container_name: portrai_nginx
+    profiles: [services]
+    ports:
+      - "80:80"
+      - "443:443"  
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro  
+    networks:
+      - proxy
+      - back
+    restart: unless-stopped
   portrai_backend:
     build:
       context: ./backend
@@ -14,6 +28,8 @@ services:
     container_name: portrai_backend_integration
     profiles: [app]
     image: portrai_backend:integration
+    networks:
+      - back  
     ports:
       - "${BACKEND_PORT:-3000}:3000"
     environment:
@@ -54,9 +70,17 @@ services:
     image: portrai_frontend:integration
     ports:
       - "${FRONTEND_PORT:-5050}:80"
+    networks:
+      - proxy  
     environment:
       - NODE_ENV=production
       - VITE_API_URL=${BACKEND_URL:-http://localhost:3000}
     depends_on:
       - portrai_backend
     restart: always
+
+networks:
+  proxy:
+    name: portrai_proxy_network  
+  back:
+    name: portrai_back_network   

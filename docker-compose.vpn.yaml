@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  wg-easy:
+    image: ghcr.io/wg-easy/wg-easy
+    container_name: portrai_wireguard
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    environment:
+      - LANG=en
+      - WG_HOST=147.93.89.3
+    ports:
+      - "51820:51820/udp"
+      - "51821:51821/tcp"
+    volumes:
+      - ~/.wg-easy:/etc/wireguard
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+      - net.ipv4.ip_forward=1
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    name: portrai_proxy_network  
+  back:
+    name: portrai_back_network 
