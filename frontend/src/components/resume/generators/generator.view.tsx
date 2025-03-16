@@ -54,11 +54,18 @@ function ResumeAIPreview(props: ResumePreviewProps) {
 					const result = response.data.profile as Profile;
 					return result;
 				} catch (error) {
-					fault.minor({
-						message:
-							((error as AxiosError).response?.data as any)
-								.error ?? (error as AxiosError).message,
-					});
+					if ((error as AxiosError).status === 402) {
+						navigate("/pricing");
+					}
+					if (
+						(error as AxiosError).status !== 401 &&
+						(error as AxiosError).status !== 402
+					)
+						fault.minor({
+							message:
+								((error as AxiosError).response?.data as any)
+									.error ?? (error as AxiosError).message,
+						});
 					return;
 				}
 			},
@@ -99,13 +106,7 @@ function ResumeAIPreview(props: ResumePreviewProps) {
 				} as CachedImage)
 			);
 			return base64_url;
-		} catch (error) {
-			fault.minor({
-				message:
-					((error as AxiosError).response?.data as any).error ??
-					(error as AxiosError).message,
-			});
-		}
+		} catch (error) {}
 	});
 	return (
 		<section class="overflow-y-auto w-full h-full flex flex-col gap-4">
@@ -177,9 +178,17 @@ function ResumeAIPreview(props: ResumePreviewProps) {
 									title: resume_data.title,
 								});
 							} catch (error) {
-								fault.major({
-									message: "Failed to generate the resume",
-								});
+								if ((error as AxiosError).status === 402) {
+									navigate("/pricing");
+								}
+								if (
+									(error as AxiosError).status !== 401 &&
+									(error as AxiosError).status !== 402
+								)
+									fault.major({
+										message:
+											"Failed to generate the resume",
+									});
 							} finally {
 								toGenerating(false);
 							}
@@ -206,10 +215,17 @@ function ResumeAIPreview(props: ResumePreviewProps) {
 									user: account(),
 								});
 							} catch (error) {
-								console.log(error);
-								fault.major({
-									message: "Failed to generate the resume",
-								});
+								if ((error as AxiosError).status === 402) {
+									navigate("/pricing");
+								}
+								if (
+									(error as AxiosError).status !== 401 &&
+									(error as AxiosError).status !== 402
+								)
+									fault.major({
+										message:
+											"Failed to generate the resume",
+									});
 							} finally {
 								toGenerating(false);
 							}

@@ -64,13 +64,7 @@ export function AvatarSection(props: AvatarSectionProps) {
 				} as CachedImage)
 			);
 			return base64_url;
-		} catch (error) {
-			fault.minor({
-				message:
-					((error as AxiosError).response?.data as any).error ??
-					(error as AxiosError).message,
-			});
-		}
+		} catch (error) {}
 	});
 
 	onCleanup(() => {

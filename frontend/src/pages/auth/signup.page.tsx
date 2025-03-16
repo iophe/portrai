@@ -4,7 +4,8 @@ import { api } from "@utils/api";
 import { A, useLocation, useNavigate } from "@solidjs/router";
 import { Pay } from "@utils/payment";
 import Footer from "@components/footer.default";
-import { Match, Switch } from "solid-js";
+import { Match, onMount, Switch } from "solid-js";
+import { useFault } from "@components/fault";
 
 interface SignupPageProps {}
 
@@ -15,7 +16,16 @@ interface EmailSignupData {
 	confirm_password: string;
 }
 
+declare global {
+	interface Window {
+		handleGoogleSignup: (response: any) => void;
+		handleGoogleSignin: (response: any) => void;
+		google: any;
+	}
+}
+
 function SignupPage(props: SignupPageProps) {
+	const fault = useFault();
 	const navigate = useNavigate();
 	const location = useLocation();
 
@@ -30,6 +40,52 @@ function SignupPage(props: SignupPageProps) {
 		const { name, value } = e.target as HTMLInputElement;
 		set_email_signup_data({ [name]: value });
 	};
+
+	onMount(() => {
+		// Create and load the Google script
+		const script = document.createElement("script");
+		script.src = "https://accounts.google.com/gsi/client";
+		script.async = true;
+		script.defer = true;
+		document.head.appendChild(script);
+	});
+	const generateNonce = () => {
+		const array = new Uint8Array(16);
+		window.crypto.getRandomValues(array);
+		return Array.from(array, (byte) =>
+			("0" + (byte & 0xff).toString(16)).slice(-2)
+		).join("");
+	};
+
+	const nonce = generateNonce();
+	onMount(() => {
+		// Add global callback function
+		window.handleGoogleSignup = async (response: any) => {
+			try {
+				// Send the ID token to your backend
+				await api.post("/auth/signin/google", {
+					id_token: response.credential,
+				});
+
+				localStorage.setItem("IS_AUTHENTICATED", "true");
+
+				if (location.query.payment) {
+					Pay({ plan: location.query.payment as string });
+				} else {
+					navigate("/", { replace: true });
+				}
+			} catch (error) {
+				console.error("Google sign-in error:", error);
+			}
+		};
+
+		// Create and load the Google script
+		const script = document.createElement("script");
+		script.src = "https://accounts.google.com/gsi/client";
+		script.async = true;
+		script.defer = true;
+		document.head.appendChild(script);
+	});
 	return (
 		<main class="md:px-48 px-8 mx-auto justify-items-center  p-4 flex flex-col gap-4 h-screen max-h-screen">
 			<Header />
@@ -39,9 +95,28 @@ function SignupPage(props: SignupPageProps) {
 						Create your account
 					</h2>
 
-					<button class="w-full flex justify-center py-2 px-4 border border-lapis-300 rounded shadow-sm bg-white text-sm font-medium text-lapis-700 hover:bg-lapis-50">
-						Sign up with Google
-					</button>
+					<div class="flex flex-col items-center w-full">
+						<div
+							id="g_id_onload"
+							data-client_id={import.meta.env.GOOGLE_CLIENT_ID}
+							data-context="signup"
+							data-ux_mode="popup"
+							data-callback="handleGoogleSignup"
+							data-auto_prompt="false"
+							data-width="100%"
+						></div>
+
+						<div
+							class="g_id_signin w-full"
+							data-type="standard"
+							data-shape="rectangular"
+							data-theme="outline"
+							data-text="signup_with"
+							data-size="large"
+							data-width="100%"
+							data-logo_alignment="left"
+						></div>
+					</div>
 
 					<div class="relative my-6">
 						<div class="absolute inset-0 flex items-center">
