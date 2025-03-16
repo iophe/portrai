@@ -319,12 +319,12 @@ export function ExecutiveTemplate(props: TemplateProps) {
 									</h3>
 									<Show
 										when={
-											project.optional_start_date ||
+											project.start_date ||
 											project.optional_end_date
 										}
 									>
 										<span class="text-sm">
-											{project.optional_start_date} -{" "}
+											{project.start_date} -{" "}
 											{project.is_current
 												? "Present"
 												: project.optional_end_date}

@@ -6,7 +6,6 @@ import (
 	"backend/lib/services/logs"
 	"backend/lib/services/monitor"
 	"backend/lib/utils"
-	"fmt"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -35,10 +34,9 @@ func ConfigureServer(app *fiber.App, cfg *ServerCfg) {
 		AllowHeaders:     "Origin,Content-Type,Accept,Authorization,X-Csrf-Token,X-Requested-With",
 	}))
 
-	fmt.Println(utils.COOKIES_ENCRIPTION_KEY)
 	// Cookie encription
 	app.Use(encryptcookie.New(encryptcookie.Config{
-		Key:    utils.COOKIES_ENCRIPTION_KEY,
+		Key:    utils.COOKIES_ENCRYPTION_KEY,
 		Except: []string{"csrf_"}, // exclude CSRF cookie
 	}))
 

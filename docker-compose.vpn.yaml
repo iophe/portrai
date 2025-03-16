@@ -11,6 +11,7 @@ services:
     environment:
       - LANG=en
       - WG_HOST=147.93.89.3
+      - PASSWORD_HASH=${PASSWORD_HASH}
     ports:
       - "51820:51820/udp"
       - "51821:51821/tcp"
@@ -24,6 +25,6 @@ services:
 
 networks:
   proxy:
-    name: portrai_proxy_network  
+    name: portrai_proxy_network
   back:
-    name: portrai_back_network 
+    name: portrai_back_network
