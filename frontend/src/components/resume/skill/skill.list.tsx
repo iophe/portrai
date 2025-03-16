@@ -8,11 +8,13 @@ import { Ordered } from "../ordered.util";
 import SectionHeader from "../utils/section.header";
 import LoadingSpinner from "@components/loading.spinner";
 import { createCachedResource } from "@utils/cache";
+import { useNavigate } from "@solidjs/router";
 
 interface SkillListProps {}
 
 export function SkillList(props: SkillListProps) {
 	const fault = useFault();
+	const navigate = useNavigate();
 
 	const [skills, { mutate, refetch }] = createCachedResource(
 		async () => {
@@ -37,11 +39,18 @@ export function SkillList(props: SkillListProps) {
 
 				return skillItems as Skill[];
 			} catch (error) {
-				fault.minor({
-					message:
-						((error as AxiosError).response?.data as any).error ??
-						(error as AxiosError).message,
-				});
+				if ((error as AxiosError).status === 402) {
+					navigate("/pricing");
+				}
+				if (
+					(error as AxiosError).status !== 401 &&
+					(error as AxiosError).status !== 402
+				)
+					fault.minor({
+						message:
+							((error as AxiosError).response?.data as any)
+								.error ?? (error as AxiosError).message,
+					});
 				return [];
 			}
 		},
@@ -96,14 +105,21 @@ export function SkillList(props: SkillListProps) {
 										item_type: "skill", // Specify the item type
 									});
 								} catch (error) {
-									fault.minor({
-										message:
-											(
-												(error as AxiosError).response
-													?.data as any
-											).error ??
-											(error as AxiosError).message,
-									});
+									if ((error as AxiosError).status === 402) {
+										navigate("/pricing");
+									}
+									if (
+										(error as AxiosError).status !== 401 &&
+										(error as AxiosError).status !== 402
+									)
+										fault.minor({
+											message:
+												(
+													(error as AxiosError)
+														.response?.data as any
+												).error ??
+												(error as AxiosError).message,
+										});
 								}
 							}}
 						>
@@ -139,16 +155,27 @@ export function SkillList(props: SkillListProps) {
 											);
 											refetch();
 										} catch (error) {
-											fault.minor({
-												message:
-													(
+											if (
+												(error as AxiosError).status ===
+												402
+											) {
+												navigate("/pricing");
+											}
+											if (
+												(error as AxiosError).status !==
+												401
+											)
+												fault.minor({
+													message:
+														(
+															(
+																error as AxiosError
+															).response
+																?.data as any
+														).error ??
 														(error as AxiosError)
-															.response
-															?.data as any
-													).error ??
-													(error as AxiosError)
-														.message,
-											});
+															.message,
+												});
 										}
 									}}
 									onCancel={() => {

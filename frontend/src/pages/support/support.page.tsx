@@ -1,6 +1,7 @@
 import { useFault } from "@components/fault";
 import Header from "@components/header.default";
 import api from "@utils/api";
+import { AxiosError } from "axios";
 import { createSignal, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 
@@ -35,10 +36,14 @@ function Support(props: SupportPageProps) {
 				message: "",
 			});
 		} catch (error) {
-			fault.minor({
-				message:
-					"There was an error sending your message. Please try again.",
-			});
+			if (
+				(error as AxiosError).status !== 401 &&
+				(error as AxiosError).status !== 402
+			)
+				fault.minor({
+					message:
+						"There was an error sending your message. Please try again.",
+				});
 		} finally {
 			set_is_submitting(false);
 		}

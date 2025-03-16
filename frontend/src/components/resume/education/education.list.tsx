@@ -8,11 +8,13 @@ import { Ordered } from "../ordered.util";
 import SectionHeader from "../utils/section.header";
 import LoadingSpinner from "@components/loading.spinner";
 import { createCachedResource } from "@utils/cache";
+import { useNavigate } from "@solidjs/router";
 
 interface EducationListProps {}
 
 export function EducationList(props: EducationListProps) {
 	const fault = useFault();
+	const navigate = useNavigate();
 
 	const [educations, { mutate, refetch }] = createCachedResource(
 		async () => {
@@ -39,11 +41,18 @@ export function EducationList(props: EducationListProps) {
 
 				return educationItems as Education[];
 			} catch (error) {
-				fault.minor({
-					message:
-						((error as AxiosError).response?.data as any).error ??
-						(error as AxiosError).message,
-				});
+				if ((error as AxiosError).status === 402) {
+					navigate("/pricing");
+				}
+				if (
+					(error as AxiosError).status !== 401 &&
+					(error as AxiosError).status !== 402
+				)
+					fault.minor({
+						message:
+							((error as AxiosError).response?.data as any)
+								.error ?? (error as AxiosError).message,
+					});
 				return [];
 			}
 		},
@@ -106,14 +115,24 @@ export function EducationList(props: EducationListProps) {
 											}
 										);
 									} catch (error) {
-										fault.minor({
-											message:
-												(
+										if (
+											(error as AxiosError).status === 402
+										) {
+											navigate("/pricing");
+										}
+										if (
+											(error as AxiosError).status !== 401
+										)
+											fault.minor({
+												message:
+													(
+														(error as AxiosError)
+															.response
+															?.data as any
+													).error ??
 													(error as AxiosError)
-														.response?.data as any
-												).error ??
-												(error as AxiosError).message,
-										});
+														.message,
+											});
 									}
 								}}
 							>
@@ -161,17 +180,28 @@ export function EducationList(props: EducationListProps) {
 												);
 												refetch();
 											} catch (error) {
-												fault.minor({
-													message:
-														(
+												if (
+													(error as AxiosError)
+														.status === 402
+												) {
+													navigate("/pricing");
+												}
+												if (
+													(error as AxiosError)
+														.status !== 401
+												)
+													fault.minor({
+														message:
+															(
+																(
+																	error as AxiosError
+																).response
+																	?.data as any
+															).error ??
 															(
 																error as AxiosError
-															).response
-																?.data as any
-														).error ??
-														(error as AxiosError)
-															.message,
-												});
+															).message,
+													});
 											}
 										}}
 										onSubmit={() => {

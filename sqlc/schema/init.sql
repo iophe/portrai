@@ -285,7 +285,7 @@ create table payment.payments (
 );
 
 create table payment.usage_analytics (
-  user_id uuid not null references auth.users on delete set null,
+  user_id uuid references auth.users on delete set null,
   total_cost_per_payment decimal not null default 0,
   all_time_cost decimal not null default 0
 );

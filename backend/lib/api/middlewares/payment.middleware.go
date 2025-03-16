@@ -25,13 +25,13 @@ func PayingFeature() fiber.Handler {
 		if token_str == "" {
 			user_id, err := GetUserID(c)
 			if err != nil {
-				return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				return c.Status(fiber.StatusPaymentRequired).JSON(fiber.Map{
 					"error": "Unauthorized access",
 				})
 			}
 			token, err := RefreshPaymentToken(user_id, &db.DB)
 			if err != nil {
-				return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				return c.Status(fiber.StatusPaymentRequired).JSON(fiber.Map{
 					"error": "failed to create payment token",
 				})
 			}
@@ -56,26 +56,26 @@ func PayingFeature() fiber.Handler {
 			if err == jwt.ErrTokenExpired {
 				user_id, err := GetUserID(c)
 				if err != nil {
-					return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+					return c.Status(fiber.StatusPaymentRequired).JSON(fiber.Map{
 						"error": "Unauthorized access",
 					})
 				}
 				token, err := RefreshPaymentToken(user_id, &db.DB)
 				if err != nil {
-					return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+					return c.Status(fiber.StatusPaymentRequired).JSON(fiber.Map{
 						"error": "failed to create payment token",
 					})
 				}
 				SetPaymentCookies(c, token)
 
 			} else {
-				return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				return c.Status(fiber.StatusPaymentRequired).JSON(fiber.Map{
 					"error": fmt.Sprintf("invalid token: %v", err),
 				})
 			}
 		}
 		if !token.Valid {
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			return c.Status(fiber.StatusPaymentRequired).JSON(fiber.Map{
 				"error": "invalid token",
 			})
 		}

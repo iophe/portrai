@@ -17,6 +17,7 @@ import {
 	CACHED_IMAGE_TTL,
 	CachedImage,
 } from "@pages/auth/avatar.section";
+import { useNavigate } from "@solidjs/router";
 
 function formatText(text: string) {
 	if (!text) return null;
@@ -54,6 +55,7 @@ interface ResumePreviewProps {
 
 function ResumePreview(props: ResumePreviewProps) {
 	const fault = useFault();
+	const navigate = useNavigate();
 
 	let cv_ref: HTMLDivElement | undefined = undefined;
 	const [is_generating, toGenerating] = createSignal(false);
@@ -81,11 +83,18 @@ function ResumePreview(props: ResumePreviewProps) {
 					const result = response.data.profile as Profile;
 					return result;
 				} catch (error) {
-					fault.minor({
-						message:
-							((error as AxiosError).response?.data as any)
-								.error ?? (error as AxiosError).message,
-					});
+					if ((error as AxiosError).status === 402) {
+						navigate("/pricing");
+					}
+					if (
+						(error as AxiosError).status !== 401 &&
+						(error as AxiosError).status !== 402
+					)
+						fault.minor({
+							message:
+								((error as AxiosError).response?.data as any)
+									.error ?? (error as AxiosError).message,
+						});
 					return;
 				}
 			},
@@ -126,11 +135,18 @@ function ResumePreview(props: ResumePreviewProps) {
 			);
 			return base64_url;
 		} catch (error) {
-			fault.minor({
-				message:
-					((error as AxiosError).response?.data as any).error ??
-					(error as AxiosError).message,
-			});
+			if ((error as AxiosError).status === 402) {
+				navigate("/pricing");
+			}
+			if (
+				(error as AxiosError).status !== 401 &&
+				(error as AxiosError).status !== 402
+			)
+				fault.minor({
+					message:
+						((error as AxiosError).response?.data as any).error ??
+						(error as AxiosError).message,
+				});
 		}
 	});
 	return (

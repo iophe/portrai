@@ -3,6 +3,8 @@ import { A } from "@solidjs/router";
 import { api } from "@utils/api";
 
 function Header() {
+	const is_authenticated = localStorage.getItem("IS_AUTHENTICATED");
+
 	return (
 		<header class="w-full flex md:flex-row flex-col gap-4 justify-between items-center">
 			<A href="/">
@@ -25,20 +27,35 @@ function Header() {
 				>
 					<h2>Pricing</h2>
 				</A>
-				<A
-					href="/signin"
-					class="tracking-widest"
-					activeClass="text-forest-600"
+				<Show when={!is_authenticated}>
+					<A
+						href="/signin"
+						class="tracking-widest"
+						activeClass="text-forest-600"
+					>
+						<h2>Sign In</h2>
+					</A>
+				</Show>
+				<Show
+					when={is_authenticated}
+					fallback={
+						<A
+							href="/pricing"
+							class="tracking-widest bg-forest-800 text-snow-100 py-2 px-4 rounded"
+							activeClass="text-forest-600"
+						>
+							<h2 class="text-nowrap">Get Started</h2>
+						</A>
+					}
 				>
-					<h2>Sign In</h2>
-				</A>
-				<A
-					href="/pricing"
-					class="tracking-widest bg-forest-800 text-snow-100 py-2 px-4 rounded"
-					activeClass="text-forest-600"
-				>
-					<h2 class="text-nowrap">Get Started</h2>
-				</A>
+					<A
+						href="/account"
+						class="tracking-widest bg-forest-800 text-snow-100 py-2 px-4 rounded"
+						activeClass="text-forest-600"
+					>
+						<h2 class="text-nowrap">My account</h2>
+					</A>
+				</Show>
 			</div>
 		</header>
 	);

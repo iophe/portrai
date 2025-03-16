@@ -18,6 +18,7 @@ import {
 	FormSubmitButton,
 	FormTextArea,
 } from "../utils/form.input";
+import { useNavigate } from "@solidjs/router";
 
 interface EducationViewProps {
 	education: Education;
@@ -31,6 +32,7 @@ interface EducationViewProps {
 
 export function EducationView(props: EducationViewProps) {
 	const fault = useFault();
+	const navigate = useNavigate();
 	return (
 		<ItemArticle
 			edit={props.edit}
@@ -52,11 +54,20 @@ export function EducationView(props: EducationViewProps) {
 						});
 						props.refetch();
 					} catch (error) {
-						fault.minor({
-							message:
-								((error as AxiosError).response?.data as any)
-									.error ?? (error as AxiosError).message,
-						});
+						if ((error as AxiosError).status === 402) {
+							navigate("/pricing");
+						}
+						if (
+							(error as AxiosError).status !== 401 &&
+							(error as AxiosError).status !== 402
+						)
+							fault.minor({
+								message:
+									(
+										(error as AxiosError).response
+											?.data as any
+									).error ?? (error as AxiosError).message,
+							});
 					}
 				}
 			}}
@@ -95,6 +106,7 @@ interface EducationFormProps {
 
 export function EducationForm(props: EducationFormProps) {
 	const fault = useFault();
+	const navigate = useNavigate();
 	const [form_data, setFormData] = createStore({
 		school: props.education?.school || "",
 		degree: props.education?.degree || "",
@@ -146,11 +158,18 @@ export function EducationForm(props: EducationFormProps) {
 					notes: [],
 				});
 			} catch (error) {
-				fault.minor({
-					message:
-						((error as AxiosError).response?.data as any).error ??
-						(error as AxiosError).message,
-				});
+				if ((error as AxiosError).status === 402) {
+					navigate("/pricing");
+				}
+				if (
+					(error as AxiosError).status !== 401 &&
+					(error as AxiosError).status !== 402
+				)
+					fault.minor({
+						message:
+							((error as AxiosError).response?.data as any)
+								.error ?? (error as AxiosError).message,
+					});
 			}
 		} else {
 			try {
@@ -191,11 +210,18 @@ export function EducationForm(props: EducationFormProps) {
 					notes: [],
 				});
 			} catch (error) {
-				fault.minor({
-					message:
-						((error as AxiosError).response?.data as any).error ??
-						(error as AxiosError).message,
-				});
+				if ((error as AxiosError).status === 402) {
+					navigate("/pricing");
+				}
+				if (
+					(error as AxiosError).status !== 401 &&
+					(error as AxiosError).status !== 402
+				)
+					fault.minor({
+						message:
+							((error as AxiosError).response?.data as any)
+								.error ?? (error as AxiosError).message,
+					});
 			}
 		}
 	}

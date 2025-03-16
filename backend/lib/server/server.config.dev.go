@@ -36,7 +36,7 @@ func ConfigureServer(app *fiber.App, cfg *ServerCfg) {
 
 	// Cookie encription
 	app.Use(encryptcookie.New(encryptcookie.Config{
-		Key:    utils.COOKIES_ENCRIPTION_KEY,
+		Key:    utils.COOKIES_ENCRYPTION_KEY,
 		Except: []string{"csrf_"}, // exclude CSRF cookie
 	}))
 

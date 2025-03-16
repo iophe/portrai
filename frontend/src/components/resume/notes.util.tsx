@@ -4,6 +4,7 @@ import { AxiosError } from "axios";
 import { createSignal, For, Show } from "solid-js";
 import NoteIcon from "@assets/icons/notes.svg?component-solid";
 import CloseIcon from "@assets/icons/close.svg?component-solid";
+import { useNavigate } from "@solidjs/router";
 
 interface NoteFormProps {
 	section_type: string;
@@ -14,6 +15,7 @@ interface NoteFormProps {
 
 export function NoteForm(props: NoteFormProps) {
 	const fault = useFault();
+	const navigate = useNavigate();
 	const [note_type, set_note_type] = createSignal("instruction");
 	const [note_content, set_note_content] = createSignal("");
 
@@ -31,11 +33,20 @@ export function NoteForm(props: NoteFormProps) {
 							item_type: props.section_type,
 						});
 					} catch (error) {
-						fault.minor({
-							message:
-								((error as AxiosError).response?.data as any)
-									.error ?? (error as AxiosError).message,
-						});
+						if ((error as AxiosError).status === 402) {
+							navigate("/pricing");
+						}
+						if (
+							(error as AxiosError).status !== 401 &&
+							(error as AxiosError).status !== 402
+						)
+							fault.minor({
+								message:
+									(
+										(error as AxiosError).response
+											?.data as any
+									).error ?? (error as AxiosError).message,
+							});
 					} finally {
 						props.submit();
 					}
@@ -96,6 +107,7 @@ interface NoteViewProps {
 
 export function NoteView(props: NoteViewProps) {
 	const fault = useFault();
+	const navigate = useNavigate();
 
 	return (
 		<div class="flex flex-col border border-lapis-50 rounded gap-4 p-4">
@@ -113,13 +125,21 @@ export function NoteView(props: NoteViewProps) {
 							});
 							props.refetch();
 						} catch (error) {
-							fault.minor({
-								message:
-									(
-										(error as AxiosError).response
-											?.data as any
-									).error ?? (error as AxiosError).message,
-							});
+							if ((error as AxiosError).status === 402) {
+								navigate("/pricing");
+							}
+							if (
+								(error as AxiosError).status !== 401 &&
+								(error as AxiosError).status !== 402
+							)
+								fault.minor({
+									message:
+										(
+											(error as AxiosError).response
+												?.data as any
+										).error ??
+										(error as AxiosError).message,
+								});
 						}
 					}}
 				>

@@ -3,7 +3,7 @@ import Header from "../../components/header.default";
 import { api } from "@utils/api";
 import { A, useLocation, useNavigate, useParams } from "@solidjs/router";
 import { Pay } from "@utils/payment";
-import { Match, Switch } from "solid-js";
+import { Match, onMount, Switch } from "solid-js";
 import Footer from "@components/footer.default";
 
 interface SigninPageProps {}
@@ -26,6 +26,52 @@ function SigninPage(props: SigninPageProps) {
 		const { name, value } = e.target as HTMLInputElement;
 		set_email_signup_data({ [name]: value });
 	};
+
+	onMount(() => {
+		if (localStorage.getItem("IS_AUTHENTICATED")) {
+			if (!location.query.payment) {
+				navigate("/", { replace: true });
+			}
+		}
+	});
+	onMount(() => {
+		// Create and load the Google script
+		const script = document.createElement("script");
+		script.src = "https://accounts.google.com/gsi/client";
+		script.async = true;
+		script.defer = true;
+		document.head.appendChild(script);
+	});
+
+	onMount(() => {
+		// Add global callback function
+		window.handleGoogleSignin = async (response: any) => {
+			try {
+				// Send the ID token to your backend
+				await api.post("/auth/signin/google", {
+					id_token: response.credential,
+				});
+
+				localStorage.setItem("IS_AUTHENTICATED", "true");
+
+				if (location.query.payment) {
+					Pay({ plan: location.query.payment as string });
+				} else {
+					navigate("/", { replace: true });
+				}
+			} catch (error) {
+				console.error("Google sign-in error:", error);
+			}
+		};
+
+		// Create and load the Google script
+		const script = document.createElement("script");
+		script.src = "https://accounts.google.com/gsi/client";
+		script.async = true;
+		script.defer = true;
+		document.head.appendChild(script);
+	});
+
 	return (
 		<main class="md:px-48 px-8 mx-auto justify-items-center  p-4 flex flex-col gap-4 h-screen max-h-screen">
 			<Header />
@@ -35,9 +81,28 @@ function SigninPage(props: SigninPageProps) {
 						Sign in to your account
 					</h2>
 
-					<button class="w-full flex justify-center py-2 px-4 border border-lapis-300 rounded shadow-sm bg-white text-sm font-medium text-lapis-700 hover:bg-lapis-50">
-						Sign in with Google
-					</button>
+					<div class="flex flex-col items-center w-full">
+						<div
+							id="g_id_onload"
+							data-client_id={import.meta.env.GOOGLE_CLIENT_ID}
+							data-context="signin"
+							data-ux_mode="popup"
+							data-callback="handleGoogleSignin"
+							data-auto_prompt="false"
+							data-width="100%"
+						></div>
+
+						<div
+							class="g_id_signin w-full"
+							data-type="standard"
+							data-shape="rectangular"
+							data-theme="outline"
+							data-text="signin_with"
+							data-size="large"
+							data-width="100%"
+							data-logo_alignment="left"
+						></div>
+					</div>
 
 					<div class="relative my-6">
 						<div class="absolute inset-0 flex items-center">
