@@ -3,11 +3,13 @@ package utils
 import (
 	"fmt"
 	"os"
+	"strconv"
 )
 
 // SERVER CONF
 var SERVER_PORT = os.Getenv("PORT")
 var LOG_FILEPATH = os.Getenv("LOG_FILEPATH")
+var SECURE_COOKIE = Must(strconv.ParseBool(os.Getenv("SECURE_COOKIE")))
 
 // DATABASE CONF
 var POSTGRES_PASSWORD = os.Getenv("POSTGRES_PASSWORD")
@@ -45,3 +47,10 @@ var STRIPE_CANCEL_URL = os.Getenv("STRIPE_CANCEL_URL")
 
 // ANTHROPIC
 var ANTHROPIC_SECRET_KEY = os.Getenv("ANTHROPIC_SECRET_KEY")
+
+func Must[T any](obj T, err error) T {
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}

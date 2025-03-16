@@ -75,7 +75,8 @@ services:
       - proxy
     environment:
       - NODE_ENV=production
-      - VITE_API_URL=${BACKEND_URL:-/api/v1}
+      - API_URL=${BACKEND_URL:-/api/v1}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
     depends_on:
       - portrai_backend
     restart: always

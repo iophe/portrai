@@ -88,7 +88,7 @@ func SetPaymentCookies(c *fiber.Ctx, token string) {
 		Name:     "payment_token",
 		Value:    token,
 		Expires:  time.Now().Add(1 * time.Hour),
-		Secure:   true,
+		Secure:   utils.SECURE_COOKIE,
 		HTTPOnly: true,
 		SameSite: "Strict",
 	})
@@ -99,7 +99,7 @@ func ClearPaymentCookies(c *fiber.Ctx) {
 		Name:     "payment_token",
 		Value:    "",
 		Expires:  time.Now().Add(-24 * time.Hour),
-		Secure:   true,
+		Secure:   utils.SECURE_COOKIE,
 		HTTPOnly: true,
 		SameSite: "Strict",
 	})

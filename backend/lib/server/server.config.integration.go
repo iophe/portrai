@@ -47,7 +47,7 @@ func ConfigureServer(app *fiber.App, cfg *ServerCfg) {
 		Expiration:     24 * time.Hour,
 		KeyLookup:      "cookie:session",
 		CookiePath:     "/",
-		CookieSecure:   true,
+		CookieSecure:   utils.SECURE_COOKIE,
 		CookieHTTPOnly: true,
 	})
 
@@ -56,7 +56,7 @@ func ConfigureServer(app *fiber.App, cfg *ServerCfg) {
 		KeyLookup:         "header:X-Csrf-Token",
 		CookieName:        "csrf_",
 		CookieSameSite:    "Strict",
-		CookieSecure:      true,
+		CookieSecure:      utils.SECURE_COOKIE,
 		CookieSessionOnly: true,
 		KeyGenerator:      fiber_utils.UUIDv4,
 		Expiration:        1 * time.Hour,
