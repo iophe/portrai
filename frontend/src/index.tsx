@@ -12,6 +12,7 @@ const root = document.getElementById("root");
 
 const Landing = lazy(() => import("./pages/home/landing.page"));
 const Support = lazy(() => import("./pages/support/support.page"));
+const Privacy = lazy(() => import("./pages/policies/privacy.page"));
 const AboutUs = lazy(() => import("./pages/support/aboutus.page"));
 const Signin = lazy(() => import("./pages/auth/signin.page"));
 const Signup = lazy(() => import("./pages/auth/signup.page"));
@@ -43,6 +44,7 @@ render(
 				<Route path={["/", "/home"]} component={Home} />
 				<Route path={"/welcolm"} component={Landing} />
 				<Route path={"/support"} component={Support} />
+				<Route path={"/policies/privacy"} component={Privacy} />
 				<Route path={"/about-us"} component={AboutUs} />
 				<Route path={"/signin"} component={Signin} />
 				<Route path={"/signup"} component={Signup} />
