@@ -17,6 +17,7 @@ import {
 	FormSubmitButton,
 	FormTextArea,
 } from "../utils/form.input";
+import { useNavigate } from "@solidjs/router";
 
 interface CertificateViewProps {
 	certificate: Certificate;
@@ -30,6 +31,7 @@ interface CertificateViewProps {
 
 export function CertificateView(props: CertificateViewProps) {
 	const fault = useFault();
+	const navigate = useNavigate();
 	return (
 		<ItemArticle
 			edit={props.edit}
@@ -51,11 +53,20 @@ export function CertificateView(props: CertificateViewProps) {
 						});
 						props.refetch();
 					} catch (error) {
-						fault.minor({
-							message:
-								((error as AxiosError).response?.data as any)
-									.error ?? (error as AxiosError).message,
-						});
+						if ((error as AxiosError).status === 402) {
+							navigate("/pricing");
+						}
+						if (
+							(error as AxiosError).status !== 401 &&
+							(error as AxiosError).status !== 402
+						)
+							fault.minor({
+								message:
+									(
+										(error as AxiosError).response
+											?.data as any
+									).error ?? (error as AxiosError).message,
+							});
 					}
 				}
 			}}
@@ -90,6 +101,7 @@ interface CertificateFormProps {
 }
 
 export function CertificateForm(props: CertificateFormProps) {
+	const navigate = useNavigate();
 	const fault = useFault();
 	const [form_data, setFormData] = createStore({
 		certificate_name: props.certificate?.certificate_name || "",
@@ -136,11 +148,18 @@ export function CertificateForm(props: CertificateFormProps) {
 					notes: [],
 				});
 			} catch (error) {
-				fault.minor({
-					message:
-						((error as AxiosError).response?.data as any).error ??
-						(error as AxiosError).message,
-				});
+				if ((error as AxiosError).status === 402) {
+					navigate("/pricing");
+				}
+				if (
+					(error as AxiosError).status !== 401 &&
+					(error as AxiosError).status !== 402
+				)
+					fault.minor({
+						message:
+							((error as AxiosError).response?.data as any)
+								.error ?? (error as AxiosError).message,
+					});
 			}
 		} else {
 			try {
@@ -177,11 +196,18 @@ export function CertificateForm(props: CertificateFormProps) {
 					notes: [],
 				});
 			} catch (error) {
-				fault.minor({
-					message:
-						((error as AxiosError).response?.data as any).error ??
-						(error as AxiosError).message,
-				});
+				if ((error as AxiosError).status === 402) {
+					navigate("/pricing");
+				}
+				if (
+					(error as AxiosError).status !== 401 &&
+					(error as AxiosError).status !== 402
+				)
+					fault.minor({
+						message:
+							((error as AxiosError).response?.data as any)
+								.error ?? (error as AxiosError).message,
+					});
 			}
 		}
 	}

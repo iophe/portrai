@@ -1,6 +1,9 @@
 import { useFault } from "@components/fault";
+import Footer from "@components/footer.default";
 import Header from "@components/header.default";
+import { A } from "@solidjs/router";
 import api from "@utils/api";
+import { AxiosError } from "axios";
 import { createSignal, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 
@@ -35,10 +38,14 @@ function Support(props: SupportPageProps) {
 				message: "",
 			});
 		} catch (error) {
-			fault.minor({
-				message:
-					"There was an error sending your message. Please try again.",
-			});
+			if (
+				(error as AxiosError).status !== 401 &&
+				(error as AxiosError).status !== 402
+			)
+				fault.minor({
+					message:
+						"There was an error sending your message. Please try again.",
+				});
 		} finally {
 			set_is_submitting(false);
 		}
@@ -103,6 +110,22 @@ function Support(props: SupportPageProps) {
 								</dd>
 							</div>
 						</dl>
+						<aside class="bg-gray-50 p-6 rounded-lg border border-gray-200">
+							<h3 class="text-lg font-medium text-forest-700 mb-3">
+								Our Policies
+							</h3>
+
+							<div>
+								<A href="/policies/term-of-services">
+									Term of service
+								</A>
+							</div>
+							<div>
+								<A href="/policies/privacy">
+									Privacy
+								</A>
+							</div>
+						</aside>
 					</section>
 
 					{/* Right column - Contact form */}
@@ -291,6 +314,7 @@ function Support(props: SupportPageProps) {
 					</section>
 				</div>
 			</section>
+			<Footer />
 		</main>
 	);
 }

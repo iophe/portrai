@@ -18,6 +18,7 @@ import {
 	FormSubmitButton,
 	FormTextArea,
 } from "../utils/form.input";
+import { useNavigate } from "@solidjs/router";
 
 interface ExperienceViewProps {
 	experience: Experience;
@@ -31,6 +32,7 @@ interface ExperienceViewProps {
 
 export function ExperienceView(props: ExperienceViewProps) {
 	const fault = useFault();
+	const navigate = useNavigate();
 	return (
 		<ItemArticle
 			edit={props.edit}
@@ -52,11 +54,20 @@ export function ExperienceView(props: ExperienceViewProps) {
 						});
 						props.refetch();
 					} catch (error) {
-						fault.minor({
-							message:
-								((error as AxiosError).response?.data as any)
-									.error ?? (error as AxiosError).message,
-						});
+						if ((error as AxiosError).status === 402) {
+							navigate("/pricing");
+						}
+						if (
+							(error as AxiosError).status !== 401 &&
+							(error as AxiosError).status !== 402
+						)
+							fault.minor({
+								message:
+									(
+										(error as AxiosError).response
+											?.data as any
+									).error ?? (error as AxiosError).message,
+							});
 					}
 				}
 			}}
@@ -95,6 +106,7 @@ interface ExperienceFormProps {
 
 export function ExperienceForm(props: ExperienceFormProps) {
 	const fault = useFault();
+	const navigate = useNavigate();
 	const [form_data, setFormData] = createStore({
 		company_name: props.experience?.company_name || "",
 		job_title: props.experience?.job_title || "",
@@ -144,11 +156,18 @@ export function ExperienceForm(props: ExperienceFormProps) {
 					notes: [],
 				});
 			} catch (error) {
-				fault.minor({
-					message:
-						((error as AxiosError).response?.data as any).error ??
-						(error as AxiosError).message,
-				});
+				if ((error as AxiosError).status === 402) {
+					navigate("/pricing");
+				}
+				if (
+					(error as AxiosError).status !== 401 &&
+					(error as AxiosError).status !== 402
+				)
+					fault.minor({
+						message:
+							((error as AxiosError).response?.data as any)
+								.error ?? (error as AxiosError).message,
+					});
 			}
 		} else {
 			try {
@@ -188,11 +207,18 @@ export function ExperienceForm(props: ExperienceFormProps) {
 					notes: [],
 				});
 			} catch (error) {
-				fault.minor({
-					message:
-						((error as AxiosError).response?.data as any).error ??
-						(error as AxiosError).message,
-				});
+				if ((error as AxiosError).status === 402) {
+					navigate("/pricing");
+				}
+				if (
+					(error as AxiosError).status !== 401 &&
+					(error as AxiosError).status !== 402
+				)
+					fault.minor({
+						message:
+							((error as AxiosError).response?.data as any)
+								.error ?? (error as AxiosError).message,
+					});
 			}
 		}
 	}

@@ -12,6 +12,7 @@ import { api } from "@utils/api";
 import { AxiosError } from "axios";
 import { useNavigate } from "@solidjs/router";
 import Footer from "@components/footer.default";
+import { Pay } from "@utils/payment";
 
 interface PricingProps {}
 
@@ -23,7 +24,11 @@ function Pricing(props: PricingProps) {
 	const handlePayment = async (plan: string) => {
 		try {
 			setLoading(true);
-			navigate(`/signup?payment=${plan}`);
+			if (localStorage.getItem("IS_AUTHENTICATED")) {
+				navigate(`/signin?payment=${plan}`);
+			} else {
+				navigate(`/signup?payment=${plan}`);
+			}
 		} catch (err) {
 			if ((err as AxiosError).response?.status === 401) {
 				navigate("/signup");

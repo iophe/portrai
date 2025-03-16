@@ -25,13 +25,13 @@ func PayingFeature() fiber.Handler {
 		if token_str == "" {
 			user_id, err := GetUserID(c)
 			if err != nil {
-				return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				return c.Status(fiber.StatusPaymentRequired).JSON(fiber.Map{
 					"error": "Unauthorized access",
 				})
 			}
 			token, err := RefreshPaymentToken(user_id, &db.DB)
 			if err != nil {
-				return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				return c.Status(fiber.StatusPaymentRequired).JSON(fiber.Map{
 					"error": "failed to create payment token",
 				})
 			}
@@ -56,26 +56,26 @@ func PayingFeature() fiber.Handler {
 			if err == jwt.ErrTokenExpired {
 				user_id, err := GetUserID(c)
 				if err != nil {
-					return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+					return c.Status(fiber.StatusPaymentRequired).JSON(fiber.Map{
 						"error": "Unauthorized access",
 					})
 				}
 				token, err := RefreshPaymentToken(user_id, &db.DB)
 				if err != nil {
-					return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+					return c.Status(fiber.StatusPaymentRequired).JSON(fiber.Map{
 						"error": "failed to create payment token",
 					})
 				}
 				SetPaymentCookies(c, token)
 
 			} else {
-				return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				return c.Status(fiber.StatusPaymentRequired).JSON(fiber.Map{
 					"error": fmt.Sprintf("invalid token: %v", err),
 				})
 			}
 		}
 		if !token.Valid {
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			return c.Status(fiber.StatusPaymentRequired).JSON(fiber.Map{
 				"error": "invalid token",
 			})
 		}
@@ -88,7 +88,7 @@ func SetPaymentCookies(c *fiber.Ctx, token string) {
 		Name:     "payment_token",
 		Value:    token,
 		Expires:  time.Now().Add(1 * time.Hour),
-		Secure:   true,
+		Secure:   utils.SECURE_COOKIE,
 		HTTPOnly: true,
 		SameSite: "Strict",
 	})
@@ -99,7 +99,7 @@ func ClearPaymentCookies(c *fiber.Ctx) {
 		Name:     "payment_token",
 		Value:    "",
 		Expires:  time.Now().Add(-24 * time.Hour),
-		Secure:   true,
+		Secure:   utils.SECURE_COOKIE,
 		HTTPOnly: true,
 		SameSite: "Strict",
 	})

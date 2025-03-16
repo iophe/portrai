@@ -19,6 +19,7 @@ import {
 	FormSubmitButton,
 	FormTextArea,
 } from "../utils/form.input";
+import { useNavigate } from "@solidjs/router";
 
 interface SkillViewProps {
 	skill: Skill;
@@ -32,6 +33,7 @@ interface SkillViewProps {
 
 export function SkillView(props: SkillViewProps) {
 	const fault = useFault();
+	const navigate = useNavigate();
 	return (
 		<ItemArticle
 			edit={props.edit}
@@ -52,11 +54,20 @@ export function SkillView(props: SkillViewProps) {
 						});
 						props.refetch();
 					} catch (error) {
-						fault.minor({
-							message:
-								((error as AxiosError).response?.data as any)
-									.error ?? (error as AxiosError).message,
-						});
+						if ((error as AxiosError).status === 402) {
+							navigate("/pricing");
+						}
+						if (
+							(error as AxiosError).status !== 401 &&
+							(error as AxiosError).status !== 402
+						)
+							fault.minor({
+								message:
+									(
+										(error as AxiosError).response
+											?.data as any
+									).error ?? (error as AxiosError).message,
+							});
 					}
 				}
 			}}
@@ -92,6 +103,7 @@ interface SkillFormProps {
 
 export function SkillForm(props: SkillFormProps) {
 	const fault = useFault();
+	const navigate = useNavigate();
 	const [form_data, setFormData] = createStore({
 		skill_name: props.skill?.skill_name || "",
 		optional_skill_type: props.skill?.optional_skill_type || "",
@@ -135,11 +147,18 @@ export function SkillForm(props: SkillFormProps) {
 					notes: [],
 				});
 			} catch (error) {
-				fault.minor({
-					message:
-						((error as AxiosError).response?.data as any).error ??
-						(error as AxiosError).message,
-				});
+				if ((error as AxiosError).status === 402) {
+					navigate("/pricing");
+				}
+				if (
+					(error as AxiosError).status !== 401 &&
+					(error as AxiosError).status !== 402
+				)
+					fault.minor({
+						message:
+							((error as AxiosError).response?.data as any)
+								.error ?? (error as AxiosError).message,
+					});
 			}
 		} else {
 			try {
@@ -175,11 +194,18 @@ export function SkillForm(props: SkillFormProps) {
 					notes: [],
 				});
 			} catch (error) {
-				fault.minor({
-					message:
-						((error as AxiosError).response?.data as any).error ??
-						(error as AxiosError).message,
-				});
+				if ((error as AxiosError).status === 402) {
+					navigate("/pricing");
+				}
+				if (
+					(error as AxiosError).status !== 401 &&
+					(error as AxiosError).status !== 402
+				)
+					fault.minor({
+						message:
+							((error as AxiosError).response?.data as any)
+								.error ?? (error as AxiosError).message,
+					});
 			}
 		}
 	}

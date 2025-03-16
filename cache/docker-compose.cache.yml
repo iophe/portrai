@@ -3,6 +3,8 @@ services:
     image: docker.dragonflydb.io/dragonflydb/dragonfly
     container_name: portrai_dragonfly
     profiles: [services,cache]
+    networks:
+      - back
     ulimits:
       memlock: -1
     ports:

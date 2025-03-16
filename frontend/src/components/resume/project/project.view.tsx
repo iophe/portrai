@@ -18,6 +18,7 @@ import {
 	FormSubmitButton,
 	FormTextArea,
 } from "../utils/form.input";
+import { useNavigate } from "@solidjs/router";
 
 interface ProjectViewProps {
 	project: Project;
@@ -31,6 +32,7 @@ interface ProjectViewProps {
 
 export function ProjectView(props: ProjectViewProps) {
 	const fault = useFault();
+	const navigate = useNavigate();
 	return (
 		<ItemArticle
 			edit={props.edit}
@@ -52,11 +54,20 @@ export function ProjectView(props: ProjectViewProps) {
 						});
 						props.refetch();
 					} catch (error) {
-						fault.minor({
-							message:
-								((error as AxiosError).response?.data as any)
-									.error ?? (error as AxiosError).message,
-						});
+						if ((error as AxiosError).status === 402) {
+							navigate("/pricing");
+						}
+						if (
+							(error as AxiosError).status !== 401 &&
+							(error as AxiosError).status !== 402
+						)
+							fault.minor({
+								message:
+									(
+										(error as AxiosError).response
+											?.data as any
+									).error ?? (error as AxiosError).message,
+							});
 					}
 				}
 			}}
@@ -94,6 +105,7 @@ interface ProjectFormProps {
 
 export function ProjectForm(props: ProjectFormProps) {
 	const fault = useFault();
+	const navigate = useNavigate();
 	const [form_data, setFormData] = createStore({
 		project_title: props.project?.project_title || "",
 		optional_project_subtitle:
@@ -143,11 +155,18 @@ export function ProjectForm(props: ProjectFormProps) {
 					notes: [],
 				});
 			} catch (error) {
-				fault.minor({
-					message:
-						((error as AxiosError).response?.data as any).error ??
-						(error as AxiosError).message,
-				});
+				if ((error as AxiosError).status === 402) {
+					navigate("/pricing");
+				}
+				if (
+					(error as AxiosError).status !== 401 &&
+					(error as AxiosError).status !== 402
+				)
+					fault.minor({
+						message:
+							((error as AxiosError).response?.data as any)
+								.error ?? (error as AxiosError).message,
+					});
 			}
 		} else {
 			try {
@@ -187,11 +206,18 @@ export function ProjectForm(props: ProjectFormProps) {
 					notes: [],
 				});
 			} catch (error) {
-				fault.minor({
-					message:
-						((error as AxiosError).response?.data as any).error ??
-						(error as AxiosError).message,
-				});
+				if ((error as AxiosError).status === 402) {
+					navigate("/pricing");
+				}
+				if (
+					(error as AxiosError).status !== 401 &&
+					(error as AxiosError).status !== 402
+				)
+					fault.minor({
+						message:
+							((error as AxiosError).response?.data as any)
+								.error ?? (error as AxiosError).message,
+					});
 			}
 		}
 	}

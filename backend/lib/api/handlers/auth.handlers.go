@@ -39,28 +39,6 @@ func HandleEmailSignup(c *fiber.Ctx, data EmailSignupData, db *db.Database) (Aut
 		return AuthResponse{}, fmt.Errorf("Email and password are required")
 	}
 
-	// Prepare request to Supabase Auth
-	signup_data := map[string]interface{}{
-		"email":    data.Email,
-		"password": data.Password,
-	}
-
-	json_data, err := json.Marshal(signup_data)
-	if err != nil {
-		return AuthResponse{}, fmt.Errorf("Failed to process request")
-	}
-
-	// Make request to Supabase Auth
-	supabase_url := fmt.Sprintf("%s/signup", utils.KONG_AUTH_URL)
-	request, err := http.NewRequest("POST", supabase_url, bytes.NewBuffer(json_data))
-	if err != nil {
-		return AuthResponse{}, fmt.Errorf("Failed to create request")
-	}
-
-	// Add required headers
-	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("apikey", utils.SERVICE_ROLE_KEY)
-
 	response, err := makeSupabaseRequest("POST", "signup", data)
 	if err != nil {
 		slog.Error("")
@@ -117,7 +95,43 @@ func HandleEmailSignin(c *fiber.Ctx, data EmailSigninData) (AuthResponse, error)
 }
 
 type GoogleSignupData struct {
-	IdToken string `json:"id_token"` // JWT token from Google
+	IdToken string `json:"id_token"`
+}
+
+func HandleGoogleSignin(c *fiber.Ctx, data GoogleSignupData) (AuthResponse, error) {
+	if data.IdToken == "" {
+		return AuthResponse{}, fmt.Errorf("id_token is required")
+	}
+
+	// Prepare request data for Supabase (GoTrue)
+	requestBody := map[string]interface{}{
+		"id_token": data.IdToken,
+		"provider": "google",
+	}
+
+	// Make request to Supabase Auth (GoTrue) using the token endpoint with OAuth grant type
+	response, err := makeSupabaseRequest("POST", "token?grant_type=id_token", requestBody)
+	if err != nil {
+		return AuthResponse{}, fmt.Errorf("failed to communicate with auth service: %w", err)
+	}
+
+	auth_response, err := handleSupabaseResponse(response)
+	if err != nil {
+		return AuthResponse{}, err
+	}
+
+	// Set auth cookies, same as in email auth
+	middlewares.SetAuthCookies(c, &middlewares.RefreshResponse{
+		AccessToken:  auth_response.AccessToken,
+		RefreshToken: auth_response.RefreshToken,
+	})
+
+	slog.Info("successfully signed in with Google",
+		"email", auth_response.User.Email,
+		"id", auth_response.User.Id,
+	)
+
+	return auth_response, nil
 }
 
 func HandleLogout(c *fiber.Ctx) error {
@@ -190,8 +204,17 @@ func HandleDeleteAccount(c *fiber.Ctx, cache *ca.Cache, db *database.Database) e
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
+		body_bytes, err := io.ReadAll(response.Body)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error":   "failed to delete account",
+				"details": err.Error(),
+			})
+		}
+
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "failed to delete account",
+			"error":   "failed to delete account",
+			"details": string(body_bytes),
 		})
 	}
 	// Clear auth cookies after successful deletion

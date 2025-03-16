@@ -218,7 +218,7 @@ func SetAuthCookies(c *fiber.Ctx, tokens *RefreshResponse) {
 		Name:     "access_token",
 		Value:    tokens.AccessToken,
 		Expires:  time.Now().Add(1 * time.Hour),
-		Secure:   true,
+		Secure:   utils.SECURE_COOKIE,
 		HTTPOnly: true,
 		SameSite: "Strict",
 	})
@@ -227,7 +227,7 @@ func SetAuthCookies(c *fiber.Ctx, tokens *RefreshResponse) {
 		Name:     "refresh_token",
 		Value:    tokens.RefreshToken,
 		Expires:  time.Now().Add(30 * 24 * time.Hour), // 30 days
-		Secure:   true,
+		Secure:   utils.SECURE_COOKIE,
 		HTTPOnly: true,
 		SameSite: "Strict",
 	})
@@ -238,7 +238,7 @@ func ClearAuthCookies(c *fiber.Ctx) {
 		Name:     "access_token",
 		Value:    "",
 		Expires:  time.Now().Add(-24 * time.Hour),
-		Secure:   true,
+		Secure:   utils.SECURE_COOKIE,
 		HTTPOnly: true,
 		SameSite: "Strict",
 	})
@@ -247,7 +247,7 @@ func ClearAuthCookies(c *fiber.Ctx) {
 		Name:     "refresh_token",
 		Value:    "",
 		Expires:  time.Now().Add(-24 * time.Hour),
-		Secure:   true,
+		Secure:   utils.SECURE_COOKIE,
 		HTTPOnly: true,
 		SameSite: "Strict",
 	})

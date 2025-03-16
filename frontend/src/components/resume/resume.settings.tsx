@@ -21,6 +21,7 @@ import { AxiosError } from "axios";
 import LoadingSpinner from "@components/loading.spinner";
 import { ItemText } from "./utils/item.content";
 import { createCachedResource } from "@utils/cache";
+import { useNavigate } from "@solidjs/router";
 
 interface ResumeSettingsProps {
 	offline?: boolean;
@@ -28,6 +29,7 @@ interface ResumeSettingsProps {
 
 function ResumeSettings(props: ResumeSettingsProps) {
 	const fault = useFault();
+	const navigate = useNavigate();
 	const [version_form_data, update_version_form_data] = createStore({
 		current_version: "",
 		selected_version: "",
@@ -48,11 +50,18 @@ function ResumeSettings(props: ResumeSettingsProps) {
 
 					return result;
 				} catch (error) {
-					fault.minor({
-						message:
-							((error as AxiosError).response?.data as any)
-								.error ?? (error as AxiosError).message,
-					});
+					if ((error as AxiosError).status === 402) {
+						navigate("/pricing");
+					}
+					if (
+						(error as AxiosError).status !== 401 &&
+						(error as AxiosError).status !== 402
+					)
+						fault.minor({
+							message:
+								((error as AxiosError).response?.data as any)
+									.error ?? (error as AxiosError).message,
+						});
 					return;
 				}
 			},
@@ -155,19 +164,35 @@ function ResumeSettings(props: ResumeSettingsProps) {
 															refetch_version();
 															refetch_profile();
 														} catch (error) {
-															fault.minor({
-																message:
-																	(
+															if (
+																(
+																	error as AxiosError
+																).status === 402
+															) {
+																navigate(
+																	"/pricing"
+																);
+															}
+															if (
+																(
+																	error as AxiosError
+																).status !== 401
+															)
+																fault.minor({
+																	message:
+																		(
+																			(
+																				error as AxiosError
+																			)
+																				.response
+																				?.data as any
+																		)
+																			.error ??
 																		(
 																			error as AxiosError
 																		)
-																			.response
-																			?.data as any
-																	).error ??
-																	(
-																		error as AxiosError
-																	).message,
-															});
+																			.message,
+																});
 														}
 													}
 												}}
@@ -199,18 +224,28 @@ function ResumeSettings(props: ResumeSettingsProps) {
 													refetch_version();
 													refetch_profile();
 												} catch (error) {
-													fault.minor({
-														message:
-															(
+													if (
+														(error as AxiosError)
+															.status === 402
+													) {
+														navigate("/pricing");
+													}
+													if (
+														(error as AxiosError)
+															.status !== 401
+													)
+														fault.minor({
+															message:
+																(
+																	(
+																		error as AxiosError
+																	).response
+																		?.data as any
+																).error ??
 																(
 																	error as AxiosError
-																).response
-																	?.data as any
-															).error ??
-															(
-																error as AxiosError
-															).message,
-													});
+																).message,
+														});
 												}
 												edit_version(false);
 											}}
@@ -265,16 +300,27 @@ function ResumeSettings(props: ResumeSettingsProps) {
 											refetch_version();
 											refetch_profile();
 										} catch (error) {
-											fault.minor({
-												message:
-													(
+											if (
+												(error as AxiosError).status ===
+												402
+											) {
+												navigate("/pricing");
+											}
+											if (
+												(error as AxiosError).status !==
+												401
+											)
+												fault.minor({
+													message:
+														(
+															(
+																error as AxiosError
+															).response
+																?.data as any
+														).error ??
 														(error as AxiosError)
-															.response
-															?.data as any
-													).error ??
-													(error as AxiosError)
-														.message,
-											});
+															.message,
+												});
 										}
 									}}
 									choices={versions()?.all_versions ?? []}
@@ -330,18 +376,33 @@ function ResumeSettings(props: ResumeSettingsProps) {
 														refetch_profile();
 														add_version(false);
 													} catch (error) {
-														fault.minor({
-															message:
-																(
+														if (
+															(
+																error as AxiosError
+															).status === 402
+														) {
+															navigate(
+																"/pricing"
+															);
+														}
+														if (
+															(
+																error as AxiosError
+															).status !== 401
+														)
+															fault.minor({
+																message:
+																	(
+																		(
+																			error as AxiosError
+																		)
+																			.response
+																			?.data as any
+																	).error ??
 																	(
 																		error as AxiosError
-																	).response
-																		?.data as any
-																).error ??
-																(
-																	error as AxiosError
-																).message,
-														});
+																	).message,
+															});
 													}
 												}}
 												title="add a new version"

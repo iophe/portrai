@@ -283,8 +283,16 @@ func HandleGetProfileAvatar(c *fiber.Ctx) error {
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
+		body_bytes, err := io.ReadAll(response.Body)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error":   "failed to get image",
+				"details": err.Error(),
+			})
+		}
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "failed to get image",
+			"error":   "failed to get image",
+			"details": string(body_bytes),
 		})
 	}
 	contentType := response.Header.Get("Content-Type")
