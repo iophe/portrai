@@ -75,7 +75,7 @@ services:
       - proxy
     environment:
       - NODE_ENV=production
-      - VITE_API_URL=${BACKEND_URL:-http://localhost:3000}
+      - VITE_API_URL=${BACKEND_URL:-/api/v1}
     depends_on:
       - portrai_backend
     restart: always
