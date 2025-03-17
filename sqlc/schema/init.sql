@@ -184,7 +184,7 @@ CREATE TRIGGER on_version_created
 */
 create table payment.customers (
   -- UUID from auth.users
-  id uuid primary key not null references auth.users on delete set null,
+  id uuid references auth.users on delete set null,
   -- The user's customer ID in Stripe. User must not be able to update this.
   stripe_customer_id text
 );

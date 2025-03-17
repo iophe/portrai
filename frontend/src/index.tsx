@@ -17,6 +17,7 @@ const TermService = lazy(() => import("./pages/policies/service.page"));
 const AboutUs = lazy(() => import("./pages/support/aboutus.page"));
 const Signin = lazy(() => import("./pages/auth/signin.page"));
 const Signup = lazy(() => import("./pages/auth/signup.page"));
+const Verify = lazy(() => import("./pages/auth/verify.page"));
 const Pricing = lazy(() => import("./pages/pricing/pricing.page"));
 const Error404 = lazy(() => import("./pages/error/error.404.page"));
 const ErrorPayment = lazy(() => import("./pages/error/error.payment.page"));
@@ -50,6 +51,7 @@ render(
 				<Route path={"/about-us"} component={AboutUs} />
 				<Route path={"/signin"} component={Signin} />
 				<Route path={"/signup"} component={Signup} />
+				<Route path={"/verify-account"} component={Verify} />
 				<Route path={"/my-templates"} component={Templates} />
 				<Route path={"/blog"} component={Blog} />
 				<Route path={"/pricing"} component={Pricing} />

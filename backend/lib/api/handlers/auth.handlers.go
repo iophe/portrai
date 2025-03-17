@@ -29,8 +29,11 @@ type AuthResponse struct {
 }
 
 type EmailSignupData struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Email          string `json:"email"`
+	Password       string `json:"password"`
+	EmailConfirm   bool   `json:"email_confirm,omitempty"`    // Whether to send confirmation email
+	RedirectTo     string `json:"redirect_to,omitempty"`      // URL to redirect after verification
+	DataInRedirect bool   `json:"data_in_redirect,omitempty"` // Whether to include user data in redirect
 }
 
 func HandleEmailSignup(c *fiber.Ctx, data EmailSignupData, db *db.Database) (AuthResponse, error) {
@@ -38,7 +41,8 @@ func HandleEmailSignup(c *fiber.Ctx, data EmailSignupData, db *db.Database) (Aut
 	if data.Email == "" || data.Password == "" {
 		return AuthResponse{}, fmt.Errorf("Email and password are required")
 	}
-
+	data.EmailConfirm = true
+	data.RedirectTo = "http:localhost:5050/verify-account"
 	response, err := makeSupabaseRequest("POST", "signup", data)
 	if err != nil {
 		slog.Error("")
@@ -224,6 +228,174 @@ func HandleDeleteAccount(c *fiber.Ctx, cache *ca.Cache, db *database.Database) e
 	slog.Info("successfully deleted", "id", user_id)
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "account successfully deleted",
+	})
+}
+
+// Extract email from request
+type ResendVerificationData struct {
+	Email string `json:"email"`
+}
+
+// ResendVerificationEmail sends another verification email to the user
+func HandleResendVerification(c *fiber.Ctx, data ResendVerificationData) error {
+	if data.Email == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Email is required",
+		})
+	}
+
+	// Prepare request for GoTrue
+	requestBody := map[string]interface{}{
+		"email": data.Email,
+		"type":  "signup",
+	}
+
+	// Send request to resend verification email
+	response, err := makeSupabaseRequest("POST", "otp", requestBody)
+	if err != nil {
+		slog.Error("Failed to resend verification email", "error", err)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to resend verification email",
+		})
+	}
+
+	// Check response
+	if response.StatusCode != http.StatusOK {
+		body_bytes, err := io.ReadAll(response.Body)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "Failed to read response from auth service",
+			})
+		}
+
+		response.Body.Close()
+		return c.Status(response.StatusCode).JSON(fiber.Map{
+			"error": string(body_bytes),
+		})
+	}
+
+	slog.Info("Successfully resent verification email", "email", data.Email)
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Verification email has been resent",
+	})
+}
+
+type VerifyEmailData struct {
+	Token      string `json:"token"`
+	Type       string `json:"type"`
+	RedirectTo string `json:"redirect_to,omitempty"`
+}
+
+// VerifyEmail handles email verification token
+func HandleVerifyEmail(c *fiber.Ctx, data VerifyEmailData) error {
+	if data.Token == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Token is required",
+		})
+	}
+
+	// Set verification type if not provided
+	if data.Type == "" {
+		data.Type = "signup"
+	}
+
+	// Prepare request for GoTrue
+	requestBody := map[string]interface{}{
+		"token": data.Token,
+		"type":  data.Type,
+	}
+
+	// Add redirect URL if provided
+	if data.RedirectTo != "" {
+		requestBody["redirect_to"] = data.RedirectTo
+	}
+
+	// Send request to verify email
+	response, err := makeSupabaseRequest("POST", "verify", requestBody)
+	if err != nil {
+		slog.Error("Failed to verify email", "error", err)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to verify email",
+		})
+	}
+
+	// Handle response
+	auth_response, err := handleSupabaseResponse(response)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	// Update user cookies with new tokens
+	middlewares.SetAuthCookies(c, &middlewares.RefreshResponse{
+		AccessToken:  auth_response.AccessToken,
+		RefreshToken: auth_response.RefreshToken,
+	})
+
+	slog.Info("Successfully verified email",
+		"email", auth_response.User.Email,
+		"id", auth_response.User.Id,
+	)
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Email successfully verified",
+		"user":    auth_response.User,
+	})
+}
+
+// Check if a user's email is verified
+func HandleCheckEmailVerification(c *fiber.Ctx) error {
+	claims, err := middlewares.GetUserClaims(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized",
+		})
+	}
+
+	// Prepare request to get user data from Supabase
+	request, err := http.NewRequest("GET", fmt.Sprintf("%s/user", utils.KONG_AUTH_URL), nil)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to create request",
+		})
+	}
+
+	request.Header.Set("Authorization", fmt.Sprintf("Bearer %s", claims.Bearer))
+	request.Header.Set("apikey", utils.SERVICE_ROLE_KEY)
+
+	client := &http.Client{}
+	response, err := client.Do(request)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to get user data",
+		})
+	}
+	defer response.Body.Close()
+
+	// Parse response
+	var userData struct {
+		EmailConfirmedAt *string `json:"email_confirmed_at"`
+	}
+
+	body_bytes, err := io.ReadAll(response.Body)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to read response",
+		})
+	}
+
+	if err := json.Unmarshal(body_bytes, &userData); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to parse user data",
+		})
+	}
+
+	// Check if email is verified
+	emailVerified := userData.EmailConfirmedAt != nil
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"email_verified": emailVerified,
 	})
 }
 

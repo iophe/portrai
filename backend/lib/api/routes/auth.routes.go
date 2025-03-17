@@ -37,6 +37,34 @@ func RegisterAuthRoutes(group fiber.Router) {
 		},
 	)
 
+	auth_group.Post("/signup/email/resend-verification",
+		func(c *fiber.Ctx) error {
+			var data handlers.ResendVerificationData
+			if err := c.BodyParser(&data); err != nil {
+				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+					"error": "Invalid request body",
+				})
+			}
+			return handlers.HandleResendVerification(c, data)
+		},
+	)
+
+	auth_group.Post("/signup/email/verify-email",
+		func(c *fiber.Ctx) error {
+			var data handlers.VerifyEmailData
+			if err := c.BodyParser(&data); err != nil {
+				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+					"error": "Invalid request body",
+				})
+			}
+			return handlers.HandleVerifyEmail(c, data)
+		},
+	)
+	auth_group.Post("/signup/email/verification-status", middlewares.Protected(),
+		func(c *fiber.Ctx) error {
+			return handlers.HandleCheckEmailVerification(c)
+		},
+	)
 	auth_group.Post("/signin/email",
 		func(c *fiber.Ctx) error {
 			var data handlers.EmailSigninData
