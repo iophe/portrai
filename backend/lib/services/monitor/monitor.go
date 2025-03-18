@@ -2,11 +2,11 @@ package monitor
 
 import (
 	"fmt"
-	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/adaptor"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -125,34 +125,9 @@ func MonitorMiddleware() fiber.Handler {
 
 // RegisterMonitoringRoutes sets up the metrics endpoint for Prometheus scraping
 func RegisterMonitoringRoutes(app *fiber.App) {
-	app.Get("/metrics", func(c *fiber.Ctx) error {
-		// Convert Fiber context to http.ResponseWriter and *http.Request
-		writer := responseWriter{c: c}
+	// Use Fiber's built-in adapter for HTTP handlers
+	promHandler := adaptor.HTTPHandler(promhttp.Handler())
 
-		// Serve Prometheus metrics
-		promhttp.Handler().ServeHTTP(writer, nil)
-		return nil
-	})
-}
-
-// responseWriter adapts fiber.Ctx to http.ResponseWriter
-type responseWriter struct {
-	c *fiber.Ctx
-}
-
-func (w responseWriter) Header() http.Header {
-	// Convert Fiber headers to http.Header
-	header := make(http.Header)
-	w.c.Response().Header.VisitAll(func(key, value []byte) {
-		header.Add(string(key), string(value))
-	})
-	return header
-}
-
-func (w responseWriter) Write(bytes []byte) (int, error) {
-	return w.c.Write(bytes)
-}
-
-func (w responseWriter) WriteHeader(statusCode int) {
-	w.c.Status(statusCode)
+	// Register the endpoint
+	app.Get("/metrics", promHandler)
 }

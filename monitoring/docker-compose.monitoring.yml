@@ -3,8 +3,7 @@ services:
     image: prom/prometheus:latest
     container_name: portrai_prometheus
     profiles: [services,monitoring]
-    networks:
-      - back
+
     ports:
       - "9090:9090"
     volumes:
@@ -33,8 +32,6 @@ services:
     restart: unless-stopped
     depends_on:
       - portrai_prometheus
-    networks:
-      - back
 
 volumes:
   portrai_prometheus_data:

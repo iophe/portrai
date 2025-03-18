@@ -6,6 +6,13 @@ scrape_configs:
   - job_name: 'prometheus'
     static_configs:
       - targets: ['localhost:9090']
+  - job_name: 'fiber-app'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['host.docker.internal:3000']  # For Docker-to-host communication on macOS/Windows
+        labels:
+          service: 'fiber-app'
+          env: 'development'
 
   - job_name: 'docker'
     static_configs:
