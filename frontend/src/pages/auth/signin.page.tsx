@@ -5,6 +5,7 @@ import { A, useLocation, useNavigate, useParams } from "@solidjs/router";
 import { Pay } from "@utils/payment";
 import { Match, onMount, Switch } from "solid-js";
 import Footer from "@components/footer.default";
+import { useFault } from "@components/fault";
 
 interface SigninPageProps {}
 
@@ -15,7 +16,7 @@ interface EmailSigninData {
 
 function SigninPage(props: SigninPageProps) {
 	const location = useLocation();
-
+	const fault = useFault();
 	const navigate = useNavigate();
 	const [email_signup_data, set_email_signup_data] =
 		createStore<EmailSigninData>({
@@ -61,6 +62,7 @@ function SigninPage(props: SigninPageProps) {
 				}
 			} catch (error) {
 				console.error("Google sign-in error:", error);
+				fault.major({ message: "Google sign-in error" });
 			}
 		};
 
@@ -84,7 +86,10 @@ function SigninPage(props: SigninPageProps) {
 					<div class="flex flex-col items-center w-full">
 						<div
 							id="g_id_onload"
-							data-client_id={import.meta.env.GOOGLE_CLIENT_ID ?? "379453756631-b7kpec1652oq9ihd2bl1n5gvnu48j2gl.apps.googleusercontent.com"}
+							data-client_id={
+								import.meta.env.GOOGLE_CLIENT_ID ??
+								"379453756631-b7kpec1652oq9ihd2bl1n5gvnu48j2gl.apps.googleusercontent.com"
+							}
 							data-context="signin"
 							data-ux_mode="popup"
 							data-callback="handleGoogleSignin"
@@ -136,6 +141,10 @@ function SigninPage(props: SigninPageProps) {
 								}
 							} catch (error) {
 								console.error("Signin error:", error);
+								fault.major({
+									message:
+										"Invalid password or email address",
+								});
 							}
 						}}
 						class="mt-8 space-y-6"

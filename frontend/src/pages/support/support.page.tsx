@@ -121,9 +121,7 @@ function Support(props: SupportPageProps) {
 								</A>
 							</div>
 							<div>
-								<A href="/policies/privacy">
-									Privacy
-								</A>
+								<A href="/policies/privacy">Privacy</A>
 							</div>
 						</aside>
 					</section>
