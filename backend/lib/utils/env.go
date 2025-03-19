@@ -9,7 +9,14 @@ import (
 // SERVER CONF
 var SERVER_PORT = os.Getenv("PORT")
 var LOG_FILEPATH = os.Getenv("LOG_FILEPATH")
+var APP_URL = os.Getenv("APP_URL")
 var SECURE_COOKIE = Must(strconv.ParseBool(os.Getenv("SECURE_COOKIE")))
+
+// MAILER CONF
+var MAILER_SMTP_HOST = os.Getenv("MAILER_SMTP_HOST")
+var MAILER_SMTP_PORT = Must(strconv.Atoi(os.Getenv("MAILER_SMTP_PORT")))
+var MAILER_SMTP_USERNAME = os.Getenv("MAILER_SMTP_USERNAME")
+var MAILER_SMTP_PASSWORD = os.Getenv("MAILER_SMTP_PASSWORD")
 
 // DATABASE CONF
 var POSTGRES_PASSWORD = os.Getenv("POSTGRES_PASSWORD")

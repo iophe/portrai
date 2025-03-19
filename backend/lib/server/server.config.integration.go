@@ -11,13 +11,11 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/csrf"
 	"github.com/gofiber/fiber/v2/middleware/encryptcookie"
 	"github.com/gofiber/fiber/v2/middleware/helmet"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/fiber/v2/middleware/session"
-	fiber_utils "github.com/gofiber/fiber/v2/utils"
 )
 
 const AUTH_URL = "http://localhost:8000/auth/v1"
@@ -50,20 +48,6 @@ func ConfigureServer(app *fiber.App, cfg *ServerCfg) {
 		CookieSecure:   utils.SECURE_COOKIE,
 		CookieHTTPOnly: true,
 	})
-
-	// CSRF Protection
-	app.Use(csrf.New(csrf.Config{
-		KeyLookup:         "header:X-Csrf-Token",
-		CookieName:        "csrf_",
-		CookieSameSite:    "Strict",
-		CookieSecure:      utils.SECURE_COOKIE,
-		CookieSessionOnly: true,
-		KeyGenerator:      fiber_utils.UUIDv4,
-		Expiration:        1 * time.Hour,
-		Session:           SESSIONS,
-		SessionKey:        "fiber.csrf.token",
-		HandlerContextKey: "fiber.csrf.handler",
-	}))
 
 	app.Use(limiter.New(limiter.Config{
 		Max:               50,

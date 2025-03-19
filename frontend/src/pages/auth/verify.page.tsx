@@ -11,6 +11,7 @@ import {
 import { A, useSearchParams } from "@solidjs/router";
 import { useFault } from "@components/fault";
 import api from "@utils/api";
+import VerifiedIcon from "@assets/icons/verified.svg?component-solid";
 
 interface VerifyPageProps {}
 
@@ -138,20 +139,7 @@ function VerifyPage(props: VerifyPageProps) {
 						<Match when={verification_status() === "success"}>
 							<div class="flex flex-col items-center justify-center py-6">
 								<div class="w-16 h-16 bg-lapis-50 rounded-full flex items-center justify-center mb-4">
-									<svg
-										xmlns="http://www.w3.org/2000/svg"
-										class="h-8 w-8 text-lapis-500"
-										fill="none"
-										viewBox="0 0 24 24"
-										stroke="currentColor"
-									>
-										<path
-											stroke-linecap="round"
-											stroke-linejoin="round"
-											stroke-width="2"
-											d="M5 13l4 4L19 7"
-										/>
-									</svg>
+									<VerifiedIcon class="fill-lapis-500"/>
 								</div>
 								<h2 class="text-xl font-semibold mb-2 text-forest-800">
 									Email Verified!

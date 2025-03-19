@@ -28,7 +28,7 @@ function Support(props: SupportPageProps) {
 		set_is_submitting(true);
 		set_submit_success(false);
 		try {
-			await api.post("/support", form_data);
+			await api.post("/mail/issue", form_data);
 
 			set_submit_success(true);
 			set_form_data({

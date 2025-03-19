@@ -5,6 +5,7 @@ import (
 	ca "backend/lib/services/cache"
 	"backend/lib/services/db"
 	database "backend/lib/services/db"
+	"backend/lib/services/mailer"
 	"backend/lib/utils"
 	"bytes"
 	"encoding/json"
@@ -393,6 +394,15 @@ func HandleVerifyEmail(c *fiber.Ctx, data VerifyEmailData) error {
 		RefreshToken: auth_response.RefreshToken,
 	})
 
+	err = mailer.MailGreeting(mailer.GreetingData{
+		Email: auth_response.User.Email,
+	})
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
 	slog.Info("Successfully verified email",
 		"email", auth_response.User.Email,
 		"id", auth_response.User.Id,
@@ -443,6 +453,15 @@ func HandleVerifyEmailCode(c *fiber.Ctx, data VerifyEmailCodeData) error {
 		AccessToken:  auth_response.AccessToken,
 		RefreshToken: auth_response.RefreshToken,
 	})
+
+	err = mailer.MailGreeting(mailer.GreetingData{
+		Email: auth_response.User.Email,
+	})
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
 
 	slog.Info("Successfully verified email with code",
 		"email", auth_response.User.Email,
@@ -937,8 +956,9 @@ func createSupabaseAdminToken() (string, error) {
 }
 
 type SupabaseError struct {
-	Message string `json:"message,omitempty"`
-	Error   string `json:"error,omitempty"`
+	Message   string `json:"message,omitempty"`
+	Error     string `json:"error,omitempty"`
+	ErrorCode string `json:"error_code,omitempty"`
 }
 
 func makeSupabaseRequest(method, endpoint string, data interface{}) (*http.Response, error) {
@@ -978,6 +998,9 @@ func handleSupabaseResponse(response *http.Response) (AuthResponse, error) {
 		error_msg := error_resp.Message
 		if error_msg == "" {
 			error_msg = error_resp.Error
+		}
+		if error_msg == "" {
+			error_msg = error_resp.ErrorCode
 		}
 		if error_msg == "" {
 			error_msg = "unexpected error"

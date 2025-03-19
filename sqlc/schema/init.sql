@@ -186,7 +186,8 @@ create table payment.customers (
   -- UUID from auth.users
   id uuid references auth.users on delete set null,
   -- The user's customer ID in Stripe. User must not be able to update this.
-  stripe_customer_id text
+  stripe_customer_id text,
+  email text
 );
 
 /******************************************************************************************/
@@ -270,7 +271,8 @@ create table payment.payments (
     -- Payment ID from Stripe, e.g. pi_1234.
     payment_id text primary key,
 
-    user_id uuid not null references auth.users on delete set null,
+    user_id uuid references auth.users on delete set null,
+    stripe_customer_id text not null,
 
     -- Set of key-value pairs, used to store additional information about the object in a structured format.
     metadata jsonb,

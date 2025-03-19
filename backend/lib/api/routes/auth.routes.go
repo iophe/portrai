@@ -5,13 +5,30 @@ import (
 	"backend/lib/api/middlewares"
 	"backend/lib/services/cache"
 	"backend/lib/services/db"
+	"backend/lib/services/sess"
+	"backend/lib/utils"
 	"log/slog"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/csrf"
+	futils "github.com/gofiber/fiber/v2/utils"
 )
 
 func RegisterAuthRoutes(group fiber.Router) {
 	auth_group := group.Group("/auth")
+	auth_group.Use(csrf.New(csrf.Config{
+		KeyLookup:         "header:X-Csrf-Token",
+		CookieName:        "csrf_",
+		CookieSameSite:    "Lax",
+		CookieSecure:      utils.SECURE_COOKIE,
+		CookieSessionOnly: true,
+		KeyGenerator:      futils.UUIDv4,
+		Expiration:        1 * time.Hour,
+		Session:           sess.SESSIONS,
+		SessionKey:        "fiber.csrf.token",
+		HandlerContextKey: "fiber.csrf.handler",
+	}))
 
 	auth_group.Post("/signup/email",
 		func(c *fiber.Ctx) error {
@@ -79,7 +96,7 @@ func RegisterAuthRoutes(group fiber.Router) {
 			res, err := handlers.HandleEmailSignin(c, data)
 			if err != nil {
 				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-					"error": err,
+					"error": err.Error(),
 				})
 			}
 			return c.Status(fiber.StatusOK).JSON(res)
