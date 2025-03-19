@@ -65,20 +65,23 @@ func (q *Queries) AddProductUsage(ctx context.Context, arg AddProductUsageParams
 const createCustomer = `-- name: CreateCustomer :exec
 INSERT INTO payment.customers (
     id,
-    stripe_customer_id
+    stripe_customer_id,
+    email
 ) VALUES (
     $1::uuid,
-    $2::text
+    $2::text,
+    $3::text
 )
 `
 
 type CreateCustomerParams struct {
 	UserID           uuid.UUID `json:"user_id"`
 	StripeCustomerID string    `json:"stripe_customer_id"`
+	Email            string    `json:"email"`
 }
 
 func (q *Queries) CreateCustomer(ctx context.Context, arg CreateCustomerParams) error {
-	_, err := q.db.Exec(ctx, createCustomer, arg.UserID, arg.StripeCustomerID)
+	_, err := q.db.Exec(ctx, createCustomer, arg.UserID, arg.StripeCustomerID, arg.Email)
 	return err
 }
 
@@ -109,7 +112,8 @@ func (q *Queries) GetConsumptionCost(ctx context.Context, userID uuid.UUID) (pgt
 const getCustomerByStripeID = `-- name: GetCustomerByStripeID :one
 SELECT 
     id,
-    stripe_customer_id
+    stripe_customer_id,
+    email
 FROM payment.customers 
 WHERE stripe_customer_id = $1::text
 `
@@ -117,14 +121,15 @@ WHERE stripe_customer_id = $1::text
 func (q *Queries) GetCustomerByStripeID(ctx context.Context, stripeCustomerID string) (PaymentCustomer, error) {
 	row := q.db.QueryRow(ctx, getCustomerByStripeID, stripeCustomerID)
 	var i PaymentCustomer
-	err := row.Scan(&i.ID, &i.StripeCustomerID)
+	err := row.Scan(&i.ID, &i.StripeCustomerID, &i.Email)
 	return i, err
 }
 
 const getCustomerByUserID = `-- name: GetCustomerByUserID :one
 SELECT 
     id,
-    stripe_customer_id
+    stripe_customer_id,
+    email
 FROM payment.customers 
 WHERE id = $1::uuid
 `
@@ -132,7 +137,7 @@ WHERE id = $1::uuid
 func (q *Queries) GetCustomerByUserID(ctx context.Context, userID uuid.UUID) (PaymentCustomer, error) {
 	row := q.db.QueryRow(ctx, getCustomerByUserID, userID)
 	var i PaymentCustomer
-	err := row.Scan(&i.ID, &i.StripeCustomerID)
+	err := row.Scan(&i.ID, &i.StripeCustomerID, &i.Email)
 	return i, err
 }
 
@@ -283,6 +288,7 @@ const insertPayment = `-- name: InsertPayment :exec
 INSERT INTO payment.payments (
    payment_id,
    user_id,
+   stripe_customer_id,
    price_id,
    amount,
    currency,
@@ -292,27 +298,30 @@ INSERT INTO payment.payments (
    $1::text,
    $2::uuid,
    $3::text,
-   $4::integer,
-   $5::text,
-   $6::jsonb,
-   $7::timestamp with time zone
+   $4::text,
+   $5::integer,
+   $6::text,
+   $7::jsonb,
+   $8::timestamp with time zone
 )
 `
 
 type InsertPaymentParams struct {
-	PaymentID string             `json:"payment_id"`
-	UserID    uuid.UUID          `json:"user_id"`
-	PriceID   string             `json:"price_id"`
-	Amount    int32              `json:"amount"`
-	Currency  string             `json:"currency"`
-	Metadata  []byte             `json:"metadata"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	PaymentID        string             `json:"payment_id"`
+	UserID           uuid.UUID          `json:"user_id"`
+	StripeCustomerID string             `json:"stripe_customer_id"`
+	PriceID          string             `json:"price_id"`
+	Amount           int32              `json:"amount"`
+	Currency         string             `json:"currency"`
+	Metadata         []byte             `json:"metadata"`
+	CreatedAt        pgtype.Timestamptz `json:"created_at"`
 }
 
 func (q *Queries) InsertPayment(ctx context.Context, arg InsertPaymentParams) error {
 	_, err := q.db.Exec(ctx, insertPayment,
 		arg.PaymentID,
 		arg.UserID,
+		arg.StripeCustomerID,
 		arg.PriceID,
 		arg.Amount,
 		arg.Currency,

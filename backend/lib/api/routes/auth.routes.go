@@ -5,18 +5,30 @@ import (
 	"backend/lib/api/middlewares"
 	"backend/lib/services/cache"
 	"backend/lib/services/db"
+	"backend/lib/services/sess"
 	"backend/lib/utils"
-	"encoding/json"
-	"fmt"
-	"io"
 	"log/slog"
-	"net/http"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/csrf"
+	futils "github.com/gofiber/fiber/v2/utils"
 )
 
 func RegisterAuthRoutes(group fiber.Router) {
 	auth_group := group.Group("/auth")
+	auth_group.Use(csrf.New(csrf.Config{
+		KeyLookup:         "header:X-Csrf-Token",
+		CookieName:        "csrf_",
+		CookieSameSite:    "Lax",
+		CookieSecure:      utils.SECURE_COOKIE,
+		CookieSessionOnly: true,
+		KeyGenerator:      futils.UUIDv4,
+		Expiration:        1 * time.Hour,
+		Session:           sess.SESSIONS,
+		SessionKey:        "fiber.csrf.token",
+		HandlerContextKey: "fiber.csrf.handler",
+	}))
 
 	auth_group.Post("/signup/email",
 		func(c *fiber.Ctx) error {
@@ -37,6 +49,42 @@ func RegisterAuthRoutes(group fiber.Router) {
 		},
 	)
 
+	auth_group.Post("/signup/email/resend-verification",
+		func(c *fiber.Ctx) error {
+			var data handlers.ResendVerificationData
+			if err := c.BodyParser(&data); err != nil {
+				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+					"error": "Invalid request body",
+				})
+			}
+			return handlers.HandleResendVerification(c, data)
+		},
+	)
+
+	auth_group.Post("/signup/email/verify-email",
+		func(c *fiber.Ctx) error {
+			var data handlers.VerifyEmailData
+			if err := c.BodyParser(&data); err != nil {
+				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+					"error": "Invalid request body",
+				})
+			}
+			return handlers.HandleVerifyEmail(c, data)
+		},
+	)
+
+	auth_group.Post("/signup/email/verify-email-code",
+		func(c *fiber.Ctx) error {
+			var data handlers.VerifyEmailCodeData
+			if err := c.BodyParser(&data); err != nil {
+				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+					"error": "Invalid request body",
+				})
+			}
+			return handlers.HandleVerifyEmailCode(c, data)
+		},
+	)
+
 	auth_group.Post("/signin/email",
 		func(c *fiber.Ctx) error {
 			var data handlers.EmailSigninData
@@ -48,7 +96,7 @@ func RegisterAuthRoutes(group fiber.Router) {
 			res, err := handlers.HandleEmailSignin(c, data)
 			if err != nil {
 				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-					"error": err,
+					"error": err.Error(),
 				})
 			}
 			return c.Status(fiber.StatusOK).JSON(res)
@@ -75,66 +123,80 @@ func RegisterAuthRoutes(group fiber.Router) {
 	)
 	auth_group.Get("/signin/google/callback",
 		func(c *fiber.Ctx) error {
-			// Extract the authorization code from the query parameters
-			code := c.Query("code")
-			if code == "" {
+			var query handlers.GoogleCallbackQuery
+			if err := c.QueryParser(&query); err != nil {
 				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-					"error": "No authorization code provided",
+					"error": "Invalid request body",
 				})
 			}
+			return handlers.HandleGoogleCallback(c, query)
 
-			// Forward the request to the internal GoTrue service
-			request, err := http.NewRequest("GET",
-				fmt.Sprintf("%s/callback?provider=google&code=%s", utils.KONG_AUTH_URL, code),
-				nil)
-			if err != nil {
-				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-					"error": "Failed to create request",
+		})
+	auth_group.Post("/recover/password",
+		func(c *fiber.Ctx) error {
+			var data handlers.PasswordRecoveryData
+			if err := c.BodyParser(&data); err != nil {
+				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+					"error": "Invalid request body",
 				})
 			}
+			return handlers.HandlePasswordRecovery(c, data)
+		},
+	)
 
-			// Add necessary headers
-			request.Header.Set("Content-Type", "application/json")
-			request.Header.Set("apikey", utils.SERVICE_ROLE_KEY)
-
-			// Execute the request
-			client := &http.Client{}
-			response, err := client.Do(request)
-			if err != nil {
-				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-					"error": "Failed to communicate with auth service",
+	auth_group.Post("/recover/password/resend",
+		func(c *fiber.Ctx) error {
+			var data handlers.PasswordRecoveryData
+			if err := c.BodyParser(&data); err != nil {
+				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+					"error": "Invalid request body",
 				})
 			}
-			defer response.Body.Close()
+			return handlers.HandleResendRecovery(c, data)
+		},
+	)
 
-			// Read and parse the response
-			body, err := io.ReadAll(response.Body)
-			if err != nil {
-				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-					"error": "Failed to read response",
+	auth_group.Post("/recover/password/reset",
+		func(c *fiber.Ctx) error {
+			var data handlers.PasswordResetData
+			if err := c.BodyParser(&data); err != nil {
+				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+					"error": "Invalid request body",
 				})
 			}
+			return handlers.HandlePasswordReset(c, data)
+		},
+	)
 
-			if response.StatusCode != http.StatusOK {
-				return c.Status(response.StatusCode).Send(body)
-			}
-
-			// Parse the auth response
-			var auth_response handlers.AuthResponse
-			if err := json.Unmarshal(body, &auth_response); err != nil {
-				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-					"error": "Failed to parse auth response",
+	auth_group.Post("/recover/password/reset-with-code",
+		func(c *fiber.Ctx) error {
+			var data handlers.PasswordResetCodeData
+			if err := c.BodyParser(&data); err != nil {
+				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+					"error": "Invalid request body",
 				})
 			}
+			return handlers.HandlePasswordResetWithCode(c, data)
+		},
+	)
 
-			// Set auth cookies
-			middlewares.SetAuthCookies(c, &middlewares.RefreshResponse{
-				AccessToken:  auth_response.AccessToken,
-				RefreshToken: auth_response.RefreshToken,
-			})
+	auth_group.Post("/recover/password/update",
+		middlewares.Protected(),
+		func(c *fiber.Ctx) error {
+			var data handlers.PasswordUpdateData
+			if err := c.BodyParser(&data); err != nil {
+				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+					"error": "Invalid request body",
+				})
+			}
+			return handlers.HandlePasswordUpdate(c, data)
+		},
+	)
 
-			// Redirect to the frontend after successful authentication
-			return c.Redirect("/")
+	auth_group.Get("/user-email",
+		middlewares.Protected(),
+		func(c *fiber.Ctx) error {
+			return handlers.HandleGetAuthUserEmail(c)
 		})
 
 	auth_group.Get("/check",

@@ -14,7 +14,8 @@ WHERE plan = @plan::text;
 -- name: GetCustomerByUserID :one
 SELECT 
     id,
-    stripe_customer_id
+    stripe_customer_id,
+    email
 FROM payment.customers 
 WHERE id = @user_id::uuid;
 
@@ -27,17 +28,20 @@ WHERE id = @product_id::text;
 -- name: GetCustomerByStripeID :one
 SELECT 
     id,
-    stripe_customer_id
+    stripe_customer_id,
+    email
 FROM payment.customers 
 WHERE stripe_customer_id = @stripe_customer_id::text;
 
 -- name: CreateCustomer :exec
 INSERT INTO payment.customers (
     id,
-    stripe_customer_id
+    stripe_customer_id,
+    email
 ) VALUES (
     @user_id::uuid,
-    @stripe_customer_id::text
+    @stripe_customer_id::text,
+    @email::text
 );
 -- name: UpsertPaymentValidity :exec
 INSERT INTO payment.validity (
@@ -69,6 +73,7 @@ WHERE user_id = @user_id::uuid;
 INSERT INTO payment.payments (
    payment_id,
    user_id,
+   stripe_customer_id,
    price_id,
    amount,
    currency,
@@ -77,6 +82,7 @@ INSERT INTO payment.payments (
 ) VALUES (
    @payment_id::text,
    @user_id::uuid,
+   @stripe_customer_id::text,
    @price_id::text,
    @amount::integer,
    @currency::text,

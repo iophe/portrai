@@ -3,6 +3,7 @@ package handlers
 import (
 	"backend/lib/api/middlewares"
 	"backend/lib/services/db"
+	"backend/lib/services/mailer"
 	"backend/lib/services/payment"
 	"backend/lib/utils"
 	"backend/sqlc_gen"
@@ -71,6 +72,7 @@ func HandleCreateCheckoutSession(c *fiber.Ctx, data CreateCheckoutData, db *db.D
 		err = queries.CreateCustomer(query_ctx, sqlc_gen.CreateCustomerParams{
 			UserID:           user_id,
 			StripeCustomerID: stripe_customer.ID,
+			Email:            user_email,
 		})
 		if err != nil {
 			slog.Error("Error saving customer", "err", err)
@@ -141,13 +143,14 @@ func HandleWebhook(c *fiber.Ctx, DB *db.Database) error {
 		}
 
 		err = queries.InsertPayment(query_ctx, sqlc_gen.InsertPaymentParams{
-			PaymentID: session_obj.PaymentIntent.ID,
-			UserID:    customer.ID,
-			PriceID:   session_obj.Metadata["price_id"],
-			Amount:    int32(session_obj.AmountTotal),
-			Currency:  string(session_obj.Currency),
-			Metadata:  metadata,
-			CreatedAt: db.Int64ToTimestamptz(session_obj.Created),
+			PaymentID:        session_obj.PaymentIntent.ID,
+			UserID:           customer.ID.Bytes,
+			StripeCustomerID: customer.StripeCustomerID.String,
+			PriceID:          session_obj.Metadata["price_id"],
+			Amount:           int32(session_obj.AmountTotal),
+			Currency:         string(session_obj.Currency),
+			Metadata:         metadata,
+			CreatedAt:        db.Int64ToTimestamptz(session_obj.Created),
 		})
 		if err != nil {
 			slog.Error("InsertPayment", "err", err)
@@ -162,7 +165,7 @@ func HandleWebhook(c *fiber.Ctx, DB *db.Database) error {
 
 		err = queries.UpsertPaymentValidity(query_ctx, sqlc_gen.UpsertPaymentValidityParams{
 			PaymentID: session_obj.PaymentIntent.ID,
-			UserID:    customer.ID,
+			UserID:    customer.ID.Bytes,
 			PriceID:   session_obj.Metadata["price_id"],
 			ExpiredAt: time.Now().Add(period_duration),
 			Metadata:  metadata,
@@ -170,6 +173,15 @@ func HandleWebhook(c *fiber.Ctx, DB *db.Database) error {
 		if err != nil {
 			slog.Error("UpsertPaymentValidity", "err", err)
 			return c.Status(fiber.StatusInternalServerError).Send([]byte("Error processing webhook"))
+		}
+
+		err = mailer.MailThanksPayment(mailer.ThanksPaymentData{
+			Email: customer.Email.String,
+		})
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": err.Error(),
+			})
 		}
 
 	case "checkout.session.expired", "payment_intent.payment_failed":

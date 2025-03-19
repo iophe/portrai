@@ -4,6 +4,7 @@ import (
 	"backend/lib/server"
 	"backend/lib/services/cache"
 	"backend/lib/services/db"
+	"backend/lib/services/mailer"
 	"backend/lib/services/monitor"
 	"backend/lib/utils"
 	"fmt"
@@ -64,6 +65,16 @@ func Setup() (Cfg, error) {
 	}
 	monitor.StartSystemMetricsCollection(30 * time.Second)
 	slog.Info("Successful monitoring set up")
+
+	// MAIL
+	slog.Info("Setting up mailer ...")
+	mailer.Mailer = mailer.NewMailer(mailer.EmailCfg{
+		Host:     utils.MAILER_SMTP_HOST,
+		Port:     utils.MAILER_SMTP_PORT,
+		Username: utils.MAILER_SMTP_USERNAME,
+		Password: utils.MAILER_SMTP_PASSWORD,
+	})
+	slog.Info("Successful mailer set up")
 
 	slog.Info("Successful server configuration set up")
 	return Cfg{

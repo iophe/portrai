@@ -99,18 +99,20 @@ func (ns NullPricingType) Value() (driver.Value, error) {
 }
 
 type PaymentCustomer struct {
-	ID               uuid.UUID   `json:"id"`
+	ID               pgtype.UUID `json:"id"`
 	StripeCustomerID pgtype.Text `json:"stripe_customer_id"`
+	Email            pgtype.Text `json:"email"`
 }
 
 type PaymentPayment struct {
-	PaymentID string             `json:"payment_id"`
-	UserID    uuid.UUID          `json:"user_id"`
-	Metadata  []byte             `json:"metadata"`
-	PriceID   pgtype.Text        `json:"price_id"`
-	Amount    pgtype.Int4        `json:"amount"`
-	Currency  string             `json:"currency"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	PaymentID        string             `json:"payment_id"`
+	UserID           pgtype.UUID        `json:"user_id"`
+	StripeCustomerID string             `json:"stripe_customer_id"`
+	Metadata         []byte             `json:"metadata"`
+	PriceID          pgtype.Text        `json:"price_id"`
+	Amount           pgtype.Int4        `json:"amount"`
+	Currency         string             `json:"currency"`
+	CreatedAt        pgtype.Timestamptz `json:"created_at"`
 }
 
 type PaymentPrice struct {
@@ -139,7 +141,7 @@ type PaymentProduct struct {
 }
 
 type PaymentUsageAnalytic struct {
-	UserID              uuid.UUID      `json:"user_id"`
+	UserID              pgtype.UUID    `json:"user_id"`
 	TotalCostPerPayment pgtype.Numeric `json:"total_cost_per_payment"`
 	AllTimeCost         pgtype.Numeric `json:"all_time_cost"`
 }

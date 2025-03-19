@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/session"
 )
 
 type Server struct {
@@ -16,8 +15,6 @@ type ServerCfg struct {
 	Port        uint
 	LogFilepath string
 }
-
-var SESSIONS *session.Store = nil
 
 func New() Server {
 	return Server{

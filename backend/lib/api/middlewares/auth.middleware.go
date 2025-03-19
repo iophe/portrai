@@ -52,7 +52,7 @@ func Protected() fiber.Handler {
 				}
 			} else {
 				return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-					"error": "token expired",
+					"error": "no refresh token",
 				})
 			}
 		}
@@ -102,7 +102,7 @@ func Protected() fiber.Handler {
 					}
 				} else {
 					return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-						"error": "token expired",
+						"error": "no refresh token",
 					})
 				}
 			} else {

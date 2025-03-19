@@ -45,10 +45,9 @@ $(which python3) cache/cache_setup.py init --dev --root $THE_ROOT_PASSWORD
 load the env variables :
 use only when using the back or front end outside of docker
 ```
-export $(cat .env | grep -v '^#' | grep -v '^$' | xargs)
-export $(cat secrets.env | grep -v '^#' | grep -v '^$' | xargs)
+source .env
+source secrets.env
 ```
-TODO : find a better way
 
 Then start the server: ( in the backend directory | cd backend )
 ```
