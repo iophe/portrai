@@ -25,4 +25,5 @@ func RegisterRoutes(server *fiber.App) {
 	RegisterResumeRoutes(v1_group)
 	RegisterAIRoutes(v1_group)
 	RegisterAccountRoutes(v1_group)
+	RegisterTemplateRoutes(v1_group)
 }
