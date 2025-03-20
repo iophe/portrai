@@ -76,6 +76,7 @@ function SignupPage(props: SignupPageProps) {
 				}
 			} catch (error) {
 				console.error("Google sign-in error:", error);
+				fault.major({ message: "Could not sign up with google" });
 			}
 		};
 
@@ -140,15 +141,10 @@ function SignupPage(props: SignupPageProps) {
 									"IS_AUTHENTICATED",
 									"true"
 								);
-								if (location.query.payment) {
-									Pay({
-										plan: location.query.payment as string,
-									});
-								} else {
-									navigate("/", { replace: true });
-								}
+								navigate("/verify-account", { replace: true });
 							} catch (error) {
 								console.error("Signup error:", error);
+								fault.major({ message: "Could not sign up" });
 							}
 						}}
 						class="mt-8 space-y-6"

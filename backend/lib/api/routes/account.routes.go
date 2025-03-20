@@ -4,14 +4,31 @@ import (
 	"backend/lib/api/handlers"
 	"backend/lib/api/middlewares"
 	"backend/lib/services/db"
+	"backend/lib/services/sess"
+	"backend/lib/utils"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/csrf"
+	futils "github.com/gofiber/fiber/v2/utils"
 )
 
 func RegisterAccountRoutes(group fiber.Router) {
 	// Account Routes
 	account_group := group.Group("/account")
 	account_group.Use(middlewares.Protected())
+	account_group.Use(csrf.New(csrf.Config{
+		KeyLookup:         "header:X-Csrf-Token",
+		CookieName:        "csrf_",
+		CookieSameSite:    "Lax",
+		CookieSecure:      utils.SECURE_COOKIE,
+		CookieSessionOnly: true,
+		KeyGenerator:      futils.UUIDv4,
+		Expiration:        1 * time.Hour,
+		Session:           sess.SESSIONS,
+		SessionKey:        "fiber.csrf.token",
+		HandlerContextKey: "fiber.csrf.handler",
+	}))
 
 	account_group.Get("/user", func(c *fiber.Ctx) error {
 		return handlers.HandleGetUser(c, &db.DB)

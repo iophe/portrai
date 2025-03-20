@@ -20,6 +20,10 @@ code {
 		monospace;
 }
 
+button {
+	cursor: pointer;
+}
+
 @layer components {
 	.dbg-1 {
 		@apply border border-red-500;

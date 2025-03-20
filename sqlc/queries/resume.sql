@@ -385,7 +385,7 @@ SELECT jsonb_build_object(
 
 -- name: GetUserResumeVersions :one
 SELECT
-    (SELECT version from public.resume_versions rv where rv.version_id = u.current_resume_version),
+    (SELECT version from public.resume_versions rv where rv.version_id = u.current_resume_version AND rv.user_id = @user_id::uuid),
     ARRAY(
         SELECT rv.version 
         FROM public.resume_versions rv 
@@ -400,7 +400,7 @@ WHERE
 -- name: ChangeResumeVersion :exec
 UPDATE public.users
 SET 
-    current_resume_version = (SELECT version_id from public.resume_versions rv where rv.version = @version::text)
+    current_resume_version = (SELECT version_id from public.resume_versions rv where rv.version = @version::text AND rv.user_id = @user_id::uuid)
 WHERE 
     id = @user_id::uuid;
 

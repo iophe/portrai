@@ -1938,7 +1938,7 @@ function TermsPage(props: TermsPageProps) {
 					</article>
 				</main>
 			</section>
-            <Footer />
+			<Footer />
 		</main>
 	);
 }

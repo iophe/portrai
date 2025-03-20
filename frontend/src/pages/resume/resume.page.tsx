@@ -296,7 +296,7 @@ function Resume(props: ResumeProps) {
 
 										await DB_JOB_SPECIFIC_RESUMES.upsert(
 											db,
-											resume()!.title,
+											resume()!.id,
 											{
 												resume_data: JSON.parse(
 													JSON.stringify(
@@ -324,7 +324,7 @@ function Resume(props: ResumeProps) {
 
 										await DB_JOB_SPECIFIC_RESUMES.upsert(
 											db,
-											resume()!.title,
+											resume()!.id,
 											{
 												resume_data: JSON.parse(
 													JSON.stringify(
@@ -381,7 +381,7 @@ function Resume(props: ResumeProps) {
 
 										await DB_JOB_SPECIFIC_RESUMES.upsert(
 											db,
-											resume()!.title,
+											resume()!.id,
 											{
 												resume_data: JSON.parse(
 													JSON.stringify(
@@ -448,7 +448,7 @@ function Resume(props: ResumeProps) {
 
 										await DB_JOB_SPECIFIC_RESUMES.upsert(
 											db,
-											resume()!.title,
+											resume()!.id,
 											{
 												resume_data: JSON.parse(
 													JSON.stringify(
@@ -475,7 +475,7 @@ function Resume(props: ResumeProps) {
 
 										await DB_JOB_SPECIFIC_RESUMES.upsert(
 											db,
-											resume()!.title,
+											resume()!.id,
 											{
 												resume_data: JSON.parse(
 													JSON.stringify(
@@ -532,7 +532,7 @@ function Resume(props: ResumeProps) {
 
 										await DB_JOB_SPECIFIC_RESUMES.upsert(
 											db,
-											resume()!.title,
+											resume()!.id,
 											{
 												resume_data: JSON.parse(
 													JSON.stringify(
@@ -600,7 +600,7 @@ function Resume(props: ResumeProps) {
 
 										await DB_JOB_SPECIFIC_RESUMES.upsert(
 											db,
-											resume()!.title,
+											resume()!.id,
 											{
 												resume_data: JSON.parse(
 													JSON.stringify(
@@ -627,7 +627,7 @@ function Resume(props: ResumeProps) {
 
 										await DB_JOB_SPECIFIC_RESUMES.upsert(
 											db,
-											resume()!.title,
+											resume()!.id,
 											{
 												resume_data: JSON.parse(
 													JSON.stringify(
@@ -684,7 +684,7 @@ function Resume(props: ResumeProps) {
 
 										await DB_JOB_SPECIFIC_RESUMES.upsert(
 											db,
-											resume()!.title,
+											resume()!.id,
 											{
 												resume_data: JSON.parse(
 													JSON.stringify(
@@ -751,7 +751,7 @@ function Resume(props: ResumeProps) {
 
 										await DB_JOB_SPECIFIC_RESUMES.upsert(
 											db,
-											resume()!.title,
+											resume()!.id,
 											{
 												resume_data: JSON.parse(
 													JSON.stringify(
@@ -778,7 +778,7 @@ function Resume(props: ResumeProps) {
 
 										await DB_JOB_SPECIFIC_RESUMES.upsert(
 											db,
-											resume()!.title,
+											resume()!.id,
 											{
 												resume_data: JSON.parse(
 													JSON.stringify(
@@ -835,7 +835,7 @@ function Resume(props: ResumeProps) {
 
 										await DB_JOB_SPECIFIC_RESUMES.upsert(
 											db,
-											resume()!.title,
+											resume()!.id,
 											{
 												resume_data: JSON.parse(
 													JSON.stringify(
@@ -885,21 +885,29 @@ function Resume(props: ResumeProps) {
 									toggle_visibility={async (id) => {
 										const update_resume_data =
 											resume()!.resume_data;
-
+											
+										
 										const idx =
 											update_resume_data.skills.findIndex(
 												(v) => v.skill_id === id
 											);
-
+										console.log(idx);
+										console.log({before:update_resume_data.skills[
+											idx
+										].is_visible});
+										
 										update_resume_data.skills[
 											idx
 										].is_visible =
 											!update_resume_data.skills[idx]
 												.is_visible;
-
+										console.log({after:update_resume_data.skills[
+											idx
+										].is_visible});
+										
 										await DB_JOB_SPECIFIC_RESUMES.upsert(
 											db,
-											resume()!.title,
+											resume()!.id,
 											{
 												resume_data: JSON.parse(
 													JSON.stringify(
@@ -925,7 +933,7 @@ function Resume(props: ResumeProps) {
 
 										await DB_JOB_SPECIFIC_RESUMES.upsert(
 											db,
-											resume()!.title,
+											resume()!.id,
 											{
 												resume_data: JSON.parse(
 													JSON.stringify(
@@ -982,7 +990,7 @@ function Resume(props: ResumeProps) {
 
 										await DB_JOB_SPECIFIC_RESUMES.upsert(
 											db,
-											resume()!.title,
+											resume()!.id,
 											{
 												resume_data: JSON.parse(
 													JSON.stringify(
