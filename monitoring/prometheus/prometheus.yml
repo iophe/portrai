@@ -6,14 +6,25 @@ scrape_configs:
   - job_name: 'prometheus'
     static_configs:
       - targets: ['localhost:9090']
-  - job_name: 'fiber-app'
+
+  - job_name: 'cv-generator'
     metrics_path: '/metrics'
     static_configs:
-      - targets: ['host.docker.internal:3000']  # For Docker-to-host communication on macOS/Windows
+      - targets: ['localhost:3000'] 
         labels:
-          service: 'fiber-app'
+          service: 'cv-generator'
+          env: 'development'
+
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['host.docker.internal:9100']
+        labels:
+          service: 'node-exporter'
           env: 'development'
 
   - job_name: 'docker'
     static_configs:
       - targets: ['host.docker.internal:9323']
+        labels:
+          service: 'docker'
+          env: 'development'

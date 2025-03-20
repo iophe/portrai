@@ -5,7 +5,7 @@ services:
     profiles: [services,monitoring]
 
     ports:
-      - "9090:9090"
+      - "9091:9090"
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - portrai_prometheus_data:/prometheus
