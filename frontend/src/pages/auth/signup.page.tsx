@@ -142,7 +142,6 @@ function SignupPage(props: SignupPageProps) {
 									"true"
 								);
 								navigate("/verify-account", { replace: true });
-								
 							} catch (error) {
 								console.error("Signup error:", error);
 								fault.major({ message: "Could not sign up" });

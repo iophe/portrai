@@ -18,6 +18,7 @@ import {
 	CACHED_IMAGE_TTL,
 	CachedImage,
 } from "@pages/auth/avatar.section";
+import { formatText } from "./offline.view";
 
 interface ResumePreviewProps {
 	template_name?: string;
@@ -208,6 +209,7 @@ function ResumeAIPreview(props: ResumePreviewProps) {
 								toGenerating(true);
 								const res = await api.get("/resume/data");
 								const data = res.data.resume_data as ResumeData;
+								console.log(data);
 								data.title = `${account()?.full_name?.replace(" ", "_")}_resume_${new Date().toISOString().slice(0, 10).replace(/-/g, "_")}`;
 								set_resume_data({
 									resume_data: data,
@@ -317,8 +319,11 @@ function ResumeAIPreview(props: ResumePreviewProps) {
 			</Show>
 
 			<Show when={resume_data()?.resume_data.letter}>
-				<section class="rounded w-full  p-4 bg-lapis-10 h-fit flex flex-col gap-4">
-					<div>{resume_data()?.resume_data.letter}</div>
+				<section class="rounded w-full p-4 bg-lapis-10 h-fit flex flex-col gap-4">
+					<h2>Cover letter :</h2>
+					<div class="bg-white border-lapis-100 shadow px-4 py-8">
+						{formatText(resume_data()?.resume_data.letter!)}
+					</div>
 				</section>
 			</Show>
 		</section>

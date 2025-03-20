@@ -507,7 +507,8 @@ func HandleChangeResumeVersion(data ChangeResumeVersionData, c *fiber.Ctx, db *d
 	})
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "could not get all the versions",
+			"error":   "could not change version",
+			"details": err.Error(),
 		})
 	}
 
@@ -536,7 +537,7 @@ func HandleAddResumeVersion(data AddResumeVersionData, c *fiber.Ctx, db *db.Data
 	})
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "could not get all the versions",
+			"error": "could not get add this version",
 		})
 	}
 

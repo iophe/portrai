@@ -20,7 +20,7 @@ import api from "@utils/api";
 import { AxiosError } from "axios";
 import LoadingSpinner from "@components/loading.spinner";
 import { ItemText } from "./utils/item.content";
-import { createCachedResource } from "@utils/cache";
+import { clear_cache, createCachedResource } from "@utils/cache";
 import { useNavigate } from "@solidjs/router";
 
 interface ResumeSettingsProps {
@@ -297,6 +297,7 @@ function ResumeSettings(props: ResumeSettingsProps) {
 														version_form_data.selected_version,
 												}
 											);
+											clear_cache();
 											refetch_version();
 											refetch_profile();
 										} catch (error) {

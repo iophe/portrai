@@ -19,7 +19,7 @@ import {
 } from "@pages/auth/avatar.section";
 import { useNavigate } from "@solidjs/router";
 
-function formatText(text: string) {
+export function formatText(text: string) {
 	if (!text) return null;
 
 	const paragraphs = text.trim().split("\n");
@@ -290,7 +290,7 @@ function ResumePreview(props: ResumePreviewProps) {
 
 				<div
 					ref={cv_ref}
-					class="max-w-[210mm] min-h-[297mm]  md:block hidden"
+					class="max-w-[210mm] min-h-[297mm] shadow md:block hidden"
 				>
 					<ExecutiveTemplate
 						data={{
@@ -323,9 +323,13 @@ function ResumePreview(props: ResumePreviewProps) {
 				</div>
 			</section>
 			<Show when={props.job_specific_resume.resume_data.letter}>
-				<section class="rounded w-full p-4 bg-lapis-10 h-full flex flex-col gap-4">
+				<section class="rounded w-full p-4 bg-lapis-10 h-fit flex flex-col gap-4">
 					<h2>Cover letter :</h2>
-					<div>{props.job_specific_resume.resume_data.letter}</div>
+					<div class="bg-white border-lapis-100 shadow px-4 py-8">
+						{formatText(
+							props.job_specific_resume.resume_data.letter
+						)}
+					</div>
 				</section>
 			</Show>
 		</section>

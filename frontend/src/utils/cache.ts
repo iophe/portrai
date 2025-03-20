@@ -120,3 +120,7 @@ export function createCachedResource<T>(
 export function invalidate(key: string) {
 	CACHE_STORE.delete(key);
 }
+
+export function clear_cache() {
+	CACHE_STORE.clear();
+}

@@ -30,7 +30,7 @@ func (q *Queries) AddResumeVersion(ctx context.Context, arg AddResumeVersionPara
 const changeResumeVersion = `-- name: ChangeResumeVersion :exec
 UPDATE public.users
 SET 
-    current_resume_version = (SELECT version_id from public.resume_versions rv where rv.version = $1::text)
+    current_resume_version = (SELECT version_id from public.resume_versions rv where rv.version = $1::text AND rv.user_id = $2::uuid)
 WHERE 
     id = $2::uuid
 `
@@ -556,7 +556,7 @@ func (q *Queries) GetResumeItemsByType(ctx context.Context, arg GetResumeItemsBy
 
 const getUserResumeVersions = `-- name: GetUserResumeVersions :one
 SELECT
-    (SELECT version from public.resume_versions rv where rv.version_id = u.current_resume_version),
+    (SELECT version from public.resume_versions rv where rv.version_id = u.current_resume_version AND rv.user_id = $1::uuid),
     ARRAY(
         SELECT rv.version 
         FROM public.resume_versions rv 

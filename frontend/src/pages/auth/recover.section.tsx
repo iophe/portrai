@@ -125,7 +125,7 @@ function RecoverAccount(props: RecoverAccountProps) {
 							onClick={() => set_show_form(true)}
 						>
 							<span>Change Password</span>
-                            <EditIcon class="fill-lapis-600"/>
+							<EditIcon class="fill-lapis-600" />
 						</button>
 					</div>
 				</Show>
