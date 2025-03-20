@@ -44,7 +44,7 @@ func ConfigureServer(app *fiber.App, cfg *ServerCfg) {
 		Expiration:     24 * time.Hour,
 		KeyLookup:      "cookie:session",
 		CookiePath:     "/",
-		CookieSecure:   false, // Set to true in production with HTTPS
+		CookieSecure:   utils.SECURE_COOKIE,
 		CookieHTTPOnly: true,
 	})
 

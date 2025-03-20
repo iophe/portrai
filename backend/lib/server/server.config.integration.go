@@ -5,8 +5,8 @@ package server
 import (
 	"backend/lib/services/logs"
 	"backend/lib/services/monitor"
+	"backend/lib/services/sess"
 	"backend/lib/utils"
-	"fmt"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -33,7 +33,6 @@ func ConfigureServer(app *fiber.App, cfg *ServerCfg) {
 		AllowHeaders:     "Origin,Content-Type,Accept,Authorization,X-Csrf-Token,X-Requested-With",
 	}))
 
-	fmt.Println(utils.COOKIES_ENCRYPTION_KEY)
 	// Cookie encription
 	app.Use(encryptcookie.New(encryptcookie.Config{
 		Key:    utils.COOKIES_ENCRYPTION_KEY,
@@ -41,7 +40,7 @@ func ConfigureServer(app *fiber.App, cfg *ServerCfg) {
 	}))
 
 	// Session configuration
-	SESSIONS = session.New(session.Config{
+	sess.SESSIONS = session.New(session.Config{
 		Expiration:     24 * time.Hour,
 		KeyLookup:      "cookie:session",
 		CookiePath:     "/",
