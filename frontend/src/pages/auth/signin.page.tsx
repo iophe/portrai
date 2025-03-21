@@ -87,7 +87,7 @@ function SigninPage(props: SigninPageProps) {
 						<div
 							id="g_id_onload"
 							data-client_id={
-								import.meta.env.GOOGLE_CLIENT_ID ??
+								import.meta.env.VITE_GOOGLE_CLIENT_ID ??
 								"379453756631-b7kpec1652oq9ihd2bl1n5gvnu48j2gl.apps.googleusercontent.com"
 							}
 							data-context="signin"

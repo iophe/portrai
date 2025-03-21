@@ -99,7 +99,7 @@ function SignupPage(props: SignupPageProps) {
 					<div class="flex flex-col items-center w-full">
 						<div
 							id="g_id_onload"
-							data-client_id={import.meta.env.GOOGLE_CLIENT_ID}
+							data-client_id={import.meta.env.VITE_GOOGLE_CLIENT_ID}
 							data-context="signup"
 							data-ux_mode="popup"
 							data-callback="handleGoogleSignup"
