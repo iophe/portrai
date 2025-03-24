@@ -164,7 +164,7 @@ function Support(props: SupportPageProps) {
 										onClick={() =>
 											set_submit_success(false)
 										}
-										class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+										class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 smooth-transition"
 									>
 										Send Another Message
 									</button>
@@ -266,7 +266,7 @@ function Support(props: SupportPageProps) {
 								<button
 									type="submit"
 									disabled={is_submitting()}
-									class="px-6 py-3 bg-forest-700 text-white rounded-lg hover:bg-forest-800 transition-colors disabled:bg-gray-400"
+									class="px-6 py-3 bg-forest-700 text-white rounded-lg hover:bg-forest-800 smooth-transition disabled:bg-gray-400"
 								>
 									{is_submitting()
 										? "Sending..."

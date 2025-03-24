@@ -31,19 +31,19 @@ function ErrorPayment(props: ErrorPaymentPageProps) {
 					<div class="flex flex-col md:flex-row gap-4">
 						<A
 							href="/checkout"
-							class="px-6 py-3 bg-forest-700 text-white rounded hover:bg-forest-800 transition-colors"
+							class="px-6 py-3 bg-forest-700 text-white rounded hover:bg-forest-800 smooth-transition"
 						>
 							Try Again
 						</A>
 						<A
 							href="/support"
-							class="px-6 py-3 border border-forest-700 text-forest-700 rounded hover:bg-forest-50 transition-colors"
+							class="px-6 py-3 border border-forest-700 text-forest-700 rounded hover:bg-forest-50 smooth-transition"
 						>
 							Contact Support
 						</A>
 						<A
 							href="/"
-							class="px-6 py-3 text-forest-700 hover:underline transition-colors"
+							class="px-6 py-3 text-forest-700 hover:underline smooth-transition"
 						>
 							Return to Homepage
 						</A>

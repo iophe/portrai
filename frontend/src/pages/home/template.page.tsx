@@ -3,6 +3,7 @@ import Header from "@components/header.autherized";
 import { createSignal, For, Show, Switch, Match } from "solid-js";
 import { createStore } from "solid-js/store";
 import EXECUTING_RESUME from "@assets/templates/executive.jpg";
+import { Motion, Presence } from "solid-motionone";
 
 interface TemplatesPage {}
 
@@ -109,120 +110,189 @@ function TemplatesPage(props: TemplatesPage) {
 
 			<section class="w-full grow h-full flex flex-col gap-6 justify-start overflow-hidden items-start text-forest-900">
 				<header class="w-full text-center mb-2">
-					<h1 class="text-3xl font-bold mb-3">Resume Templates</h1>
-					<p class="text-gray-600 max-w-3xl mx-auto">
-						Choose from our professionally designed templates to
-						create your perfect resume. Click on a template to
-						select it for your next application.
-					</p>
+					<Motion
+						initial={{ opacity: 0, y: -20 }}
+						animate={{ opacity: 1, y: 0 }}
+						transition={{ duration: 0.5 }}
+					>
+						<h1 class="text-3xl font-bold mb-3">
+							Resume Templates
+						</h1>
+						<p class="text-gray-600 max-w-3xl mx-auto">
+							Choose from our professionally designed templates to
+							create your perfect resume. Click on a template to
+							select it for your next application.
+						</p>
+					</Motion>
 				</header>
 
 				{/* Filter Categories */}
-				<nav
-					class="w-full border-b border-gray-200 flex flex-wrap gap-2 md:gap-0"
-					aria-label="Template categories"
+				<Motion
+					initial={{ opacity: 0, y: 10 }}
+					animate={{ opacity: 1, y: 0 }}
+					transition={{ duration: 0.3, delay: 0.2 }}
 				>
-					<For each={categories}>
-						{(category) => (
-							<button
-								onClick={() => set_filter_category(category.id)}
-								classList={{
-									"px-5 py-3 font-medium text-sm md:text-base":
-										true,
-									"border-b-2 border-forest-600 text-forest-600":
-										filter_category() === category.id,
-									"text-gray-500 hover:text-forest-600":
-										filter_category() !== category.id,
-								}}
-								aria-selected={
-									filter_category() === category.id
-								}
-							>
-								{category.name}
-							</button>
-						)}
-					</For>
-				</nav>
+					<nav
+						class="w-full border-b border-gray-200 flex flex-wrap gap-2 md:gap-0"
+						aria-label="Template categories"
+					>
+						<For each={categories}>
+							{(category) => (
+								<button
+									onClick={() =>
+										set_filter_category(category.id)
+									}
+									classList={{
+										"px-5 py-3 font-medium text-sm md:text-base":
+											true,
+										"border-b-2 border-forest-600 text-forest-600":
+											filter_category() === category.id,
+										"text-gray-500 hover:text-forest-600":
+											filter_category() !== category.id,
+									}}
+									aria-selected={
+										filter_category() === category.id
+									}
+								>
+									{category.name}
+								</button>
+							)}
+						</For>
+					</nav>
+				</Motion>
 
 				{/* Templates Grid */}
 				<ul class="w-full overflow-y-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 list-none">
 					<For each={filtered_templates()}>
-						{(template) => (
-							<li>
-								<article
-									class="h-full p-2 flex flex-col gap-4 rounded overflow-hidden border-2 transition-all cursor-pointer hover:shadow-md"
-									classList={{
-										"border-forest-600":
-											selected_template_id() ===
-											template.id,
-										"border-lapis-50":
-											selected_template_id() !==
-											template.id,
-									}}
-									onClick={() =>
-										handle_template_select(template.id)
-									}
-								>
-									<div class="flex flex-col gap-2">
-										<h3 class="font-medium text-lg">
-											{template.name}
-										</h3>
-										<p class="text-sm text-gray-600">
-											{template.description}
-										</p>
-
-										<Show
-											when={
+						{(template, index) => (
+							<Motion
+								initial={{ opacity: 0, scale: 0.9 }}
+								animate={{ opacity: 1, scale: 1 }}
+								transition={{
+									duration: 0.4,
+									delay: 0.1 * (index() + 1),
+								}}
+							>
+								<li>
+									<article
+										class="h-full p-2 flex flex-col gap-4 rounded overflow-hidden border-2 transition-all cursor-pointer hover:shadow-md"
+										classList={{
+											"border-forest-600":
 												selected_template_id() ===
-												template.id
-											}
-										>
-											<div class="mt-3 flex justify-center">
-												<button
-													onClick={(e) => {
-														e.stopPropagation(); // Prevent triggering parent onClick
-														use_selected_template();
-													}}
-													class="px-4 py-2 bg-forest-700 text-white rounded hover:bg-forest-800 transition-colors"
+												template.id,
+											"border-lapis-50":
+												selected_template_id() !==
+												template.id,
+										}}
+										onClick={() =>
+											handle_template_select(template.id)
+										}
+									>
+										<div class="flex flex-col gap-2">
+											<h3 class="font-medium text-lg">
+												{template.name}
+											</h3>
+											<p class="text-sm text-gray-600">
+												{template.description}
+											</p>
+
+											<Presence>
+												<Show
+													when={
+														selected_template_id() ===
+														template.id
+													}
 												>
-													Use Template
-												</button>
-											</div>
-										</Show>
-									</div>
-									<figure class="flex-1">
-										<img
-											src={template.image_url}
-											alt={`${template.name} template preview`}
-											class="object-cover w-full h-full"
-											onError={(e) => {
-												// Fallback for missing images
-												const target =
-													e.target as HTMLImageElement;
-												// target.src = "/templates/placeholder.jpg";
-											}}
-										/>
-									</figure>
-								</article>
-							</li>
+													<Motion
+														initial={{
+															opacity: 0,
+															y: 10,
+														}}
+														animate={{
+															opacity: 1,
+															y: 0,
+														}}
+														exit={{
+															opacity: 0,
+															y: -10,
+														}}
+														transition={{
+															duration: 0.3,
+														}}
+													>
+														<div class="mt-3 flex justify-center">
+															<button
+																onClick={(
+																	e
+																) => {
+																	e.stopPropagation();
+																	use_selected_template();
+																}}
+																class="px-4 py-2 bg-forest-700 text-white rounded hover:bg-forest-800 transition-colors"
+															>
+																Use Template
+															</button>
+														</div>
+													</Motion>
+												</Show>
+											</Presence>
+										</div>
+										<Motion
+											initial={{ scale: 0.95 }}
+											animate={{ scale: 1 }}
+											transition={{ duration: 0.3 }}
+										>
+											<figure class="flex-1">
+												<img
+													src={template.image_url}
+													alt={`${template.name} template preview`}
+													class="object-cover w-full h-full"
+													onError={(e) => {
+														// Fallback for missing images
+														const target =
+															e.target as HTMLImageElement;
+														// target.src = "/templates/placeholder.jpg";
+													}}
+												/>
+											</figure>
+										</Motion>
+									</article>
+								</li>
+							</Motion>
 						)}
 					</For>
 				</ul>
 
-				{/* Empty State */}
-				<Show when={filtered_templates().length === 0}>
-					<div class="w-full py-12 text-center">
-						<p class="text-gray-500 text-lg">
-							No templates found in this category.
-						</p>
-						<button
-							onClick={() => set_filter_category("all")}
-							class="mt-4 px-4 py-2 border border-forest-700 text-forest-700 rounded-lg hover:bg-forest-50 transition-colors"
+				{/* Empty State with Animation */}
+				<Presence>
+					<Show when={filtered_templates().length === 0}>
+						<Motion
+							initial={{ opacity: 0, y: 20 }}
+							animate={{ opacity: 1, y: 0 }}
+							exit={{ opacity: 0, y: -20 }}
+							transition={{ duration: 0.4 }}
 						>
-							View All Templates
-						</button>
-					</div>
-				</Show>
+							<div class="w-full py-12 text-center">
+								<p class="text-gray-500 text-lg">
+									No templates found in this category.
+								</p>
+								<Motion
+									hover={{ scale: 1.05 }}
+									press={{ scale: 0.95 }}
+								>
+									<button
+										onClick={() =>
+											set_filter_category("all")
+										}
+										class="mt-4 px-4 py-2 border border-forest-700 text-forest-700 rounded-lg hover:bg-forest-50 transition-colors"
+									>
+										View All Templates
+									</button>
+								</Motion>
+							</div>
+						</Motion>
+					</Show>
+				</Presence>
 			</section>
 			<Footer />
 		</main>

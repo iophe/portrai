@@ -80,7 +80,9 @@ export function ExperienceList(props: ExperienceListProps) {
 				section_name="experience"
 				form={(props) => (
 					<ExperienceForm
-						delete={() => {}}
+						delete={() => {
+							props.cancel();
+						}}
 						onCancel={() => {
 							props.cancel();
 						}}
