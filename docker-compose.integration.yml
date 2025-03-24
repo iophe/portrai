@@ -29,10 +29,6 @@ services:
     container_name: portrai_backend_integration
     profiles: [app]
     image: portrai_backend:integration
-    volumes:
-      - ./backend/templates:./templates
-      - ./backend/static:./static      
-      - ./nginx/ssl:/etc/nginx/ssl:ro
     networks:
       - back
     ports:
