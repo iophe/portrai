@@ -225,7 +225,14 @@ export function ProjectForm(props: ProjectFormProps) {
 	return (
 		<FormArticle on_submit={handleSubmit}>
 			<FormDeleteButton
-				delete={() => props.delete(props.project!.project_id)}
+				no_confirm={props.project?.project_id === undefined}
+				delete={() => {
+					if (props.project?.project_id) {
+						props.delete(props.project?.project_id);
+					} else {
+						props.onCancel();
+					}
+				}}
 			/>
 			<FormLabeledInput label="Project Title">
 				<FormInputText

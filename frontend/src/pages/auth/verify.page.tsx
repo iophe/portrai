@@ -149,7 +149,7 @@ function VerifyPage(props: VerifyPageProps) {
 								</p>
 								<A
 									href="/signin"
-									class="px-6 py-2 bg-forest-800 text-white rounded hover:bg-forest-700 transition-colors"
+									class="px-6 py-2 bg-forest-800 text-white rounded hover:bg-forest-700 smooth-transition"
 								>
 									Go to Login
 								</A>
@@ -212,7 +212,7 @@ function VerifyPage(props: VerifyPageProps) {
 
 										<button
 											type="submit"
-											class="w-full px-6 py-2 bg-forest-800 text-white rounded hover:bg-forest-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+											class="w-full px-6 py-2 bg-forest-800 text-white rounded hover:bg-forest-700 smooth-transition disabled:opacity-50 disabled:cursor-not-allowed"
 											disabled={
 												resend_status() === "sending"
 											}
@@ -306,7 +306,7 @@ function VerifyPage(props: VerifyPageProps) {
 
 										<button
 											type="submit"
-											class="w-full px-6 py-2 bg-forest-800 text-white rounded hover:bg-forest-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+											class="w-full px-6 py-2 bg-forest-800 text-white rounded hover:bg-forest-700 smooth-transition disabled:opacity-50 disabled:cursor-not-allowed"
 											disabled={
 												resend_status() === "sending"
 											}
@@ -380,7 +380,7 @@ function VerifyPage(props: VerifyPageProps) {
 
 										<button
 											type="submit"
-											class="w-full px-6 py-2 bg-forest-800 text-white rounded hover:bg-forest-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+											class="w-full px-6 py-2 bg-forest-800 text-white rounded hover:bg-forest-700 smooth-transition disabled:opacity-50 disabled:cursor-not-allowed"
 											disabled={
 												verification_status() ===
 												"loading"

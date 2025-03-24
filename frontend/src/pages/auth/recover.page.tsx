@@ -194,7 +194,7 @@ function RecoverPasswordPage(props: RecoverPasswordProps) {
 								</p>
 								<A
 									href="/signin"
-									class="px-6 py-2 bg-forest-800 text-white rounded hover:bg-forest-700 transition-colors"
+									class="px-6 py-2 bg-forest-800 text-white rounded hover:bg-forest-700 smooth-transition"
 								>
 									Go to Login
 								</A>
@@ -283,7 +283,7 @@ function RecoverPasswordPage(props: RecoverPasswordProps) {
 
 										<button
 											type="submit"
-											class="w-full px-6 py-2 bg-forest-800 text-white rounded hover:bg-forest-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+											class="w-full px-6 py-2 bg-forest-800 text-white rounded hover:bg-forest-700 smooth-transition disabled:opacity-50 disabled:cursor-not-allowed"
 											disabled={
 												resend_status() === "sending"
 											}
@@ -405,7 +405,7 @@ function RecoverPasswordPage(props: RecoverPasswordProps) {
 
 										<button
 											type="submit"
-											class="w-full px-6 py-2 bg-forest-800 text-white rounded hover:bg-forest-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+											class="w-full px-6 py-2 bg-forest-800 text-white rounded hover:bg-forest-700 smooth-transition disabled:opacity-50 disabled:cursor-not-allowed"
 											disabled={
 												recovery_status() ===
 												"processing"
@@ -496,7 +496,7 @@ function RecoverPasswordPage(props: RecoverPasswordProps) {
 
 									<button
 										type="button"
-										class="w-full px-6 py-2 bg-forest-800 text-white rounded hover:bg-forest-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+										class="w-full px-6 py-2 bg-forest-800 text-white rounded hover:bg-forest-700 smooth-transition disabled:opacity-50 disabled:cursor-not-allowed"
 										disabled={
 											recovery_status() === "processing"
 										}
@@ -547,7 +547,7 @@ function RecoverPasswordPage(props: RecoverPasswordProps) {
 								</p>
 
 								<button
-									class="px-6 py-2 bg-forest-800 text-white rounded hover:bg-forest-700 transition-colors"
+									class="px-6 py-2 bg-forest-800 text-white rounded hover:bg-forest-700 smooth-transition"
 									onClick={() => {
 										if (recovery_method() === "reset") {
 											set_recovery_status("idle");
@@ -601,7 +601,7 @@ function RecoverPasswordPage(props: RecoverPasswordProps) {
 
 									<button
 										type="submit"
-										class="w-full px-6 py-2 bg-forest-800 text-white rounded hover:bg-forest-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+										class="w-full px-6 py-2 bg-forest-800 text-white rounded hover:bg-forest-700 smooth-transition disabled:opacity-50 disabled:cursor-not-allowed"
 										disabled={
 											recovery_status() === "sending"
 										}
@@ -622,7 +622,7 @@ function RecoverPasswordPage(props: RecoverPasswordProps) {
 										Remember your password?{" "}
 										<A
 											href="/signin"
-											class="text-lapis-500 hover:underline"
+											class="text-lapis-500 hover:underline smooth-transition"
 										>
 											Sign in
 										</A>

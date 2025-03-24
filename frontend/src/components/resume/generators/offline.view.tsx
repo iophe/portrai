@@ -1,5 +1,6 @@
 import { useFault } from "@components/fault";
 import { createResource, createSignal, For, Show } from "solid-js";
+import { Motion, Presence } from "solid-motionone";
 import { generatePDF } from "./generator.utils";
 import { TemplateData } from "./templates/template.utils";
 import { api } from "@utils/api";
@@ -9,6 +10,7 @@ import { db, JobSpecificResume } from "@utils/db/db";
 import EditIcon from "@assets/icons/edit.svg?component-solid";
 import DeleteIcon from "@assets/icons/delete.svg?component-solid";
 import CloseIcon from "@assets/icons/close.svg?component-solid";
+import DownloadIcon from "@assets/icons/download.svg?component-solid";
 import { FormInputText } from "../utils/form.input";
 import { DB_JOB_SPECIFIC_RESUMES } from "@utils/db/resume.db";
 import { createCachedResource } from "@utils/cache";
@@ -16,7 +18,7 @@ import {
 	CACHED_IMAGE_KEY,
 	CACHED_IMAGE_TTL,
 	CachedImage,
-} from "@pages/auth/avatar.section";
+} from "@components/avatar.section";
 import { useNavigate } from "@solidjs/router";
 
 export function formatText(text: string) {
@@ -151,187 +153,377 @@ function ResumePreview(props: ResumePreviewProps) {
 	});
 	return (
 		<section class="overflow-y-auto w-full h-full flex flex-col gap-4">
-			<section class="rounded w-full p-4 bg-lapis-10 h-full flex flex-col gap-4">
-				<Show
-					when={editing_title()}
-					fallback={
-						<div class="flex flex-row items-center justify-between">
-							<h1 class="grow text-center alice-regular self-center ">
-								{props.job_specific_resume.title}
-							</h1>
-							<div class="flex flex-row gap-4">
-								<button
-									title="Edit"
-									onclick={() => {
-										edit_title(true);
-									}}
-								>
-									<EditIcon class="fill-forest-900" />
-								</button>
-								<button
-									title="delete"
-									onclick={async () => {
-										const ok = confirm(
-											"Are you sure you want to delete this ?"
-										);
-										if (ok) {
-											await DB_JOB_SPECIFIC_RESUMES.delete(
-												db,
-												props.job_specific_resume.id
-											);
-											window.location.reload();
-										}
-									}}
-								>
-									<DeleteIcon class="fill-forest-900" />
-								</button>
-							</div>
-						</div>
-					}
-				>
-					<div class="flex flex-row items-center justify-between gap-4">
-						<form
-							class="w-full"
-							onSubmit={async (e) => {
-								await DB_JOB_SPECIFIC_RESUMES.upsert(
-									db,
-									props.job_specific_resume.id,
-									{ title: new_title() }
-								);
-							}}
-						>
-							<FormInputText
-								value={new_title()}
-								on_input={(value) => set_new_title(value)}
-								placeholder="Rename this resume"
-							/>
-						</form>
-						<button
-							title="close"
-							onclick={() => {
-								edit_title(false);
-							}}
-						>
-							<CloseIcon class="fill-forest-900" />
-						</button>
-					</div>
-				</Show>
-				<div class="flex flex-col items-start gap-4">
-					<article class="p-4 border-l-4 border-l-lapis-50  bg-gradient-to-br from-lapis-10 to-white flex flex-col gap-2">
-						<h2>Job description :</h2>
-						<div
-							class="line-clamp-6 "
-							classList={{
-								"line-clamp-6": !showing_more(),
-								"h-75 overflow-y-scroll": showing_more(),
-							}}
-						>
-							{formatText(
-								props.job_specific_resume.job_description
-							)}
-						</div>
-						<div class="self-end">
-							<Show
-								when={showing_more()}
-								fallback={
-									<button
-										title="show more"
-										onclick={() => show_more(true)}
-									>
-										show more ...
-									</button>
-								}
-							>
-								<button
-									title="show less"
-									onclick={() => show_more(false)}
-								>
-									show less ...
-								</button>
-							</Show>
-						</div>
-					</article>
-				</div>
-			</section>
-
-			<section class="rounded w-full p-4 bg-lapis-10 h-fit flex flex-col gap-4">
-				<h3 class="alice-regular self-center text-sm">{`${account()?.full_name?.replace(" ", "_")}_resume_${new Date().toISOString().slice(0, 10).replace(/-/g, "_")}.pdf`}</h3>
-				<div class="flex flex-row self-center gap-4">
-					<button
-						class="bg-lapis-100 rounded text-snow-100 py-2 px-4"
-						onClick={async () => {
-							if (!cv_ref) return;
-							try {
-								toGenerating(true);
-								generatePDF(cv_ref, {
-									name: `${account()?.full_name?.replace(" ", "_")}_resume_${new Date().toISOString().slice(0, 10).replace(/-/g, "_")}.pdf`,
-								});
-								fault.info({
-									message: "successfully generated the PDF",
-								});
-							} catch (error) {
-								fault.major({
-									message: "Failed to generate the PDF",
-								});
-							} finally {
-								toGenerating(false);
-							}
+			<Motion
+				initial={{ opacity: 0, y: 10 }}
+				animate={{ opacity: 1, y: 0 }}
+				transition={{ duration: 0.3, easing: "ease-out" }}
+			>
+				<section class="rounded w-full p-4 bg-lapis-10 h-full flex flex-col gap-4 relative overflow-hidden">
+					<Motion
+						initial={{ width: "0%" }}
+						animate={{ width: "100%" }}
+						transition={{
+							duration: 0.6,
+							easing: "ease-out",
+							delay: 0.2,
 						}}
-						disabled={is_generating()}
-					>
+						style={{
+							position: "absolute",
+							left: "0",
+							top: "0",
+							height: "3px",
+							"background-color": "var(--lapis-100)",
+						}}
+					></Motion>
+					<Presence>
 						<Show
-							when={!is_generating()}
-							fallback={"Generating PDF..."}
+							when={!editing_title()}
+							fallback={
+								<Motion
+									initial={{ opacity: 0, y: 5 }}
+									animate={{ opacity: 1, y: 0 }}
+									exit={{ opacity: 0, y: -5 }}
+									transition={{ duration: 0.2 }}
+								>
+									<div class="flex flex-row items-center justify-between gap-4">
+										<form
+											class="w-full"
+											onSubmit={async (e) => {
+												e.preventDefault();
+												await DB_JOB_SPECIFIC_RESUMES.upsert(
+													db,
+													props.job_specific_resume
+														.id,
+													{ title: new_title() }
+												);
+												edit_title(false);
+											}}
+										>
+											<FormInputText
+												value={new_title()}
+												on_input={(value) =>
+													set_new_title(value)
+												}
+												placeholder="Rename this resume"
+											/>
+										</form>
+										<Motion
+											hover={{ scale: 1.1 }}
+											press={{ scale: 0.95 }}
+											transition={{ duration: 0.15 }}
+										>
+											<button
+												title="close"
+												onclick={() => {
+													edit_title(false);
+												}}
+											>
+												<CloseIcon class="fill-forest-900" />
+											</button>
+										</Motion>
+									</div>
+								</Motion>
+							}
 						>
-							Download PDF
+							<div class="flex flex-row items-center justify-between">
+								<Motion
+									initial={{ opacity: 0, x: -5 }}
+									animate={{ opacity: 1, x: 0 }}
+									transition={{ duration: 0.3, delay: 0.1 }}
+								>
+									<h1 class="grow text-center alice-regular self-center">
+										{props.job_specific_resume.title}
+									</h1>
+								</Motion>
+								<div class="flex flex-row gap-4">
+									<Motion
+										hover={{ scale: 1.1 }}
+										press={{ scale: 0.95 }}
+										transition={{ duration: 0.15 }}
+									>
+										<button
+											title="Edit"
+											onclick={() => {
+												edit_title(true);
+											}}
+										>
+											<EditIcon class="fill-forest-900" />
+										</button>
+									</Motion>
+									<Motion
+										hover={{ scale: 1.1, rotate: 5 }}
+										press={{ scale: 0.95 }}
+										transition={{ duration: 0.15 }}
+									>
+										<button
+											title="delete"
+											onclick={async () => {
+												const ok = confirm(
+													"Are you sure you want to delete this?"
+												);
+												if (ok) {
+													await DB_JOB_SPECIFIC_RESUMES.delete(
+														db,
+														props
+															.job_specific_resume
+															.id
+													);
+													window.location.reload();
+												}
+											}}
+										>
+											<DeleteIcon class="fill-forest-900" />
+										</button>
+									</Motion>
+								</div>
+							</div>
 						</Show>
-					</button>
-				</div>
-
-				<div
-					ref={cv_ref}
-					class="max-w-[210mm] min-h-[297mm] shadow md:block hidden"
-				>
-					<ExecutiveTemplate
-						data={{
-							resume_data: props.job_specific_resume.resume_data,
-							profile: profile(),
-							user: account(),
-						}}
-						settings={{
-							font_size: {
-								name: "2rem",
-								section_title: "1.25rem",
-								subsection_title: "1.1rem",
-								body: "0.9rem",
-							},
-							spacing: {
-								section: "1.5rem",
-								subsection: "1rem",
-								item: "0.75rem",
-							},
-							show_sections: {
-								summary: true,
-								experience: true,
-								education: true,
-								skills: true,
-								certificates: true,
-								projects: true,
-							},
-						}}
-					/>
-				</div>
-			</section>
-			<Show when={props.job_specific_resume.resume_data.letter}>
-				<section class="rounded w-full p-4 bg-lapis-10 h-fit flex flex-col gap-4">
-					<h2>Cover letter :</h2>
-					<div class="bg-white border-lapis-100 shadow px-4 py-8">
-						{formatText(
-							props.job_specific_resume.resume_data.letter
-						)}
-					</div>
+					</Presence>
+					<Motion
+						initial={{ opacity: 0, y: 10 }}
+						animate={{ opacity: 1, y: 0 }}
+						transition={{ duration: 0.3, delay: 0.2 }}
+					>
+						<div class="flex flex-col items-start gap-4">
+							<article class="p-4 border-l-4 border-l-lapis-50 bg-gradient-to-br from-lapis-10 to-white flex flex-col gap-2 w-full">
+								<h2 class="text-lapis-700 font-medium">
+									Job description:
+								</h2>
+								<div
+									class="line-clamp-6 transition-all duration-300"
+									classList={{
+										"line-clamp-6": !showing_more(),
+										"max-h-[300px] overflow-y-auto":
+											showing_more(),
+									}}
+								>
+									{formatText(
+										props.job_specific_resume
+											.job_description
+									)}
+								</div>
+								<div class="self-end">
+									<Presence>
+										<Show
+											when={showing_more()}
+											fallback={
+												<Motion
+													hover={{ scale: 1.05 }}
+													press={{ scale: 0.95 }}
+													transition={{
+														duration: 0.15,
+													}}
+												>
+													<button
+														title="show more"
+														onclick={() =>
+															show_more(true)
+														}
+														class="text-lapis-600 hover:text-lapis-800 font-medium text-sm smooth-transition"
+													>
+														show more ...
+													</button>
+												</Motion>
+											}
+										>
+											<Motion
+												hover={{ scale: 1.05 }}
+												press={{ scale: 0.95 }}
+												transition={{ duration: 0.15 }}
+												initial={{ opacity: 0 }}
+												animate={{ opacity: 1 }}
+												exit={{ opacity: 0 }}
+											>
+												<button
+													title="show less"
+													onclick={() =>
+														show_more(false)
+													}
+													class="text-lapis-600 hover:text-lapis-800 font-medium text-sm smooth-transition"
+												>
+													show less ...
+												</button>
+											</Motion>
+										</Show>
+									</Presence>
+								</div>
+							</article>
+						</div>
+					</Motion>
 				</section>
-			</Show>
+			</Motion>
+
+			<Motion
+				initial={{ opacity: 0, y: 10 }}
+				animate={{ opacity: 1, y: 0 }}
+				transition={{ duration: 0.3, delay: 0.3, easing: "ease-out" }}
+			>
+				<section class="rounded w-full p-4 bg-lapis-10 h-fit flex flex-col gap-4 relative overflow-hidden">
+					<Motion
+						initial={{ width: "0%" }}
+						animate={{ width: "100%" }}
+						transition={{
+							duration: 0.6,
+							easing: "ease-out",
+							delay: 0.4,
+						}}
+						style={{
+							position: "absolute",
+							left: "0",
+							top: "0",
+							height: "3px",
+							"background-color": "var(--forest-200)",
+						}}
+					></Motion>
+					<h3 class="alice-regular self-center text-sm">{`${account()?.full_name?.replace(" ", "_")}_resume_${new Date().toISOString().slice(0, 10).replace(/-/g, "_")}.pdf`}</h3>
+					<div class="flex flex-row self-center gap-4">
+						<Motion
+							hover={{ scale: 1.05 }}
+							press={{ scale: 0.95 }}
+							transition={{ duration: 0.15 }}
+						>
+							<button
+								class="bg-lapis-100 rounded text-snow-100 py-2 px-4 flex items-center gap-2"
+								onClick={async () => {
+									if (!cv_ref) return;
+									try {
+										toGenerating(true);
+										generatePDF(cv_ref, {
+											name: `${account()?.full_name?.replace(" ", "_")}_resume_${new Date().toISOString().slice(0, 10).replace(/-/g, "_")}.pdf`,
+										});
+										fault.info({
+											message:
+												"successfully generated the PDF",
+										});
+									} catch (error) {
+										fault.major({
+											message:
+												"Failed to generate the PDF",
+										});
+									} finally {
+										toGenerating(false);
+									}
+								}}
+								disabled={is_generating()}
+							>
+								<Show
+									when={!is_generating()}
+									fallback={
+										<span class="flex items-center gap-2">
+											<Motion
+												animate={{ rotate: 360 }}
+												transition={{
+													duration: 1,
+													repeat: Infinity,
+												}}
+												style={{
+													display: "inline-block",
+												}}
+											>
+												<span class="block w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span>
+											</Motion>
+											Generating PDF...
+										</span>
+									}
+								>
+									<DownloadIcon class="fill-white w-5 h-5" />
+									<span>Download PDF</span>
+								</Show>
+							</button>
+						</Motion>
+					</div>
+
+					<Motion
+						initial={{ opacity: 0, scale: 0.98 }}
+						animate={{ opacity: 1, scale: 1 }}
+						transition={{ duration: 0.4, delay: 0.2 }}
+					>
+						<div
+							ref={cv_ref}
+							class="max-w-[210mm] min-h-[297mm] shadow md:block hidden"
+						>
+							<ExecutiveTemplate
+								data={{
+									resume_data:
+										props.job_specific_resume.resume_data,
+									profile: profile(),
+									user: account(),
+								}}
+								settings={{
+									font_size: {
+										name: "2rem",
+										section_title: "1.25rem",
+										subsection_title: "1.1rem",
+										body: "0.9rem",
+									},
+									spacing: {
+										section: "1.5rem",
+										subsection: "1rem",
+										item: "0.75rem",
+									},
+									show_sections: {
+										summary: true,
+										experience: true,
+										education: true,
+										skills: true,
+										certificates: true,
+										projects: true,
+									},
+								}}
+							/>
+						</div>
+					</Motion>
+				</section>
+			</Motion>
+
+			<Presence>
+				<Show when={props.job_specific_resume.resume_data.letter}>
+					<Motion
+						initial={{ opacity: 0, y: 10 }}
+						animate={{ opacity: 1, y: 0 }}
+						exit={{ opacity: 0, y: -10 }}
+						transition={{
+							duration: 0.3,
+							delay: 0.4,
+							easing: "ease-out",
+						}}
+					>
+						<section class="rounded w-full p-4 bg-lapis-10 h-fit flex flex-col gap-4 relative overflow-hidden">
+							<Motion
+								initial={{ width: "0%" }}
+								animate={{ width: "100%" }}
+								transition={{
+									duration: 0.6,
+									easing: "ease-out",
+									delay: 0.5,
+								}}
+								style={{
+									position: "absolute",
+									left: "0",
+									top: "0",
+									height: "3px",
+									"background-color": "var(--lapis-50)",
+								}}
+							></Motion>
+							<h2 class="text-lapis-700 font-medium">
+								Cover letter:
+							</h2>
+							<Motion
+								initial={{ opacity: 0, scale: 0.98 }}
+								animate={{ opacity: 1, scale: 1 }}
+								transition={{ duration: 0.3, delay: 0.1 }}
+							>
+								<div class="bg-white border-lapis-100 shadow px-4 py-8">
+									{formatText(
+										props.job_specific_resume.resume_data
+											.letter
+									)}
+								</div>
+							</Motion>
+						</section>
+					</Motion>
+				</Show>
+			</Presence>
 		</section>
 	);
 }

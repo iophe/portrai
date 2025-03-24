@@ -44,7 +44,7 @@ export function FormTags(props: FormTagsProps) {
 				onInput={(e) => setNewTag(e.currentTarget.value)}
 				onKeyPress={addTag}
 				placeholder="Press Enter to add tag"
-				class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-gray-500"
+				class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-lapis-500"
 			/>
 			<ul class="flex gap-2 flex-wrap">
 				<For each={props.tags}>
@@ -54,7 +54,7 @@ export function FormTags(props: FormTagsProps) {
 							<button
 								type="button"
 								onClick={() => props.delete(index())}
-								class="text-gray-500 hover:text-gray-700"
+								class="text-gray-500 hover:text-gray-700 smooth-transition"
 							>
 								×
 							</button>

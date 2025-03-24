@@ -215,7 +215,14 @@ export function CertificateForm(props: CertificateFormProps) {
 	return (
 		<FormArticle on_submit={handleSubmit}>
 			<FormDeleteButton
-				delete={() => props.delete(props.certificate!.certificate_id)}
+				no_confirm={props.certificate?.certificate_id === undefined}
+				delete={() => {
+					if (props.certificate?.certificate_id) {
+						props.delete(props.certificate?.certificate_id);
+					} else {
+						props.onCancel();
+					}
+				}}
 			/>
 			<FormLabeledInput label="Certificate Name">
 				<FormInputText

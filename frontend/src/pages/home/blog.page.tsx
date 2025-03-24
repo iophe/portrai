@@ -47,7 +47,7 @@ const BlogPostCard: Component<{ post: BlogPost }> = (props) => {
 					<span class="text-sm text-gray-500">
 						By {props.post.author}
 					</span>
-					<button class="text-blue-600 hover:text-blue-800 transition-colors">
+					<button class="text-blue-600 hover:text-blue-800 smooth-transition">
 						Read More
 					</button>
 				</div>
@@ -145,7 +145,7 @@ const Blog: Component = () => {
 					{/* Filtres de tags */}
 					<div class="flex flex-wrap justify-center gap-2 mb-8">
 						<button
-							class={`px-3 py-1 rounded-full text-sm transition-colors ${!selectedTag() ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-700"}`}
+							class={`px-3 py-1 rounded-full text-sm smooth-transition ${!selectedTag() ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-700"}`}
 							onClick={() => setSelectedTag(null)}
 						>
 							All Posts
@@ -153,7 +153,7 @@ const Blog: Component = () => {
 						<For each={allTags}>
 							{(tag) => (
 								<button
-									class={`px-3 py-1 rounded-full text-sm transition-colors ${selectedTag() === tag ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-700"}`}
+									class={`px-3 py-1 rounded-full text-sm smooth-transition ${selectedTag() === tag ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-700"}`}
 									onClick={() => {
 										setSelectedTag(tag);
 										setCurrentPage(1);
@@ -208,7 +208,7 @@ const Blog: Component = () => {
 								placeholder="Enter your email"
 								class="flex-grow px-4 py-2 border rounded-l-lg"
 							/>
-							<button class="bg-blue-500 text-white px-6 py-2 rounded-r-lg hover:bg-blue-600 transition-colors">
+							<button class="bg-blue-500 text-white px-6 py-2 rounded-r-lg hover:bg-blue-600 smooth-transition">
 								Subscribe
 							</button>
 						</div>

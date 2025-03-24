@@ -184,7 +184,7 @@ function SigninPage(props: SigninPageProps) {
 
 						<button
 							type="submit"
-							class="w-full flex justify-center py-2 px-4 border border-transparent rounded shadow-sm text-sm font-medium text-white bg-forest-600 hover:bg-forest-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-forest-500"
+							class="w-full flex justify-center py-2 px-4 border border-transparent rounded shadow-sm text-sm font-medium text-white bg-forest-600 hover:bg-forest-400 smooth-transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-forest-500"
 						>
 							Sign in
 						</button>
@@ -193,7 +193,7 @@ function SigninPage(props: SigninPageProps) {
 					<div class="flex items-center justify-between">
 						<A
 							href="/forgot-password"
-							class="text-sm font-medium text-lapis-600 hover:text-lapis-500"
+							class="text-sm font-medium text-lapis-600 hover:text-lapis-500 smooth-transition"
 						>
 							Forgot your password?
 						</A>
@@ -201,7 +201,7 @@ function SigninPage(props: SigninPageProps) {
 							<Match when={location.query.payment}>
 								<A
 									href={`/signup?payment=${location.query.payment}`}
-									class="text-sm font-medium text-lapis-600 hover:text-lapis-500"
+									class="text-sm font-medium text-lapis-600 hover:text-lapis-500 smooth-transition"
 								>
 									No account? Sign up
 								</A>
@@ -209,7 +209,7 @@ function SigninPage(props: SigninPageProps) {
 							<Match when={!location.query.payment}>
 								<A
 									href="/signup"
-									class="text-sm font-medium text-lapis-600 hover:text-lapis-500"
+									class="text-sm font-medium text-lapis-600 hover:text-lapis-500 smooth-transition"
 								>
 									No account? Sign up
 								</A>

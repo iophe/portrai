@@ -213,7 +213,14 @@ export function SkillForm(props: SkillFormProps) {
 	return (
 		<FormArticle on_submit={handleSubmit}>
 			<FormDeleteButton
-				delete={() => props.delete(props.skill!.skill_id)}
+				no_confirm={props.skill?.skill_id === undefined}
+				delete={() => {
+					if (props.skill?.skill_id) {
+						props.delete(props.skill?.skill_id);
+					} else {
+						props.onCancel();
+					}
+				}}
 			/>
 			<FormLabeledInput label="Skill">
 				<FormInputText
