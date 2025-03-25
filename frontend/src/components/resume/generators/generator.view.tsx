@@ -111,18 +111,18 @@ function ResumeAIPreview(props: ResumePreviewProps) {
 		} catch (error) {}
 	});
 	return (
-		<Motion
-			initial={{ opacity: 0 }}
-			animate={{ opacity: 1 }}
-			transition={{ duration: 0.4, easing: "ease-out" }}
-		>
-			<section class="overflow-y-auto w-full h-full flex flex-col gap-4">
-				<Motion
-					initial={{ opacity: 0, y: 10 }}
-					animate={{ opacity: 1, y: 0 }}
-					transition={{ duration: 0.3, easing: "ease-out" }}
-				>
-					<section class="rounded w-full p-4 bg-lapis-10 h-full flex flex-col gap-4 relative overflow-hidden">
+		<section class="overflow-y-auto w-full h-full flex flex-col gap-4">
+			<Motion
+				initial={{ opacity: 0 }}
+				animate={{ opacity: 1 }}
+				transition={{ duration: 0.4, easing: "ease-out" }}
+			>
+				<section class="rounded w-full p-4 bg-lapis-10 h-full flex flex-col gap-4 relative overflow-hidden">
+					<Motion
+						initial={{ opacity: 0, y: 10 }}
+						animate={{ opacity: 1, y: 0 }}
+						transition={{ duration: 0.3, easing: "ease-out" }}
+					>
 						<Motion
 							initial={{ y: "-100%" }}
 							animate={{ y: "0%" }}
@@ -201,6 +201,8 @@ function ResumeAIPreview(props: ResumePreviewProps) {
 													}
 												);
 
+												refetch_profile();
+												
 												const uuid =
 													crypto.randomUUID();
 												set_resume_data({
@@ -288,7 +290,9 @@ function ResumeAIPreview(props: ResumePreviewProps) {
 													);
 												const data = res.data
 													.resume_data as ResumeData;
-												console.log(data);
+
+												refetch_profile();
+
 												data.title = `${account()?.full_name?.replace(" ", "_")}_resume_${new Date().toISOString().slice(0, 10).replace(/-/g, "_")}`;
 												set_resume_data({
 													resume_data: data,
@@ -323,8 +327,8 @@ function ResumeAIPreview(props: ResumePreviewProps) {
 								</Motion>
 							</div>
 						</Motion>
-					</section>
-				</Motion>
+					</Motion>
+				</section>
 
 				<Presence>
 					<Show when={resume_data()}>
@@ -481,8 +485,8 @@ function ResumeAIPreview(props: ResumePreviewProps) {
 						</Motion>
 					</Show>
 				</Presence>
-			</section>
-		</Motion>
+			</Motion>
+		</section>
 	);
 }
 

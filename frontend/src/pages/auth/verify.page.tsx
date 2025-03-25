@@ -28,8 +28,6 @@ function VerifyPage(props: VerifyPageProps) {
 	// Function to verify the email token
 	async function verify_email_token(token: string, type: string = "signup") {
 		try {
-			console.log({ token, type });
-
 			const response = await api.post("/auth/signup/email/verify-email", {
 				token,
 				type,

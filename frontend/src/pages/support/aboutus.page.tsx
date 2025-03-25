@@ -393,16 +393,16 @@ function AboutUs(props: AboutUsPageProps) {
 				</article>
 
 				{/* Call to Action */}
-				<Show when={!is_authenticated}>					
+				<Show when={!is_authenticated}>
 					<aside class="bg-forest-50 border border-forest-100 rounded-xl p-8 text-center mt-6">
 						<h2 class="text-2xl font-bold text-forest-800 mb-3">
 							Land Your Dream Job
 						</h2>
 						<p class="text-gray-700 max-w-2xl mx-auto mb-6">
 							Whether you're actively job hunting, exploring new
-							opportunities, or just want to keep your resume updated,
-							our AI-powered platform helps you create tailored
-							application documents that get results.
+							opportunities, or just want to keep your resume
+							updated, our AI-powered platform helps you create
+							tailored application documents that get results.
 						</p>
 						<div class="flex flex-wrap justify-center gap-4">
 							<a

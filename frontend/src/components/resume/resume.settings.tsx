@@ -761,10 +761,6 @@ function ResumeSettings(props: ResumeSettingsProps) {
 										onSubmit={async (e) => {
 											e.preventDefault();
 											try {
-												console.log(
-													profile_form_data.description
-												);
-
 												await api.post(
 													"/account/profile/update",
 													profile_form_data
