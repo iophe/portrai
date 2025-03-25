@@ -21,12 +21,18 @@ function getCSRFToken(): string | null {
 }
 
 api.interceptors.request.use(
-	(config) => {
+	async (config) => {
 		if (config.method === "post") {
 			const csrfToken = getCSRFToken();
 
 			if (csrfToken) {
 				config.headers["X-Csrf-Token"] = csrfToken;
+			} else {
+				try {
+					await api.get("/account/csrf-update");
+					const csrfToken = getCSRFToken();
+					config.headers["X-Csrf-Token"] = csrfToken;
+				} catch {}
 			}
 		}
 

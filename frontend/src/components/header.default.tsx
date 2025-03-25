@@ -25,7 +25,7 @@ function Header() {
 					class="tracking-widest"
 					activeClass="text-forest-600"
 				>
-					<h2>Pricing</h2>
+					<h1>Pricing</h1>
 				</A>
 				<Show when={!is_authenticated}>
 					<A
@@ -33,7 +33,7 @@ function Header() {
 						class="tracking-widest"
 						activeClass="text-forest-600"
 					>
-						<h2>Sign In</h2>
+						<h1>Sign In</h1>
 					</A>
 				</Show>
 				<Show
@@ -44,7 +44,7 @@ function Header() {
 							class="tracking-widest bg-forest-800 text-snow-100 py-2 px-4 rounded"
 							activeClass="text-forest-600"
 						>
-							<h2 class="text-nowrap">Get Started</h2>
+							<h1 class="text-nowrap">Get Started</h1>
 						</A>
 					}
 				>
@@ -53,7 +53,7 @@ function Header() {
 						class="tracking-widest bg-forest-800 text-snow-100 py-2 px-4 rounded"
 						activeClass="text-forest-600"
 					>
-						<h2 class="text-nowrap">My account</h2>
+						<h1 class="text-nowrap">My account</h1>
 					</A>
 				</Show>
 			</div>

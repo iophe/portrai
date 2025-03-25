@@ -19,7 +19,7 @@ function Header(props: HeaderProps) {
 					class="tracking-widest"
 					activeClass="text-forest-600"
 				>
-					<h2>History</h2>
+					<h1>History</h1>
 				</A>
 
 				<A
@@ -27,14 +27,14 @@ function Header(props: HeaderProps) {
 					class="tracking-widest"
 					activeClass="text-forest-600"
 				>
-					<h2>Templates</h2>
+					<h1>Templates</h1>
 				</A>
 				<A
 					href="/account"
 					class="tracking-widest bg-forest-800 text-snow-100 py-2 px-4 rounded"
 					activeClass="text-forest-600"
 				>
-					<h2 class="text-nowrap">My Account</h2>
+					<h1 class="text-nowrap">My Account</h1>
 				</A>
 			</div>
 		</header>

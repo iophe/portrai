@@ -229,7 +229,14 @@ export function EducationForm(props: EducationFormProps) {
 	return (
 		<FormArticle on_submit={handleSubmit}>
 			<FormDeleteButton
-				delete={() => props.delete(props.education!.education_id)}
+				no_confirm={props.education?.education_id === undefined}
+				delete={() => {
+					if (props.education?.education_id) {
+						props.delete(props.education?.education_id);
+					} else {
+						props.onCancel();
+					}
+				}}
 			/>
 			<FormLabeledInput label="Degree">
 				<FormInputText

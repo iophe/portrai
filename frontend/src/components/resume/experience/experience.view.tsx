@@ -226,9 +226,13 @@ export function ExperienceForm(props: ExperienceFormProps) {
 	return (
 		<FormArticle on_submit={handleSubmit}>
 			<FormDeleteButton
+				no_confirm={props.experience?.experience_id === undefined}
 				delete={() => {
-					if (props.experience?.experience_id)
+					if (props.experience?.experience_id) {
 						props.delete(props.experience?.experience_id);
+					} else {
+						props.onCancel();
+					}
 				}}
 			/>
 			<FormLabeledInput label="Job Title">

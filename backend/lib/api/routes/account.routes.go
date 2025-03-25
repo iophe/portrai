@@ -30,6 +30,10 @@ func RegisterAccountRoutes(group fiber.Router) {
 		HandlerContextKey: "fiber.csrf.handler",
 	}))
 
+	account_group.Get("/csrf-update", func(c *fiber.Ctx) error {
+		return c.SendStatus(fiber.StatusOK)
+	})
+
 	account_group.Get("/user", func(c *fiber.Ctx) error {
 		return handlers.HandleGetUser(c, &db.DB)
 	})

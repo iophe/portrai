@@ -353,8 +353,20 @@ func GenerateResume(
 	if ascii_resume_cache != cached_resume_hash {
 		// Re-create a new conversation with the new resume
 		history = []anthropic.MessageParam{
-			anthropic.NewAssistantMessage(anthropic.NewTextBlock(EN_SYSTEM_PROMPTS)),
-			anthropic.NewUserMessage(anthropic.NewTextBlock(fmt.Sprintf(EN_INIT_PROMPT_TEMPLATE, string(resume_data_json)))),
+			anthropic.NewAssistantMessage(anthropic.TextBlockParam{
+				Text: anthropic.F(EN_SYSTEM_PROMPTS),
+				CacheControl: anthropic.F(anthropic.CacheControlEphemeralParam{
+					Type: anthropic.F(anthropic.CacheControlEphemeralTypeEphemeral),
+				}),
+				Type: anthropic.F(anthropic.TextBlockParamTypeText),
+			}),
+			anthropic.NewUserMessage(anthropic.TextBlockParam{
+				Text: anthropic.F(fmt.Sprintf(EN_INIT_PROMPT_TEMPLATE, string(resume_data_json))),
+				CacheControl: anthropic.F(anthropic.CacheControlEphemeralParam{
+					Type: anthropic.F(anthropic.CacheControlEphemeralTypeEphemeral),
+				}),
+				Type: anthropic.F(anthropic.TextBlockParamTypeText),
+			}),
 			anthropic.NewAssistantMessage(anthropic.NewTextBlock("I understand, I will use this to create the most fitting resume according to the job description and the provided json template")),
 		}
 		ca.SetResumeHash(user_id, ascii_resume_cache, ctx, cache)
@@ -382,9 +394,21 @@ func GenerateResume(
 
 	if len(history)+1 > MAX_HISTORY_MESSAGES {
 		// clean conversation
-		history = append(history[:3], anthropic.NewUserMessage(anthropic.NewTextBlock(prompt)))
+		history = append(history[:3], anthropic.NewUserMessage(anthropic.TextBlockParam{
+			Text: anthropic.F(prompt),
+			CacheControl: anthropic.F(anthropic.CacheControlEphemeralParam{
+				Type: anthropic.F(anthropic.CacheControlEphemeralTypeEphemeral),
+			}),
+			Type: anthropic.F(anthropic.TextBlockParamTypeText),
+		}))
 	} else {
-		history = append(history, anthropic.NewUserMessage(anthropic.NewTextBlock(prompt)))
+		history = append(history, anthropic.NewUserMessage(anthropic.TextBlockParam{
+			Text: anthropic.F(prompt),
+			CacheControl: anthropic.F(anthropic.CacheControlEphemeralParam{
+				Type: anthropic.F(anthropic.CacheControlEphemeralTypeEphemeral),
+			}),
+			Type: anthropic.F(anthropic.TextBlockParamTypeText),
+		}))
 	}
 
 	message, err := claude.Messages.New(ctx, anthropic.MessageNewParams{

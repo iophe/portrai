@@ -19,13 +19,13 @@ function Error404(props: Error404PageProps) {
 					<div class="flex flex-col md:flex-row gap-4">
 						<a
 							href="/"
-							class="px-6 py-3 bg-forest-700 text-white rounded hover:bg-forest-800 transition-colors"
+							class="px-6 py-3 bg-forest-700 text-white rounded hover:bg-forest-800 smooth-transition"
 						>
 							Go to Homepage
 						</a>
 						<button
 							onClick={() => history.back()}
-							class="px-6 py-3 border border-forest-700 text-forest-700 rounded hover:bg-forest-50 transition-colors"
+							class="px-6 py-3 border border-forest-700 text-forest-700 rounded hover:bg-forest-50 smooth-transition"
 						>
 							Go Back
 						</button>

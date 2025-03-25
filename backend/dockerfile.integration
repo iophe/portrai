@@ -23,6 +23,8 @@ RUN adduser -D -h /app appuser
 WORKDIR /app
 
 COPY --from=build /src/backend /app/backend
+COPY --from=build /src/templates /app/templates 
+COPY --from=build /src/static /app/static  
 COPY --from=build /usr/share/zoneinfo /usr/share/zoneinfo
 
 ENV TZ=Europe/Paris

@@ -1,0 +1,30 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [ integration ] 
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Install SSH key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.VPS_PREPROD_SSH }}
+          known_hosts: 'placeholder'
+          
+      - name: Adding Known Hosts
+        run: ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
+      
+      - name: Execute Docker Compose commands via SSH
+        run: |
+          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
+            cd portrai
+            docker-compose --env-file .env --env-file secrets.env --profile app --file docker-compose.integration.yml up -d --build
+            docker logs portrai_backend_integration 
+            docker logs portrai_frontend_integration 
+          EOF

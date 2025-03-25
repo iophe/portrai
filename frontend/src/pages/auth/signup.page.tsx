@@ -99,7 +99,9 @@ function SignupPage(props: SignupPageProps) {
 					<div class="flex flex-col items-center w-full">
 						<div
 							id="g_id_onload"
-							data-client_id={import.meta.env.VITE_GOOGLE_CLIENT_ID}
+							data-client_id={
+								import.meta.env.VITE_GOOGLE_CLIENT_ID
+							}
 							data-context="signup"
 							data-ux_mode="popup"
 							data-callback="handleGoogleSignup"
@@ -198,7 +200,7 @@ function SignupPage(props: SignupPageProps) {
 						</div>
 						<button
 							type="submit"
-							class="w-full flex justify-center py-2 px-4 border border-transparent rounded shadow-sm text-sm font-medium text-white bg-forest-600 hover:bg-forest-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-forest-500"
+							class="w-full flex justify-center py-2 px-4 border border-transparent rounded shadow-sm text-sm font-medium text-white bg-forest-600 hover:bg-forest-400 smooth-transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-forest-500"
 						>
 							Create account
 						</button>
@@ -209,7 +211,7 @@ function SignupPage(props: SignupPageProps) {
 							<Match when={location.query.payment}>
 								<A
 									href={`/signin?payment=${location.query.payment}`}
-									class="text-sm font-medium text-lapis-600 hover:text-lapis-500"
+									class="text-sm font-medium text-lapis-600 hover:text-lapis-500 smooth-transition"
 								>
 									Already have an account? Sign in
 								</A>
@@ -217,7 +219,7 @@ function SignupPage(props: SignupPageProps) {
 							<Match when={!location.query.payment}>
 								<A
 									href="/signin"
-									class="text-sm font-medium text-lapis-600 hover:text-lapis-500"
+									class="text-sm font-medium text-lapis-600 hover:text-lapis-500 smooth-transition"
 								>
 									Already have an account? Sign in
 								</A>

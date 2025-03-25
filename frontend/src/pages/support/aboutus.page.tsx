@@ -5,6 +5,7 @@ import { createSignal, Show, For } from "solid-js";
 interface AboutUsPageProps {}
 
 function AboutUs(props: AboutUsPageProps) {
+	const is_authenticated = localStorage.getItem("IS_AUTHENTICATED");
 	const [active_tab, set_active_tab] = createSignal("mission");
 	const skills = [
 		"Product Strategy",
@@ -166,7 +167,7 @@ function AboutUs(props: AboutUsPageProps) {
 										true,
 									"border-b-2 border-forest-600 text-forest-600":
 										active_tab() === tab.id,
-									"text-gray-500 hover:text-forest-600":
+									"text-gray-500 hover:text-forest-600 smooth-transition":
 										active_tab() !== tab.id,
 								}}
 								aria-selected={active_tab() === tab.id}
@@ -392,31 +393,33 @@ function AboutUs(props: AboutUsPageProps) {
 				</article>
 
 				{/* Call to Action */}
-				<aside class="bg-forest-50 border border-forest-100 rounded-xl p-8 text-center mt-6">
-					<h2 class="text-2xl font-bold text-forest-800 mb-3">
-						Land Your Dream Job
-					</h2>
-					<p class="text-gray-700 max-w-2xl mx-auto mb-6">
-						Whether you're actively job hunting, exploring new
-						opportunities, or just want to keep your resume updated,
-						our AI-powered platform helps you create tailored
-						application documents that get results.
-					</p>
-					<div class="flex flex-wrap justify-center gap-4">
-						<a
-							href="/signup"
-							class="px-6 py-3 bg-forest-700 text-white rounded-lg hover:bg-forest-800 transition-colors"
-						>
-							Create Your Resume
-						</a>
-						<a
-							href="/pricing"
-							class="px-6 py-3 border border-forest-700 text-forest-700 rounded-lg hover:bg-forest-50 transition-colors"
-						>
-							View Plans
-						</a>
-					</div>
-				</aside>
+				<Show when={!is_authenticated}>
+					<aside class="bg-forest-50 border border-forest-100 rounded-xl p-8 text-center mt-6">
+						<h2 class="text-2xl font-bold text-forest-800 mb-3">
+							Land Your Dream Job
+						</h2>
+						<p class="text-gray-700 max-w-2xl mx-auto mb-6">
+							Whether you're actively job hunting, exploring new
+							opportunities, or just want to keep your resume
+							updated, our AI-powered platform helps you create
+							tailored application documents that get results.
+						</p>
+						<div class="flex flex-wrap justify-center gap-4">
+							<a
+								href="/signup"
+								class="px-6 py-3 bg-forest-700 text-white rounded-lg hover:bg-forest-800 smooth-transition"
+							>
+								Create Your Resume
+							</a>
+							<a
+								href="/pricing"
+								class="px-6 py-3 border border-forest-700 text-forest-700 rounded-lg hover:bg-forest-50 smooth-transition"
+							>
+								View Plans
+							</a>
+						</div>
+					</aside>
+				</Show>
 			</section>
 			<Footer />
 		</main>

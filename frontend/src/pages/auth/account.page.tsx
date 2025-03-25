@@ -7,11 +7,11 @@ import PlanIcon from "@assets/icons/plan.svg?component-solid";
 import DangerIcon from "@assets/icons/danger.svg?component-solid";
 import EditIcon from "@assets/icons/edit.svg?component-solid";
 import { createStore } from "solid-js/store";
-import { AccountSection } from "./account.section";
-import { AvatarSection } from "./avatar.section";
-import { PlanSection } from "./plan.section";
-import { DangerZone } from "./danger.section";
+import { AccountSection } from "@components/account.section";
+import { AvatarSection } from "@components/avatar.section";
+import { PlanSection } from "@components/plan.section";
 import Footer from "@components/footer.default";
+import { DangerZone } from "@components/danger.section";
 
 interface AccountPageProps {}
 
