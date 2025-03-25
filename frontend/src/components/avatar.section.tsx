@@ -76,198 +76,183 @@ export function AvatarSection(props: AvatarSectionProps) {
 	});
 
 	return (
-		<Motion
+		<Motion.section
 			initial={{ opacity: 0, y: 5 }}
 			animate={{ opacity: 1, y: 0 }}
 			transition={{ duration: 0.2 }}
+			class="w-full bg-white rounded p-6 shadow-sm"
 		>
-			<section class="w-full bg-white rounded p-6 shadow-sm">
-				<Motion
-					initial={{ x: -5, opacity: 0 }}
-					animate={{ x: 0, opacity: 1 }}
-					transition={{ duration: 0.15 }}
+			<Motion.header
+				initial={{ x: -5, opacity: 0 }}
+				animate={{ x: 0, opacity: 1 }}
+				transition={{ duration: 0.15 }}
+				class="flex flex-row gap-4 border-b-2 border-forest-900 pb-2"
+			>
+				<AvatarIcon class="min-w-fit fill-forest-900 w-6 h-6" />
+				<h2 class="text-sm text-gray-500 uppercase">Profile Picture</h2>
+			</Motion.header>
+
+			<article class="flex flex-row items-center gap-4 pt-4">
+				<Motion.figure
+					initial={{ scale: 0.9, opacity: 0 }}
+					animate={{ scale: 1, opacity: 1 }}
+					transition={{ duration: 0.25, delay: 0.1 }}
+					class="flex flex-col items-center"
 				>
-					<header class="flex flex-row gap-4 border-b-2 border-forest-900 pb-2">
-						<AvatarIcon class="fill-forest-900 w-6 h-6" />
-						<h2 class="text-sm text-gray-500 uppercase">
-							Profile Picture
-						</h2>
-					</header>
-				</Motion>
-
-				<article class="flex flex-row items-center gap-4 pt-4">
-					<Motion
-						initial={{ scale: 0.9, opacity: 0 }}
-						animate={{ scale: 1, opacity: 1 }}
-						transition={{ duration: 0.25, delay: 0.1 }}
+					<div
+						class="w-24 h-24 rounded-full overflow-hidden flex items-center justify-center"
+						classList={{
+							"bg-none": avatar() !== undefined,
+							"bg-forest-50": !avatar(),
+						}}
 					>
-						<figure class="flex flex-col items-center">
-							<div
-								class="w-24 h-24 rounded-full overflow-hidden flex items-center justify-center"
-								classList={{
-									"bg-none": avatar() !== undefined,
-									"bg-forest-50": !avatar(),
-								}}
-							>
-								<Switch
-									fallback={
-										<Motion
-											animate={{
-												rotate: [0, 5, 0, -5, 0],
-											}}
-											transition={{
-												duration: 0.5,
-												delay: 0.3,
-											}}
-										>
-											<AvatarIcon class="w-20 h-20 fill-forest-700" />
-										</Motion>
-									}
+						<Switch
+							fallback={
+								<Motion
+									animate={{
+										rotate: [0, 5, 0, -5, 0],
+									}}
+									transition={{
+										duration: 0.5,
+										delay: 0.3,
+									}}
 								>
-									<Match when={avatar.loading}>
-										<LoadingSpinner />
-									</Match>
-									<Match when={avatar()}>
-										<Motion
-											initial={{ scale: 0.8, opacity: 0 }}
-											animate={{ scale: 1, opacity: 1 }}
-											transition={{ duration: 0.2 }}
-										>
-											<img
-												src={avatar()}
-												alt="Profile Avatar"
-												class="w-full h-full"
-											/>
-										</Motion>
-									</Match>
-								</Switch>
-							</div>
-						</figure>
-					</Motion>
-
-					<Motion
-						initial={{ opacity: 0, x: 10 }}
-						animate={{ opacity: 1, x: 0 }}
-						transition={{ duration: 0.25, delay: 0.15 }}
-					>
-						<aside class="flex-1 flex flex-col gap-2">
-							<p class="text-sm text-forest-700">
-								Upload a profile picture. Max file size 5MB.
-							</p>
-							<p class="text-xs text-gray-500">
-								Supported formats: JPG, PNG, WEBP
-							</p>
-							<Motion
-								initial={{ opacity: 0, y: 5 }}
-								animate={{ opacity: 1, y: 0 }}
-								transition={{ duration: 0.15, delay: 0.2 }}
-								hover={{ scale: 1.03 }}
-								press={{ scale: 0.97 }}
-							>
-								<div class="px-4 self-center">
-									<input
-										id="avatar-upload"
-										type="file"
-										accept="image/*"
-										class="hidden"
-										onChange={async (e) => {
-											const input =
-												e.target as HTMLInputElement;
-											if (!input.files?.length) return;
-
-											const file = input.files[0];
-
-											if (
-												!file.type.startsWith("image/")
-											) {
-												fault.major({
-													message:
-														"Please upload an image file (JPG, PNG, or WEBP)",
-												});
-												return;
-											}
-
-											if (file.size > 5 * 1024 * 1024) {
-												fault.major({
-													message:
-														"File size exceeds 5MB limit",
-												});
-												return;
-											}
-
-											const object_url =
-												URL.createObjectURL(file);
-
-											set_is_uploading(true);
-
-											const form_data = new FormData();
-											form_data.append("image", file);
-
-											try {
-												await api.post(
-													"/account/profile/avatar/update",
-													form_data
-												);
-												window.localStorage.removeItem(
-													CACHED_IMAGE_KEY
-												);
-												refetch();
-											} catch (error) {
-												fault.minor({
-													message:
-														(
-															(
-																error as AxiosError
-															).response
-																?.data as any
-														).error ??
-														(error as AxiosError)
-															.message,
-												});
-											} finally {
-												set_is_uploading(false);
-												URL.revokeObjectURL(object_url);
-											}
-										}}
-										disabled={is_uploading()}
-										aria-label="Upload profile picture"
+									<AvatarIcon class="w-20 h-20 fill-forest-700" />
+								</Motion>
+							}
+						>
+							<Match when={avatar.loading}>
+								<LoadingSpinner />
+							</Match>
+							<Match when={avatar()}>
+								<Motion
+									initial={{ scale: 0.8, opacity: 0 }}
+									animate={{ scale: 1, opacity: 1 }}
+									transition={{ duration: 0.2 }}
+								>
+									<img
+										src={avatar()}
+										alt="Profile Avatar"
+										class="w-full h-full"
 									/>
-									<label
-										for="avatar-upload"
-										class="text-sm flex flex-row gap-4 items-center text-lapis-500 hover:text-lapis-300 cursor-pointer smooth-transition"
+								</Motion>
+							</Match>
+						</Switch>
+					</div>
+				</Motion.figure>
+
+				<Motion.aside
+					initial={{ opacity: 0, x: 10 }}
+					animate={{ opacity: 1, x: 0 }}
+					transition={{ duration: 0.25, delay: 0.15 }}
+					class="flex-1 flex flex-col gap-2"
+				>
+					<p class="text-sm text-forest-700">
+						Upload a profile picture. Max file size 5MB.
+					</p>
+					<p class="text-xs text-gray-500">
+						Supported formats: JPG, PNG, WEBP
+					</p>
+					<Motion.div
+						initial={{ opacity: 0, y: 5 }}
+						animate={{ opacity: 1, y: 0 }}
+						transition={{ duration: 0.15, delay: 0.2 }}
+						hover={{ scale: 1.03 }}
+						press={{ scale: 0.97 }}
+						class="px-4 self-center"
+					>
+						<input
+							id="avatar-upload"
+							type="file"
+							accept="image/*"
+							class="hidden"
+							onChange={async (e) => {
+								const input = e.target as HTMLInputElement;
+								if (!input.files?.length) return;
+
+								const file = input.files[0];
+
+								if (!file.type.startsWith("image/")) {
+									fault.major({
+										message:
+											"Please upload an image file (JPG, PNG, or WEBP)",
+									});
+									return;
+								}
+
+								if (file.size > 5 * 1024 * 1024) {
+									fault.major({
+										message: "File size exceeds 5MB limit",
+									});
+									return;
+								}
+
+								const object_url = URL.createObjectURL(file);
+
+								set_is_uploading(true);
+
+								const form_data = new FormData();
+								form_data.append("image", file);
+
+								try {
+									await api.post(
+										"/account/profile/avatar/update",
+										form_data
+									);
+									window.localStorage.removeItem(
+										CACHED_IMAGE_KEY
+									);
+									refetch();
+								} catch (error) {
+									fault.minor({
+										message:
+											(
+												(error as AxiosError).response
+													?.data as any
+											).error ??
+											(error as AxiosError).message,
+									});
+								} finally {
+									set_is_uploading(false);
+									URL.revokeObjectURL(object_url);
+								}
+							}}
+							disabled={is_uploading()}
+							aria-label="Upload profile picture"
+						/>
+						<label
+							for="avatar-upload"
+							class="text-sm flex flex-row gap-4 items-center text-lapis-500 hover:text-lapis-300 cursor-pointer smooth-transition"
+						>
+							Change
+							<EditIcon class="min-w-fit fill-forest-900" />
+							<Presence>
+								<Show when={is_uploading()}>
+									<Motion
+										initial={{
+											scale: 0,
+											opacity: 0,
+										}}
+										animate={{
+											scale: 1,
+											opacity: 1,
+										}}
+										exit={{
+											scale: 0,
+											opacity: 0,
+										}}
+										transition={{
+											duration: 0.2,
+										}}
 									>
-										Change
-										<EditIcon class="fill-forest-900" />
-										<Presence>
-											<Show when={is_uploading()}>
-												<Motion
-													initial={{
-														scale: 0,
-														opacity: 0,
-													}}
-													animate={{
-														scale: 1,
-														opacity: 1,
-													}}
-													exit={{
-														scale: 0,
-														opacity: 0,
-													}}
-													transition={{
-														duration: 0.2,
-													}}
-												>
-													<LoadingSpinner />
-												</Motion>
-											</Show>
-										</Presence>
-									</label>
-								</div>
-							</Motion>
-						</aside>
-					</Motion>
-				</article>
-			</section>
-		</Motion>
+										<LoadingSpinner />
+									</Motion>
+								</Show>
+							</Presence>
+						</label>
+					</Motion.div>
+				</Motion.aside>
+			</article>
+		</Motion.section>
 	);
 }

@@ -137,7 +137,7 @@ function VerifyPage(props: VerifyPageProps) {
 						<Match when={verification_status() === "success"}>
 							<div class="flex flex-col items-center justify-center py-6">
 								<div class="w-16 h-16 bg-lapis-50 rounded-full flex items-center justify-center mb-4">
-									<VerifiedIcon class="fill-lapis-500" />
+									<VerifiedIcon class="min-w-fit fill-lapis-500" />
 								</div>
 								<h2 class="text-xl font-semibold mb-2 text-forest-800">
 									Email Verified!

@@ -88,15 +88,6 @@ function ResumePreview(props: ResumePreviewProps) {
 					if ((error as AxiosError).status === 402) {
 						navigate("/pricing");
 					}
-					if (
-						(error as AxiosError).status !== 401 &&
-						(error as AxiosError).status !== 402
-					)
-						fault.minor({
-							message:
-								((error as AxiosError).response?.data as any)
-									.error ?? (error as AxiosError).message,
-						});
 					return;
 				}
 			},
@@ -158,7 +149,7 @@ function ResumePreview(props: ResumePreviewProps) {
 				animate={{ opacity: 1, y: 0 }}
 				transition={{ duration: 0.3, easing: "ease-out" }}
 			>
-				<section class="rounded w-full p-4 bg-lapis-10 h-full flex flex-col gap-4 relative overflow-hidden">
+				<section class="shadow rounded w-full p-4 bg-lapis-10 h-full flex flex-col gap-4">
 					<Motion
 						initial={{ width: "0%" }}
 						animate={{ width: "100%" }}
@@ -218,7 +209,7 @@ function ResumePreview(props: ResumePreviewProps) {
 													edit_title(false);
 												}}
 											>
-												<CloseIcon class="fill-forest-900" />
+												<CloseIcon class="min-w-fit fill-forest-900" />
 											</button>
 										</Motion>
 									</div>
@@ -247,7 +238,7 @@ function ResumePreview(props: ResumePreviewProps) {
 												edit_title(true);
 											}}
 										>
-											<EditIcon class="fill-forest-900" />
+											<EditIcon class="min-w-fit fill-forest-900" />
 										</button>
 									</Motion>
 									<Motion
@@ -272,7 +263,7 @@ function ResumePreview(props: ResumePreviewProps) {
 												}
 											}}
 										>
-											<DeleteIcon class="fill-forest-900" />
+											<DeleteIcon class="min-w-fit fill-forest-900" />
 										</button>
 									</Motion>
 								</div>
@@ -353,132 +344,122 @@ function ResumePreview(props: ResumePreviewProps) {
 				</section>
 			</Motion>
 
-			<Motion
+			<Motion.section
 				initial={{ opacity: 0, y: 10 }}
 				animate={{ opacity: 1, y: 0 }}
 				transition={{ duration: 0.3, delay: 0.3, easing: "ease-out" }}
+				class="shadow rounded w-full p-4 bg-lapis-10 h-fit flex flex-col gap-4"
 			>
-				<section class="rounded w-full p-4 bg-lapis-10 h-fit flex flex-col gap-4 relative overflow-hidden">
-					<Motion
-						initial={{ width: "0%" }}
-						animate={{ width: "100%" }}
-						transition={{
-							duration: 0.6,
-							easing: "ease-out",
-							delay: 0.4,
+				<Motion
+					initial={{ width: "0%" }}
+					animate={{ width: "100%" }}
+					transition={{
+						duration: 0.6,
+						easing: "ease-out",
+						delay: 0.4,
+					}}
+					style={{
+						position: "absolute",
+						left: "0",
+						top: "0",
+						height: "3px",
+						"background-color": "var(--forest-200)",
+					}}
+				></Motion>
+				<h3 class="alice-regular self-center text-sm">{`${account()?.full_name?.replace(" ", "_")}_resume_${new Date().toISOString().slice(0, 10).replace(/-/g, "_")}.pdf`}</h3>
+				<div class="flex flex-row self-center gap-4">
+					<Motion.button
+						hover={{ scale: 1.05 }}
+						press={{ scale: 0.95 }}
+						transition={{ duration: 0.15 }}
+						class="bg-lapis-100 rounded text-snow-100 py-2 px-4 flex items-center gap-2"
+						onClick={async () => {
+							if (!cv_ref) return;
+							try {
+								toGenerating(true);
+								generatePDF(cv_ref, {
+									name: `${account()?.full_name?.replace(" ", "_")}_resume_${new Date().toISOString().slice(0, 10).replace(/-/g, "_")}.pdf`,
+								});
+								fault.info({
+									message: "successfully generated the PDF",
+								});
+							} catch (error) {
+								fault.major({
+									message: "Failed to generate the PDF",
+								});
+							} finally {
+								toGenerating(false);
+							}
 						}}
-						style={{
-							position: "absolute",
-							left: "0",
-							top: "0",
-							height: "3px",
-							"background-color": "var(--forest-200)",
-						}}
-					></Motion>
-					<h3 class="alice-regular self-center text-sm">{`${account()?.full_name?.replace(" ", "_")}_resume_${new Date().toISOString().slice(0, 10).replace(/-/g, "_")}.pdf`}</h3>
-					<div class="flex flex-row self-center gap-4">
-						<Motion
-							hover={{ scale: 1.05 }}
-							press={{ scale: 0.95 }}
-							transition={{ duration: 0.15 }}
-						>
-							<button
-								class="bg-lapis-100 rounded text-snow-100 py-2 px-4 flex items-center gap-2"
-								onClick={async () => {
-									if (!cv_ref) return;
-									try {
-										toGenerating(true);
-										generatePDF(cv_ref, {
-											name: `${account()?.full_name?.replace(" ", "_")}_resume_${new Date().toISOString().slice(0, 10).replace(/-/g, "_")}.pdf`,
-										});
-										fault.info({
-											message:
-												"successfully generated the PDF",
-										});
-									} catch (error) {
-										fault.major({
-											message:
-												"Failed to generate the PDF",
-										});
-									} finally {
-										toGenerating(false);
-									}
-								}}
-								disabled={is_generating()}
-							>
-								<Show
-									when={!is_generating()}
-									fallback={
-										<span class="flex items-center gap-2">
-											<Motion
-												animate={{ rotate: 360 }}
-												transition={{
-													duration: 1,
-													repeat: Infinity,
-												}}
-												style={{
-													display: "inline-block",
-												}}
-											>
-												<span class="block w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span>
-											</Motion>
-											Generating PDF...
-										</span>
-									}
-								>
-									<DownloadIcon class="fill-white w-5 h-5" />
-									<span>Download PDF</span>
-								</Show>
-							</button>
-						</Motion>
-					</div>
-
-					<Motion
-						initial={{ opacity: 0, scale: 0.98 }}
-						animate={{ opacity: 1, scale: 1 }}
-						transition={{ duration: 0.4, delay: 0.2 }}
+						disabled={is_generating()}
 					>
-						<div
-							ref={cv_ref}
-							class="max-w-[210mm] min-h-[297mm] shadow md:block hidden"
+						<Show
+							when={!is_generating()}
+							fallback={
+								<span class="flex items-center gap-2">
+									<Motion
+										animate={{ rotate: 360 }}
+										transition={{
+											duration: 1,
+											repeat: Infinity,
+										}}
+										style={{
+											display: "inline-block",
+										}}
+									>
+										<span class="block w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span>
+									</Motion>
+									Generating PDF...
+								</span>
+							}
 						>
-							<ExecutiveTemplate
-								data={{
-									resume_data:
-										props.job_specific_resume.resume_data,
-									profile: profile(),
-									user: account(),
-								}}
-								settings={{
-									font_size: {
-										name: "2rem",
-										section_title: "1.25rem",
-										subsection_title: "1.1rem",
-										body: "0.9rem",
-									},
-									spacing: {
-										section: "1.5rem",
-										subsection: "1rem",
-										item: "0.75rem",
-									},
-									show_sections: {
-										summary: true,
-										experience: true,
-										education: true,
-										skills: true,
-										certificates: true,
-										projects: true,
-									},
-								}}
-							/>
-						</div>
-					</Motion>
-				</section>
-			</Motion>
+							<DownloadIcon class="min-w-fit fill-white w-5 h-5" />
+							<span>Download PDF</span>
+						</Show>
+					</Motion.button>
+				</div>
+
+				<Motion.div
+					initial={{ opacity: 0, scale: 0.98 }}
+					animate={{ opacity: 1, scale: 1 }}
+					transition={{ duration: 0.4, delay: 0.2 }}
+					ref={cv_ref}
+					class="max-w-[210mm] h-fit shadow md:block hidden"
+				>
+					<ExecutiveTemplate
+						data={{
+							resume_data: props.job_specific_resume.resume_data,
+							profile: profile(),
+							user: account(),
+						}}
+						settings={{
+							font_size: {
+								name: "2rem",
+								section_title: "1.25rem",
+								subsection_title: "1.1rem",
+								body: "0.9rem",
+							},
+							spacing: {
+								section: "1.5rem",
+								subsection: "1rem",
+								item: "0.75rem",
+							},
+							show_sections: {
+								summary: true,
+								experience: true,
+								education: true,
+								skills: true,
+								certificates: true,
+								projects: true,
+							},
+						}}
+					/>
+				</Motion.div>
+			</Motion.section>
 
 			<Presence>
 				<Show when={props.job_specific_resume.resume_data.letter}>
-					<Motion
+					<Motion.section
 						initial={{ opacity: 0, y: 10 }}
 						animate={{ opacity: 1, y: 0 }}
 						exit={{ opacity: 0, y: -10 }}
@@ -487,41 +468,39 @@ function ResumePreview(props: ResumePreviewProps) {
 							delay: 0.4,
 							easing: "ease-out",
 						}}
+						class="shadow rounded w-full p-4 bg-lapis-10 h-fit flex flex-col gap-4"
 					>
-						<section class="rounded w-full p-4 bg-lapis-10 h-fit flex flex-col gap-4 relative overflow-hidden">
-							<Motion
-								initial={{ width: "0%" }}
-								animate={{ width: "100%" }}
-								transition={{
-									duration: 0.6,
-									easing: "ease-out",
-									delay: 0.5,
-								}}
-								style={{
-									position: "absolute",
-									left: "0",
-									top: "0",
-									height: "3px",
-									"background-color": "var(--lapis-50)",
-								}}
-							></Motion>
-							<h2 class="text-lapis-700 font-medium">
-								Cover letter:
-							</h2>
-							<Motion
-								initial={{ opacity: 0, scale: 0.98 }}
-								animate={{ opacity: 1, scale: 1 }}
-								transition={{ duration: 0.3, delay: 0.1 }}
-							>
-								<div class="bg-white border-lapis-100 shadow px-4 py-8">
-									{formatText(
-										props.job_specific_resume.resume_data
-											.letter
-									)}
-								</div>
-							</Motion>
-						</section>
-					</Motion>
+						<Motion
+							initial={{ width: "0%" }}
+							animate={{ width: "100%" }}
+							transition={{
+								duration: 0.6,
+								easing: "ease-out",
+								delay: 0.5,
+							}}
+							style={{
+								position: "absolute",
+								left: "0",
+								top: "0",
+								height: "3px",
+								"background-color": "var(--lapis-50)",
+							}}
+						></Motion>
+						<h2 class="text-lapis-700 font-medium">
+							Cover letter:
+						</h2>
+						<Motion
+							initial={{ opacity: 0, scale: 0.98 }}
+							animate={{ opacity: 1, scale: 1 }}
+							transition={{ duration: 0.3, delay: 0.1 }}
+						>
+							<div class="bg-white border-lapis-100 shadow px-4 py-8">
+								{formatText(
+									props.job_specific_resume.resume_data.letter
+								)}
+							</div>
+						</Motion>
+					</Motion.section>
 				</Show>
 			</Presence>
 		</section>

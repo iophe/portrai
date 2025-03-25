@@ -52,64 +52,59 @@ function AsideSelector(props: AsideSelectorProps) {
 		<aside class="flex gap-4 justify-between text-sm pb-2 border-b-2 border-forest-900">
 			<For each={navItems}>
 				{(item) => (
-					<Motion
+					<Motion.button
 						hover={{ scale: 1.04 }}
 						press={{ scale: 0.98 }}
 						transition={{ duration: 0.1 }}
+						onclick={() => props.set_section(item.id)}
+						class="relative flex flex-wrap gap-2 items-center rounded opacity-70 hover:opacity-100"
+						classList={{
+							"bg-forest-50 px-4 py-2 opacity-100":
+								props.section() === item.id,
+						}}
 					>
-						<button
-							onclick={() => props.set_section(item.id)}
-							class="relative flex flex-wrap gap-2 items-center rounded opacity-70 hover:opacity-100 smooth-transition"
-							classList={{
-								"bg-forest-50 px-4 py-2 opacity-100":
-									props.section() === item.id,
-							}}
-						>
-							<Show when={!item.hideLabel}>
-								<label
-									class="hidden md:block"
-									classList={{
-										"text-forest-900":
-											props.section() === item.id,
-										"text-forest-700":
-											props.section() !== item.id,
-									}}
-								>
-									{item.label}
-								</label>
-							</Show>
-
-							<item.icon
-								class=""
+						<Show when={!item.hideLabel}>
+							<label
+								class="hidden md:block"
 								classList={{
-									"fill-forest-900":
+									"text-forest-900":
 										props.section() === item.id,
-									"fill-forest-700":
+									"text-forest-700":
 										props.section() !== item.id,
 								}}
-							/>
+							>
+								{item.label}
+							</label>
+						</Show>
 
-							<Show when={props.section() === item.id}>
-								<Motion
-									initial={{ scaleX: 0 }}
-									animate={{ scaleX: 1 }}
-									transition={{
-										duration: 0.3,
-										easing: "ease-out",
-									}}
-									style={{
-										position: "absolute",
-										bottom: "-2px",
-										left: "0",
-										width: "100%",
-										height: "2px",
-										"background-color": "var(--forest-900)",
-										"transform-origin": "left",
-									}}
-								></Motion>
-							</Show>
-						</button>
-					</Motion>
+						<item.icon
+							class=""
+							classList={{
+								"fill-forest-900": props.section() === item.id,
+								"fill-forest-700": props.section() !== item.id,
+							}}
+						/>
+
+						<Show when={props.section() === item.id}>
+							<Motion
+								initial={{ scaleX: 0 }}
+								animate={{ scaleX: 1 }}
+								transition={{
+									duration: 0.3,
+									easing: "ease-out",
+								}}
+								style={{
+									position: "absolute",
+									bottom: "-2px",
+									left: "0",
+									width: "100%",
+									height: "2px",
+									"background-color": "var(--forest-900)",
+									"transform-origin": "left",
+								}}
+							></Motion>
+						</Show>
+					</Motion.button>
 				)}
 			</For>
 		</aside>

@@ -122,39 +122,36 @@ function RecoverAccount(props: RecoverAccountProps) {
 		>
 			<div class="w-full">
 				<div class="flex flex-col gap-2">
-					<Motion
+					<Motion.p
 						initial={{ x: -5, opacity: 0 }}
 						animate={{ x: 0, opacity: 1 }}
 						transition={{ duration: 0.15 }}
+						class="text-forest-700"
 					>
-						<p class="text-forest-700">Account Management</p>
-					</Motion>
+						Account Management
+					</Motion.p>
 
 					<Presence>
 						<Show
 							when={!show_form() && password_status() === "idle"}
 						>
-							<Motion
+							<Motion.div
 								initial={{ opacity: 0, y: 5 }}
 								animate={{ opacity: 1, y: 0 }}
 								exit={{ opacity: 0, y: -5 }}
 								transition={{ duration: 0.2 }}
+								class="flex flex-col gap-2 mt-2"
 							>
-								<div class="flex flex-col gap-2 mt-2">
-									<Motion
-										hover={{ scale: 1.01 }}
-										press={{ scale: 0.99 }}
-									>
-										<button
-											class="flex flex-row gap-4 items-center border w-fit px-4 py-2 rounded border-lapis-400 text-lapis-600"
-											onClick={() => set_show_form(true)}
-										>
-											<span>Change Password</span>
-											<EditIcon class="fill-lapis-600" />
-										</button>
-									</Motion>
-								</div>
-							</Motion>
+								<Motion.button
+									hover={{ scale: 1.01 }}
+									press={{ scale: 0.99 }}
+									class="flex flex-row gap-4 items-center border w-fit px-4 py-2 rounded border-lapis-400 text-lapis-600"
+									onClick={() => set_show_form(true)}
+								>
+									<span>Change Password</span>
+									<EditIcon class="min-w-fit fill-lapis-600" />
+								</Motion.button>
+							</Motion.div>
 						</Show>
 					</Presence>
 
@@ -166,325 +163,287 @@ function RecoverAccount(props: RecoverAccountProps) {
 								password_status() !== "success"
 							}
 						>
-							<Motion
+							<Motion.form
 								initial={{ opacity: 0, y: 10 }}
 								animate={{ opacity: 1, y: 0 }}
 								exit={{ opacity: 0, y: -10 }}
 								transition={{ duration: 0.25 }}
+								onSubmit={handle_change_password}
+								class="w-full max-w-md bg-white rounded-lg mt-4"
 							>
-								<form
-									onSubmit={handle_change_password}
-									class="w-full max-w-md bg-white rounded-lg mt-4"
+								{/* Current Password Field */}
+								<Motion.fieldset
+									initial={{ opacity: 0, x: -5 }}
+									animate={{ opacity: 1, x: 0 }}
+									transition={{
+										duration: 0.2,
+										delay: 0.05,
+									}}
+									class="mb-4"
 								>
-									{/* Current Password Field */}
-									<Motion
-										initial={{ opacity: 0, x: -5 }}
-										animate={{ opacity: 1, x: 0 }}
-										transition={{
-											duration: 0.2,
-											delay: 0.05,
-										}}
+									<label
+										for="current-password"
+										class="block text-forest-800 mb-2"
 									>
-										<fieldset class="mb-4">
-											<label
-												for="current-password"
-												class="block text-forest-800 mb-2"
-											>
-												Current Password
-											</label>
-											<input
-												type="password"
-												id="current-password"
-												value={current_password()}
-												onInput={(e) =>
-													set_current_password(
-														e.target.value
-													)
-												}
-												placeholder="Enter your current password"
-												class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-lapis-500"
-												disabled={
-													password_status() ===
-													"processing"
-												}
-											/>
-										</fieldset>
-									</Motion>
+										Current Password
+									</label>
+									<input
+										type="password"
+										id="current-password"
+										value={current_password()}
+										onInput={(e) =>
+											set_current_password(e.target.value)
+										}
+										placeholder="Enter your current password"
+										class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-lapis-500"
+										disabled={
+											password_status() === "processing"
+										}
+									/>
+								</Motion.fieldset>
 
-									{/* New Password Field */}
-									<Motion
-										initial={{ opacity: 0, x: -5 }}
-										animate={{ opacity: 1, x: 0 }}
-										transition={{
-											duration: 0.2,
-											delay: 0.1,
-										}}
+								{/* New Password Field */}
+								<Motion.fieldset
+									initial={{ opacity: 0, x: -5 }}
+									animate={{ opacity: 1, x: 0 }}
+									transition={{
+										duration: 0.2,
+										delay: 0.1,
+									}}
+									class="mb-4"
+								>
+									<label
+										for="new-password"
+										class="block text-forest-800 mb-2"
 									>
-										<fieldset class="mb-4">
-											<label
-												for="new-password"
-												class="block text-forest-800 mb-2"
-											>
-												New Password
-											</label>
-											<input
-												type="password"
-												id="new-password"
-												value={new_password()}
-												onInput={(e) =>
-													set_new_password(
-														e.target.value
-													)
-												}
-												placeholder="Enter new password"
-												class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-lapis-500"
-												disabled={
-													password_status() ===
-													"processing"
-												}
-											/>
-										</fieldset>
-									</Motion>
+										New Password
+									</label>
+									<input
+										type="password"
+										id="new-password"
+										value={new_password()}
+										onInput={(e) =>
+											set_new_password(e.target.value)
+										}
+										placeholder="Enter new password"
+										class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-lapis-500"
+										disabled={
+											password_status() === "processing"
+										}
+									/>
+								</Motion.fieldset>
 
-									{/* Confirm Password Field */}
-									<Motion
-										initial={{ opacity: 0, x: -5 }}
-										animate={{ opacity: 1, x: 0 }}
-										transition={{
-											duration: 0.2,
-											delay: 0.15,
-										}}
+								{/* Confirm Password Field */}
+								<Motion.fieldset
+									initial={{ opacity: 0, x: -5 }}
+									animate={{ opacity: 1, x: 0 }}
+									transition={{
+										duration: 0.2,
+										delay: 0.15,
+									}}
+									class="mb-4"
+								>
+									<label
+										for="confirm-new-password"
+										class="block text-forest-800 mb-2"
 									>
-										<fieldset class="mb-4">
-											<label
-												for="confirm-new-password"
-												class="block text-forest-800 mb-2"
-											>
-												Confirm New Password
-											</label>
-											<input
-												type="password"
-												id="confirm-new-password"
-												value={confirm_password()}
-												onInput={(e) =>
-													set_confirm_password(
-														e.target.value
-													)
-												}
-												placeholder="Confirm new password"
-												class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-lapis-500"
-												disabled={
-													password_status() ===
-													"processing"
-												}
-											/>
-										</fieldset>
-									</Motion>
+										Confirm New Password
+									</label>
+									<input
+										type="password"
+										id="confirm-new-password"
+										value={confirm_password()}
+										onInput={(e) =>
+											set_confirm_password(e.target.value)
+										}
+										placeholder="Confirm new password"
+										class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-lapis-500"
+										disabled={
+											password_status() === "processing"
+										}
+									/>
+								</Motion.fieldset>
 
-									{/* Buttons */}
-									<Motion
-										initial={{ opacity: 0, y: 5 }}
-										animate={{ opacity: 1, y: 0 }}
-										transition={{
-											duration: 0.2,
-											delay: 0.2,
-										}}
+								{/* Buttons */}
+								<Motion.div
+									initial={{ opacity: 0, y: 5 }}
+									animate={{ opacity: 1, y: 0 }}
+									transition={{
+										duration: 0.2,
+										delay: 0.2,
+									}}
+									class="flex justify-between gap-4 mt-6"
+								>
+									<Motion.button
+										hover={{ scale: 1.02 }}
+										press={{ scale: 0.98 }}
+										type="button"
+										class="px-4 py-2 border border-forest-800 text-forest-800 rounded hover:bg-forest-50"
+										onClick={() => set_show_form(false)}
+										disabled={
+											password_status() === "processing"
+										}
 									>
-										<div class="flex justify-between gap-4 mt-6">
-											<Motion
-												hover={{ scale: 1.02 }}
-												press={{ scale: 0.98 }}
-											>
-												<button
-													type="button"
-													class="px-4 py-2 border border-forest-800 text-forest-800 rounded hover:bg-forest-50 smooth-transition"
-													onClick={() =>
-														set_show_form(false)
-													}
-													disabled={
-														password_status() ===
-														"processing"
-													}
-												>
-													Cancel
-												</button>
-											</Motion>
-											<Motion
-												hover={{ scale: 1.02 }}
-												press={{ scale: 0.98 }}
-											>
-												<button
-													type="submit"
-													class="px-4 py-2 bg-forest-800 text-white rounded hover:bg-forest-700 smooth-transition"
-													disabled={
-														password_status() ===
-														"processing"
-													}
-												>
-													<Show
-														when={
-															password_status() !==
-															"processing"
-														}
-														fallback="Updating..."
-													>
-														Update Password
-													</Show>
-												</button>
-											</Motion>
-										</div>
-									</Motion>
+										Cancel
+									</Motion.button>
+									<Motion.button
+										hover={{ scale: 1.02 }}
+										press={{ scale: 0.98 }}
+										type="submit"
+										class="px-4 py-2 bg-forest-800 text-white rounded hover:bg-forest-700"
+										disabled={
+											password_status() === "processing"
+										}
+									>
+										<Show
+											when={
+												password_status() !==
+												"processing"
+											}
+											fallback="Updating..."
+										>
+											Update Password
+										</Show>
+									</Motion.button>
+								</Motion.div>
 
-									{/* Password Reset Section */}
-									<Motion
-										initial={{ opacity: 0 }}
-										animate={{ opacity: 1 }}
-										transition={{
-											duration: 0.25,
-											delay: 0.25,
-										}}
+								{/* Password Reset Section */}
+								<Motion.div
+									initial={{ opacity: 0 }}
+									animate={{ opacity: 1 }}
+									transition={{
+										duration: 0.25,
+										delay: 0.25,
+									}}
+									class="mt-4 pt-4 border-t border-lapis-200"
+								>
+									<p class="text-sm text-forest-700 mb-2">
+										Forgot your current password?
+									</p>
+									<Motion.button
+										hover={{ scale: 1.01 }}
+										press={{ scale: 0.99 }}
+										type="button"
+										class="text-lapis-500 hover:underline text-sm"
+										onClick={handle_reset_password}
+										disabled={
+											password_status() ===
+												"processing" ||
+											password_status() === "sending"
+										}
 									>
-										<div class="mt-4 pt-4 border-t border-lapis-200">
-											<p class="text-sm text-forest-700 mb-2">
-												Forgot your current password?
-											</p>
-											<Motion
-												hover={{ scale: 1.01 }}
-												press={{ scale: 0.99 }}
-											>
-												<button
-													type="button"
-													class="text-lapis-500 hover:underline text-sm"
-													onClick={
-														handle_reset_password
-													}
-													disabled={
-														password_status() ===
-															"processing" ||
-														password_status() ===
-															"sending"
-													}
-												>
-													<Show
-														when={
-															password_status() !==
-															"sending"
-														}
-														fallback="Sending reset email..."
-													>
-														Send password reset
-														email instead
-													</Show>
-												</button>
-											</Motion>
-										</div>
-									</Motion>
-								</form>
-							</Motion>
+										<Show
+											when={
+												password_status() !== "sending"
+											}
+											fallback="Sending reset email..."
+										>
+											Send password reset email instead
+										</Show>
+									</Motion.button>
+								</Motion.div>
+							</Motion.form>
 						</Show>
 					</Presence>
 
 					{/* Success Message */}
 					<Presence>
 						<Show when={password_status() === "success"}>
-							<Motion
+							<Motion.div
 								initial={{ opacity: 0, y: 5 }}
 								animate={{ opacity: 1, y: 0 }}
 								exit={{ opacity: 0, scale: 0.95 }}
 								transition={{ duration: 0.2 }}
+								class="w-full max-w-md bg-lapis-10 p-4 rounded mt-4"
 							>
-								<div class="w-full max-w-md bg-lapis-10 p-4 rounded mt-4">
-									<div class="flex items-center">
-										<svg
-											xmlns="http://www.w3.org/2000/svg"
-											class="h-5 w-5 text-lapis-500 mr-2"
-											fill="none"
-											viewBox="0 0 24 24"
-											stroke="currentColor"
-										>
-											<path
-												stroke-linecap="round"
-												stroke-linejoin="round"
-												stroke-width="2"
-												d="M5 13l4 4L19 7"
-											/>
-										</svg>
-										<p class="text-forest-800">
-											Password changed successfully!
-										</p>
-									</div>
+								<div class="flex items-center">
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										class="h-5 w-5 text-lapis-500 mr-2"
+										fill="none"
+										viewBox="0 0 24 24"
+										stroke="currentColor"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M5 13l4 4L19 7"
+										/>
+									</svg>
+									<p class="text-forest-800">
+										Password changed successfully!
+									</p>
 								</div>
-							</Motion>
+							</Motion.div>
 						</Show>
 					</Presence>
 
 					{/* Email Sent Message */}
 					<Presence>
 						<Show when={password_status() === "requested"}>
-							<Motion
+							<Motion.div
 								initial={{ opacity: 0, y: 5 }}
 								animate={{ opacity: 1, y: 0 }}
 								exit={{ opacity: 0, scale: 0.95 }}
 								transition={{ duration: 0.2 }}
+								class="w-full max-w-md bg-lapis-10 p-4 rounded mt-4"
 							>
-								<div class="w-full max-w-md bg-lapis-10 p-4 rounded mt-4">
-									<div class="flex items-center">
-										<svg
-											xmlns="http://www.w3.org/2000/svg"
-											class="h-5 w-5 text-lapis-500 mr-2"
-											fill="none"
-											viewBox="0 0 24 24"
-											stroke="currentColor"
-										>
-											<path
-												stroke-linecap="round"
-												stroke-linejoin="round"
-												stroke-width="2"
-												d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-											/>
-										</svg>
-										<p class="text-forest-800">
-											Password reset email sent! Check
-											your inbox.
-										</p>
-									</div>
+								<div class="flex items-center">
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										class="h-5 w-5 text-lapis-500 mr-2"
+										fill="none"
+										viewBox="0 0 24 24"
+										stroke="currentColor"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+										/>
+									</svg>
+									<p class="text-forest-800">
+										Password reset email sent! Check your
+										inbox.
+									</p>
 								</div>
-							</Motion>
+							</Motion.div>
 						</Show>
 					</Presence>
 
 					{/* Error Message */}
 					<Presence>
 						<Show when={password_status() === "failed"}>
-							<Motion
+							<Motion.div
 								initial={{ opacity: 0, y: 5 }}
 								animate={{ opacity: 1, y: 0 }}
 								exit={{ opacity: 0, scale: 0.95 }}
 								transition={{ duration: 0.2 }}
+								class="w-full max-w-md bg-red-100 p-4 rounded mt-4"
 							>
-								<div class="w-full max-w-md bg-red-100 p-4 rounded mt-4">
-									<div class="flex items-center">
-										<svg
-											xmlns="http://www.w3.org/2000/svg"
-											class="h-5 w-5 text-red-500 mr-2"
-											fill="none"
-											viewBox="0 0 24 24"
-											stroke="currentColor"
-										>
-											<path
-												stroke-linecap="round"
-												stroke-linejoin="round"
-												stroke-width="2"
-												d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-											/>
-										</svg>
-										<p class="text-red-800">
-											Error changing password. Please try
-											again.
-										</p>
-									</div>
+								<div class="flex items-center">
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										class="h-5 w-5 text-red-500 mr-2"
+										fill="none"
+										viewBox="0 0 24 24"
+										stroke="currentColor"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+										/>
+									</svg>
+									<p class="text-red-800">
+										Error changing password. Please try
+										again.
+									</p>
 								</div>
-							</Motion>
+							</Motion.div>
 						</Show>
 					</Presence>
 				</div>
