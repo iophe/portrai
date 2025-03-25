@@ -1,4 +1,11 @@
-import { children, createSignal, JSXElement, Show } from "solid-js";
+import {
+	children,
+	createEffect,
+	createSignal,
+	JSXElement,
+	Resource,
+	Show,
+} from "solid-js";
 import SectionTitle from "./section.title";
 
 interface FormProps {
@@ -6,17 +13,25 @@ interface FormProps {
 	submit: () => void;
 }
 
-interface SectionHeaderProps {
+interface SectionHeaderProps<T> {
 	add: () => void;
 	section_title: string;
 	section_name: string;
 	form: (props: FormProps) => JSXElement;
+	list?: Resource<T[]>;
+	fallback?: JSXElement;
+	open?: boolean;
 }
 
-function SectionHeader(props: SectionHeaderProps) {
-	const [creating_new, create_new] = createSignal(false);
+function SectionHeader<T>(props: SectionHeaderProps<T>) {
+	const [creating_new, create_new] = createSignal(props.open ?? false);
+	createEffect(() => {
+		if (props.list && props.list()?.length === 0) {
+			create_new(true);
+		}
+	});
 	return (
-		<div>
+		<div class="flex flex-col gap-2">
 			<SectionTitle
 				add={() => {
 					create_new(true);
@@ -24,7 +39,11 @@ function SectionHeader(props: SectionHeaderProps) {
 			>
 				{props.section_title}
 			</SectionTitle>
-
+			<Show
+				when={props.open || (props.list && props.list()?.length === 0)}
+			>
+				{props.fallback}
+			</Show>
 			<Show when={creating_new()}>
 				{props.form({
 					cancel() {

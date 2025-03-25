@@ -127,45 +127,40 @@ function TemplatesPage(props: TemplatesPage) {
 				</header>
 
 				{/* Filter Categories */}
-				<Motion
+				<Motion.nav
 					initial={{ opacity: 0, y: 10 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ duration: 0.3, delay: 0.2 }}
+					class="w-full border-b border-gray-200 flex flex-wrap gap-2 md:gap-0"
+					aria-label="Template categories"
 				>
-					<nav
-						class="w-full border-b border-gray-200 flex flex-wrap gap-2 md:gap-0"
-						aria-label="Template categories"
-					>
-						<For each={categories}>
-							{(category) => (
-								<button
-									onClick={() =>
-										set_filter_category(category.id)
-									}
-									classList={{
-										"px-5 py-3 font-medium text-sm md:text-base":
-											true,
-										"border-b-2 border-forest-600 text-forest-600":
-											filter_category() === category.id,
-										"text-gray-500 hover:text-forest-600":
-											filter_category() !== category.id,
-									}}
-									aria-selected={
-										filter_category() === category.id
-									}
-								>
-									{category.name}
-								</button>
-							)}
-						</For>
-					</nav>
-				</Motion>
+					<For each={categories}>
+						{(category) => (
+							<button
+								onClick={() => set_filter_category(category.id)}
+								classList={{
+									"px-5 py-3 font-medium text-sm md:text-base":
+										true,
+									"border-b-2 border-forest-600 text-forest-600":
+										filter_category() === category.id,
+									"text-gray-500 hover:text-forest-600":
+										filter_category() !== category.id,
+								}}
+								aria-selected={
+									filter_category() === category.id
+								}
+							>
+								{category.name}
+							</button>
+						)}
+					</For>
+				</Motion.nav>
 
 				{/* Templates Grid */}
 				<ul class="w-full overflow-y-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 list-none">
 					<For each={filtered_templates()}>
 						{(template, index) => (
-							<Motion
+							<Motion.li
 								initial={{ opacity: 0, scale: 0.9 }}
 								animate={{ opacity: 1, scale: 1 }}
 								transition={{
@@ -173,92 +168,88 @@ function TemplatesPage(props: TemplatesPage) {
 									delay: 0.1 * (index() + 1),
 								}}
 							>
-								<li>
-									<article
-										class="h-full p-2 flex flex-col gap-4 rounded overflow-hidden border-2 transition-all cursor-pointer hover:shadow-md"
-										classList={{
-											"border-forest-600":
-												selected_template_id() ===
-												template.id,
-											"border-lapis-50":
-												selected_template_id() !==
-												template.id,
-										}}
-										onClick={() =>
-											handle_template_select(template.id)
-										}
-									>
-										<div class="flex flex-col gap-2">
-											<h3 class="font-medium text-lg">
-												{template.name}
-											</h3>
-											<p class="text-sm text-gray-600">
-												{template.description}
-											</p>
+								<article
+									class="h-full p-2 flex flex-col gap-4 rounded overflow-hidden border-2 transition-all cursor-pointer hover:shadow-md"
+									classList={{
+										"border-forest-600":
+											selected_template_id() ===
+											template.id,
+										"border-lapis-50":
+											selected_template_id() !==
+											template.id,
+									}}
+									onClick={() =>
+										handle_template_select(template.id)
+									}
+								>
+									<div class="flex flex-col gap-2">
+										<h3 class="font-medium text-lg">
+											{template.name}
+										</h3>
+										<p class="text-sm text-gray-600">
+											{template.description}
+										</p>
 
-											<Presence>
-												<Show
-													when={
-														selected_template_id() ===
-														template.id
-													}
-												>
-													<Motion
-														initial={{
-															opacity: 0,
-															y: 10,
-														}}
-														animate={{
-															opacity: 1,
-															y: 0,
-														}}
-														exit={{
-															opacity: 0,
-															y: -10,
-														}}
-														transition={{
-															duration: 0.3,
-														}}
-													>
-														<div class="mt-3 flex justify-center">
-															<button
-																onClick={(
-																	e
-																) => {
-																	e.stopPropagation();
-																	use_selected_template();
-																}}
-																class="px-4 py-2 bg-forest-700 text-white rounded hover:bg-forest-800 transition-colors"
-															>
-																Use Template
-															</button>
-														</div>
-													</Motion>
-												</Show>
-											</Presence>
-										</div>
-										<Motion
-											initial={{ scale: 0.95 }}
-											animate={{ scale: 1 }}
-											transition={{ duration: 0.3 }}
-										>
-											<figure class="flex-1">
-												<img
-													src={template.image_url}
-													alt={`${template.name} template preview`}
-													class="object-cover w-full h-full"
-													onError={(e) => {
-														// Fallback for missing images
-														const target =
-															e.target as HTMLImageElement;
-														// target.src = "/templates/placeholder.jpg";
+										<Presence>
+											<Show
+												when={
+													selected_template_id() ===
+													template.id
+												}
+											>
+												<Motion
+													initial={{
+														opacity: 0,
+														y: 10,
 													}}
-												/>
-											</figure>
-										</Motion>
-									</article>
-								</li>
-							</Motion>
+													animate={{
+														opacity: 1,
+														y: 0,
+													}}
+													exit={{
+														opacity: 0,
+														y: -10,
+													}}
+													transition={{
+														duration: 0.3,
+													}}
+												>
+													<div class="mt-3 flex justify-center">
+														<button
+															onClick={(e) => {
+																e.stopPropagation();
+																use_selected_template();
+															}}
+															class="px-4 py-2 bg-forest-700 text-white rounded hover:bg-forest-800 transition-colors"
+														>
+															Use Template
+														</button>
+													</div>
+												</Motion>
+											</Show>
+										</Presence>
+									</div>
+									<Motion
+										initial={{ scale: 0.95 }}
+										animate={{ scale: 1 }}
+										transition={{ duration: 0.3 }}
+									>
+										<figure class="flex-1">
+											<img
+												src={template.image_url}
+												alt={`${template.name} template preview`}
+												class="object-cover w-full h-full"
+												onError={(e) => {
+													// Fallback for missing images
+													const target =
+														e.target as HTMLImageElement;
+													// target.src = "/templates/placeholder.jpg";
+												}}
+											/>
+										</figure>
+									</Motion>
+								</article>
+							</Motion.li>
 						)}
 					</For>
 				</ul>
@@ -276,19 +267,14 @@ function TemplatesPage(props: TemplatesPage) {
 								<p class="text-gray-500 text-lg">
 									No templates found in this category.
 								</p>
-								<Motion
+								<Motion.button
 									hover={{ scale: 1.05 }}
 									press={{ scale: 0.95 }}
+									onClick={() => set_filter_category("all")}
+									class="mt-4 px-4 py-2 border border-forest-700 text-forest-700 rounded-lg hover:bg-forest-50"
 								>
-									<button
-										onClick={() =>
-											set_filter_category("all")
-										}
-										class="mt-4 px-4 py-2 border border-forest-700 text-forest-700 rounded-lg hover:bg-forest-50 transition-colors"
-									>
-										View All Templates
-									</button>
-								</Motion>
+									View All Templates
+								</Motion.button>
 							</div>
 						</Motion>
 					</Show>

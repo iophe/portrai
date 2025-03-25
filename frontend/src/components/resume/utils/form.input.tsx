@@ -13,29 +13,28 @@ interface FormLabeledInputProps {
 
 export function FormLabeledInput(props: FormLabeledInputProps) {
 	return (
-		<Motion
+		<Motion.div
 			initial={{ opacity: 0, y: 5 }}
 			animate={{ opacity: 1, y: 0 }}
 			transition={{ duration: 0.1, easing: "ease-out" }}
+			class="space-y-2"
 		>
-			<div class="space-y-2">
-				<label class="block text-lg font-medium text-forest-900">
-					<span class="flex flex-row gap-2">
-						{props.label}
-						<Show when={props.optional}>
-							<Motion
-								initial={{ opacity: 0, scale: 0.8 }}
-								animate={{ opacity: 1, scale: 1 }}
-								transition={{ duration: 0.1, delay: 0.1 }}
-							>
-								<p class="">(optional)</p>
-							</Motion>
-						</Show>
-					</span>
-				</label>
-				{props.children}
-			</div>
-		</Motion>
+			<label class="block text-lg font-medium text-forest-900">
+				<span class="flex flex-row gap-2">
+					{props.label}
+					<Show when={props.optional}>
+						<Motion.p
+							initial={{ opacity: 0, scale: 0.8 }}
+							animate={{ opacity: 1, scale: 1 }}
+							transition={{ duration: 0.1, delay: 0.1 }}
+						>
+							(optional)
+						</Motion.p>
+					</Show>
+				</span>
+			</label>
+			{props.children}
+		</Motion.div>
 	);
 }
 
@@ -62,22 +61,19 @@ export function FormInputText(props: FormInputTextProps) {
 	};
 
 	return (
-		<Motion
+		<Motion.input
 			initial={{ opacity: 0, scaleY: 0.95 }}
 			animate={{ opacity: 1, scaleY: 1 }}
 			transition={{ duration: 0.1 }}
-		>
-			<input
-				type="text"
-				value={props.value}
-				placeholder={props.placeholder}
-				onInput={handleInput}
-				class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-lapis-500"
-				required={props.required}
-				disabled={props.disabled}
-				maxLength={props.max_length ?? 144}
-			/>
-		</Motion>
+			type="text"
+			value={props.value}
+			placeholder={props.placeholder}
+			onInput={handleInput}
+			class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-lapis-500"
+			required={props.required}
+			disabled={props.disabled}
+			maxLength={props.max_length ?? 144}
+		/>
 	);
 }
 
@@ -91,20 +87,17 @@ interface FormInputTelephoneProps {
 
 export function FormInputTelephone(props: FormInputTelephoneProps) {
 	return (
-		<Motion
+		<Motion.input
 			initial={{ opacity: 0, scaleY: 0.95 }}
 			animate={{ opacity: 1, scaleY: 1 }}
 			transition={{ duration: 0.1 }}
-		>
-			<input
-				type="tel"
-				value={props.value}
-				placeholder={props.placeholder}
-				onInput={(e) => props.on_input(e.currentTarget.value)}
-				class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-lapis-500"
-				required={props.required}
-			/>
-		</Motion>
+			type="tel"
+			value={props.value}
+			placeholder={props.placeholder}
+			onInput={(e) => props.on_input(e.currentTarget.value)}
+			class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-lapis-500"
+			required={props.required}
+		/>
 	);
 }
 
@@ -131,22 +124,19 @@ export function FormTextArea(props: FormTextAreaProps) {
 	};
 
 	return (
-		<Motion
+		<Motion.textarea
 			initial={{ opacity: 0, scaleY: 0.95 }}
 			animate={{ opacity: 1, scaleY: 1 }}
 			transition={{ duration: 0.1 }}
-		>
-			<textarea
-				value={props.value}
-				placeholder={props.placeholder}
-				onInput={handleInput}
-				class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-lapis-500"
-				rows={props.rows ?? 4}
-				required={props.required}
-				disabled={props.disabled}
-				maxLength={props.max_length ?? 1024}
-			/>
-		</Motion>
+			value={props.value}
+			placeholder={props.placeholder}
+			onInput={handleInput}
+			class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-lapis-500"
+			rows={props.rows ?? 4}
+			required={props.required}
+			disabled={props.disabled}
+			maxLength={props.max_length ?? 1024}
+		/>
 	);
 }
 
@@ -160,20 +150,17 @@ interface FormInputDateProps {
 
 export function FormInputDate(props: FormInputDateProps) {
 	return (
-		<Motion
+		<Motion.input
 			initial={{ opacity: 0, scaleY: 0.95 }}
 			animate={{ opacity: 1, scaleY: 1 }}
 			transition={{ duration: 0.1 }}
-		>
-			<input
-				type="date"
-				value={props.value}
-				placeholder={props.placeholder}
-				onInput={(e) => props.on_input(e.currentTarget.value)}
-				class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-lapis-500"
-				required={props.required}
-			/>
-		</Motion>
+			type="date"
+			value={props.value}
+			placeholder={props.placeholder}
+			onInput={(e) => props.on_input(e.currentTarget.value)}
+			class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-lapis-500"
+			required={props.required}
+		/>
 	);
 }
 
@@ -185,21 +172,20 @@ interface FormCheckboxProps {
 
 export function FormCheckbox(props: FormCheckboxProps) {
 	return (
-		<Motion
+		<Motion.div
 			initial={{ opacity: 0, x: -5 }}
 			animate={{ opacity: 1, x: 0 }}
 			transition={{ duration: 0.1 }}
+			class="flex items-center gap-2"
 		>
-			<div class="flex items-center gap-2">
-				<input
-					type="checkbox"
-					checked={props.value}
-					onChange={(e) => props.on_input(e.currentTarget.checked)}
-					class="rounded border-gray-300 text-gray-600 focus:ring-lapis-500"
-				/>
-				<label class="text-sm text-gray-700">{props.label}</label>
-			</div>
-		</Motion>
+			<input
+				type="checkbox"
+				checked={props.value}
+				onChange={(e) => props.on_input(e.currentTarget.checked)}
+				class="rounded border-gray-300 text-gray-600 focus:ring-lapis-500"
+			/>
+			<label class="text-sm text-gray-700">{props.label}</label>
+		</Motion.div>
 	);
 }
 
@@ -212,22 +198,19 @@ interface FormSelectProps {
 
 export function FormSelect(props: FormSelectProps) {
 	return (
-		<Motion
+		<Motion.select
 			initial={{ opacity: 0, scaleY: 0.95 }}
 			animate={{ opacity: 1, scaleY: 1 }}
 			transition={{ duration: 0.1 }}
+			value={props.value}
+			onChange={(e) => props.on_input(e.currentTarget.value)}
+			class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-lapis-500"
 		>
-			<select
-				value={props.value}
-				onChange={(e) => props.on_input(e.currentTarget.value)}
-				class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-lapis-500"
-			>
-				<option value="">{props.select_label}</option>
-				<For each={props.choices}>
-					{(choice) => <option value={choice}>{choice}</option>}
-				</For>
-			</select>
-		</Motion>
+			<option value="">{props.select_label}</option>
+			<For each={props.choices}>
+				{(choice) => <option value={choice}>{choice}</option>}
+			</For>
+		</Motion.select>
 	);
 }
 
@@ -236,37 +219,31 @@ interface FormCancelProps {
 }
 export function FormCancelButton(props: FormCancelProps) {
 	return (
-		<Motion
+		<Motion.button
 			hover={{ scale: 1.05 }}
 			press={{ scale: 0.95 }}
 			transition={{ duration: 0.1 }}
+			type="button"
+			onClick={props.cancel}
+			class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded"
 		>
-			<button
-				type="button"
-				onClick={props.cancel}
-				class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded smooth-transition"
-			>
-				Cancel
-			</button>
-		</Motion>
+			Cancel
+		</Motion.button>
 	);
 }
 
 interface FormSubmitProps {}
 export function FormSubmitButton(props: FormSubmitProps) {
 	return (
-		<Motion
+		<Motion.button
 			hover={{ scale: 1.05 }}
 			press={{ scale: 0.95 }}
 			transition={{ duration: 0.1 }}
+			type="submit"
+			class="px-4 py-2 w-fit bg-forest-900 text-white rounded hover:bg-forest-500"
 		>
-			<button
-				type="submit"
-				class="px-4 py-2 w-fit bg-forest-900 text-white rounded hover:bg-forest-500 smooth-transition"
-			>
-				Save
-			</button>
-		</Motion>
+			Save
+		</Motion.button>
 	);
 }
 
@@ -278,25 +255,22 @@ interface FormDeleteButtonProps {
 export function FormDeleteButton(props: FormDeleteButtonProps) {
 	return (
 		<div class="self-end flex flex-row gap-4">
-			<Motion
+			<Motion.button
 				hover={{ scale: 1.1 }}
 				press={{ scale: 0.9 }}
 				transition={{ duration: 0.1 }}
+				title="Delete"
+				onclick={() => {
+					const ok =
+						props.no_confirm ||
+						confirm("Are you sure you want to delete this ?");
+					if (ok) {
+						props.delete();
+					}
+				}}
 			>
-				<button
-					title="Delete"
-					onclick={() => {
-						const ok =
-							props.no_confirm ||
-							confirm("Are you sure you want to delete this ?");
-						if (ok) {
-							props.delete();
-						}
-					}}
-				>
-					<DeleteIcon class="fill-forest-900" />
-				</button>
-			</Motion>
+				<DeleteIcon class="min-w-fit fill-forest-900" />
+			</Motion.button>
 		</div>
 	);
 }
@@ -312,36 +286,33 @@ export function FormVisibilityToggle(props: FormVisibilityToggleProps) {
 			hover={{ scale: 1.1 }}
 			press={{ scale: 0.9 }}
 			transition={{ duration: 0.1 }}
+			title={props.is_visible ? "Hide item" : "Show item"}
+			onClick={props.toggle}
 		>
-			<button
-				title={props.is_visible ? "Hide item" : "Show item"}
-				onClick={props.toggle}
-			>
-				<Presence exitBeforeEnter>
-					<Show
-						when={props.is_visible}
-						fallback={
-							<Motion
-								initial={{ rotateY: -90 }}
-								animate={{ rotateY: 0 }}
-								exit={{ rotateY: 90 }}
-								transition={{ duration: 0.1 }}
-							>
-								<EyeCloseIcon class="fill-forest-900" />
-							</Motion>
-						}
-					>
+			<Presence exitBeforeEnter>
+				<Show
+					when={props.is_visible}
+					fallback={
 						<Motion
 							initial={{ rotateY: -90 }}
 							animate={{ rotateY: 0 }}
 							exit={{ rotateY: 90 }}
 							transition={{ duration: 0.1 }}
 						>
-							<EyeOpenIcon class="fill-forest-900" />
+							<EyeCloseIcon class="min-w-fit fill-forest-900" />
 						</Motion>
-					</Show>
-				</Presence>
-			</button>
+					}
+				>
+					<Motion
+						initial={{ rotateY: -90 }}
+						animate={{ rotateY: 0 }}
+						exit={{ rotateY: 90 }}
+						transition={{ duration: 0.1 }}
+					>
+						<EyeOpenIcon class="min-w-fit fill-forest-900" />
+					</Motion>
+				</Show>
+			</Presence>
 		</Motion>
 	);
 }

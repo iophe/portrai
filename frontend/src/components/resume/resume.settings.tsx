@@ -16,7 +16,8 @@ import AccountIcon from "@assets/icons/account.svg?component-solid";
 import ArticleIcon from "@assets/icons/article.svg?component-solid";
 import CloseIcon from "@assets/icons/close.svg?component-solid";
 import CancelIcon from "@assets/icons/cancel.svg?component-solid";
-import { createResource, createSignal, Show, Suspense } from "solid-js";
+import { createResource, createSignal, For, Show, Suspense } from "solid-js";
+import HelpIcon from "@assets/icons/help.svg?component-solid";
 import api from "@utils/api";
 import { AxiosError } from "axios";
 import LoadingSpinner from "@components/loading.spinner";
@@ -104,214 +105,505 @@ function ResumeSettings(props: ResumeSettingsProps) {
 	const [editing_profile, edit_profile] = createSignal(false);
 
 	return (
-		<Motion
+		<Motion.section
 			initial={{ opacity: 0, y: 10 }}
 			animate={{ opacity: 1, y: 0 }}
 			transition={{ duration: 0.3, easing: "ease-out" }}
+			class="flex flex-col gap-4 pb-4"
 		>
-			<section class="flex flex-col gap-4">
-				<Show when={!props.offline}>
+			<Show when={!props.offline}>
+				<Motion.article
+					initial={{ opacity: 0, y: 5 }}
+					animate={{ opacity: 1, y: 0 }}
+					transition={{ duration: 0.3, delay: 0.1 }}
+					class="p-5 border border-lapis-50 rounded-lg flex flex-col gap-4 relative overflow-hidden bg-white shadow-sm"
+				>
+					{/* Accent line */}
 					<Motion
-						initial={{ opacity: 0, y: 5 }}
-						animate={{ opacity: 1, y: 0 }}
-						transition={{ duration: 0.3, delay: 0.1 }}
-					>
-						<section class="p-4 border border-lapis-50 rounded-lg flex flex-col gap-4 relative overflow-hidden">
-							<Motion
-								initial={{ x: "-100%" }}
-								animate={{ x: "0%" }}
-								transition={{
-									duration: 0.4,
-									easing: "ease-out",
-									delay: 0.3,
-								}}
-								style={{
-									position: "absolute",
-									left: "0",
-									top: "0",
-									width: "3px",
-									height: "100%",
-									"background-color": "var(--forest-200)",
-								}}
-							></Motion>
-							<header class="flex justify-between items-center border-b-2 border-forest-900 pb-2">
-								<Motion
-									initial={{ x: -5, opacity: 0 }}
-									animate={{ x: 0, opacity: 1 }}
-									transition={{ duration: 0.3, delay: 0.2 }}
-								>
-									<div class="flex flex-row gap-4">
-										<ArticleIcon class="fill-forest-900" />
-										<h2 class="uppercase">
-											My resume versions
-										</h2>
-									</div>
-								</Motion>
-							</header>
-							<section class="flex flex-col gap-2">
-								<Suspense fallback={<LoadingSpinner />}>
-									<Show
-										when={editing_version()}
-										fallback={
-											<Motion
-												initial={{ opacity: 0 }}
-												animate={{ opacity: 1 }}
-												transition={{ duration: 0.2 }}
-											>
-												<div class="flex flex-row items-center justify-between">
-													<span>
-														Current version:{" "}
-														<span class="text-forest-800">
-															{
-																versions()
-																	?.version
-															}
-														</span>
-													</span>
-													<div class="flex flex-row gap-4">
-														<Motion
-															hover={{
-																scale: 1.1,
-															}}
-															press={{
-																scale: 0.95,
-															}}
-															transition={{
-																duration: 0.1,
-															}}
-														>
-															<button
-																title="Edit"
-																onclick={() => {
-																	edit_version(
-																		true
-																	);
-																}}
-															>
-																<EditIcon class="fill-forest-900" />
-															</button>
-														</Motion>
-														<Motion
-															hover={{
-																scale: 1.1,
-															}}
-															press={{
-																scale: 0.95,
-															}}
-															transition={{
-																duration: 0.1,
-															}}
-														>
-															<button
-																title="delete"
-																onclick={async () => {
-																	if (
-																		(versions()
-																			?.all_versions
-																			.length ??
-																			0) <=
-																		1
-																	) {
-																		fault.minor(
-																			{
-																				message:
-																					"cannot delete this version, this is your only version",
-																			}
-																		);
-																		return;
-																	}
+						initial={{ x: "-100%" }}
+						animate={{ x: "0%" }}
+						transition={{
+							duration: 0.4,
+							easing: "ease-out",
+							delay: 0.3,
+						}}
+						style={{
+							position: "absolute",
+							left: "0",
+							top: "0",
+							width: "4px",
+							height: "100%",
+							"background-color": "var(--forest-300)",
+						}}
+					></Motion>
 
-																	const ok =
-																		confirm(
-																			"Are you sure you want to delete this version?"
-																		);
-																	if (ok) {
-																		try {
-																			await api.post(
-																				"/resume/delete-version",
-																				{
-																					version:
-																						versions()
-																							?.version,
-																				}
-																			);
-																			refetch_version();
-																			refetch_profile();
-																		} catch (error) {
-																			if (
-																				(
-																					error as AxiosError
-																				)
-																					.status ===
-																				402
-																			) {
-																				navigate(
-																					"/pricing"
-																				);
-																			}
-																			if (
-																				(
-																					error as AxiosError
-																				)
-																					.status !==
-																				401
-																			)
-																				fault.minor(
-																					{
-																						message:
-																							(
-																								(
-																									error as AxiosError
-																								)
-																									.response
-																									?.data as any
-																							)
-																								.error ??
-																							(
-																								error as AxiosError
-																							)
-																								.message,
-																					}
-																				);
-																		}
-																	}
-																}}
-															>
-																<DeleteIcon class="fill-forest-900" />
-															</button>
-														</Motion>
-													</div>
-												</div>
-											</Motion>
-										}
+					{/* Header with improved visual hierarchy */}
+					<header class="flex justify-between items-center border-b-2 border-forest-900 pb-3">
+						<Motion.hgroup
+							initial={{ x: -5, opacity: 0 }}
+							animate={{ x: 0, opacity: 1 }}
+							transition={{ duration: 0.3, delay: 0.2 }}
+							class="flex flex-row gap-4 items-center"
+						>
+							<ArticleIcon class="min-w-fit fill-forest-600" />
+							<div class="flex flex-col">
+								<h2 class="font-semibold text-forest-900 text-lg">
+									Resume Versions
+								</h2>
+								<p class="text-sm text-forest-600">
+									Create targeted resumes for different
+									opportunities
+								</p>
+							</div>
+						</Motion.hgroup>
+					</header>
+
+					{/* Value proposition */}
+					<aside class="text-sm text-lapis-500 flex items-center gap-2">
+						<HelpIcon class="min-w-fit fill-lapis-400" />
+						<p>
+							Customize different versions of your resume for
+							specific industries, positions, or languages
+						</p>
+					</aside>
+
+					{/* Main content with improved visual cues */}
+					<section class="flex flex-col gap-4">
+						<Suspense fallback={<LoadingSpinner />}>
+							{/* Version display/edit mode */}
+							<Show
+								when={editing_version()}
+								fallback={
+									<Motion.article
+										initial={{ opacity: 0 }}
+										animate={{ opacity: 1 }}
+										transition={{ duration: 0.2 }}
+										class="flex flex-row items-center justify-between rounded-md"
 									>
-										<Motion
-											initial={{ opacity: 0, y: 5 }}
-											animate={{ opacity: 1, y: 0 }}
-											transition={{ duration: 0.2 }}
-										>
-											<div class="flex flex-row items-center justify-between gap-4">
-												<span class="flex flex-row grow gap-2 items-center ">
-													<p class="text-nowrap">
-														Rename to:
-													</p>
-													<form
-														class="w-full"
-														onSubmit={async (e) => {
-															e.preventDefault();
+										<hgroup class="flex flex-col">
+											<h3 class="text-sm text-forest-600">
+												Active Resume
+											</h3>
+											<strong class="text-forest-900 text-lg">
+												{versions()?.version ||
+													"Default"}
+											</strong>
+										</hgroup>
+										<nav class="flex flex-row gap-4">
+											<Motion.button
+												hover={{
+													scale: 1.05,
+												}}
+												press={{
+													scale: 0.98,
+												}}
+												transition={{
+													duration: 0.1,
+												}}
+												class=""
+												title="Edit version name"
+												onclick={() => {
+													edit_version(true);
+												}}
+											>
+												<EditIcon class="min-w-fit fill-forest-700" />
+											</Motion.button>
+											<Motion.button
+												hover={{
+													scale: 1.05,
+												}}
+												press={{
+													scale: 0.98,
+												}}
+												transition={{
+													duration: 0.1,
+												}}
+												title="Delete this version"
+												onclick={async () => {
+													if (
+														(versions()
+															?.all_versions
+															.length ?? 0) <= 1
+													) {
+														fault.minor({
+															message:
+																"Cannot delete this version, this is your only version",
+														});
+														return;
+													}
+
+													const ok = confirm(
+														"Are you sure you want to delete this version?"
+													);
+													if (ok) {
+														try {
+															await api.post(
+																"/resume/delete-version",
+																{
+																	version:
+																		versions()
+																			?.version,
+																}
+															);
+															refetch_version();
+															refetch_profile();
+														} catch (error) {
+															if (
+																(
+																	error as AxiosError
+																).status === 402
+															) {
+																navigate(
+																	"/pricing"
+																);
+															}
+															if (
+																(
+																	error as AxiosError
+																).status !== 401
+															)
+																fault.minor({
+																	message:
+																		(
+																			(
+																				error as AxiosError
+																			)
+																				.response
+																				?.data as any
+																		)
+																			.error ??
+																		(
+																			error as AxiosError
+																		)
+																			.message,
+																});
+														}
+													}
+												}}
+											>
+												<DeleteIcon class="min-w-fit fill-forest-700" />
+											</Motion.button>
+										</nav>
+									</Motion.article>
+								}
+							>
+								{/* Rename version mode */}
+								<Motion.article
+									initial={{ opacity: 0, y: 5 }}
+									animate={{ opacity: 1, y: 0 }}
+									transition={{ duration: 0.2 }}
+									class="flex flex-row items-center justify-between gap-4 rounded-md"
+								>
+									<label class="flex flex-col grow gap-2 justify-start">
+										<span class="text-forest-700 font-medium">
+											Rename to:
+										</span>
+										<div class="flex flex-row items-center gap-4">
+											<form
+												class="w-full"
+												onSubmit={async (e) => {
+													e.preventDefault();
+													try {
+														await api.post(
+															"/resume/rename-version",
+															{
+																old_name:
+																	versions()
+																		?.version,
+																new_name:
+																	version_form_data.current_version,
+															}
+														);
+														refetch_version();
+														refetch_profile();
+													} catch (error) {
+														if (
+															(
+																error as AxiosError
+															).status === 402
+														) {
+															navigate(
+																"/pricing"
+															);
+														}
+														if (
+															(
+																error as AxiosError
+															).status !== 401
+														)
+															fault.minor({
+																message:
+																	(
+																		(
+																			error as AxiosError
+																		)
+																			.response
+																			?.data as any
+																	).error ??
+																	(
+																		error as AxiosError
+																	).message,
+															});
+													}
+													edit_version(false);
+												}}
+											>
+												<FormInputText
+													value={
+														version_form_data.current_version
+													}
+													on_input={(value) =>
+														update_version_form_data(
+															"current_version",
+															value
+														)
+													}
+													placeholder="Enter new version name"
+												/>
+											</form>
+
+											<Motion.button
+												hover={{
+													scale: 1.05,
+												}}
+												press={{
+													scale: 0.98,
+												}}
+												transition={{
+													duration: 0.1,
+												}}
+												title="Cancel renaming"
+												onclick={() => {
+													edit_version(false);
+												}}
+											>
+												<CloseIcon class="min-w-fit fill-forest-700" />
+											</Motion.button>
+										</div>
+									</label>
+								</Motion.article>
+							</Show>
+
+							{/* Version switcher with improved UI */}
+							<fieldset class="flex flex-col gap-2 mt-1 border-0">
+								<legend class="text-sm text-forest-600 mb-1">
+									Switch between versions
+								</legend>
+								<menu class="flex gap-2 flex-wrap mt-1 p-0 items-center">
+									<For each={versions()?.all_versions}>
+										{(version) => (
+											<li
+												class="text-xs px-2 py-1 rounded"
+												classList={{
+													"bg-forest-50 text-forest-800":
+														versions()?.version ===
+														version,
+													"bg-gray-100 text-gray-600":
+														versions()?.version !==
+														version,
+												}}
+											>
+												<button
+													title={`change version to ${version}`}
+													class="w-full"
+													onclick={async () => {
+														try {
+															await api.post(
+																"/resume/change-version",
+																{
+																	version:
+																		version,
+																}
+															);
+															clear_cache();
+															refetch_version();
+															refetch_profile();
+														} catch (error) {
+															if (
+																(
+																	error as AxiosError
+																).status === 402
+															) {
+																navigate(
+																	"/pricing"
+																);
+															}
+															if (
+																(
+																	error as AxiosError
+																).status !== 401
+															)
+																fault.minor({
+																	message:
+																		(
+																			(
+																				error as AxiosError
+																			)
+																				.response
+																				?.data as any
+																		)
+																			.error ??
+																		(
+																			error as AxiosError
+																		)
+																			.message,
+																});
+														}
+													}}
+												>
+													{version}
+												</button>
+											</li>
+										)}
+									</For>
+									<Motion.button
+										hover={{ scale: 1.05 }}
+										press={{ scale: 0.98 }}
+										transition={{ duration: 0.1 }}
+										onClick={() => {
+											add_version(true);
+										}}
+										title="Create a new version"
+									>
+										<AddIcon class="min-w-fit fill-forest-800 " />
+									</Motion.button>
+								</menu>
+								{/* <div class="flex flex-row gap-4 items-center w-full">
+											<FormSelect
+												value={""}
+												on_input={async (value) => {
+													update_version_form_data(
+														"selected_version",
+														value
+													);
+
+													if (
+														!version_form_data.selected_version ||
+														version_form_data.selected_version ===
+															version_form_data.current_version
+													)
+														return;
+													try {
+														await api.post(
+															"/resume/change-version",
+															{
+																version:
+																	version_form_data.selected_version,
+															}
+														);
+														clear_cache();
+														refetch_version();
+														refetch_profile();
+													} catch (error) {
+														if (
+															(
+																error as AxiosError
+															).status === 402
+														) {
+															navigate(
+																"/pricing"
+															);
+														}
+														if (
+															(
+																error as AxiosError
+															).status !== 401
+														)
+															fault.minor({
+																message:
+																	(
+																		(
+																			error as AxiosError
+																		)
+																			.response
+																			?.data as any
+																	).error ??
+																	(
+																		error as AxiosError
+																	).message,
+															});
+													}
+												}}
+												choices={
+													versions()?.all_versions ??
+													[]
+												}
+												select_label="Select a version"
+											/>
+										</div> */}
+							</fieldset>
+
+							<Presence>
+								<Show when={adding_version()}>
+									<Motion.article
+										initial={{ opacity: 0, y: 5 }}
+										animate={{ opacity: 1, y: 0 }}
+										exit={{ opacity: 0, y: -5 }}
+										transition={{ duration: 0.2 }}
+										class="flex flex-col gap-4 mt-2 p-4 border border-forest-100 rounded-md "
+									>
+										<header class="flex items-center gap-2">
+											<h3 class="font-medium text-forest-700">
+												Create New Resume Version
+											</h3>
+											<HelpIcon class="min-w-fit fill-lapis-400" />
+											<p class="text-xs text-lapis-500">
+												Each version keeps its own
+												content and settings
+											</p>
+										</header>
+										<p class="text-sm text-forest-600">
+											Create targeted versions for
+											different opportunities (e.g.,
+											"Teaching Position", "French
+											Resume")
+										</p>
+										<footer class="flex flex-row items-center justify-between gap-4">
+											<FormInputText
+												value={
+													version_form_data.new_version
+												}
+												on_input={(value) =>
+													update_version_form_data(
+														"new_version",
+														value
+													)
+												}
+												placeholder="Enter version name"
+											/>
+											<nav class="flex flex-row gap-2">
+												<Show
+													when={
+														version_form_data
+															.new_version
+															.length > 0
+													}
+												>
+													<Motion.button
+														hover={{
+															scale: 1.05,
+														}}
+														press={{
+															scale: 0.98,
+														}}
+														transition={{
+															duration: 0.1,
+														}}
+														class="bg-forest-500 hover:bg-forest-600 text-white px-4 py-2 rounded-md shadow-sm text-sm font-medium"
+														onClick={async () => {
 															try {
 																await api.post(
-																	"/resume/rename-version",
+																	"/resume/add-version",
 																	{
-																		old_name:
-																			versions()
-																				?.version,
-																		new_name:
-																			version_form_data.current_version,
+																		new_version:
+																			version_form_data.new_version,
 																	}
 																);
 																refetch_version();
 																refetch_profile();
+																add_version(
+																	false
+																);
 															} catch (error) {
 																if (
 																	(
@@ -347,487 +639,269 @@ function ResumeSettings(props: ResumeSettingsProps) {
 																		}
 																	);
 															}
-															edit_version(false);
 														}}
 													>
-														<FormInputText
-															value={
-																version_form_data.current_version
-															}
-															on_input={(value) =>
-																update_version_form_data(
-																	"current_version",
-																	value
-																)
-															}
-															placeholder="Rename this version"
-														/>
-													</form>
-												</span>
-												<Motion
-													hover={{ scale: 1.1 }}
-													press={{ scale: 0.95 }}
+														Create Version
+													</Motion.button>
+												</Show>
+												<Motion.button
+													hover={{
+														scale: 1.05,
+													}}
+													press={{
+														scale: 0.98,
+													}}
 													transition={{
 														duration: 0.1,
 													}}
+													class="bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-md text-sm"
+													title="Cancel"
+													onclick={() => {
+														add_version(false);
+													}}
 												>
-													<button
-														title="close"
-														onclick={() => {
-															edit_version(false);
-														}}
-													>
-														<CloseIcon class="fill-forest-900" />
-													</button>
-												</Motion>
-											</div>
-										</Motion>
-									</Show>
-									<div class="flex flex-row gap-4 items-center justify-between">
-										<FormSelect
-											value={""}
-											on_input={async (value) => {
-												update_version_form_data(
-													"selected_version",
-													value
-												);
+													Cancel
+												</Motion.button>
+											</nav>
+										</footer>
+									</Motion.article>
+								</Show>
+							</Presence>
 
-												if (
-													!version_form_data.selected_version ||
-													version_form_data.selected_version ===
-														version_form_data.current_version
-												)
-													return;
-												try {
-													await api.post(
-														"/resume/change-version",
-														{
-															version:
-																version_form_data.selected_version,
-														}
-													);
-													clear_cache();
-													refetch_version();
-													refetch_profile();
-												} catch (error) {
-													if (
-														(error as AxiosError)
-															.status === 402
-													) {
-														navigate("/pricing");
-													}
-													if (
-														(error as AxiosError)
-															.status !== 401
-													)
-														fault.minor({
-															message:
-																(
-																	(
-																		error as AxiosError
-																	).response
-																		?.data as any
-																).error ??
-																(
-																	error as AxiosError
-																).message,
-														});
-												}
-											}}
-											choices={
-												versions()?.all_versions ?? []
-											}
-											select_label="change version"
-										/>
-										<Motion
-											hover={{ scale: 1.1 }}
-											press={{ scale: 0.95 }}
-											transition={{ duration: 0.1 }}
-										>
-											<button
-												onClick={() => {
-													add_version(true);
-												}}
-												title="add a new version"
-											>
-												<AddIcon class="fill-forest-900" />
-											</button>
-										</Motion>
-									</div>
-									<Presence>
-										<Show when={adding_version()}>
-											<Motion
-												initial={{ opacity: 0, y: 5 }}
-												animate={{ opacity: 1, y: 0 }}
-												exit={{ opacity: 0, y: -5 }}
-												transition={{ duration: 0.2 }}
-											>
-												<div class="flex flex-row items-center justify-between gap-4">
-													<span class="flex flex-row grow gap-2 items-center">
-														<p class="text-nowrap">
-															Add a new version{" "}
-														</p>
-
-														<FormInputText
-															value={
-																version_form_data.new_version
-															}
-															on_input={(value) =>
-																update_version_form_data(
-																	"new_version",
-																	value
-																)
-															}
-															placeholder="version name eg. French resume"
-														/>
-													</span>
-													<div class="flex flex-row gap-4">
-														<Show
-															when={
-																version_form_data
-																	.new_version
-																	.length > 0
-															}
-														>
-															<Motion
-																hover={{
-																	scale: 1.1,
-																}}
-																press={{
-																	scale: 0.95,
-																}}
-																transition={{
-																	duration: 0.1,
-																}}
-															>
-																<button
-																	onClick={async () => {
-																		try {
-																			await api.post(
-																				"/resume/add-version",
-																				{
-																					new_version:
-																						version_form_data.new_version,
-																				}
-																			);
-																			refetch_version();
-																			refetch_profile();
-																			add_version(
-																				false
-																			);
-																		} catch (error) {
-																			if (
-																				(
-																					error as AxiosError
-																				)
-																					.status ===
-																				402
-																			) {
-																				navigate(
-																					"/pricing"
-																				);
-																			}
-																			if (
-																				(
-																					error as AxiosError
-																				)
-																					.status !==
-																				401
-																			)
-																				fault.minor(
-																					{
-																						message:
-																							(
-																								(
-																									error as AxiosError
-																								)
-																									.response
-																									?.data as any
-																							)
-																								.error ??
-																							(
-																								error as AxiosError
-																							)
-																								.message,
-																					}
-																				);
-																		}
-																	}}
-																	title="add a new version"
-																>
-																	<AddIcon class="fill-forest-900" />
-																</button>
-															</Motion>
-														</Show>
-														<Motion
-															hover={{
-																scale: 1.1,
-															}}
-															press={{
-																scale: 0.95,
-															}}
-															transition={{
-																duration: 0.1,
-															}}
-														>
-															<button
-																title="close"
-																onclick={() => {
-																	add_version(
-																		false
-																	);
-																}}
-															>
-																<CloseIcon class="fill-forest-900" />
-															</button>
-														</Motion>
-													</div>
-												</div>
-											</Motion>
-										</Show>
-									</Presence>
-								</Suspense>
-							</section>
-						</section>
-					</Motion>
-				</Show>
-
-				<Motion
-					initial={{ opacity: 0, y: 5 }}
-					animate={{ opacity: 1, y: 0 }}
-					transition={{ duration: 0.3, delay: 0.2 }}
-				>
-					<section class="p-4 border border-lapis-50 rounded-lg flex flex-col gap-4 relative overflow-hidden">
-						<Motion
-							initial={{ x: "-100%" }}
-							animate={{ x: "0%" }}
-							transition={{
-								duration: 0.4,
-								easing: "ease-out",
-								delay: 0.4,
-							}}
-							style={{
-								position: "absolute",
-								left: "0",
-								top: "0",
-								width: "3px",
-								height: "100%",
-								"background-color": "var(--lapis-200)",
-							}}
-						></Motion>
-						<header class="flex justify-between items-center border-b-2 border-forest-900 pb-2">
-							<Motion
-								initial={{ x: -5, opacity: 0 }}
-								animate={{ x: 0, opacity: 1 }}
-								transition={{ duration: 0.3, delay: 0.3 }}
-							>
-								<div class="flex flex-row gap-4">
-									<AccountIcon class="fill-forest-900" />
-									<h2 class="uppercase">My profile</h2>
-								</div>
-							</Motion>
+							{/* Usage tips section */}
 							<Show
-								when={editing_profile()}
-								fallback={
-									<Motion
-										hover={{ scale: 1.1 }}
-										press={{ scale: 0.95 }}
-										transition={{ duration: 0.1 }}
-									>
-										<button
-											disabled={editing_profile()}
-											onclick={() => edit_profile(true)}
-										>
-											<EditIcon class="fill-forest-500" />
-										</button>
-									</Motion>
-								}
+								when={!adding_version() && !editing_version()}
 							>
-								<Motion
-									hover={{ scale: 1.1 }}
-									press={{ scale: 0.95 }}
-									transition={{ duration: 0.1 }}
-								>
-									<button
-										type="button"
-										class="text-gray-500 hover:text-gray-600 text-sm font-medium smooth-transition"
-										onclick={() => {
-											edit_profile(false);
-											// Reset form data
-											update_profile_form_data({
-												linkedin: profile()?.linkedin,
-												website: profile()?.website,
-												description:
-													profile()?.description,
-											});
-										}}
-									>
-										<CancelIcon class="fill-forest-900" />
-									</button>
-								</Motion>
+								<footer class="mt-2 border-t border-forest-100 pt-3">
+									<h4 class="text-sm font-medium text-forest-700 mb-2">
+										Resume Version Ideas:
+									</h4>
+									<ul class="flex gap-2 flex-wrap">
+										<li class="bg-lapis-50 text-lapis-800 px-3 py-1 rounded-md text-xs">
+											Industry-specific
+										</li>
+										<li class="bg-lapis-50 text-lapis-800 px-3 py-1 rounded-md text-xs">
+											Different languages
+										</li>
+										<li class="bg-lapis-50 text-lapis-800 px-3 py-1 rounded-md text-xs">
+											Role-focused
+										</li>
+										<li class="bg-lapis-50 text-lapis-800 px-3 py-1 rounded-md text-xs">
+											Skill-focused
+										</li>
+									</ul>
+								</footer>
 							</Show>
-						</header>
-						<Presence>
-							<Show
-								when={editing_profile()}
-								fallback={
-									<Motion
-										initial={{ opacity: 0 }}
-										animate={{ opacity: 1 }}
-										transition={{ duration: 0.3 }}
-									>
-										<div class="flex flex-col gap-4">
-											<Motion
-												initial={{ opacity: 0, y: 5 }}
-												animate={{ opacity: 1, y: 0 }}
-												transition={{
-													duration: 0.2,
-													delay: 0.1,
-												}}
-											>
-												<article class="flex flex-col gap-1">
-													<h3 class="text-lg text-forest-700 font-medium">
-														Self description
-													</h3>
-													<ItemText>
-														{profile()
-															?.description ||
-															"Not specified"}
-													</ItemText>
-												</article>
-											</Motion>
+						</Suspense>
+					</section>
+				</Motion.article>
+			</Show>
 
-											<Motion
-												initial={{ opacity: 0, y: 5 }}
-												animate={{ opacity: 1, y: 0 }}
-												transition={{
-													duration: 0.2,
-													delay: 0.2,
-												}}
-											>
-												<article class="flex flex-col gap-1">
-													<h3 class="text-lg text-forest-700 font-medium">
-														Linkedin
-													</h3>
-													<a
-														class="text-forest-900"
-														href={
-															profile()
-																?.linkedin ?? ""
-														}
-													>
-														{profile()?.linkedin ||
-															"Not specified"}
-													</a>
-												</article>
-											</Motion>
-
-											<Motion
-												initial={{ opacity: 0, y: 5 }}
-												animate={{ opacity: 1, y: 0 }}
-												transition={{
-													duration: 0.2,
-													delay: 0.3,
-												}}
-											>
-												<article class="flex flex-col gap-1">
-													<h3 class="text-lg text-forest-700 font-medium">
-														Website
-													</h3>
-													<a
-														class="text-forest-900"
-														href={
-															profile()
-																?.website ?? ""
-														}
-													>
-														{profile()?.website ||
-															"Not specified"}
-													</a>
-												</article>
-											</Motion>
-										</div>
-									</Motion>
-								}
+			<Motion.section
+				initial={{ opacity: 0, y: 5 }}
+				animate={{ opacity: 1, y: 0 }}
+				transition={{ duration: 0.3, delay: 0.2 }}
+				class="p-4 border bg-white border-lapis-50 rounded-lg flex flex-col gap-4 relative overflow-hidden"
+			>
+				<Motion
+					initial={{ x: "-100%" }}
+					animate={{ x: "0%" }}
+					transition={{
+						duration: 0.4,
+						easing: "ease-out",
+						delay: 0.4,
+					}}
+					style={{
+						position: "absolute",
+						left: "0",
+						top: "0",
+						width: "3px",
+						height: "100%",
+						"background-color": "var(--lapis-200)",
+					}}
+				></Motion>
+				<header class="flex justify-between items-center border-b-2 border-forest-900 pb-2">
+					<Motion.div
+						initial={{ x: -5, opacity: 0 }}
+						animate={{ x: 0, opacity: 1 }}
+						transition={{ duration: 0.3, delay: 0.3 }}
+						class="flex flex-row gap-4"
+					>
+						<AccountIcon class="min-w-fit fill-forest-900" />
+						<h2 class="uppercase">My profile</h2>
+					</Motion.div>
+					<Show
+						when={editing_profile()}
+						fallback={
+							<Motion.button
+								hover={{ scale: 1.1 }}
+								press={{ scale: 0.95 }}
+								transition={{ duration: 0.1 }}
+								disabled={editing_profile()}
+								onclick={() => edit_profile(true)}
 							>
-								<Motion
+								<EditIcon class="min-w-fit fill-forest-500" />
+							</Motion.button>
+						}
+					>
+						<Motion.button
+							hover={{ scale: 1.1 }}
+							press={{ scale: 0.95 }}
+							transition={{ duration: 0.1 }}
+							type="button"
+							class="text-gray-500 hover:text-gray-600 text-sm font-medium"
+							onclick={() => {
+								edit_profile(false);
+								// Reset form data
+								update_profile_form_data({
+									linkedin: profile()?.linkedin,
+									website: profile()?.website,
+									description: profile()?.description,
+								});
+							}}
+						>
+							<CancelIcon class="min-w-fit fill-forest-900" />
+						</Motion.button>
+					</Show>
+				</header>
+				<Presence>
+					<Show
+						when={editing_profile()}
+						fallback={
+							<Motion.div
+								initial={{ opacity: 0 }}
+								animate={{ opacity: 1 }}
+								transition={{ duration: 0.3 }}
+								class="flex flex-col gap-4"
+							>
+								<Motion.article
 									initial={{ opacity: 0, y: 5 }}
 									animate={{ opacity: 1, y: 0 }}
-									exit={{ opacity: 0, y: -5 }}
-									transition={{ duration: 0.3 }}
+									transition={{
+										duration: 0.2,
+										delay: 0.1,
+									}}
+									class="flex flex-col gap-1"
 								>
-									<form
-										class="flex flex-col gap-2"
-										onSubmit={async (e) => {
-											e.preventDefault();
-											try {
-												await api.post(
-													"/account/profile/update",
-													profile_form_data
-												);
-												edit_profile(false);
-												refetch_profile();
-											} catch (error) {}
-										}}
+									<h3 class="text-lg text-forest-700 font-medium">
+										Self description
+									</h3>
+									<ItemText>
+										<Show
+											when={profile()?.description}
+											fallback="Not specified"
+										>
+											{profile()?.description}
+										</Show>
+									</ItemText>
+								</Motion.article>
+
+								<Motion.article
+									initial={{ opacity: 0, y: 5 }}
+									animate={{ opacity: 1, y: 0 }}
+									transition={{
+										duration: 0.2,
+										delay: 0.2,
+									}}
+									class="flex flex-col gap-1"
+								>
+									<h3 class="text-lg text-forest-700 font-medium">
+										Linkedin
+									</h3>
+									<a
+										class="text-forest-900"
+										href={profile()?.linkedin ?? ""}
 									>
-										<FormLabeledInput label="Description">
-											<FormTextArea
-												value={
-													profile_form_data.description ??
-													""
-												}
-												on_input={(value) => {
-													update_profile_form_data(
-														"description",
-														value
-													);
-												}}
-												placeholder="Write your description"
-											/>
-										</FormLabeledInput>
-										<FormLabeledInput label="Linkedin">
-											<FormInputText
-												value={
-													profile_form_data.linkedin ??
-													""
-												}
-												on_input={(value) =>
-													update_profile_form_data(
-														"linkedin",
-														value
-													)
-												}
-												placeholder="Write your linkedin link"
-											/>
-										</FormLabeledInput>
+										{profile()?.linkedin || "Not specified"}
+									</a>
+								</Motion.article>
 
-										<FormLabeledInput label="Website">
-											<FormInputText
-												value={
-													profile_form_data.website ??
-													""
-												}
-												on_input={(value) =>
-													update_profile_form_data(
-														"website",
-														value
-													)
-												}
-												placeholder="Write your website link"
-											/>
-										</FormLabeledInput>
+								<Motion.article
+									initial={{ opacity: 0, y: 5 }}
+									animate={{ opacity: 1, y: 0 }}
+									transition={{
+										duration: 0.2,
+										delay: 0.3,
+									}}
+									class="flex flex-col gap-1"
+								>
+									<h3 class="text-lg text-forest-700 font-medium">
+										Website
+									</h3>
+									<a
+										class="text-forest-900"
+										href={profile()?.website ?? ""}
+									>
+										{profile()?.website || "Not specified"}
+									</a>
+								</Motion.article>
+							</Motion.div>
+						}
+					>
+						<Motion.form
+							initial={{ opacity: 0, y: 5 }}
+							animate={{ opacity: 1, y: 0 }}
+							exit={{ opacity: 0, y: -5 }}
+							transition={{ duration: 0.3 }}
+							class="flex flex-col gap-2"
+							onSubmit={async (e) => {
+								e.preventDefault();
+								try {
+									await api.post(
+										"/account/profile/update",
+										profile_form_data
+									);
+									edit_profile(false);
+									refetch_profile();
+								} catch (error) {}
+							}}
+						>
+							<FormLabeledInput label="Description">
+								<FormTextArea
+									value={profile_form_data.description ?? ""}
+									on_input={(value) => {
+										update_profile_form_data(
+											"description",
+											value
+										);
+									}}
+									placeholder="Write your description"
+								/>
+							</FormLabeledInput>
+							<FormLabeledInput label="Linkedin">
+								<FormInputText
+									value={profile_form_data.linkedin ?? ""}
+									on_input={(value) =>
+										update_profile_form_data(
+											"linkedin",
+											value
+										)
+									}
+									placeholder="Write your linkedin link"
+								/>
+							</FormLabeledInput>
 
-										<div class="self-end">
-											<FormSubmitButton />
-										</div>
-									</form>
-								</Motion>
-							</Show>
-						</Presence>
-					</section>
-				</Motion>
-			</section>
-		</Motion>
+							<FormLabeledInput label="Website">
+								<FormInputText
+									value={profile_form_data.website ?? ""}
+									on_input={(value) =>
+										update_profile_form_data(
+											"website",
+											value
+										)
+									}
+									placeholder="Write your website link"
+								/>
+							</FormLabeledInput>
+
+							<div class="self-end">
+								<FormSubmitButton />
+							</div>
+						</Motion.form>
+					</Show>
+				</Presence>
+			</Motion.section>
+		</Motion.section>
 	);
 }
 
