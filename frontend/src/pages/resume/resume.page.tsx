@@ -722,23 +722,12 @@ function Resume(props: ResumeProps) {
 											update_resume_data.skills.findIndex(
 												(v) => v.skill_id === id
 											);
-										console.log(idx);
-										console.log({
-											before: update_resume_data.skills[
-												idx
-											].is_visible,
-										});
 
 										update_resume_data.skills[
 											idx
 										].is_visible =
 											!update_resume_data.skills[idx]
 												.is_visible;
-										console.log({
-											after: update_resume_data.skills[
-												idx
-											].is_visible,
-										});
 
 										await DB_JOB_SPECIFIC_RESUMES.upsert(
 											db,

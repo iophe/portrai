@@ -419,7 +419,6 @@ async function split_page(
 
 		// Try to find cut-off elements
 		const hierarchy = get_cutoff_element_hierarchy(current_page);
-		console.log(hierarchy);
 
 		// If no hierarchy found, this page doesn't need splitting
 		if (hierarchy.length === 0) {
@@ -430,7 +429,6 @@ async function split_page(
 		if (!cutoff_child) {
 			return;
 		}
-		console.log(cutoff_child);
 
 		// Extract cut-off elements
 		const cutoffs = extract_cutoff_elements(
@@ -438,7 +436,6 @@ async function split_page(
 			hierarchy,
 			current_page
 		);
-		console.log(cutoffs);
 
 		// If no elements were removed, this page doesn't need splitting
 		if (cutoffs.removed_elements.length === 0) {
