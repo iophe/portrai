@@ -61,10 +61,7 @@ export function FormInputText(props: FormInputTextProps) {
 	};
 
 	return (
-		<Motion.input
-			initial={{ opacity: 0, scaleY: 0.95 }}
-			animate={{ opacity: 1, scaleY: 1 }}
-			transition={{ duration: 0.1 }}
+		<input
 			type="text"
 			value={props.value}
 			placeholder={props.placeholder}
@@ -87,10 +84,7 @@ interface FormInputTelephoneProps {
 
 export function FormInputTelephone(props: FormInputTelephoneProps) {
 	return (
-		<Motion.input
-			initial={{ opacity: 0, scaleY: 0.95 }}
-			animate={{ opacity: 1, scaleY: 1 }}
-			transition={{ duration: 0.1 }}
+		<input
 			type="tel"
 			value={props.value}
 			placeholder={props.placeholder}
@@ -124,10 +118,7 @@ export function FormTextArea(props: FormTextAreaProps) {
 	};
 
 	return (
-		<Motion.textarea
-			initial={{ opacity: 0, scaleY: 0.95 }}
-			animate={{ opacity: 1, scaleY: 1 }}
-			transition={{ duration: 0.1 }}
+		<textarea
 			value={props.value}
 			placeholder={props.placeholder}
 			onInput={handleInput}
@@ -150,10 +141,7 @@ interface FormInputDateProps {
 
 export function FormInputDate(props: FormInputDateProps) {
 	return (
-		<Motion.input
-			initial={{ opacity: 0, scaleY: 0.95 }}
-			animate={{ opacity: 1, scaleY: 1 }}
-			transition={{ duration: 0.1 }}
+		<input
 			type="date"
 			value={props.value}
 			placeholder={props.placeholder}
@@ -198,10 +186,7 @@ interface FormSelectProps {
 
 export function FormSelect(props: FormSelectProps) {
 	return (
-		<Motion.select
-			initial={{ opacity: 0, scaleY: 0.95 }}
-			animate={{ opacity: 1, scaleY: 1 }}
-			transition={{ duration: 0.1 }}
+		<select
 			value={props.value}
 			onChange={(e) => props.on_input(e.currentTarget.value)}
 			class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-lapis-500"
@@ -210,7 +195,7 @@ export function FormSelect(props: FormSelectProps) {
 			<For each={props.choices}>
 				{(choice) => <option value={choice}>{choice}</option>}
 			</For>
-		</Motion.select>
+		</select>
 	);
 }
 

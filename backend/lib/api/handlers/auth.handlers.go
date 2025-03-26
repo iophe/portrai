@@ -32,6 +32,7 @@ type AuthResponse struct {
 type EmailSignupData struct {
 	Email          string `json:"email"`
 	Password       string `json:"password"`
+	TermsAccepted  bool   `json:"terms_accepted"`
 	EmailConfirm   bool   `json:"email_confirm,omitempty"`    // Whether to send confirmation email
 	RedirectTo     string `json:"redirect_to,omitempty"`      // URL to redirect after verification
 	DataInRedirect bool   `json:"data_in_redirect,omitempty"` // Whether to include user data in redirect
@@ -100,7 +101,8 @@ func HandleEmailSignin(c *fiber.Ctx, data EmailSigninData) (AuthResponse, error)
 }
 
 type GoogleSignupData struct {
-	IdToken string `json:"id_token"`
+	IdToken       string `json:"id_token"`
+	TermsAccepted bool   `json:"terms_accepted"`
 }
 
 func HandleGoogleSignin(c *fiber.Ctx, data GoogleSignupData) (AuthResponse, error) {

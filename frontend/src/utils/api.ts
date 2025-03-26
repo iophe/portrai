@@ -29,7 +29,7 @@ api.interceptors.request.use(
 				config.headers["X-Csrf-Token"] = csrfToken;
 			} else {
 				try {
-					await api.get("/account/csrf-update");
+					await api.get("/csrf/update");
 					const csrfToken = getCSRFToken();
 					config.headers["X-Csrf-Token"] = csrfToken;
 				} catch {}
