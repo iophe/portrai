@@ -5,63 +5,99 @@ import { createResource, createSignal, For, Show, Suspense } from "solid-js";
 import { createStore } from "solid-js/store";
 import { EducationForm, EducationView } from "./education.view";
 import { Ordered } from "../ordered.util";
+import SectionHeader from "../utils/section.header";
+import LoadingSpinner from "@components/loading.spinner";
+import HelpIcon from "@assets/icons/help.svg?component-solid";
+import { createCachedResource } from "@utils/cache";
+import { useNavigate } from "@solidjs/router";
 
 interface EducationListProps {}
 
 export function EducationList(props: EducationListProps) {
 	const fault = useFault();
+	const navigate = useNavigate();
 
-	const [educations, { mutate, refetch }] = createResource(async () => {
-		try {
-			const response = await api.get("/resume/education/all");
-			const result: EducationsResponse =
-				response.data as EducationsResponse;
-			return result.educations;
-		} catch (error) {
-			fault.minor({
-				message:
-					((error as AxiosError).response?.data as any).error ??
-					(error as AxiosError).message,
-			});
-			return [];
-		}
-	});
+	const [educations, { mutate, refetch }] = createCachedResource(
+		async () => {
+			try {
+				const response = await api.get(
+					"/resume/items/by-type?item_type=education"
+				);
+				const result = response.data.items as ResumeItem[];
+
+				const educationItems = result.map((item) => ({
+					education_id: item.item_id,
+					degree: item.title,
+					school: item.subtitle,
+					location: item.location,
+					start_date: item.start_date,
+					optional_end_date: item.end_date,
+					is_current: item.is_current,
+					description: item.description,
+					priority: item.priority,
+					is_visible: item.is_visible,
+					tags: item.tags,
+					notes: item.notes,
+				}));
+
+				return educationItems as Education[];
+			} catch (error) {
+				if ((error as AxiosError).status === 402) {
+					navigate("/pricing");
+				}
+				if (
+					(error as AxiosError).status !== 401 &&
+					(error as AxiosError).status !== 402
+				)
+					fault.minor({
+						message:
+							((error as AxiosError).response?.data as any)
+								.error ?? (error as AxiosError).message,
+					});
+				return [];
+			}
+		},
+		{ cache_key: "EducationList:/resume/items/by-type?item_type=education" }
+	);
 
 	const [editing_educations, updateEditingEducations] = createStore(
 		[] as number[]
 	);
 
-	const [creating_new, createNew] = createSignal(false);
 	const [dragged_id, set_dragged_id] = createSignal<number | null>(null);
 
 	return (
 		<section class="w-full flex flex-col gap-4 justify-items-center">
-			<span class="flex flex-row gap-4">
-				<h2 class="text-2xl font-semibold text-gray-900">Education</h2>
-				<button
-					onClick={() => createNew(true)}
-					class="px-4 py-2 bg-gray-900 text-white rounded hover:bg-gray-800"
-				>
-					Add Education
-				</button>
-			</span>
-			<Show when={creating_new()}>
-				<EducationForm
-					onCancel={() => {
-						createNew(false);
-					}}
-					onSubmit={() => {
-						refetch();
-						createNew(false);
-					}}
-					is_new
-				/>
-			</Show>
-			<Suspense
+			<SectionHeader
+				add={() => {}}
+				section_title="Educations"
+				section_name="education"
+				form={(props) => (
+					<EducationForm
+						delete={() => {}}
+						onCancel={() => {
+							props.cancel();
+						}}
+						onSubmit={() => {
+							props.submit();
+							refetch();
+						}}
+						is_new
+					/>
+				)}
+				list={educations}
 				fallback={
-					<p class="text-gray-500">Loading education history...</p>
+					<span class="flex flex-wrap gap-2 text-lapis-500">
+						<HelpIcon class="min-w-fit fill-lapis-400" />{" "}
+						<p>
+							Add your educational background and qualifications
+							in your resume
+						</p>{" "}
+					</span>
 				}
-			>
+			/>
+
+			<Suspense fallback={<LoadingSpinner />}>
 				<For each={educations()}>
 					{(education) => {
 						return (
@@ -72,7 +108,7 @@ export function EducationList(props: EducationListProps) {
 									editing_educations.includes(id)
 								}
 								id={education.education_id}
-								getId={(e: Education) => e.education_id}
+								getId={(e) => e.education_id}
 								list={educations}
 								onSubmit={async (
 									new_list,
@@ -82,21 +118,32 @@ export function EducationList(props: EducationListProps) {
 									mutate(new_list);
 									try {
 										await api.post(
-											"/resume/education/reorder",
+											"/resume/items/reorder",
 											{
-												education_id: source_id,
+												item_id: source_id,
 												after_id: target_id,
+												item_type: "education", // Specify the item type
 											}
 										);
 									} catch (error) {
-										fault.minor({
-											message:
-												(
+										if (
+											(error as AxiosError).status === 402
+										) {
+											navigate("/pricing");
+										}
+										if (
+											(error as AxiosError).status !== 401
+										)
+											fault.minor({
+												message:
+													(
+														(error as AxiosError)
+															.response
+															?.data as any
+													).error ??
 													(error as AxiosError)
-														.response?.data as any
-												).error ??
-												(error as AxiosError).message,
-										});
+														.message,
+											});
 									}
 								}}
 							>
@@ -106,34 +153,17 @@ export function EducationList(props: EducationListProps) {
 									)}
 									fallback={
 										<EducationView
+											refetch={() => refetch()}
+											set_dragged_id={set_dragged_id}
+											draggable={(id) =>
+												editing_educations.includes(id)
+											}
 											education={education}
 											edit={(education_id) => {
 												updateEditingEducations([
 													...editing_educations,
 													education_id,
 												]);
-											}}
-											delete={async (education_id) => {
-												try {
-													await api.post(
-														"/resume/education/delete",
-														{ education_id }
-													);
-													refetch();
-												} catch (error) {
-													fault.minor({
-														message:
-															(
-																(
-																	error as AxiosError
-																).response
-																	?.data as any
-															).error ??
-															(
-																error as AxiosError
-															).message,
-													});
-												}
 											}}
 										/>
 									}
@@ -149,6 +179,42 @@ export function EducationList(props: EducationListProps) {
 												)
 											);
 										}}
+										delete={async () => {
+											try {
+												await api.post(
+													"/resume/items/delete",
+													{
+														item_id:
+															education.education_id,
+														item_type: "education", // Specify the item type
+													}
+												);
+												refetch();
+											} catch (error) {
+												if (
+													(error as AxiosError)
+														.status === 402
+												) {
+													navigate("/pricing");
+												}
+												if (
+													(error as AxiosError)
+														.status !== 401
+												)
+													fault.minor({
+														message:
+															(
+																(
+																	error as AxiosError
+																).response
+																	?.data as any
+															).error ??
+															(
+																error as AxiosError
+															).message,
+													});
+											}
+										}}
 										onSubmit={() => {
 											refetch();
 											updateEditingEducations(
@@ -159,6 +225,138 @@ export function EducationList(props: EducationListProps) {
 												)
 											);
 										}}
+									/>
+								</Show>
+							</Ordered>
+						);
+					}}
+				</For>
+			</Suspense>
+		</section>
+	);
+}
+
+interface OfflineEducationListProps {
+	educations: Education[];
+	add: (education: Education) => void;
+	update: (education: Education) => void;
+	delete: (id: number) => void;
+	reorder: (new_list: Education[]) => void;
+	toggle_visibility: (id: number) => void;
+}
+
+export function OfflineEducationList(props: OfflineEducationListProps) {
+	const fault = useFault();
+
+	const [editing_educations, updateEditingEducations] = createStore(
+		[] as number[]
+	);
+
+	const [dragged_id, set_dragged_id] = createSignal<number | null>(null);
+
+	return (
+		<section class="w-full flex flex-col gap-4 justify-items-center">
+			<SectionHeader
+				add={() => {}}
+				section_title="Educations"
+				section_name="education"
+				form={(p) => (
+					<EducationForm
+						delete={() => {}}
+						onCancel={() => {
+							p.cancel();
+						}}
+						onSubmit={(id, v) => {
+							p.submit();
+							props.add(v);
+						}}
+						is_new
+						offline
+					/>
+				)}
+				open={props.educations.length === 0}
+				fallback={
+					<span class="flex flex-wrap gap-2 text-lapis-500">
+						<HelpIcon class="min-w-fit fill-lapis-400" />{" "}
+						<p>
+							Add some educational background and qualifications
+							in this resume
+						</p>{" "}
+					</span>
+				}
+			/>
+
+			<Suspense fallback={<LoadingSpinner />}>
+				<For each={props.educations}>
+					{(education) => {
+						return (
+							<Ordered
+								set_dragged_id={set_dragged_id}
+								dragged_id={dragged_id}
+								draggable={(id) =>
+									editing_educations.includes(id)
+								}
+								id={education.education_id}
+								getId={(e) => e.education_id}
+								list={() => props.educations}
+								onSubmit={async (
+									new_list,
+									source_id,
+									target_id
+								) => {
+									props.reorder(new_list);
+								}}
+							>
+								<Show
+									when={editing_educations.includes(
+										education.education_id
+									)}
+									fallback={
+										<EducationView
+											refetch={() => {}}
+											set_dragged_id={set_dragged_id}
+											draggable={(id) =>
+												editing_educations.includes(id)
+											}
+											education={education}
+											toggle_visibility={
+												props.toggle_visibility
+											}
+											edit={(education_id) => {
+												updateEditingEducations([
+													...editing_educations,
+													education_id,
+												]);
+											}}
+											offline
+										/>
+									}
+								>
+									<EducationForm
+										education={education}
+										onCancel={() => {
+											updateEditingEducations(
+												editing_educations.filter(
+													(id) =>
+														id !==
+														education.education_id
+												)
+											);
+										}}
+										delete={(id) => {
+											props.delete(id);
+										}}
+										onSubmit={(id, v) => {
+											props.update(v);
+											updateEditingEducations(
+												editing_educations.filter(
+													(id) =>
+														id !==
+														education.education_id
+												)
+											);
+										}}
+										offline
 									/>
 								</Show>
 							</Ordered>

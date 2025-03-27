@@ -5,62 +5,94 @@ import { createResource, createSignal, For, Show, Suspense } from "solid-js";
 import { createStore } from "solid-js/store";
 import { ProjectForm, ProjectView } from "./project.view";
 import { Ordered } from "../ordered.util";
+import SectionHeader from "../utils/section.header";
+import LoadingSpinner from "@components/loading.spinner";
+import HelpIcon from "@assets/icons/help.svg?component-solid";
+import { createCachedResource } from "@utils/cache";
+import { useNavigate } from "@solidjs/router";
 
 interface ProjectListProps {}
 
 export function ProjectList(props: ProjectListProps) {
 	const fault = useFault();
+	const navigate = useNavigate();
 
-	const [projects, { mutate, refetch }] = createResource(async () => {
-		try {
-			const response = await api.get("/resume/project/all");
-			const result: ProjectsResponse = response.data as ProjectsResponse;
-			return result.projects;
-		} catch (error) {
-			fault.minor({
-				message:
-					((error as AxiosError).response?.data as any).error ??
-					(error as AxiosError).message,
-			});
-			return [];
-		}
-	});
+	const [projects, { mutate, refetch }] = createCachedResource(
+		async () => {
+			try {
+				const response = await api.get(
+					"/resume/items/by-type?item_type=project"
+				);
+				const result = response.data.items as ResumeItem[];
+
+				const projectItems = result.map((item) => ({
+					project_id: item.item_id,
+					project_title: item.title,
+					optional_project_subtitle: item.subtitle,
+					start_date: item.start_date,
+					optional_end_date: item.end_date,
+					is_current: item.is_current,
+					description: item.description,
+					priority: item.priority,
+					is_visible: item.is_visible,
+					tags: item.tags,
+					notes: item.notes,
+				}));
+
+				return projectItems as Project[];
+			} catch (error) {
+				if ((error as AxiosError).status === 402) {
+					navigate("/pricing");
+				}
+				if (
+					(error as AxiosError).status !== 401 &&
+					(error as AxiosError).status !== 402
+				)
+					fault.minor({
+						message:
+							((error as AxiosError).response?.data as any)
+								.error ?? (error as AxiosError).message,
+					});
+				return [];
+			}
+		},
+		{ cache_key: "ProjectList:/resume/items/by-type?item_type=project" }
+	);
 
 	const [editing_projects, updateEditingProjects] = createStore(
 		[] as number[]
 	);
 
-	const [creating_new, createNew] = createSignal(false);
 	const [dragged_id, set_dragged_id] = createSignal<number | null>(null);
 
 	return (
 		<section class="w-full flex flex-col gap-4 justify-items-center">
-			<span class="flex flex-row gap-4">
-				<h2 class="text-2xl font-semibold text-gray-900">
-					Projects & Portfolio
-				</h2>
-				<button
-					onClick={() => createNew(true)}
-					class="px-4 py-2 bg-gray-900 text-white rounded hover:bg-gray-800"
-				>
-					Add Project
-				</button>
-			</span>
-			<Show when={creating_new()}>
-				<ProjectForm
-					onCancel={() => {
-						createNew(false);
-					}}
-					onSubmit={() => {
-						refetch();
-						createNew(false);
-					}}
-					is_new
-				/>
-			</Show>
-			<Suspense
-				fallback={<p class="text-gray-500">Loading projects...</p>}
-			>
+			<SectionHeader
+				add={() => {}}
+				section_title="Projects"
+				section_name="project"
+				form={(props) => (
+					<ProjectForm
+						delete={() => {}}
+						onCancel={() => {
+							props.cancel();
+						}}
+						onSubmit={() => {
+							props.submit();
+							refetch();
+						}}
+						is_new
+					/>
+				)}
+				list={projects}
+				fallback={
+					<span class="flex flex-wrap gap-2 text-lapis-500">
+						<HelpIcon class="min-w-fit fill-lapis-400" />{" "}
+						<p>Add your personal projects in your resume</p>{" "}
+					</span>
+				}
+			/>
+			<Suspense fallback={<LoadingSpinner />}>
 				<For each={projects()}>
 					{(project) => {
 						return (
@@ -71,7 +103,7 @@ export function ProjectList(props: ProjectListProps) {
 									editing_projects.includes(id)
 								}
 								id={project.project_id}
-								getId={(e: Project) => e.project_id}
+								getId={(e) => e.project_id}
 								list={projects}
 								onSubmit={async (
 									new_list,
@@ -81,21 +113,32 @@ export function ProjectList(props: ProjectListProps) {
 									mutate(new_list);
 									try {
 										await api.post(
-											"/resume/project/reorder",
+											"/resume/items/reorder",
 											{
-												project_id: source_id,
+												item_id: source_id,
 												after_id: target_id,
+												item_type: "project", // Specify the item type
 											}
 										);
 									} catch (error) {
-										fault.minor({
-											message:
-												(
+										if (
+											(error as AxiosError).status === 402
+										) {
+											navigate("/pricing");
+										}
+										if (
+											(error as AxiosError).status !== 401
+										)
+											fault.minor({
+												message:
+													(
+														(error as AxiosError)
+															.response
+															?.data as any
+													).error ??
 													(error as AxiosError)
-														.response?.data as any
-												).error ??
-												(error as AxiosError).message,
-										});
+														.message,
+											});
 									}
 								}}
 							>
@@ -105,6 +148,11 @@ export function ProjectList(props: ProjectListProps) {
 									)}
 									fallback={
 										<ProjectView
+											refetch={() => refetch()}
+											set_dragged_id={set_dragged_id}
+											draggable={(id) =>
+												editing_projects.includes(id)
+											}
 											project={project}
 											edit={(project_id) => {
 												updateEditingProjects([
@@ -112,14 +160,33 @@ export function ProjectList(props: ProjectListProps) {
 													project_id,
 												]);
 											}}
-											delete={async (project_id) => {
-												try {
-													await api.post(
-														"/resume/project/delete",
-														{ project_id }
-													);
-													refetch();
-												} catch (error) {
+										/>
+									}
+								>
+									<ProjectForm
+										project={project}
+										delete={async () => {
+											try {
+												await api.post(
+													"/resume/items/delete",
+													{
+														item_id:
+															project.project_id,
+														item_type: "project", // Specify the item type
+													}
+												);
+												refetch();
+											} catch (error) {
+												if (
+													(error as AxiosError)
+														.status === 402
+												) {
+													navigate("/pricing");
+												}
+												if (
+													(error as AxiosError)
+														.status !== 401
+												)
 													fault.minor({
 														message:
 															(
@@ -132,13 +199,8 @@ export function ProjectList(props: ProjectListProps) {
 																error as AxiosError
 															).message,
 													});
-												}
-											}}
-										/>
-									}
-								>
-									<ProjectForm
-										project={project}
+											}
+										}}
 										onCancel={() => {
 											updateEditingProjects(
 												editing_projects.filter(
@@ -158,6 +220,134 @@ export function ProjectList(props: ProjectListProps) {
 												)
 											);
 										}}
+									/>
+								</Show>
+							</Ordered>
+						);
+					}}
+				</For>
+			</Suspense>
+		</section>
+	);
+}
+
+interface OfflineProjectListProps {
+	projects: Project[];
+	add: (project: Project) => void;
+	update: (project: Project) => void;
+	delete: (id: number) => void;
+	reorder: (new_list: Project[]) => void;
+	toggle_visibility: (id: number) => void;
+}
+
+export function OfflineProjectList(props: OfflineProjectListProps) {
+	const fault = useFault();
+
+	const [editing_projects, updateEditingProjects] = createStore(
+		[] as number[]
+	);
+
+	const [dragged_id, set_dragged_id] = createSignal<number | null>(null);
+
+	return (
+		<section class="w-full flex flex-col gap-4 justify-items-center">
+			<SectionHeader
+				add={() => {}}
+				section_title="Projects"
+				section_name="project"
+				form={(p) => (
+					<ProjectForm
+						delete={() => {}}
+						onCancel={() => {
+							p.cancel();
+						}}
+						onSubmit={(i, v) => {
+							p.submit();
+							props.add(v);
+						}}
+						is_new
+						offline
+					/>
+				)}
+				open={props.projects.length === 0}
+				fallback={
+					<span class="flex flex-wrap gap-2 text-lapis-500">
+						<HelpIcon class="min-w-fit fill-lapis-400" />{" "}
+						<p>Add some personal projects in this resume</p>{" "}
+					</span>
+				}
+			/>
+			<Suspense fallback={<LoadingSpinner />}>
+				<For each={props.projects}>
+					{(project) => {
+						return (
+							<Ordered
+								set_dragged_id={set_dragged_id}
+								dragged_id={dragged_id}
+								draggable={(id) =>
+									editing_projects.includes(id)
+								}
+								id={project.project_id}
+								getId={(e) => e.project_id}
+								list={() => props.projects}
+								onSubmit={async (
+									new_list,
+									source_id,
+									target_id
+								) => {
+									props.reorder(new_list);
+								}}
+							>
+								<Show
+									when={editing_projects.includes(
+										project.project_id
+									)}
+									fallback={
+										<ProjectView
+											refetch={() => {}}
+											set_dragged_id={set_dragged_id}
+											draggable={(id) =>
+												editing_projects.includes(id)
+											}
+											project={project}
+											toggle_visibility={
+												props.toggle_visibility
+											}
+											edit={(project_id) => {
+												updateEditingProjects([
+													...editing_projects,
+													project_id,
+												]);
+											}}
+											offline
+										/>
+									}
+								>
+									<ProjectForm
+										project={project}
+										delete={(id) => {
+											props.delete(id);
+										}}
+										onCancel={() => {
+											updateEditingProjects(
+												editing_projects.filter(
+													(id) =>
+														id !==
+														project.project_id
+												)
+											);
+										}}
+										onSubmit={(i, v) => {
+											props.update(v);
+											updateEditingProjects(
+												editing_projects.filter(
+													(id) =>
+														id !==
+														project.project_id
+												)
+											);
+										}}
+										offline
 									/>
 								</Show>
 							</Ordered>

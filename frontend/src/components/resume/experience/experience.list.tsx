@@ -5,6 +5,11 @@ import { createResource, createSignal, For, Show, Suspense } from "solid-js";
 import { createStore } from "solid-js/store";
 import { ExperienceForm, ExperienceView } from "./experience.view";
 import { Ordered } from "../ordered.util";
+import SectionHeader from "../utils/section.header";
+import LoadingSpinner from "@components/loading.spinner";
+import HelpIcon from "@assets/icons/help.svg?component-solid";
+import { createCachedResource } from "@utils/cache";
+import { useNavigate } from "@solidjs/router";
 
 interface ExperienceListProps {
 	onOrder?: (experienceIds: number[]) => void;
@@ -12,57 +17,92 @@ interface ExperienceListProps {
 
 export function ExperienceList(props: ExperienceListProps) {
 	const fault = useFault();
+	const navigate = useNavigate();
 
-	const [experiences, { mutate, refetch }] = createResource(async () => {
-		try {
-			const response = await api.get("/resume/experience/all");
-			const result: ExperiencesResponse =
-				response.data as ExperiencesResponse;
-			return result.experiences;
-		} catch (error) {
-			fault.minor({
-				message:
-					((error as AxiosError).response?.data as any).error ??
-					(error as AxiosError).message,
-			});
-			return [];
+	const [experiences, { mutate, refetch }] = createCachedResource(
+		async () => {
+			try {
+				const response = await api.get(
+					"/resume/items/by-type?item_type=experience"
+				);
+				const result = response.data.items as ResumeItem[];
+
+				const experienceItems: Experience[] = result.map(
+					(item) =>
+						({
+							experience_id: item.item_id,
+							job_title: item.title,
+							company_name: item.subtitle,
+							location: item.location,
+							start_date: item.start_date,
+							optional_end_date: item.end_date,
+							is_current: item.is_current,
+							description: item.description,
+							priority: item.priority,
+							is_visible: item.is_visible,
+							tags: item.tags,
+							notes: item.notes,
+						}) as Experience
+				);
+
+				return experienceItems;
+			} catch (error) {
+				if ((error as AxiosError).status === 402) {
+					navigate("/pricing");
+				}
+				if (
+					(error as AxiosError).status !== 401 &&
+					(error as AxiosError).status !== 402
+				)
+					fault.minor({
+						message:
+							((error as AxiosError).response?.data as any)
+								.error ?? (error as AxiosError).message,
+					});
+				return [];
+			}
+		},
+		{
+			cache_key:
+				"ExperienceList:/resume/items/by-type?item_type=experience",
 		}
-	});
+	);
 
 	const [editing_experiences, updateEditingExperiences] = createStore(
 		[] as number[]
 	);
-	const [creating_new, createNew] = createSignal(false);
 	const [dragged_id, set_dragged_id] = createSignal<number | null>(null);
 
 	return (
 		<section class="w-full flex flex-col gap-4 justify-items-center">
-			<span class="flex flex-row gap-4">
-				<h2 class="text-2xl font-semibold text-gray-900">
-					Professional Experiences
-				</h2>
-				<button
-					onClick={() => createNew(true)}
-					class="px-4 py-2 bg-gray-900 text-white rounded hover:bg-gray-800"
-				>
-					Add Experience
-				</button>
-			</span>
-			<Show when={creating_new()}>
-				<ExperienceForm
-					onCancel={() => {
-						createNew(false);
-					}}
-					onSubmit={() => {
-						refetch();
-						createNew(false);
-					}}
-					is_new
-				/>
-			</Show>
-			<Suspense
-				fallback={<p class="text-gray-500">Loading experiences...</p>}
-			>
+			<SectionHeader
+				add={() => {}}
+				section_title="Professional Experiences"
+				section_name="experience"
+				form={(props) => (
+					<ExperienceForm
+						delete={() => {
+							props.cancel();
+						}}
+						onCancel={() => {
+							props.cancel();
+						}}
+						onSubmit={() => {
+							props.submit();
+							refetch();
+						}}
+						is_new
+					/>
+				)}
+				list={experiences}
+				fallback={
+					<span class="flex flex-wrap gap-2 text-lapis-500">
+						<HelpIcon class="min-w-fit fill-lapis-400" />{" "}
+						<p>Add your professional experiences in your resume</p>{" "}
+					</span>
+				}
+			/>
+			<Suspense fallback={<LoadingSpinner />}>
 				<For each={experiences()}>
 					{(experience) => {
 						return (
@@ -73,7 +113,7 @@ export function ExperienceList(props: ExperienceListProps) {
 									editing_experiences.includes(id)
 								}
 								id={experience.experience_id}
-								getId={(e: Experience) => e.experience_id}
+								getId={(e) => e.experience_id}
 								list={experiences}
 								onSubmit={async (
 									new_list,
@@ -83,21 +123,32 @@ export function ExperienceList(props: ExperienceListProps) {
 									mutate(new_list);
 									try {
 										await api.post(
-											"/resume/experience/reorder",
+											"/resume/items/reorder",
 											{
-												experience_id: source_id,
+												item_id: source_id,
 												after_id: target_id,
+												item_type: "experience", // Specify the item type
 											}
 										);
 									} catch (error) {
-										fault.minor({
-											message:
-												(
+										if (
+											(error as AxiosError).status === 402
+										) {
+											navigate("/pricing");
+										}
+										if (
+											(error as AxiosError).status !== 401
+										)
+											fault.minor({
+												message:
+													(
+														(error as AxiosError)
+															.response
+															?.data as any
+													).error ??
 													(error as AxiosError)
-														.response?.data as any
-												).error ??
-												(error as AxiosError).message,
-										});
+														.message,
+											});
 									}
 								}}
 							>
@@ -107,6 +158,11 @@ export function ExperienceList(props: ExperienceListProps) {
 									)}
 									fallback={
 										<ExperienceView
+											refetch={() => refetch()}
+											set_dragged_id={set_dragged_id}
+											draggable={(id) =>
+												editing_experiences.includes(id)
+											}
 											experience={experience}
 											edit={(experience_id) => {
 												updateEditingExperiences([
@@ -114,16 +170,33 @@ export function ExperienceList(props: ExperienceListProps) {
 													experience_id,
 												]);
 											}}
-											delete={async (experience_id) => {
-												try {
-													await api.post(
-														"/resume/experience/delete",
-														{
-															experience_id,
-														}
-													);
-													refetch();
-												} catch (error) {
+										/>
+									}
+								>
+									<ExperienceForm
+										experience={experience}
+										delete={async () => {
+											try {
+												await api.post(
+													"/resume/items/delete",
+													{
+														item_id:
+															experience.experience_id,
+														item_type: "experience", // Specify the item type
+													}
+												);
+												refetch();
+											} catch (error) {
+												if (
+													(error as AxiosError)
+														.status === 402
+												) {
+													navigate("/pricing");
+												}
+												if (
+													(error as AxiosError)
+														.status !== 401
+												)
 													fault.minor({
 														message:
 															(
@@ -136,13 +209,8 @@ export function ExperienceList(props: ExperienceListProps) {
 																error as AxiosError
 															).message,
 													});
-												}
-											}}
-										/>
-									}
-								>
-									<ExperienceForm
-										experience={experience}
+											}
+										}}
 										onCancel={() => {
 											updateEditingExperiences(
 												editing_experiences.filter(
@@ -162,6 +230,133 @@ export function ExperienceList(props: ExperienceListProps) {
 												)
 											);
 										}}
+									/>
+								</Show>
+							</Ordered>
+						);
+					}}
+				</For>
+			</Suspense>
+		</section>
+	);
+}
+
+interface OfflineExperienceListProps {
+	experiences: Experience[];
+	add: (experience: Experience) => void;
+	update: (experience: Experience) => void;
+	delete: (id: number) => void;
+	toggle_visibility: (id: number) => void;
+	reorder: (new_list: Experience[]) => void;
+}
+
+export function OfflineExperienceList(props: OfflineExperienceListProps) {
+	const fault = useFault();
+
+	const [editing_experiences, updateEditingExperiences] = createStore(
+		[] as number[]
+	);
+	const [dragged_id, set_dragged_id] = createSignal<number | null>(null);
+
+	return (
+		<section class="w-full flex flex-col gap-4 justify-items-center">
+			<SectionHeader
+				add={() => {}}
+				section_title="Professional Experiences"
+				section_name="experience"
+				form={(p) => (
+					<ExperienceForm
+						delete={() => {}}
+						onCancel={() => {
+							p.cancel();
+						}}
+						onSubmit={(id, exp) => {
+							p.submit();
+							props.add(exp);
+						}}
+						is_new
+						offline
+					/>
+				)}
+				open={props.experiences.length === 0}
+				fallback={
+					<span class="flex flex-wrap gap-2 text-lapis-500">
+						<HelpIcon class="min-w-fit fill-lapis-400" />{" "}
+						<p>Add some professional experiences in this resume</p>{" "}
+					</span>
+				}
+			/>
+			<Suspense fallback={<LoadingSpinner />}>
+				<For each={props.experiences}>
+					{(experience) => {
+						return (
+							<Ordered
+								set_dragged_id={set_dragged_id}
+								dragged_id={dragged_id}
+								draggable={(id) =>
+									editing_experiences.includes(id)
+								}
+								id={experience.experience_id}
+								getId={(e) => e.experience_id}
+								list={() => props.experiences}
+								onSubmit={async (
+									new_list,
+									source_id,
+									target_id
+								) => {
+									props.reorder(new_list);
+								}}
+							>
+								<Show
+									when={editing_experiences.includes(
+										experience.experience_id
+									)}
+									fallback={
+										<ExperienceView
+											refetch={() => {}}
+											set_dragged_id={set_dragged_id}
+											draggable={(id) =>
+												editing_experiences.includes(id)
+											}
+											experience={experience}
+											edit={(experience_id) => {
+												updateEditingExperiences([
+													...editing_experiences,
+													experience_id,
+												]);
+											}}
+											toggle_visibility={
+												props.toggle_visibility
+											}
+											offline
+										/>
+									}
+								>
+									<ExperienceForm
+										experience={experience}
+										delete={(id) => {
+											props.delete(id);
+										}}
+										onCancel={() => {
+											updateEditingExperiences(
+												editing_experiences.filter(
+													(id) =>
+														id !==
+														experience.experience_id
+												)
+											);
+										}}
+										onSubmit={(id, exp) => {
+											props.update(exp);
+											updateEditingExperiences(
+												editing_experiences.filter(
+													(id) =>
+														id !==
+														experience.experience_id
+												)
+											);
+										}}
+										offline
 									/>
 								</Show>
 							</Ordered>

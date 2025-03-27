@@ -1,83 +1,109 @@
 import { useFault } from "@components/fault";
 import { api } from "@utils/api";
 import { AxiosError } from "axios";
-import { createSignal, For, Show } from "solid-js";
+import { createSignal, For, Setter, Show } from "solid-js";
 import { createStore } from "solid-js/store";
-import { AddNote, NoteList } from "../notes.util";
+import { NoteList } from "../notes.util";
+import ItemArticle from "../utils/item.article";
+import { ItemInfo, ItemText } from "../utils/item.content";
+import { FormTags, Tags } from "../utils/tags";
+import FormArticle from "../utils/form.article";
+import {
+	FormCancelButton,
+	FormCheckbox,
+	FormDeleteButton,
+	FormInputDate,
+	FormInputText,
+	FormLabeledInput,
+	FormSelect,
+	FormSubmitButton,
+	FormTextArea,
+} from "../utils/form.input";
+import { useNavigate } from "@solidjs/router";
 
 interface SkillViewProps {
 	skill: Skill;
 	edit: (skill_id: number) => void;
-	delete: (skill_id: number) => void;
+	refetch: () => void;
+	set_dragged_id: Setter<number | null>;
+	draggable: (id: number) => boolean;
+	offline?: boolean;
+	toggle_visibility?: (id: number) => void;
 }
 
 export function SkillView(props: SkillViewProps) {
+	const fault = useFault();
+	const navigate = useNavigate();
 	return (
-		<article class="p-4 border border-gray-200 rounded-lg flex flex-col gap-2">
-			<header class="flex flex-col justify-between items-start mb-2">
-				<h3 class="text-lg font-medium text-gray-900">
-					{props.skill.skill_name}
-				</h3>
-				<div class="flex flex-row gap-4">
-					<Show when={props.skill.optional_skill_type}>
-						<span class="text-gray-600">
-							Type: {props.skill.optional_skill_type}
-						</span>
-					</Show>
-					<Show when={props.skill.optional_skill_level}>
-						<span class="text-gray-600">
-							Level: {props.skill.optional_skill_level}
-						</span>
-					</Show>
-				</div>
-			</header>
-			<p class="text-gray-700">{props.skill.description}</p>
-			<footer class="mt-2">
-				<ul class="flex gap-2 flex-wrap">
-					<For each={props.skill.tags}>
-						{(tag) => (
-							<li class="px-2 py-1 bg-gray-100 text-gray-700 text-sm rounded">
-								{tag}
-							</li>
-						)}
-					</For>
-				</ul>
-			</footer>
-			<div class="self-end flex flex-row gap-4">
-				<button
-					title="Edit this skill"
-					class="self-end w-fit px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded"
-					onclick={() => {
-						props.edit(props.skill.skill_id);
-					}}
-				>
-					Edit
-				</button>
-				<button
-					title="Delete this skill"
-					class="self-end w-fit px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded"
-					onclick={() => {
-						props.delete(props.skill.skill_id);
-					}}
-				>
-					Delete
-				</button>
-			</div>
-			<NoteList notes={props.skill.notes} />
-			<AddNote id={props.skill.skill_id} section_type="skill" />
-		</article>
+		<ItemArticle
+			edit={props.edit}
+			item_id={props.skill.skill_id}
+			title={props.skill.skill_name}
+			set_dragged_id={props.set_dragged_id}
+			draggable={props.draggable}
+			is_visible={props.skill?.is_visible ?? true}
+			toggle_visibility={async () => {
+				if (!props.skill) return;
+				if (props.offline) {
+					props.toggle_visibility?.(props.skill.skill_id);
+				} else {
+					try {
+						await api.post("/resume/items/toggle", {
+							item_id: props.skill.skill_id,
+							item_type: "skill",
+						});
+						props.refetch();
+					} catch (error) {
+						if ((error as AxiosError).status === 402) {
+							navigate("/pricing");
+						}
+						if (
+							(error as AxiosError).status !== 401 &&
+							(error as AxiosError).status !== 402
+						)
+							fault.minor({
+								message:
+									(
+										(error as AxiosError).response
+											?.data as any
+									).error ?? (error as AxiosError).message,
+							});
+					}
+				}
+			}}
+		>
+			<Show when={props.skill.optional_skill_type}>
+				<ItemInfo>Type: {props.skill.optional_skill_type}</ItemInfo>
+			</Show>
+			<Show when={props.skill.optional_skill_level}>
+				<ItemInfo>Level: {props.skill.optional_skill_level}</ItemInfo>
+			</Show>
+			<ItemText>{props.skill.description}</ItemText>
+			<Tags values={props.skill.tags} />
+			<Show when={!props.offline}>
+				<NoteList
+					notes={props.skill.notes}
+					id={props.skill.skill_id}
+					section_type="skill" // Changed from "experience" to "skill" to fix a bug
+					refetch={props.refetch}
+				/>
+			</Show>
+		</ItemArticle>
 	);
 }
 
 interface SkillFormProps {
 	skill?: Skill;
 	is_new?: boolean;
-	onSubmit: (skill_id: number) => void;
+	delete: (id: number) => void;
+	onSubmit: (skill_id: number, s: Skill) => void;
 	onCancel: () => void;
+	offline?: boolean;
 }
 
 export function SkillForm(props: SkillFormProps) {
 	const fault = useFault();
+	const navigate = useNavigate();
 	const [form_data, setFormData] = createStore({
 		skill_name: props.skill?.skill_name || "",
 		optional_skill_type: props.skill?.optional_skill_type || "",
@@ -87,178 +113,181 @@ export function SkillForm(props: SkillFormProps) {
 		tags: props.skill?.tags || [],
 		notes: props.skill?.notes || [],
 	});
-	const [new_tag, setNewTag] = createSignal("");
 
-	async function handleSubmit(e: Event) {
-		e.preventDefault();
+	async function handleSubmit() {
 		if (!props.is_new) {
 			if (!props.skill) return;
 			try {
-				await api.post("/resume/skill/update", {
-					...form_data,
+				const itemData = {
+					item_id: props.skill.skill_id,
+					item_type: "skill",
+					title: form_data.skill_name,
+					subtitle: form_data.optional_skill_type,
+					description: form_data.description,
+					priority: form_data.priority,
+					tags: form_data.tags,
+					// Store skill level in metadata
+					metadata: {
+						skill_level: form_data.optional_skill_level,
+					},
+				};
+
+				if (!props.offline) {
+					await api.post("/resume/items/update", itemData);
+				}
+				props.onSubmit(props.skill.skill_id, {
 					skill_id: props.skill.skill_id,
+					skill_name: form_data.skill_name,
+					optional_skill_type: form_data.optional_skill_type,
+					optional_skill_level: form_data.optional_skill_level,
+					description: form_data.description,
+					priority: form_data.priority,
+					is_visible: true,
+					tags: form_data.tags,
+					notes: [],
 				});
-				props.onSubmit(props.skill.skill_id);
 			} catch (error) {
-				fault.minor({
-					message:
-						((error as AxiosError).response?.data as any).error ??
-						(error as AxiosError).message,
-				});
+				if ((error as AxiosError).status === 402) {
+					navigate("/pricing");
+				}
+				if (
+					(error as AxiosError).status !== 401 &&
+					(error as AxiosError).status !== 402
+				)
+					fault.minor({
+						message:
+							((error as AxiosError).response?.data as any)
+								.error ?? (error as AxiosError).message,
+					});
 			}
 		} else {
 			try {
-				const res = await api.post("/resume/skill/create", form_data);
-				const skill_id = res.data.skill_id;
-				props.onSubmit(skill_id);
-			} catch (error) {
-				fault.minor({
-					message:
-						((error as AxiosError).response?.data as any).error ??
-						(error as AxiosError).message,
-				});
-			}
-		}
-	}
+				const itemData = {
+					item_type: "skill",
+					title: form_data.skill_name,
+					subtitle: form_data.optional_skill_type,
+					description: form_data.description,
+					tags: form_data.tags,
+					// Store skill level in metadata
+					metadata: {
+						skill_level: form_data.optional_skill_level,
+					},
+				};
 
-	function addTag(e: KeyboardEvent) {
-		if (e.key === "Enter" && new_tag()) {
-			e.preventDefault();
-			setFormData("tags", [...form_data.tags, new_tag()]);
-			setNewTag("");
+				let item_id = 0;
+				if (!props.offline) {
+					const res = await api.post(
+						"/resume/items/create",
+						itemData
+					);
+					item_id = res.data.item_id;
+				}
+				props.onSubmit(item_id, {
+					skill_id: item_id,
+					skill_name: form_data.skill_name,
+					optional_skill_type: form_data.optional_skill_type,
+					optional_skill_level: form_data.optional_skill_level,
+					description: form_data.description,
+					priority: form_data.priority,
+					is_visible: true,
+					tags: form_data.tags,
+					notes: [],
+				});
+			} catch (error) {
+				if ((error as AxiosError).status === 402) {
+					navigate("/pricing");
+				}
+				if (
+					(error as AxiosError).status !== 401 &&
+					(error as AxiosError).status !== 402
+				)
+					fault.minor({
+						message:
+							((error as AxiosError).response?.data as any)
+								.error ?? (error as AxiosError).message,
+					});
+			}
 		}
 	}
 
 	return (
-		<form onSubmit={handleSubmit} class="">
-			<div class="space-y-2">
-				<label class="block text-sm font-medium text-gray-700">
-					Skill Name
-				</label>
-				<input
-					type="text"
-					value={form_data.skill_name}
-					onInput={(e) =>
-						setFormData("skill_name", e.currentTarget.value)
+		<FormArticle on_submit={handleSubmit}>
+			<FormDeleteButton
+				no_confirm={props.skill?.skill_id === undefined}
+				delete={() => {
+					if (props.skill?.skill_id) {
+						props.delete(props.skill?.skill_id);
+					} else {
+						props.onCancel();
 					}
-					class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-gray-500"
+				}}
+			/>
+			<FormLabeledInput label="Skill">
+				<FormInputText
+					value={form_data.skill_name}
+					on_input={(value) => setFormData("skill_name", value)}
+					placeholder="Write the skill"
 					required
 				/>
-			</div>
+			</FormLabeledInput>
 
-			<div class="grid grid-cols-2 gap-4">
-				<div class="space-y-2">
-					<label class="block text-sm font-medium text-gray-700">
-						Skill Type
-					</label>
-					<select
-						value={form_data.optional_skill_type}
-						onChange={(e) =>
-							setFormData(
-								"optional_skill_type",
-								e.currentTarget.value
-							)
-						}
-						class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-gray-500"
-					>
-						<option value="">Select Type</option>
-						<option value="Technical">Technical</option>
-						<option value="Soft">Soft</option>
-						<option value="Language">Language</option>
-						<option value="Tool">Tool</option>
-						<option value="Framework">Framework</option>
-						<option value="Platform">Platform</option>
-						<option value="Other">Other</option>
-					</select>
-				</div>
-
-				<div class="space-y-2">
-					<label class="block text-sm font-medium text-gray-700">
-						Skill Level
-					</label>
-					<select
-						value={form_data.optional_skill_level}
-						onChange={(e) =>
-							setFormData(
-								"optional_skill_level",
-								e.currentTarget.value
-							)
-						}
-						class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-gray-500"
-					>
-						<option value="">Select Level</option>
-						<option value="beginner">Beginner</option>
-						<option value="amateur">Amateur</option>
-						<option value="competent">Competent</option>
-						<option value="proficient">Proficient</option>
-						<option value="Expert">Expert</option>
-					</select>
-				</div>
-			</div>
-
-			<div class="space-y-2 mt-4">
-				<label class="block text-sm font-medium text-gray-700">
-					Description
-				</label>
-				<textarea
-					value={form_data.description}
-					onInput={(e) =>
-						setFormData("description", e.currentTarget.value)
+			<FormLabeledInput label="Skill Type" optional>
+				<FormSelect
+					value={form_data.optional_skill_type}
+					on_input={(value) =>
+						setFormData("optional_skill_type", value)
 					}
-					class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-gray-500"
-					rows="4"
+					choices={[
+						"Technical",
+						"Soft",
+						"Language",
+						"Tool",
+						"Framework",
+						"Platform",
+						"Other",
+					]}
+					select_label="Select Type"
 				/>
-			</div>
-
-			<div class="space-y-2">
-				<label class="block text-sm font-medium text-gray-700">
-					Tags
-				</label>
-				<input
-					type="text"
-					value={new_tag()}
-					onInput={(e) => setNewTag(e.currentTarget.value)}
-					onKeyPress={addTag}
-					placeholder="Press Enter to add tag"
-					class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-gray-500"
+			</FormLabeledInput>
+			<FormLabeledInput label="Skill Level" optional>
+				<FormSelect
+					value={form_data.optional_skill_level}
+					on_input={(value) =>
+						setFormData("optional_skill_level", value)
+					}
+					choices={[
+						"Beginner",
+						"Amateur",
+						"Competent",
+						"Proficient",
+						"Expert",
+					]}
+					select_label="Select Level"
 				/>
-				<ul class="flex gap-2 flex-wrap">
-					<For each={form_data.tags}>
-						{(tag, index) => (
-							<li class="px-2 py-1 bg-gray-100 text-gray-700 text-sm rounded flex items-center gap-1">
-								{tag}
-								<button
-									type="button"
-									onClick={() =>
-										setFormData("tags", (t) =>
-											t.filter((_, i) => i !== index())
-										)
-									}
-									class="text-gray-500 hover:text-gray-700"
-								>
-									×
-								</button>
-							</li>
-						)}
-					</For>
-				</ul>
-			</div>
+			</FormLabeledInput>
+			<FormLabeledInput label="Description">
+				<FormTextArea
+					placeholder="write the description of this skill"
+					value={form_data.description}
+					on_input={(value) => setFormData("description", value)}
+					rows={4}
+				/>
+			</FormLabeledInput>
 
-			<div class="flex justify-end gap-4 mt-4">
-				<button
-					type="button"
-					onClick={props.onCancel}
-					class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded"
-				>
-					Cancel
-				</button>
-				<button
-					type="submit"
-					class="px-4 py-2 bg-gray-900 text-white rounded hover:bg-gray-800"
-				>
-					Save Skill
-				</button>
+			<FormTags
+				add={(tag) => {
+					setFormData("tags", [...form_data.tags, tag]);
+				}}
+				delete={(idx) => {
+					setFormData("tags", (t) => t.filter((_, i) => i !== idx));
+				}}
+				tags={form_data.tags}
+			/>
+
+			<div class="flex justify-end gap-4">
+				<FormCancelButton cancel={props.onCancel} />
+				<FormSubmitButton />
 			</div>
-		</form>
+		</FormArticle>
 	);
 }

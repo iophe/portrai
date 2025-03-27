@@ -1,35 +1,60 @@
+import { Component, Show } from "solid-js";
 import { A } from "@solidjs/router";
-import { Show } from "solid-js";
-import HomeIcon from "@assets/icons/home.svg?component-solid";
+import { api } from "@utils/api";
 
-interface HeaderProps {
-	with_home?: boolean;
-}
+function Header() {
+	const is_authenticated = localStorage.getItem("IS_AUTHENTICATED");
 
-function Header(props: HeaderProps) {
 	return (
-		<header
-			class="
-            /fixed /top-4 
-            /md:right-4
-            /right-1/2 /translate-x-1/2 /md:translate-x-0
-
-			md:self-end self-center
-            bg-gray-100 rounded shadow-md shadow-gray-300
-            w-fit h-fit
-            flex flex-row items-center
-        "
-		>
-			<div class="flex flex-row gap-8 items-center py-2 px-4 text-nowrap">
-				<A href="/products">Products</A>
-				<A href="/pricing">Pricing</A>
-			</div>
-			<div class="bg-gray-700 w-full md:w-auto px-4 py-2 text-nowrap rounded-r gap-8 text-gray-100 flex flex-row items-center justify-center">
-				<Show
-					when={props.with_home}
-					fallback={<A href="/signin">Sign in</A>}
+		<header class="w-full flex md:flex-row flex-col gap-4 justify-between items-center">
+			<A href="/">
+				<h1 class="text-2xl tracking-widest">
+					PORTR<span class="alice-regular text-forest-900">AI</span>
+				</h1>
+			</A>
+			<div class="md:w-fit w-full flex flex-row md:gap-16 md:justify-center justify-between items-center">
+				{/* <A
+					href="/blog"
+					class="tracking-widest"
+					activeClass="text-forest-600"
 				>
-					<A href="/home">Home</A>
+					<h2>Blog</h2>
+				</A> */}
+				<A
+					href="/pricing"
+					class="tracking-widest"
+					activeClass="text-forest-600"
+				>
+					<h1>Pricing</h1>
+				</A>
+				<Show when={!is_authenticated}>
+					<A
+						href="/signin"
+						class="tracking-widest"
+						activeClass="text-forest-600"
+					>
+						<h1>Sign In</h1>
+					</A>
+				</Show>
+				<Show
+					when={is_authenticated}
+					fallback={
+						<A
+							href="/pricing"
+							class="tracking-widest bg-forest-800 text-snow-100 py-2 px-4 rounded"
+							activeClass="text-forest-600"
+						>
+							<h1 class="text-nowrap">Get Started</h1>
+						</A>
+					}
+				>
+					<A
+						href="/account"
+						class="tracking-widest bg-forest-800 text-snow-100 py-2 px-4 rounded"
+						activeClass="text-forest-600"
+					>
+						<h1 class="text-nowrap">My account</h1>
+					</A>
 				</Show>
 			</div>
 		</header>

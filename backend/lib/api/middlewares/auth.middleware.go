@@ -42,9 +42,19 @@ func Protected() fiber.Handler {
 		}
 
 		if token_str == "" {
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-				"error": "unauthorized: no token provided",
-			})
+			// Try to refresh using refresh token
+			refresh_token := c.Cookies("refresh_token")
+			if refresh_token != "" {
+				new_tokens, err := refreshSession(refresh_token)
+				if err == nil {
+					token_str = new_tokens.AccessToken
+					SetAuthCookies(c, new_tokens)
+				}
+			} else {
+				return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+					"error": "no refresh token",
+				})
+			}
 		}
 
 		// Parse and validate the JWT token
@@ -83,11 +93,16 @@ func Protected() fiber.Handler {
 							}
 							return []byte(secret), nil
 						})
+						if err != nil {
+							return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+								"error": "unexpected error while creating auth tokens",
+							})
+						}
 						SetAuthCookies(c, new_tokens)
 					}
 				} else {
 					return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-						"error": "token expired",
+						"error": "no refresh token",
 					})
 				}
 			} else {
@@ -203,7 +218,7 @@ func SetAuthCookies(c *fiber.Ctx, tokens *RefreshResponse) {
 		Name:     "access_token",
 		Value:    tokens.AccessToken,
 		Expires:  time.Now().Add(1 * time.Hour),
-		Secure:   true,
+		Secure:   utils.SECURE_COOKIE,
 		HTTPOnly: true,
 		SameSite: "Strict",
 	})
@@ -212,7 +227,27 @@ func SetAuthCookies(c *fiber.Ctx, tokens *RefreshResponse) {
 		Name:     "refresh_token",
 		Value:    tokens.RefreshToken,
 		Expires:  time.Now().Add(30 * 24 * time.Hour), // 30 days
-		Secure:   true,
+		Secure:   utils.SECURE_COOKIE,
+		HTTPOnly: true,
+		SameSite: "Strict",
+	})
+}
+
+func ClearAuthCookies(c *fiber.Ctx) {
+	c.Cookie(&fiber.Cookie{
+		Name:     "access_token",
+		Value:    "",
+		Expires:  time.Now().Add(-24 * time.Hour),
+		Secure:   utils.SECURE_COOKIE,
+		HTTPOnly: true,
+		SameSite: "Strict",
+	})
+
+	c.Cookie(&fiber.Cookie{
+		Name:     "refresh_token",
+		Value:    "",
+		Expires:  time.Now().Add(-24 * time.Hour),
+		Secure:   utils.SECURE_COOKIE,
 		HTTPOnly: true,
 		SameSite: "Strict",
 	})

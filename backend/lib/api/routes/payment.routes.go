@@ -11,11 +11,13 @@ import (
 func RegisterPaymentRoutes(group fiber.Router) {
 	payment_group := group.Group("/payment")
 
+	// Public route (webhook from Stripe)
 	payment_group.Post("/webhook", func(c *fiber.Ctx) error {
 		return handlers.HandleWebhook(c, &db.DB)
 	})
 
-	payment_group.Post("/create-checkout-session",
+	payment_group.Post(
+		"/create-checkout-session",
 		middlewares.Protected(),
 		func(c *fiber.Ctx) error {
 			var data handlers.CreateCheckoutData
@@ -28,17 +30,35 @@ func RegisterPaymentRoutes(group fiber.Router) {
 		},
 	)
 
-	payment_group.Post("/cancel-subscription/:subscription_id",
+	payment_group.Get("/status",
 		middlewares.Protected(),
 		func(c *fiber.Ctx) error {
-			var params handlers.CancelSubscriptionParams
-			if err := c.ParamsParser(&params); err != nil {
-				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-					"error": err,
-				})
-			}
-			return handlers.HandleCancelSubscription(c, params, &db.DB)
+			return handlers.HandlePaymentValidityStatus(c, &db.DB)
 		},
 	)
-
+	payment_group.Get("/history",
+		middlewares.Protected(),
+		func(c *fiber.Ctx) error {
+			return handlers.HandlePaymentHistory(c, &db.DB)
+		},
+	)
+	payment_group.Get("/refresh",
+		middlewares.Protected(),
+		func(c *fiber.Ctx) error {
+			user_id, err := middlewares.GetUserID(c)
+			if err != nil {
+				return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+					"error": "Unauthorized access",
+				})
+			}
+			token, err := middlewares.RefreshPaymentToken(user_id, &db.DB)
+			if err != nil {
+				return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+					"error": "failed to create payment token",
+				})
+			}
+			middlewares.SetPaymentCookies(c, token)
+			return c.SendStatus(fiber.StatusOK)
+		},
+	)
 }

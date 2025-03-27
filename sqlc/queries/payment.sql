@@ -1,117 +1,152 @@
--- name: GetPriceByID :one
+-- name: GetPriceByPlan :one
 SELECT 
     id,
+    product_id,
     unit_amount,
     currency,
     type,
     interval,
     interval_count
 FROM payment.prices 
-WHERE id = @price_id::text;
+WHERE plan = @plan::text;
+
 
 -- name: GetCustomerByUserID :one
 SELECT 
     id,
-    stripe_customer_id
+    stripe_customer_id,
+    email
 FROM payment.customers 
 WHERE id = @user_id::uuid;
+
+-- name: GetValidityPeroidByProductID :one
+SELECT 
+    validity_period
+FROM payment.products 
+WHERE id = @product_id::text;
 
 -- name: GetCustomerByStripeID :one
 SELECT 
     id,
-    stripe_customer_id
+    stripe_customer_id,
+    email
 FROM payment.customers 
 WHERE stripe_customer_id = @stripe_customer_id::text;
 
 -- name: CreateCustomer :exec
 INSERT INTO payment.customers (
     id,
-    stripe_customer_id
+    stripe_customer_id,
+    email
 ) VALUES (
     @user_id::uuid,
-    @stripe_customer_id::text
+    @stripe_customer_id::text,
+    @email::text
+);
+-- name: UpsertPaymentValidity :exec
+INSERT INTO payment.validity (
+    user_id,
+    payment_id,
+    price_id,
+    expired_at,
+    metadata
+) VALUES (
+    @user_id::uuid,
+    @payment_id::text,
+    @price_id::text,
+    @expired_at::timestamptz,
+    @metadata::jsonb
+)
+ON CONFLICT (user_id) DO UPDATE SET
+    payment_id = EXCLUDED.payment_id,
+    price_id = EXCLUDED.price_id,
+    expired_at = EXCLUDED.expired_at,
+    metadata = EXCLUDED.metadata;
+
+-- name: GetPaymentValidity :one
+SELECT
+    expired_at
+FROM payment.validity 
+WHERE user_id = @user_id::uuid;
+
+-- name: InsertPayment :exec
+INSERT INTO payment.payments (
+   payment_id,
+   user_id,
+   stripe_customer_id,
+   price_id,
+   amount,
+   currency,
+   metadata,
+   created_at
+) VALUES (
+   @payment_id::text,
+   @user_id::uuid,
+   @stripe_customer_id::text,
+   @price_id::text,
+   @amount::integer,
+   @currency::text,
+   @metadata::jsonb,
+   @created_at::timestamp with time zone
 );
 
--- name: UpsertSubscription :exec
-INSERT INTO payment.subscriptions (
-    id,
-    user_id,
-    status,
-    price_id,
-    quantity,
-    cancel_at_period_end,
-    current_period_start,
-    current_period_end,
-    created,
-    ended_at,
-    cancel_at,
-    canceled_at,
-    trial_start,
-    trial_end
+-- name: DeletePayment :exec
+DELETE FROM payment.payments 
+WHERE payment_id = @payment_id::text;
+
+-- name: GetConsumptionCost :one
+SELECT
+    total_cost_per_payment
+FROM payment.usage_analytics 
+WHERE user_id = @user_id::uuid;
+
+-- name: AddProductUsage :exec
+INSERT INTO payment.usage_history (
+   user_id,
+   input_token_used,
+   price_rate_input_token,
+   output_token_used,
+   price_rate_output_token,
+   model,
+   duration,
+   valid,
+   date
 ) VALUES (
-    @subscription_id::text,
-    @user_id::uuid,
-    @status::subscription_status,
-    @price_id::text,
-    @quantity::integer,
-    @cancel_at_period_end::boolean,
-    @current_period_start::timestamp with time zone,
-    @current_period_end::timestamp with time zone,
-    @created_at::timestamp with time zone,
-    NULLIF(@ended_at::timestamp with time zone, '1970-01-01T00:00:00Z'),
-    NULLIF(@cancel_at::timestamp with time zone, '1970-01-01T00:00:00Z'),
-    NULLIF(@canceled_at::timestamp with time zone, '1970-01-01T00:00:00Z'),
-    NULLIF(@trial_start::timestamp with time zone, '1970-01-01T00:00:00Z'),
-    NULLIF(@trial_end::timestamp with time zone, '1970-01-01T00:00:00Z')
-) ON CONFLICT (id) DO UPDATE SET
-    status = EXCLUDED.status,
-    quantity = EXCLUDED.quantity,
-    cancel_at_period_end = EXCLUDED.cancel_at_period_end,
-    current_period_start = EXCLUDED.current_period_start,
-    current_period_end = EXCLUDED.current_period_end,
-    ended_at = EXCLUDED.ended_at,
-    cancel_at = EXCLUDED.cancel_at,
-    canceled_at = EXCLUDED.canceled_at,
-    trial_start = EXCLUDED.trial_start,
-    trial_end = EXCLUDED.trial_end;
+   @user_id::uuid,
+   @input_token_used::bigint,
+   @price_rate_input_token::decimal,
+   @output_token_used::bigint,
+   @price_rate_output_token::decimal,
+   @model::text,
+   @duration::interval,
+   @valid::boolean,
+   CURRENT_TIMESTAMP
+);
 
--- name: DeleteSubscription :exec
-DELETE FROM payment.subscriptions 
-WHERE id = @subscription_id::text;
-
--- name: GetSubscriptionByID :one
-SELECT 
-    id,
-    user_id,
-    status,
-    price_id,
-    cancel_at_period_end
-FROM payment.subscriptions 
-WHERE id = @subscription_id::text;
-
--- name: GetActiveSubscriptionByUserID :one
-SELECT 
-    s.id,
-    s.status,
-    s.price_id,
-    s.current_period_end,
-    p.unit_amount,
-    p.currency,
-    p.interval,
-    p.interval_count
-FROM payment.subscriptions s
-JOIN payment.prices p ON s.price_id = p.id
-WHERE s.user_id = @user_id::uuid 
-AND s.status IN ('active', 'trialing')
-ORDER BY s.created DESC
+-- name: GetPriceForPayment :one
+SELECT p.unit_amount
+FROM payment.validity v
+JOIN payment.prices p ON v.price_id = p.id
+WHERE v.user_id = @user_id::uuid
 LIMIT 1;
 
--- name: UpdateSubscriptionStatus :exec
-UPDATE payment.subscriptions
-SET 
-    status = @status::subscription_status,
-    canceled_at = CASE 
-        WHEN @status::subscription_status = 'canceled' THEN CURRENT_TIMESTAMP
-        ELSE canceled_at
-    END
-WHERE id = @subscription_id::text;
+-- name: GetUserValidityStatus :one
+SELECT 
+    created_at,
+    expired_at,
+    CASE 
+        WHEN expired_at IS NULL THEN false
+        WHEN expired_at > current_timestamp THEN true
+        ELSE false
+    END AS is_valid
+FROM payment.validity
+WHERE user_id = @user_id::uuid;
+
+-- name: GetUserPaymentHistory :many
+SELECT 
+    amount,
+    currency,
+    created_at
+FROM payment.payments
+WHERE user_id = @user_id::uuid
+ORDER BY created_at DESC;

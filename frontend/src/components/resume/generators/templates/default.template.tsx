@@ -1,5 +1,5 @@
 import { For, Show } from "solid-js";
-import { TemplateData, TemplateSettings } from "./template.utils";
+import { PDFText, TemplateData, TemplateSettings } from "./template.utils";
 
 interface TemplateProps {
 	data: TemplateData;
@@ -33,91 +33,103 @@ export function ExecutiveTemplate(props: TemplateProps) {
 	};
 
 	return (
-		<div class="p-8 font-serif h-full w-full text-black bg-white">
+		<div class="p-8 font-serif h-full w-full text-black bg-white pdf-outline">
 			{/* Header Section */}
-			<header class="text-center mb-8">
-				<h1
-					class="font-bold"
-					style={{ "font-size": settings.font_size.name }}
-				>
-					{props.data.contact.name}
+			<header class="text-center mb-4 pdf-outline">
+				<h1 class="font-bold uppercase tracking-wide">
+					{props.data.user?.full_name}
 				</h1>
-				<div class="mt-2 text-sm">
-					<p>
-						{props.data.contact.email} • {props.data.contact.phone}
-					</p>
-					<p>{props.data.contact.location}</p>
-					<Show
-						when={
-							props.data.contact.linkedin ||
-							props.data.contact.website
-						}
-					>
-						<p>
-							<Show when={props.data.contact.linkedin}>
-								{props.data.contact.linkedin}
-							</Show>
-							<Show
-								when={
-									props.data.contact.linkedin &&
-									props.data.contact.website
-								}
+				<div class="mt-2 text-sm text-gray-700">
+					<div class="flex justify-center items-center gap-4 mb-1">
+						<span>{props.data.user?.email}</span>
+						<Show when={props.data.user?.phone}>
+							<span>•</span>
+							<span>{props.data.user?.phone}</span>
+						</Show>
+						<Show when={props.data.user?.location}>
+							<span>•</span>
+							<span>{props.data.user?.location}</span>
+						</Show>
+					</div>
+					<div class="flex justify-center gap-4">
+						{props.data.profile?.linkedin && (
+							<a
+								href={props.data.profile?.linkedin}
+								target="_blank"
+								rel="noopener noreferrer"
+								class="hover:text-blue-600 transition-colors"
 							>
-								{" • "}
-							</Show>
-							<Show when={props.data.contact.website}>
-								{props.data.contact.website}
-							</Show>
-						</p>
-					</Show>
+								LinkedIn
+							</a>
+						)}
+						{props.data.profile?.website && (
+							<a
+								href={props.data.profile?.website}
+								target="_blank"
+								rel="noopener noreferrer"
+								class="hover:text-blue-600 transition-colors"
+							>
+								Website
+							</a>
+						)}
+					</div>
 				</div>
 			</header>
-
-			{/* Professional Summary */}
-			<Show
-				when={
-					settings.show_sections.summary &&
-					props.data.professional_summary
-				}
-			>
-				<section class="mb-6">
-					<h2
-						class="font-bold border-b border-black pb-1 mb-3"
-						style={{
-							"font-size": settings.font_size.section_title,
-						}}
-					>
-						Professional Summary
-					</h2>
-					<p
-						class="text-justify"
-						style={{ "font-size": settings.font_size.body }}
-					>
-						{props.data.professional_summary}
-					</p>
-				</section>
-			</Show>
 
 			{/* Experience Section */}
 			<Show
 				when={
 					settings.show_sections.experience &&
-					props.data.resume_data.experiences.length > 0
+					props.data.resume_data.experiences.filter(
+						(v) => v.is_visible
+					).length > 0
 				}
 			>
-				<section class="mb-6">
+				<section class="mb-6 pdf-outline">
 					<h2
-						class="font-bold border-b border-black pb-1 mb-3"
+						class="font-bold border-b border-black pb-1 mb-3 uppercase"
+						style={{
+							"font-size": settings.font_size.section_title,
+						}}
+					>
+						Profile
+					</h2>
+
+					<PDFText
+						src={props.data.profile?.description ?? ""}
+						font_size={settings.font_size.body}
+					/>
+				</section>
+			</Show>
+			{/* Experience Section */}
+			<Show
+				when={
+					settings.show_sections.experience &&
+					props.data.resume_data.experiences.filter(
+						(v) => v.is_visible
+					).length > 0
+				}
+			>
+				<section class="mb-6 pdf-outline">
+					<h2
+						class="font-bold border-b border-black pb-1 mb-3 uppercase pdf-boxup"
 						style={{
 							"font-size": settings.font_size.section_title,
 						}}
 					>
 						Professional Experience
 					</h2>
-					<For each={props.data.resume_data.experiences}>
-						{(experience) => (
-							<div class="mb-4">
-								<div class="flex justify-between items-baseline">
+					<For
+						each={props.data.resume_data.experiences.filter(
+							(v) => v.is_visible
+						)}
+					>
+						{(experience, i) => (
+							<div
+								class="mb-4 pdf-container"
+								classList={{ "pdf-containerup": i() === 0 }}
+							>
+								<div class="flex justify-between items-baseline pdf-boxup">
 									<h3
 										class="font-bold"
 										style={{
@@ -135,7 +147,7 @@ export function ExecutiveTemplate(props: TemplateProps) {
 											: experience.optional_end_date}
 									</span>
 								</div>
-								<div class="flex justify-between items-baseline">
+								<div class="flex justify-between items-baseline pdf-boxup">
 									<h4 class="italic">
 										{experience.company_name}
 									</h4>
@@ -143,14 +155,11 @@ export function ExecutiveTemplate(props: TemplateProps) {
 										{experience.location}
 									</span>
 								</div>
-								<p
-									class="mt-2 text-justify"
-									style={{
-										"font-size": settings.font_size.body,
-									}}
-								>
-									{experience.description}
-								</p>
+
+								<PDFText
+									src={experience.description}
+									font_size={settings.font_size.body}
+								/>
 							</div>
 						)}
 					</For>
@@ -161,22 +170,31 @@ export function ExecutiveTemplate(props: TemplateProps) {
 			<Show
 				when={
 					settings.show_sections.education &&
-					props.data.resume_data.educations.length > 0
+					props.data.resume_data.educations.filter(
+						(v) => v.is_visible
+					).length > 0
 				}
 			>
-				<section class="mb-6">
+				<section class="mb-6 pdf-outline pdf-container">
 					<h2
-						class="font-bold border-b border-black pb-1 mb-3"
+						class="font-bold border-b border-black pb-1 mb-3 uppercase pdf-boxup"
 						style={{
 							"font-size": settings.font_size.section_title,
 						}}
 					>
 						Education
 					</h2>
-					<For each={props.data.resume_data.educations}>
-						{(education) => (
-							<div class="mb-4">
-								<div class="flex justify-between items-baseline">
+					<For
+						each={props.data.resume_data.educations.filter(
+							(v) => v.is_visible
+						)}
+					>
+						{(education, i) => (
+							<div
+								class="mb-4 pdf-container"
+								classList={{ "pdf-containerup": i() === 0 }}
+							>
+								<div class="flex justify-between items-baseline pdf-boxup">
 									<h3
 										class="font-bold"
 										style={{
@@ -194,22 +212,17 @@ export function ExecutiveTemplate(props: TemplateProps) {
 											: education.optional_end_date}
 									</span>
 								</div>
-								<div class="flex justify-between items-baseline">
+								<div class="flex justify-between items-baseline pdf-boxup">
 									<h4 class="italic">{education.school}</h4>
 									<span class="text-sm">
 										{education.location}
 									</span>
 								</div>
 								<Show when={education.description}>
-									<p
-										class="mt-2 text-justify"
-										style={{
-											"font-size":
-												settings.font_size.body,
-										}}
-									>
-										{education.description}
-									</p>
+									<PDFText
+										src={education.description}
+										font_size={settings.font_size.body}
+									/>
 								</Show>
 							</div>
 						)}
@@ -221,12 +234,13 @@ export function ExecutiveTemplate(props: TemplateProps) {
 			<Show
 				when={
 					settings.show_sections.skills &&
-					props.data.resume_data.skills.length > 0
+					props.data.resume_data.skills.filter((v) => v.is_visible)
+						.length > 0
 				}
 			>
-				<section class="mb-6">
+				<section class="mb-6 pdf-outline">
 					<h2
-						class="font-bold border-b border-black pb-1 mb-3"
+						class="font-bold border-b border-black pb-1 mb-3 uppercase"
 						style={{
 							"font-size": settings.font_size.section_title,
 						}}
@@ -234,11 +248,18 @@ export function ExecutiveTemplate(props: TemplateProps) {
 						Skills & Expertise
 					</h2>
 					<div class="grid grid-cols-1 gap-4">
-						<For each={props.data.resume_data.skills}>
-							{(skill) => (
-								<div>
+						<For
+							each={props.data.resume_data.skills.filter(
+								(v) => v.is_visible
+							)}
+						>
+							{(skill, i) => (
+								<div
+									class=" pdf-container"
+									classList={{ "pdf-containerup": i() === 0 }}
+								>
 									<h3
-										class="font-bold mb-2"
+										class="font-bold mb-2 pdf-boxup"
 										style={{
 											"font-size":
 												settings.font_size
@@ -247,14 +268,10 @@ export function ExecutiveTemplate(props: TemplateProps) {
 									>
 										{skill.skill_name}
 									</h3>
-									<p
-										style={{
-											"font-size":
-												settings.font_size.body,
-										}}
-									>
-										{skill.description}
-									</p>
+									<PDFText
+										src={skill.description}
+										font_size={settings.font_size.body}
+									/>
 								</div>
 							)}
 						</For>
@@ -266,22 +283,30 @@ export function ExecutiveTemplate(props: TemplateProps) {
 			<Show
 				when={
 					settings.show_sections.projects &&
-					props.data.resume_data.projects.length > 0
+					props.data.resume_data.projects.filter((v) => v.is_visible)
+						.length > 0
 				}
 			>
-				<section class="mb-6">
+				<section class="mb-6 pdf-outline">
 					<h2
-						class="font-bold border-b border-black pb-1 mb-3"
+						class="font-bold border-b border-black pb-1 mb-3 uppercase"
 						style={{
 							"font-size": settings.font_size.section_title,
 						}}
 					>
 						Notable Projects
 					</h2>
-					<For each={props.data.resume_data.projects}>
-						{(project) => (
-							<div class="mb-4">
-								<div class="flex justify-between items-baseline">
+					<For
+						each={props.data.resume_data.projects.filter(
+							(v) => v.is_visible
+						)}
+					>
+						{(project, i) => (
+							<div
+								class="mb-4 pdf-container"
+								classList={{ "pdf-containerup": i() === 0 }}
+							>
+								<div class="flex justify-between items-baseline pdf-boxup">
 									<h3
 										class="font-bold"
 										style={{
@@ -307,18 +332,14 @@ export function ExecutiveTemplate(props: TemplateProps) {
 									</Show>
 								</div>
 								<Show when={project.optional_project_subtitle}>
-									<h4 class="italic">
+									<h4 class="italic pdf-boxup">
 										{project.optional_project_subtitle}
 									</h4>
 								</Show>
-								<p
-									class="mt-2 text-justify"
-									style={{
-										"font-size": settings.font_size.body,
-									}}
-								>
-									{project.description}
-								</p>
+								<PDFText
+									src={project.description}
+									font_size={settings.font_size.body}
+								/>
 							</div>
 						)}
 					</For>
@@ -329,22 +350,31 @@ export function ExecutiveTemplate(props: TemplateProps) {
 			<Show
 				when={
 					settings.show_sections.certificates &&
-					props.data.resume_data.certificates.length > 0
+					props.data.resume_data.certificates.filter(
+						(v) => v.is_visible
+					).length > 0
 				}
 			>
-				<section class="mb-6">
+				<section class="mb-6 pdf-outline">
 					<h2
-						class="font-bold border-b border-black pb-1 mb-3"
+						class="font-bold border-b border-black pb-1 mb-3 uppercase"
 						style={{
 							"font-size": settings.font_size.section_title,
 						}}
 					>
 						Certifications
 					</h2>
-					<For each={props.data.resume_data.certificates}>
-						{(certificate) => (
-							<div class="mb-4">
-								<div class="flex justify-between items-baseline">
+					<For
+						each={props.data.resume_data.certificates.filter(
+							(v) => v.is_visible
+						)}
+					>
+						{(certificate, i) => (
+							<div
+								class="mb-4 pdf-container"
+								classList={{ "pdf-containerup": i() === 0 }}
+							>
+								<div class="flex justify-between items-baseline pdf-boxup">
 									<h3
 										class="font-bold"
 										style={{
@@ -364,20 +394,15 @@ export function ExecutiveTemplate(props: TemplateProps) {
 									</Show>
 								</div>
 								<Show when={certificate.optional_issuer}>
-									<h4 class="italic">
+									<h4 class="italic pdf-boxup">
 										{certificate.optional_issuer}
 									</h4>
 								</Show>
 								<Show when={certificate.description}>
-									<p
-										class="mt-2 text-justify"
-										style={{
-											"font-size":
-												settings.font_size.body,
-										}}
-									>
-										{certificate.description}
-									</p>
+									<PDFText
+										src={certificate.description}
+										font_size={settings.font_size.body}
+									/>
 								</Show>
 							</div>
 						)}
@@ -386,21 +411,4 @@ export function ExecutiveTemplate(props: TemplateProps) {
 			</Show>
 		</div>
 	);
-}
-
-// Helper function to group skills by type
-function groupSkillsByType(skills: Skill[]): [string, Skill[]][] {
-	const grouped = skills.reduce(
-		(acc, skill) => {
-			const type = skill.optional_skill_type || "Other";
-			if (!acc[type]) {
-				acc[type] = [];
-			}
-			acc[type].push(skill);
-			return acc;
-		},
-		{} as Record<string, Skill[]>
-	);
-
-	return Object.entries(grouped).sort();
 }

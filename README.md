@@ -1,6 +1,6 @@
 # portrai
 A resume and profile maker to help user find job with the help of AI
-
+read2
 # Dev Build and Usage
 ## Secrets managements
 
@@ -45,10 +45,9 @@ $(which python3) cache/cache_setup.py init --dev --root $THE_ROOT_PASSWORD
 load the env variables :
 use only when using the back or front end outside of docker
 ```
-export $(cat .env | grep -v '^#' | grep -v '^$' | xargs)
-export $(cat secrets.env | grep -v '^#' | grep -v '^$' | xargs)
+source .env
+source secrets.env
 ```
-TODO : find a better way
 
 Then start the server: ( in the backend directory | cd backend )
 ```
@@ -77,4 +76,9 @@ npm run dev
 ## Use the frontend in docker
 ```
 docker compose --env-file .env --profile frontend --file docker-compose.dev.yml up -d --build
+```
+
+## Use the stripe cli
+```
+stripe listen --forward-to localhost:3000/api/v1/payment/webhook
 ```

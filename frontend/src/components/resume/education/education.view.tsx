@@ -1,90 +1,112 @@
 import { useFault } from "@components/fault";
 import { api } from "@utils/api";
 import { AxiosError } from "axios";
-import { createSignal, For, Show } from "solid-js";
+import { createSignal, For, Setter, Show } from "solid-js";
 import { createStore } from "solid-js/store";
-import { AddNote, NoteList } from "../notes.util";
+import { NoteList } from "../notes.util";
+import ItemArticle from "../utils/item.article";
+import { ItemDateRange, ItemInfo, ItemText } from "../utils/item.content";
+import { FormTags, Tags } from "../utils/tags";
+import FormArticle from "../utils/form.article";
+import {
+	FormCancelButton,
+	FormCheckbox,
+	FormDeleteButton,
+	FormInputDate,
+	FormInputText,
+	FormLabeledInput,
+	FormSubmitButton,
+	FormTextArea,
+} from "../utils/form.input";
+import { useNavigate } from "@solidjs/router";
 
 interface EducationViewProps {
 	education: Education;
 	edit: (education_id: number) => void;
-	delete: (education_id: number) => void;
+	refetch: () => void;
+	set_dragged_id: Setter<number | null>;
+	draggable: (id: number) => boolean;
+	offline?: boolean;
+	toggle_visibility?: (id: number) => void;
 }
 
 export function EducationView(props: EducationViewProps) {
+	const fault = useFault();
+	const navigate = useNavigate();
 	return (
-		<article class="p-4 border border-gray-200 rounded-lg flex flex-col gap-2">
-			<header class="flex flex-col justify-between items-start mb-2">
-				<h3 class="text-lg font-medium text-gray-900">
-					{props.education.degree}
-				</h3>
-				<h4 class="text-gray-700">{props.education.school}</h4>
-			</header>
-			<p class="text-gray-600 text-sm">{props.education.location}</p>
-			<span class="flex flex-row">
-				<p class="text-gray-600 text-sm">
-					{props.education.start_date}
-				</p>
-				-
-				<Show
-					when={props.education.optional_end_date}
-					fallback={<p class="text-gray-600 text-sm">present</p>}
-				>
-					<p class="text-gray-600 text-sm">
-						{props.education.optional_end_date}
-					</p>
-				</Show>
-			</span>
-			<p class="text-gray-700">{props.education.description}</p>
-			<footer class="mt-2">
-				<ul class="flex gap-2 flex-wrap">
-					<For each={props.education.tags}>
-						{(tag) => (
-							<li class="px-2 py-1 bg-gray-100 text-gray-700 text-sm rounded">
-								{tag}
-							</li>
-						)}
-					</For>
-				</ul>
-			</footer>
-			<div class="self-end flex flex-row gap-4">
-				<button
-					title="Edit this education"
-					class="self-end w-fit px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded"
-					onclick={() => {
-						props.edit(props.education.education_id);
-					}}
-				>
-					Edit
-				</button>
-				<button
-					title="Delete this education"
-					class="self-end w-fit px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded"
-					onclick={() => {
-						props.delete(props.education.education_id);
-					}}
-				>
-					Delete
-				</button>
-			</div>
-			<NoteList notes={props.education.notes} />
-			<AddNote
-				id={props.education.education_id}
-				section_type="education"
+		<ItemArticle
+			edit={props.edit}
+			item_id={props.education.education_id}
+			title={props.education.degree}
+			subtitle={props.education.school}
+			set_dragged_id={props.set_dragged_id}
+			draggable={props.draggable}
+			is_visible={props.education?.is_visible ?? true}
+			toggle_visibility={async () => {
+				if (!props.education) return;
+				if (props.offline) {
+					props.toggle_visibility?.(props.education.education_id);
+				} else {
+					try {
+						await api.post("/resume/items/toggle", {
+							item_id: props.education.education_id,
+							item_type: "education",
+						});
+						props.refetch();
+					} catch (error) {
+						if ((error as AxiosError).status === 402) {
+							navigate("/pricing");
+						}
+						if (
+							(error as AxiosError).status !== 401 &&
+							(error as AxiosError).status !== 402
+						)
+							fault.minor({
+								message:
+									(
+										(error as AxiosError).response
+											?.data as any
+									).error ?? (error as AxiosError).message,
+							});
+					}
+				}
+			}}
+		>
+			<ItemInfo>{props.education.location}</ItemInfo>
+			<ItemDateRange
+				start={new Date(props.education.start_date)}
+				end={
+					props.education.optional_end_date
+						? new Date(props.education.optional_end_date)
+						: undefined
+				}
 			/>
-		</article>
+			<ItemText>{props.education.description}</ItemText>
+			<Tags values={props.education.tags} />
+			<Show when={!props.offline}>
+				<NoteList
+					notes={props.education.notes}
+					id={props.education.education_id}
+					section_type="education"
+					refetch={props.refetch}
+				/>
+			</Show>
+		</ItemArticle>
 	);
 }
 
 interface EducationFormProps {
 	education?: Education;
 	is_new?: boolean;
-	onSubmit: (education_id: number) => void;
+	delete: (id: number) => void;
+	onSubmit: (education_id: number, e: Education) => void;
 	onCancel: () => void;
+	offline?: boolean;
 }
 
 export function EducationForm(props: EducationFormProps) {
 	const fault = useFault();
+	const navigate = useNavigate();
 	const [form_data, setFormData] = createStore({
 		school: props.education?.school || "",
 		degree: props.education?.degree || "",
@@ -97,207 +119,201 @@ export function EducationForm(props: EducationFormProps) {
 		tags: props.education?.tags || [],
 		notes: props.education?.notes || [],
 	});
-	const [new_tag, setNewTag] = createSignal("");
 
-	async function handleSubmit(e: Event) {
-		e.preventDefault();
+	async function handleSubmit() {
 		if (!props.is_new) {
 			if (!props.education) return;
 			try {
-				await api.post("/resume/education/update", {
-					...form_data,
+				const itemData = {
+					item_id: props.education.education_id,
+					item_type: "education",
+					title: form_data.degree,
+					subtitle: form_data.school,
+					location: form_data.location,
+					start_date: form_data.start_date,
+					end_date: form_data.optional_end_date,
+					is_current: form_data.is_current,
+					description: form_data.description,
+					priority: form_data.priority,
+					tags: form_data.tags,
+					// metadata can be used for any education-specific fields
+					metadata: {},
+				};
+
+				if (!props.offline) {
+					await api.post("/resume/items/update", itemData);
+				}
+				props.onSubmit(props.education.education_id, {
 					education_id: props.education.education_id,
+					school: form_data.school,
+					degree: form_data.degree,
+					location: form_data.location,
+					start_date: form_data.start_date,
+					optional_end_date: form_data.optional_end_date,
+					is_current: form_data.is_current,
+					description: form_data.description,
+					priority: form_data.priority,
+					is_visible: true,
+					tags: form_data.tags,
+					notes: [],
 				});
-				props.onSubmit(props.education.education_id);
 			} catch (error) {
-				fault.minor({
-					message:
-						((error as AxiosError).response?.data as any).error ??
-						(error as AxiosError).message,
-				});
+				if ((error as AxiosError).status === 402) {
+					navigate("/pricing");
+				}
+				if (
+					(error as AxiosError).status !== 401 &&
+					(error as AxiosError).status !== 402
+				)
+					fault.minor({
+						message:
+							((error as AxiosError).response?.data as any)
+								.error ?? (error as AxiosError).message,
+					});
 			}
 		} else {
 			try {
-				const res = await api.post(
-					"/resume/education/create",
-					form_data
-				);
-				const education_id = res.data.education_id;
-				props.onSubmit(education_id);
-			} catch (error) {
-				fault.minor({
-					message:
-						((error as AxiosError).response?.data as any).error ??
-						(error as AxiosError).message,
-				});
-			}
-		}
-	}
+				const itemData = {
+					item_type: "education",
+					title: form_data.degree,
+					subtitle: form_data.school,
+					location: form_data.location,
+					start_date: form_data.start_date,
+					end_date: form_data.optional_end_date,
+					is_current: form_data.is_current,
+					description: form_data.description,
+					tags: form_data.tags,
+					// metadata can be used for any education-specific fields
+					metadata: {},
+				};
 
-	function addTag(e: KeyboardEvent) {
-		if (e.key === "Enter" && new_tag()) {
-			e.preventDefault();
-			setFormData("tags", [...form_data.tags, new_tag()]);
-			setNewTag("");
+				let item_id = 0;
+				if (!props.offline) {
+					const res = await api.post(
+						"/resume/items/create",
+						itemData
+					);
+					item_id = res.data.item_id;
+				}
+				props.onSubmit(item_id, {
+					education_id: item_id,
+					school: form_data.school,
+					degree: form_data.degree,
+					location: form_data.location,
+					start_date: form_data.start_date,
+					optional_end_date: form_data.optional_end_date,
+					is_current: form_data.is_current,
+					description: form_data.description,
+					priority: form_data.priority,
+					is_visible: true,
+					tags: form_data.tags,
+					notes: [],
+				});
+			} catch (error) {
+				if ((error as AxiosError).status === 402) {
+					navigate("/pricing");
+				}
+				if (
+					(error as AxiosError).status !== 401 &&
+					(error as AxiosError).status !== 402
+				)
+					fault.minor({
+						message:
+							((error as AxiosError).response?.data as any)
+								.error ?? (error as AxiosError).message,
+					});
+			}
 		}
 	}
 
 	return (
-		<form onSubmit={handleSubmit} class="">
-			<div class="space-y-2">
-				<label class="block text-sm font-medium text-gray-700">
-					Degree
-				</label>
-				<input
-					type="text"
+		<FormArticle on_submit={handleSubmit}>
+			<FormDeleteButton
+				no_confirm={props.education?.education_id === undefined}
+				delete={() => {
+					if (props.education?.education_id) {
+						props.delete(props.education?.education_id);
+					} else {
+						props.onCancel();
+					}
+				}}
+			/>
+			<FormLabeledInput label="Degree">
+				<FormInputText
 					value={form_data.degree}
-					onInput={(e) =>
-						setFormData("degree", e.currentTarget.value)
-					}
-					class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-gray-500"
+					on_input={(value) => setFormData("degree", value)}
+					placeholder="Write the degree"
 					required
 				/>
-			</div>
+			</FormLabeledInput>
 
-			<div class="space-y-2">
-				<label class="block text-sm font-medium text-gray-700">
-					School
-				</label>
-				<input
-					type="text"
+			<FormLabeledInput label="School">
+				<FormInputText
 					value={form_data.school}
-					onInput={(e) =>
-						setFormData("school", e.currentTarget.value)
-					}
-					class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-gray-500"
+					on_input={(value) => setFormData("school", value)}
+					placeholder="Write the school"
 					required
 				/>
-			</div>
+			</FormLabeledInput>
 
-			<div class="space-y-2">
-				<label class="block text-sm font-medium text-gray-700">
-					Location
-				</label>
-				<input
-					type="text"
+			<FormLabeledInput label="Location">
+				<FormInputText
 					value={form_data.location}
-					onInput={(e) =>
-						setFormData("location", e.currentTarget.value)
-					}
-					class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-gray-500"
+					on_input={(value) => setFormData("location", value)}
+					placeholder="Write the location"
+					required
 				/>
-			</div>
-
+			</FormLabeledInput>
 			<div class="grid grid-cols-2 gap-4">
-				<div class="space-y-2">
-					<label class="block text-sm font-medium text-gray-700">
-						Start Date
-					</label>
-					<input
-						type="date"
+				<FormLabeledInput label="Start Date">
+					<FormInputDate
 						value={form_data.start_date}
-						onInput={(e) =>
-							setFormData("start_date", e.currentTarget.value)
-						}
-						class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-gray-500"
+						on_input={(value) => setFormData("start_date", value)}
+						placeholder="select start date"
 						required
 					/>
-				</div>
+				</FormLabeledInput>
 
-				<div class="space-y-2">
-					<label class="block text-sm font-medium text-gray-700">
-						End Date
-					</label>
-					<input
-						type="date"
+				<FormLabeledInput label="End Date" optional>
+					<FormInputDate
 						value={form_data.optional_end_date}
-						onInput={(e) =>
-							setFormData(
-								"optional_end_date",
-								e.currentTarget.value
-							)
+						on_input={(value) =>
+							setFormData("optional_end_date", value)
 						}
 						disabled={form_data.is_current}
-						class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-gray-500"
+						placeholder="select end date"
 					/>
-				</div>
+				</FormLabeledInput>
 			</div>
+			<FormCheckbox
+				label="Currently Studying"
+				on_input={(value) => setFormData("is_current", value)}
+				value={form_data.is_current}
+			/>
 
-			<div class="flex items-center gap-2">
-				<input
-					type="checkbox"
-					checked={form_data.is_current}
-					onChange={(e) =>
-						setFormData("is_current", e.currentTarget.checked)
-					}
-					class="rounded border-gray-300 text-gray-600 focus:ring-gray-500"
-				/>
-				<label class="text-sm text-gray-700">Currently Studying</label>
-			</div>
-
-			<div class="space-y-2">
-				<label class="block text-sm font-medium text-gray-700">
-					Description
-				</label>
-				<textarea
+			<FormLabeledInput label="Description">
+				<FormTextArea
+					placeholder="write the description of this experience"
 					value={form_data.description}
-					onInput={(e) =>
-						setFormData("description", e.currentTarget.value)
-					}
-					class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-gray-500"
-					rows="4"
+					on_input={(value) => setFormData("description", value)}
+					rows={4}
 				/>
-			</div>
+			</FormLabeledInput>
 
-			<div class="space-y-2">
-				<label class="block text-sm font-medium text-gray-700">
-					Tags
-				</label>
-				<input
-					type="text"
-					value={new_tag()}
-					onInput={(e) => setNewTag(e.currentTarget.value)}
-					onKeyPress={addTag}
-					placeholder="Press Enter to add tag"
-					class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-gray-500"
-				/>
-				<ul class="flex gap-2 flex-wrap">
-					<For each={form_data.tags}>
-						{(tag, index) => (
-							<li class="px-2 py-1 bg-gray-100 text-gray-700 text-sm rounded flex items-center gap-1">
-								{tag}
-								<button
-									type="button"
-									onClick={() =>
-										setFormData("tags", (t) =>
-											t.filter((_, i) => i !== index())
-										)
-									}
-									class="text-gray-500 hover:text-gray-700"
-								>
-									×
-								</button>
-							</li>
-						)}
-					</For>
-				</ul>
-			</div>
+			<FormTags
+				add={(tag) => {
+					setFormData("tags", [...form_data.tags, tag]);
+				}}
+				delete={(idx) => {
+					setFormData("tags", (t) => t.filter((_, i) => i !== idx));
+				}}
+				tags={form_data.tags}
+			/>
 
 			<div class="flex justify-end gap-4">
-				<button
-					type="button"
-					onClick={props.onCancel}
-					class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded"
-				>
-					Cancel
-				</button>
-				<button
-					type="submit"
-					class="px-4 py-2 bg-gray-900 text-white rounded hover:bg-gray-800"
-				>
-					Save Education
-				</button>
+				<FormCancelButton cancel={props.onCancel} />
+				<FormSubmitButton />
 			</div>
-		</form>
+		</FormArticle>
 	);
 }

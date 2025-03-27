@@ -7,90 +7,113 @@ package sqlc_gen
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const addProductUsage = `-- name: AddProductUsage :exec
+INSERT INTO payment.usage_history (
+   user_id,
+   input_token_used,
+   price_rate_input_token,
+   output_token_used,
+   price_rate_output_token,
+   model,
+   duration,
+   valid,
+   date
+) VALUES (
+   $1::uuid,
+   $2::bigint,
+   $3::decimal,
+   $4::bigint,
+   $5::decimal,
+   $6::text,
+   $7::interval,
+   $8::boolean,
+   CURRENT_TIMESTAMP
+)
+`
+
+type AddProductUsageParams struct {
+	UserID               uuid.UUID       `json:"user_id"`
+	InputTokenUsed       int64           `json:"input_token_used"`
+	PriceRateInputToken  pgtype.Numeric  `json:"price_rate_input_token"`
+	OutputTokenUsed      int64           `json:"output_token_used"`
+	PriceRateOutputToken pgtype.Numeric  `json:"price_rate_output_token"`
+	Model                string          `json:"model"`
+	Duration             pgtype.Interval `json:"duration"`
+	Valid                bool            `json:"valid"`
+}
+
+func (q *Queries) AddProductUsage(ctx context.Context, arg AddProductUsageParams) error {
+	_, err := q.db.Exec(ctx, addProductUsage,
+		arg.UserID,
+		arg.InputTokenUsed,
+		arg.PriceRateInputToken,
+		arg.OutputTokenUsed,
+		arg.PriceRateOutputToken,
+		arg.Model,
+		arg.Duration,
+		arg.Valid,
+	)
+	return err
+}
+
 const createCustomer = `-- name: CreateCustomer :exec
 INSERT INTO payment.customers (
     id,
-    stripe_customer_id
+    stripe_customer_id,
+    email
 ) VALUES (
     $1::uuid,
-    $2::text
+    $2::text,
+    $3::text
 )
 `
 
 type CreateCustomerParams struct {
 	UserID           uuid.UUID `json:"user_id"`
 	StripeCustomerID string    `json:"stripe_customer_id"`
+	Email            string    `json:"email"`
 }
 
 func (q *Queries) CreateCustomer(ctx context.Context, arg CreateCustomerParams) error {
-	_, err := q.db.Exec(ctx, createCustomer, arg.UserID, arg.StripeCustomerID)
+	_, err := q.db.Exec(ctx, createCustomer, arg.UserID, arg.StripeCustomerID, arg.Email)
 	return err
 }
 
-const deleteSubscription = `-- name: DeleteSubscription :exec
-DELETE FROM payment.subscriptions 
-WHERE id = $1::text
+const deletePayment = `-- name: DeletePayment :exec
+DELETE FROM payment.payments 
+WHERE payment_id = $1::text
 `
 
-func (q *Queries) DeleteSubscription(ctx context.Context, subscriptionID string) error {
-	_, err := q.db.Exec(ctx, deleteSubscription, subscriptionID)
+func (q *Queries) DeletePayment(ctx context.Context, paymentID string) error {
+	_, err := q.db.Exec(ctx, deletePayment, paymentID)
 	return err
 }
 
-const getActiveSubscriptionByUserID = `-- name: GetActiveSubscriptionByUserID :one
-SELECT 
-    s.id,
-    s.status,
-    s.price_id,
-    s.current_period_end,
-    p.unit_amount,
-    p.currency,
-    p.interval,
-    p.interval_count
-FROM payment.subscriptions s
-JOIN payment.prices p ON s.price_id = p.id
-WHERE s.user_id = $1::uuid 
-AND s.status IN ('active', 'trialing')
-ORDER BY s.created DESC
-LIMIT 1
+const getConsumptionCost = `-- name: GetConsumptionCost :one
+SELECT
+    total_cost_per_payment
+FROM payment.usage_analytics 
+WHERE user_id = $1::uuid
 `
 
-type GetActiveSubscriptionByUserIDRow struct {
-	ID               string                  `json:"id"`
-	Status           NullSubscriptionStatus  `json:"status"`
-	PriceID          pgtype.Text             `json:"price_id"`
-	CurrentPeriodEnd pgtype.Timestamptz      `json:"current_period_end"`
-	UnitAmount       pgtype.Int8             `json:"unit_amount"`
-	Currency         pgtype.Text             `json:"currency"`
-	Interval         NullPricingPlanInterval `json:"interval"`
-	IntervalCount    pgtype.Int4             `json:"interval_count"`
-}
-
-func (q *Queries) GetActiveSubscriptionByUserID(ctx context.Context, userID uuid.UUID) (GetActiveSubscriptionByUserIDRow, error) {
-	row := q.db.QueryRow(ctx, getActiveSubscriptionByUserID, userID)
-	var i GetActiveSubscriptionByUserIDRow
-	err := row.Scan(
-		&i.ID,
-		&i.Status,
-		&i.PriceID,
-		&i.CurrentPeriodEnd,
-		&i.UnitAmount,
-		&i.Currency,
-		&i.Interval,
-		&i.IntervalCount,
-	)
-	return i, err
+func (q *Queries) GetConsumptionCost(ctx context.Context, userID uuid.UUID) (pgtype.Numeric, error) {
+	row := q.db.QueryRow(ctx, getConsumptionCost, userID)
+	var total_cost_per_payment pgtype.Numeric
+	err := row.Scan(&total_cost_per_payment)
+	return total_cost_per_payment, err
 }
 
 const getCustomerByStripeID = `-- name: GetCustomerByStripeID :one
 SELECT 
     id,
-    stripe_customer_id
+    stripe_customer_id,
+    email
 FROM payment.customers 
 WHERE stripe_customer_id = $1::text
 `
@@ -98,14 +121,15 @@ WHERE stripe_customer_id = $1::text
 func (q *Queries) GetCustomerByStripeID(ctx context.Context, stripeCustomerID string) (PaymentCustomer, error) {
 	row := q.db.QueryRow(ctx, getCustomerByStripeID, stripeCustomerID)
 	var i PaymentCustomer
-	err := row.Scan(&i.ID, &i.StripeCustomerID)
+	err := row.Scan(&i.ID, &i.StripeCustomerID, &i.Email)
 	return i, err
 }
 
 const getCustomerByUserID = `-- name: GetCustomerByUserID :one
 SELECT 
     id,
-    stripe_customer_id
+    stripe_customer_id,
+    email
 FROM payment.customers 
 WHERE id = $1::uuid
 `
@@ -113,24 +137,40 @@ WHERE id = $1::uuid
 func (q *Queries) GetCustomerByUserID(ctx context.Context, userID uuid.UUID) (PaymentCustomer, error) {
 	row := q.db.QueryRow(ctx, getCustomerByUserID, userID)
 	var i PaymentCustomer
-	err := row.Scan(&i.ID, &i.StripeCustomerID)
+	err := row.Scan(&i.ID, &i.StripeCustomerID, &i.Email)
 	return i, err
 }
 
-const getPriceByID = `-- name: GetPriceByID :one
+const getPaymentValidity = `-- name: GetPaymentValidity :one
+SELECT
+    expired_at
+FROM payment.validity 
+WHERE user_id = $1::uuid
+`
+
+func (q *Queries) GetPaymentValidity(ctx context.Context, userID uuid.UUID) (pgtype.Timestamptz, error) {
+	row := q.db.QueryRow(ctx, getPaymentValidity, userID)
+	var expired_at pgtype.Timestamptz
+	err := row.Scan(&expired_at)
+	return expired_at, err
+}
+
+const getPriceByPlan = `-- name: GetPriceByPlan :one
 SELECT 
     id,
+    product_id,
     unit_amount,
     currency,
     type,
     interval,
     interval_count
 FROM payment.prices 
-WHERE id = $1::text
+WHERE plan = $1::text
 `
 
-type GetPriceByIDRow struct {
+type GetPriceByPlanRow struct {
 	ID            string                  `json:"id"`
+	ProductID     pgtype.Text             `json:"product_id"`
 	UnitAmount    pgtype.Int8             `json:"unit_amount"`
 	Currency      pgtype.Text             `json:"currency"`
 	Type          NullPricingType         `json:"type"`
@@ -138,11 +178,12 @@ type GetPriceByIDRow struct {
 	IntervalCount pgtype.Int4             `json:"interval_count"`
 }
 
-func (q *Queries) GetPriceByID(ctx context.Context, priceID string) (GetPriceByIDRow, error) {
-	row := q.db.QueryRow(ctx, getPriceByID, priceID)
-	var i GetPriceByIDRow
+func (q *Queries) GetPriceByPlan(ctx context.Context, plan string) (GetPriceByPlanRow, error) {
+	row := q.db.QueryRow(ctx, getPriceByPlan, plan)
+	var i GetPriceByPlanRow
 	err := row.Scan(
 		&i.ID,
+		&i.ProductID,
 		&i.UnitAmount,
 		&i.Currency,
 		&i.Type,
@@ -152,136 +193,180 @@ func (q *Queries) GetPriceByID(ctx context.Context, priceID string) (GetPriceByI
 	return i, err
 }
 
-const getSubscriptionByID = `-- name: GetSubscriptionByID :one
-SELECT 
-    id,
-    user_id,
-    status,
-    price_id,
-    cancel_at_period_end
-FROM payment.subscriptions 
-WHERE id = $1::text
+const getPriceForPayment = `-- name: GetPriceForPayment :one
+SELECT p.unit_amount
+FROM payment.validity v
+JOIN payment.prices p ON v.price_id = p.id
+WHERE v.user_id = $1::uuid
+LIMIT 1
 `
 
-type GetSubscriptionByIDRow struct {
-	ID                string                 `json:"id"`
-	UserID            uuid.UUID              `json:"user_id"`
-	Status            NullSubscriptionStatus `json:"status"`
-	PriceID           pgtype.Text            `json:"price_id"`
-	CancelAtPeriodEnd pgtype.Bool            `json:"cancel_at_period_end"`
+func (q *Queries) GetPriceForPayment(ctx context.Context, userID uuid.UUID) (pgtype.Int8, error) {
+	row := q.db.QueryRow(ctx, getPriceForPayment, userID)
+	var unit_amount pgtype.Int8
+	err := row.Scan(&unit_amount)
+	return unit_amount, err
 }
 
-func (q *Queries) GetSubscriptionByID(ctx context.Context, subscriptionID string) (GetSubscriptionByIDRow, error) {
-	row := q.db.QueryRow(ctx, getSubscriptionByID, subscriptionID)
-	var i GetSubscriptionByIDRow
-	err := row.Scan(
-		&i.ID,
-		&i.UserID,
-		&i.Status,
-		&i.PriceID,
-		&i.CancelAtPeriodEnd,
-	)
+const getUserPaymentHistory = `-- name: GetUserPaymentHistory :many
+SELECT 
+    amount,
+    currency,
+    created_at
+FROM payment.payments
+WHERE user_id = $1::uuid
+ORDER BY created_at DESC
+`
+
+type GetUserPaymentHistoryRow struct {
+	Amount    pgtype.Int4        `json:"amount"`
+	Currency  string             `json:"currency"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
+func (q *Queries) GetUserPaymentHistory(ctx context.Context, userID uuid.UUID) ([]GetUserPaymentHistoryRow, error) {
+	rows, err := q.db.Query(ctx, getUserPaymentHistory, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetUserPaymentHistoryRow{}
+	for rows.Next() {
+		var i GetUserPaymentHistoryRow
+		if err := rows.Scan(&i.Amount, &i.Currency, &i.CreatedAt); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getUserValidityStatus = `-- name: GetUserValidityStatus :one
+SELECT 
+    created_at,
+    expired_at,
+    CASE 
+        WHEN expired_at IS NULL THEN false
+        WHEN expired_at > current_timestamp THEN true
+        ELSE false
+    END AS is_valid
+FROM payment.validity
+WHERE user_id = $1::uuid
+`
+
+type GetUserValidityStatusRow struct {
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	ExpiredAt pgtype.Timestamptz `json:"expired_at"`
+	IsValid   bool               `json:"is_valid"`
+}
+
+func (q *Queries) GetUserValidityStatus(ctx context.Context, userID uuid.UUID) (GetUserValidityStatusRow, error) {
+	row := q.db.QueryRow(ctx, getUserValidityStatus, userID)
+	var i GetUserValidityStatusRow
+	err := row.Scan(&i.CreatedAt, &i.ExpiredAt, &i.IsValid)
 	return i, err
 }
 
-const updateSubscriptionStatus = `-- name: UpdateSubscriptionStatus :exec
-UPDATE payment.subscriptions
-SET 
-    status = $1::subscription_status,
-    canceled_at = CASE 
-        WHEN $1::subscription_status = 'canceled' THEN CURRENT_TIMESTAMP
-        ELSE canceled_at
-    END
-WHERE id = $2::text
+const getValidityPeroidByProductID = `-- name: GetValidityPeroidByProductID :one
+SELECT 
+    validity_period
+FROM payment.products 
+WHERE id = $1::text
 `
 
-type UpdateSubscriptionStatusParams struct {
-	Status         SubscriptionStatus `json:"status"`
-	SubscriptionID string             `json:"subscription_id"`
+func (q *Queries) GetValidityPeroidByProductID(ctx context.Context, productID string) (pgtype.Interval, error) {
+	row := q.db.QueryRow(ctx, getValidityPeroidByProductID, productID)
+	var validity_period pgtype.Interval
+	err := row.Scan(&validity_period)
+	return validity_period, err
 }
 
-func (q *Queries) UpdateSubscriptionStatus(ctx context.Context, arg UpdateSubscriptionStatusParams) error {
-	_, err := q.db.Exec(ctx, updateSubscriptionStatus, arg.Status, arg.SubscriptionID)
+const insertPayment = `-- name: InsertPayment :exec
+INSERT INTO payment.payments (
+   payment_id,
+   user_id,
+   stripe_customer_id,
+   price_id,
+   amount,
+   currency,
+   metadata,
+   created_at
+) VALUES (
+   $1::text,
+   $2::uuid,
+   $3::text,
+   $4::text,
+   $5::integer,
+   $6::text,
+   $7::jsonb,
+   $8::timestamp with time zone
+)
+`
+
+type InsertPaymentParams struct {
+	PaymentID        string             `json:"payment_id"`
+	UserID           uuid.UUID          `json:"user_id"`
+	StripeCustomerID string             `json:"stripe_customer_id"`
+	PriceID          string             `json:"price_id"`
+	Amount           int32              `json:"amount"`
+	Currency         string             `json:"currency"`
+	Metadata         []byte             `json:"metadata"`
+	CreatedAt        pgtype.Timestamptz `json:"created_at"`
+}
+
+func (q *Queries) InsertPayment(ctx context.Context, arg InsertPaymentParams) error {
+	_, err := q.db.Exec(ctx, insertPayment,
+		arg.PaymentID,
+		arg.UserID,
+		arg.StripeCustomerID,
+		arg.PriceID,
+		arg.Amount,
+		arg.Currency,
+		arg.Metadata,
+		arg.CreatedAt,
+	)
 	return err
 }
 
-const upsertSubscription = `-- name: UpsertSubscription :exec
-INSERT INTO payment.subscriptions (
-    id,
+const upsertPaymentValidity = `-- name: UpsertPaymentValidity :exec
+INSERT INTO payment.validity (
     user_id,
-    status,
+    payment_id,
     price_id,
-    quantity,
-    cancel_at_period_end,
-    current_period_start,
-    current_period_end,
-    created,
-    ended_at,
-    cancel_at,
-    canceled_at,
-    trial_start,
-    trial_end
+    expired_at,
+    metadata
 ) VALUES (
-    $1::text,
-    $2::uuid,
-    $3::subscription_status,
-    $4::text,
-    $5::integer,
-    $6::boolean,
-    $7::timestamp with time zone,
-    $8::timestamp with time zone,
-    $9::timestamp with time zone,
-    NULLIF($10::timestamp with time zone, '1970-01-01T00:00:00Z'),
-    NULLIF($11::timestamp with time zone, '1970-01-01T00:00:00Z'),
-    NULLIF($12::timestamp with time zone, '1970-01-01T00:00:00Z'),
-    NULLIF($13::timestamp with time zone, '1970-01-01T00:00:00Z'),
-    NULLIF($14::timestamp with time zone, '1970-01-01T00:00:00Z')
-) ON CONFLICT (id) DO UPDATE SET
-    status = EXCLUDED.status,
-    quantity = EXCLUDED.quantity,
-    cancel_at_period_end = EXCLUDED.cancel_at_period_end,
-    current_period_start = EXCLUDED.current_period_start,
-    current_period_end = EXCLUDED.current_period_end,
-    ended_at = EXCLUDED.ended_at,
-    cancel_at = EXCLUDED.cancel_at,
-    canceled_at = EXCLUDED.canceled_at,
-    trial_start = EXCLUDED.trial_start,
-    trial_end = EXCLUDED.trial_end
+    $1::uuid,
+    $2::text,
+    $3::text,
+    $4::timestamptz,
+    $5::jsonb
+)
+ON CONFLICT (user_id) DO UPDATE SET
+    payment_id = EXCLUDED.payment_id,
+    price_id = EXCLUDED.price_id,
+    expired_at = EXCLUDED.expired_at,
+    metadata = EXCLUDED.metadata
 `
 
-type UpsertSubscriptionParams struct {
-	SubscriptionID     string             `json:"subscription_id"`
-	UserID             uuid.UUID          `json:"user_id"`
-	Status             SubscriptionStatus `json:"status"`
-	PriceID            string             `json:"price_id"`
-	Quantity           int32              `json:"quantity"`
-	CancelAtPeriodEnd  bool               `json:"cancel_at_period_end"`
-	CurrentPeriodStart pgtype.Timestamptz `json:"current_period_start"`
-	CurrentPeriodEnd   pgtype.Timestamptz `json:"current_period_end"`
-	CreatedAt          pgtype.Timestamptz `json:"created_at"`
-	EndedAt            pgtype.Timestamptz `json:"ended_at"`
-	CancelAt           pgtype.Timestamptz `json:"cancel_at"`
-	CanceledAt         pgtype.Timestamptz `json:"canceled_at"`
-	TrialStart         pgtype.Timestamptz `json:"trial_start"`
-	TrialEnd           pgtype.Timestamptz `json:"trial_end"`
+type UpsertPaymentValidityParams struct {
+	UserID    uuid.UUID `json:"user_id"`
+	PaymentID string    `json:"payment_id"`
+	PriceID   string    `json:"price_id"`
+	ExpiredAt time.Time `json:"expired_at"`
+	Metadata  []byte    `json:"metadata"`
 }
 
-func (q *Queries) UpsertSubscription(ctx context.Context, arg UpsertSubscriptionParams) error {
-	_, err := q.db.Exec(ctx, upsertSubscription,
-		arg.SubscriptionID,
+func (q *Queries) UpsertPaymentValidity(ctx context.Context, arg UpsertPaymentValidityParams) error {
+	_, err := q.db.Exec(ctx, upsertPaymentValidity,
 		arg.UserID,
-		arg.Status,
+		arg.PaymentID,
 		arg.PriceID,
-		arg.Quantity,
-		arg.CancelAtPeriodEnd,
-		arg.CurrentPeriodStart,
-		arg.CurrentPeriodEnd,
-		arg.CreatedAt,
-		arg.EndedAt,
-		arg.CancelAt,
-		arg.CanceledAt,
-		arg.TrialStart,
-		arg.TrialEnd,
+		arg.ExpiredAt,
+		arg.Metadata,
 	)
 	return err
 }

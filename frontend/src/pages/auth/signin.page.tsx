@@ -1,7 +1,11 @@
 import { createStore } from "solid-js/store";
 import Header from "../../components/header.default";
 import { api } from "@utils/api";
-import { useNavigate } from "@solidjs/router";
+import { A, useLocation, useNavigate, useParams } from "@solidjs/router";
+import { Pay } from "@utils/payment";
+import { Match, onMount, Switch } from "solid-js";
+import Footer from "@components/footer.default";
+import { useFault } from "@components/fault";
 
 interface SigninPageProps {}
 
@@ -11,6 +15,8 @@ interface EmailSigninData {
 }
 
 function SigninPage(props: SigninPageProps) {
+	const location = useLocation();
+	const fault = useFault();
 	const navigate = useNavigate();
 	const [email_signup_data, set_email_signup_data] =
 		createStore<EmailSigninData>({
@@ -21,101 +27,198 @@ function SigninPage(props: SigninPageProps) {
 		const { name, value } = e.target as HTMLInputElement;
 		set_email_signup_data({ [name]: value });
 	};
+
+	onMount(() => {
+		if (localStorage.getItem("IS_AUTHENTICATED")) {
+			if (!location.query.payment) {
+				navigate("/", { replace: true });
+			}
+		}
+	});
+	onMount(() => {
+		// Create and load the Google script
+		const script = document.createElement("script");
+		script.src = "https://accounts.google.com/gsi/client";
+		script.async = true;
+		script.defer = true;
+		document.head.appendChild(script);
+	});
+
+	onMount(() => {
+		// Add global callback function
+		window.handleGoogleSignin = async (response: any) => {
+			try {
+				// Send the ID token to your backend
+				await api.post("/auth/signin/google", {
+					id_token: response.credential,
+				});
+
+				localStorage.setItem("IS_AUTHENTICATED", "true");
+
+				if (location.query.payment) {
+					Pay({ plan: location.query.payment as string });
+				} else {
+					navigate("/", { replace: true });
+				}
+			} catch (error) {
+				console.error("Google sign-in error:", error);
+				fault.major({ message: "Google sign-in error" });
+			}
+		};
+
+		// Create and load the Google script
+		const script = document.createElement("script");
+		script.src = "https://accounts.google.com/gsi/client";
+		script.async = true;
+		script.defer = true;
+		document.head.appendChild(script);
+	});
+
 	return (
-		<main class="p-4 flex flex-col gap-4 bg-gray-50 min-h-screen items-center">
-			<Header with_home />
-			<section class="max-w-md w-full space-y-8 grow">
-				<h2 class="text-center text-3xl text-gray-900">
-					Sign in to your account
-				</h2>
+		<main class="md:px-48 px-8 mx-auto justify-items-center  p-4 flex flex-col gap-4 h-screen max-h-screen">
+			<Header />
+			<section class="md:py-16 py-8 h-full flex flex-col gap-16 items-center">
+				<section class="max-w-md w-full space-y-8 grow">
+					<h2 class="text-center text-3xl text-forest-900">
+						Sign in to your account
+					</h2>
 
-				<button class="w-full flex justify-center py-2 px-4 border border-gray-300 rounded shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-					Sign in with Google
-				</button>
+					<div class="flex flex-col items-center w-full">
+						<div
+							id="g_id_onload"
+							data-client_id={
+								import.meta.env.VITE_GOOGLE_CLIENT_ID ??
+								"379453756631-b7kpec1652oq9ihd2bl1n5gvnu48j2gl.apps.googleusercontent.com"
+							}
+							data-context="signin"
+							data-ux_mode="popup"
+							data-callback="handleGoogleSignin"
+							data-auto_prompt="false"
+							data-width="100%"
+						></div>
 
-				<div class="relative my-6">
-					<div class="absolute inset-0 flex items-center">
-						<div class="w-full border-t border-gray-300"></div>
+						<div
+							class="g_id_signin w-full"
+							data-type="standard"
+							data-shape="rectangular"
+							data-theme="outline"
+							data-text="signin_with"
+							data-size="large"
+							data-width="100%"
+							data-logo_alignment="left"
+						></div>
 					</div>
-					<div class="relative flex justify-center text-sm">
-						<span class="px-2 bg-gray-50 text-gray-500">
-							Or continue with
-						</span>
-					</div>
-				</div>
 
-				<form
-					onSubmit={async (e) => {
-						e.preventDefault();
-						try {
-							const response = await api.post(
-								"/auth/signin/email",
-								email_signup_data
-							);
-							localStorage.setItem("IS_AUTHENTICATED", "true");
-							navigate("/", { replace: true });
-						} catch (error) {
-							console.error("Signin error:", error);
-						}
-					}}
-					class="mt-8 space-y-6"
-				>
-					<div class="rounded shadow-sm -space-y-px">
-						<div>
-							<label for="email" class="sr-only">
-								Email address
-							</label>
-							<input
-								id="email"
-								name="email"
-								type="email"
-								required
-								value={email_signup_data.email}
-								onInput={handle_input}
-								class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-gray-500 focus:border-gray-500 focus:z-10 sm:text-sm"
-								placeholder="Email address"
-							/>
+					<div class="relative my-6">
+						<div class="absolute inset-0 flex items-center">
+							<div class="w-full border-t border-lapis-300"></div>
 						</div>
-						<div>
-							<label for="password" class="sr-only">
-								Password
-							</label>
-							<input
-								id="password"
-								name="password"
-								type="password"
-								required
-								value={email_signup_data.password}
-								onInput={handle_input}
-								class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-gray-500 focus:border-gray-500 focus:z-10 sm:text-sm"
-								placeholder="Password"
-							/>
+						<div class="relative flex justify-center text-sm">
+							<span class="px-2 bg-forest-50 text-forest-500">
+								Or continue with
+							</span>
 						</div>
 					</div>
 
-					<button
-						type="submit"
-						class="w-full flex justify-center py-2 px-4 border border-transparent rounded shadow-sm text-sm font-medium text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+					<form
+						onSubmit={async (e) => {
+							e.preventDefault();
+							try {
+								const response = await api.post(
+									"/auth/signin/email",
+									email_signup_data
+								);
+								localStorage.setItem(
+									"IS_AUTHENTICATED",
+									"true"
+								);
+								if (location.query.payment) {
+									Pay({
+										plan: location.query.payment as string,
+									});
+								} else {
+									navigate("/", { replace: true });
+								}
+							} catch (error) {
+								console.error("Signin error:", error);
+								fault.major({
+									message:
+										"Invalid password or email address",
+								});
+							}
+						}}
+						class="mt-8 space-y-6"
 					>
-						Sign in
-					</button>
-				</form>
+						<div class="rounded shadow-sm -space-y-px">
+							<div>
+								<label for="email" class="sr-only">
+									Email address
+								</label>
+								<input
+									id="email"
+									name="email"
+									type="email"
+									required
+									value={email_signup_data.email}
+									onInput={handle_input}
+									class="appearance-none rounded-none relative block w-full px-3 py-2 border border-lapis-300 placeholder-lapis-500 text-forest-900 focus:outline-none focus:ring-lapis-500 focus:border-lapis-500 focus:z-10 sm:text-sm"
+									placeholder="Email address"
+								/>
+							</div>
+							<div>
+								<label for="password" class="sr-only">
+									Password
+								</label>
+								<input
+									id="password"
+									name="password"
+									type="password"
+									required
+									value={email_signup_data.password}
+									onInput={handle_input}
+									class="appearance-none rounded-none relative block w-full px-3 py-2 border border-lapis-300 placeholder-lapis-500 text-forest-900 focus:outline-none focus:ring-lapis-500 focus:border-lapis-500 focus:z-10 sm:text-sm"
+									placeholder="Password"
+								/>
+							</div>
+						</div>
 
-				<div class="flex items-center justify-between">
-					<a
-						href="/forgot-password"
-						class="text-sm font-medium text-gray-600 hover:text-gray-500"
-					>
-						Forgot your password?
-					</a>
-					<a
-						href="/signup"
-						class="text-sm font-medium text-gray-600 hover:text-gray-500"
-					>
-						No account? Sign up
-					</a>
-				</div>
+						<button
+							type="submit"
+							class="w-full flex justify-center py-2 px-4 border border-transparent rounded shadow-sm text-sm font-medium text-white bg-forest-600 hover:bg-forest-400 smooth-transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-forest-500"
+						>
+							Sign in
+						</button>
+					</form>
+
+					<div class="flex items-center justify-between">
+						<A
+							href="/forgot-password"
+							class="text-sm font-medium text-lapis-600 hover:text-lapis-500 smooth-transition"
+						>
+							Forgot your password?
+						</A>
+						<Switch>
+							<Match when={location.query.payment}>
+								<A
+									href={`/signup?payment=${location.query.payment}`}
+									class="text-sm font-medium text-lapis-600 hover:text-lapis-500 smooth-transition"
+								>
+									No account? Sign up
+								</A>
+							</Match>
+							<Match when={!location.query.payment}>
+								<A
+									href="/signup"
+									class="text-sm font-medium text-lapis-600 hover:text-lapis-500 smooth-transition"
+								>
+									No account? Sign up
+								</A>
+							</Match>
+						</Switch>
+					</div>
+				</section>
 			</section>
+			<Footer />
 		</main>
 	);
 }
