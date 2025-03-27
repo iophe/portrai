@@ -7,6 +7,7 @@ import { SkillForm, SkillView } from "./skill.view";
 import { Ordered } from "../ordered.util";
 import SectionHeader from "../utils/section.header";
 import LoadingSpinner from "@components/loading.spinner";
+import HelpIcon from "@assets/icons/help.svg?component-solid";
 import { createCachedResource } from "@utils/cache";
 import { useNavigate } from "@solidjs/router";
 
@@ -81,6 +82,13 @@ export function SkillList(props: SkillListProps) {
 						is_new
 					/>
 				)}
+				list={skills}
+				fallback={
+					<span class="flex flex-wrap gap-2 text-lapis-500">
+						<HelpIcon class="min-w-fit fill-lapis-400" />{" "}
+						<p>Add some of your skills in your resume</p>{" "}
+					</span>
+				}
 			/>
 			<Suspense fallback={<LoadingSpinner />}>
 				<For each={skills()}>
@@ -239,6 +247,13 @@ export function OfflineSkillList(props: OfflineSkillListProps) {
 						offline
 					/>
 				)}
+				open={props.skills.length === 0}
+				fallback={
+					<span class="flex flex-wrap gap-2 text-lapis-500">
+						<HelpIcon class="min-w-fit fill-lapis-400" />{" "}
+						<p>Add some of your skills in this resume</p>{" "}
+					</span>
+				}
 			/>
 			<Suspense fallback={<LoadingSpinner />}>
 				<For each={props.skills}>

@@ -6,7 +6,7 @@ interface TagsProps {
 
 export function Tags(props: TagsProps) {
 	return (
-		<ul class="self-end flex gap-2 flex-wrap">
+		<ul class="flex gap-2 flex-wrap">
 			<For each={props.values}>
 				{(value) => (
 					<li class="px-2 py-1 bg-lapis-50 text-gray-700 text-sm rounded">

@@ -153,7 +153,7 @@ function FaultPopup(props: FaultProps) {
 					};
 				}}
 			>
-				<CloseIcon class="fill-snow-100" />
+				<CloseIcon class="min-w-fit fill-snow-100" />
 			</button>
 		</div>
 	);

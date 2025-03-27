@@ -22,123 +22,107 @@ export function NoteForm(props: NoteFormProps) {
 	const [note_content, set_note_content] = createSignal("");
 
 	return (
-		<Motion
+		<Motion.form
 			initial={{ opacity: 0, y: 10 }}
 			animate={{ opacity: 1, y: 0 }}
 			transition={{ duration: 0.2, easing: "ease-out" }}
-			class=""
-		>
-			<form
-				onSubmit={async (e) => {
-					e.preventDefault();
+			onSubmit={async (e) => {
+				e.preventDefault();
 
-					try {
-						await api.post("/resume/notes/create", {
-							type: note_type(),
-							content: note_content(),
-							item_id: props.id,
-							item_type: props.section_type,
-						});
-					} catch (error) {
-						if ((error as AxiosError).status === 402) {
-							navigate("/pricing");
-						}
-						if (
-							(error as AxiosError).status !== 401 &&
-							(error as AxiosError).status !== 402
-						)
-							fault.minor({
-								message:
-									(
-										(error as AxiosError).response
-											?.data as any
-									).error ?? (error as AxiosError).message,
-							});
-					} finally {
-						props.submit();
+				try {
+					await api.post("/resume/notes/create", {
+						type: note_type(),
+						content: note_content(),
+						item_id: props.id,
+						item_type: props.section_type,
+					});
+				} catch (error) {
+					if ((error as AxiosError).status === 402) {
+						navigate("/pricing");
 					}
-				}}
-				class="flex flex-col gap-3"
+					if (
+						(error as AxiosError).status !== 401 &&
+						(error as AxiosError).status !== 402
+					)
+						fault.minor({
+							message:
+								((error as AxiosError).response?.data as any)
+									.error ?? (error as AxiosError).message,
+						});
+				} finally {
+					props.submit();
+				}
+			}}
+			class="flex flex-col gap-3"
+		>
+			<Motion.div
+				initial={{ opacity: 0, y: 5 }}
+				animate={{ opacity: 1, y: 0 }}
+				transition={{ duration: 0.1, delay: 0.1 }}
+				class="flex flex-col gap-2"
 			>
-				<Motion
-					initial={{ opacity: 0, y: 5 }}
-					animate={{ opacity: 1, y: 0 }}
-					transition={{ duration: 0.1, delay: 0.1 }}
+				<label class="text-sm text-gray-700">
+					What kind of comment ?
+				</label>
+				<select
+					value={note_type()}
+					onChange={(e) => set_note_type(e.target.value)}
+					class="border border-gray-300 rounded px-3 py-2"
 				>
-					<div class="flex flex-col gap-2">
-						<label class="text-sm text-gray-700">
-							What kind of comment ?
-						</label>
-						<select
-							value={note_type()}
-							onChange={(e) => set_note_type(e.target.value)}
-							class="border border-gray-300 rounded px-3 py-2"
-						>
-							<option value="instruction">
-								Instruction for the AI assistant
-							</option>
-							<option value="additional">
-								Additional information about this{" "}
-								{props.section_type}
-							</option>
-						</select>
-					</div>
-				</Motion>
+					<option value="instruction">
+						Instruction for the AI assistant
+					</option>
+					<option value="additional">
+						Additional information about this {props.section_type}
+					</option>
+				</select>
+			</Motion.div>
 
-				<Motion
-					initial={{ opacity: 0, y: 5 }}
-					animate={{ opacity: 1, y: 0 }}
-					transition={{ duration: 0.1, delay: 0.2 }}
-				>
-					<div class="flex flex-col gap-2">
-						<label class="text-sm text-gray-700">Comment</label>
-						<textarea
-							value={note_content()}
-							onInput={(e) => set_note_content(e.target.value)}
-							class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-lapis-500"
-							rows={4}
-							maxLength={1024}
-							placeholder="Write your comment here..."
-							required
-						/>
-					</div>
-				</Motion>
+			<Motion.div
+				initial={{ opacity: 0, y: 5 }}
+				animate={{ opacity: 1, y: 0 }}
+				transition={{ duration: 0.1, delay: 0.2 }}
+				class="flex flex-col gap-2"
+			>
+				<label class="text-sm text-gray-700">Comment</label>
+				<textarea
+					value={note_content()}
+					onInput={(e) => set_note_content(e.target.value)}
+					class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-lapis-500"
+					rows={4}
+					maxLength={1024}
+					placeholder="Write your comment here..."
+					required
+				/>
+			</Motion.div>
 
-				<Motion
-					initial={{ opacity: 0, y: 5 }}
-					animate={{ opacity: 1, y: 0 }}
-					transition={{ duration: 0.1, delay: 0.3 }}
+			<Motion.div
+				initial={{ opacity: 0, y: 5 }}
+				animate={{ opacity: 1, y: 0 }}
+				transition={{ duration: 0.1, delay: 0.3 }}
+				class="flex gap-2 justify-end"
+			>
+				<Motion.button
+					hover={{ scale: 1.02 }}
+					press={{ scale: 0.98 }}
+					transition={{ duration: 0.1 }}
+					type="button"
+					onClick={() => props.cancel()}
+					class="px-4 py-2 text-sm text-lapis-600 hover:bg-lapis-50 rounded"
 				>
-					<div class="flex gap-2 justify-end">
-						<Motion
-							hover={{ scale: 1.05 }}
-							press={{ scale: 0.95 }}
-							transition={{ duration: 0.15 }}
-						>
-							<button
-								type="button"
-								onClick={() => props.cancel()}
-								class="px-4 py-2 text-sm text-lapis-600 hover:bg-lapis-50 rounded smooth-transition"
-							>
-								Cancel
-							</button>
-						</Motion>
-						<Motion
-							hover={{ scale: 1.05 }}
-							press={{ scale: 0.95 }}
-							transition={{ duration: 0.15 }}
-						>
-							<button
-								type="submit"
-								class="px-4 py-2 text-sm text-white bg-lapis-600 hover:bg-lapis-700 rounded smooth-transition"
-							>
-								Submit Note
-							</button>
-						</Motion>
-					</div>
-				</Motion>
-			</form>
-		</Motion>
+					Cancel
+				</Motion.button>
+				<Motion.button
+					hover={{ scale: 1.02 }}
+					press={{ scale: 0.98 }}
+					transition={{ duration: 0.1 }}
+					type="submit"
+					class="px-4 py-2 text-sm text-white bg-lapis-600 hover:bg-lapis-700 rounded"
+				>
+					Submit
+				</Motion.button>
+			</Motion.div>
+		</Motion.form>
 	);
 }
 
@@ -156,86 +140,82 @@ export function NoteView(props: NoteViewProps) {
 	const navigate = useNavigate();
 
 	return (
-		<Motion
+		<Motion.div
 			initial={{ opacity: 0, scale: 0.97 }}
 			animate={{ opacity: 1, scale: 1 }}
 			transition={{ duration: 0.2, easing: "ease-out" }}
+			class="flex flex-col border border-lapis-50 rounded gap-4 p-4 relative overflow-hidden"
 		>
-			<div class="flex flex-col border border-lapis-50 rounded gap-4 p-4 relative overflow-hidden">
-				<Motion
-					initial={{ x: "-100%" }}
-					animate={{ x: "0%" }}
-					transition={{
-						duration: 0.3,
-						easing: "ease-out",
-						delay: 0.1,
-					}}
-					style={{
-						position: "absolute",
-						left: "0",
-						top: "0",
-						width: "3px",
-						height: "100%",
-						"background-color":
-							props.type === "instruction"
-								? "var(--lapis-200)"
-								: "var(--forest-200)",
-					}}
-				></Motion>
-				<span class="flex flex-row justify-between items-center">
-					<p class="text-gray-600 text-sm">
-						<Switch>
-							<Match when={props.type === "additional"}>
-								Additional information about this{" "}
-								{props.section_type}
-							</Match>
-							<Match when={props.type === "instruction"}>
-								Instruction for the AI assistant
-							</Match>
-						</Switch>
-					</p>
-					<Motion
-						hover={{ scale: 1.1 }}
-						press={{ scale: 0.9 }}
-						transition={{ duration: 0.15 }}
-					>
-						<button
-							onclick={async (e) => {
-								if (!e.isTrusted) return;
+			<Motion
+				initial={{ x: "-100%" }}
+				animate={{ x: "0%" }}
+				transition={{
+					duration: 0.3,
+					easing: "ease-out",
+					delay: 0.1,
+				}}
+				style={{
+					position: "absolute",
+					left: "0",
+					top: "0",
+					width: "3px",
+					height: "100%",
+					"background-color":
+						props.type === "instruction"
+							? "var(--lapis-200)"
+							: "var(--forest-200)",
+				}}
+			></Motion>
+			<span class="flex flex-row justify-between items-center">
+				<p class="text-gray-600 text-sm">
+					<Switch>
+						<Match when={props.type === "additional"}>
+							Additional information about this{" "}
+							{props.section_type}
+						</Match>
+						<Match when={props.type === "instruction"}>
+							Instruction for the AI assistant
+						</Match>
+					</Switch>
+				</p>
+				<Motion.button
+					hover={{ scale: 1.1 }}
+					press={{ scale: 0.9 }}
+					transition={{ duration: 0.15 }}
+					onclick={async (e) => {
+						if (!e.isTrusted) return;
 
-								try {
-									await api.post("/resume/notes/delete", {
-										note_id: props.note_id,
-										item_type: props.section_type,
-										item_id: props.on_id,
-									});
-									props.refetch();
-								} catch (error) {
-									if ((error as AxiosError).status === 402) {
-										navigate("/pricing");
-									}
-									if (
-										(error as AxiosError).status !== 401 &&
-										(error as AxiosError).status !== 402
-									)
-										fault.minor({
-											message:
-												(
-													(error as AxiosError)
-														.response?.data as any
-												).error ??
-												(error as AxiosError).message,
-										});
-								}
-							}}
-						>
-							<CloseIcon class="fill-forest-900" />
-						</button>
-					</Motion>
-				</span>
-				<p class="text-gray-700">{props.content}</p>
-			</div>
-		</Motion>
+						try {
+							await api.post("/resume/notes/delete", {
+								note_id: props.note_id,
+								item_type: props.section_type,
+								item_id: props.on_id,
+							});
+							props.refetch();
+						} catch (error) {
+							if ((error as AxiosError).status === 402) {
+								navigate("/pricing");
+							}
+							if (
+								(error as AxiosError).status !== 401 &&
+								(error as AxiosError).status !== 402
+							)
+								fault.minor({
+									message:
+										(
+											(error as AxiosError).response
+												?.data as any
+										).error ??
+										(error as AxiosError).message,
+								});
+						}
+					}}
+				>
+					<CloseIcon class="min-w-fit fill-forest-900" />
+				</Motion.button>
+			</span>
+			<p class="text-gray-700">{props.content}</p>
+		</Motion.div>
 	);
 }
 
@@ -250,50 +230,46 @@ export function NoteList(props: NoteListProps) {
 	const [showing_note_form, show_note_form] = createSignal(false);
 	return (
 		<div class="flex flex-col gap-4">
-			<Motion
+			<Motion.header
 				initial={{ opacity: 0, y: -5 }}
 				animate={{ opacity: 1, y: 0 }}
 				transition={{ duration: 0.2 }}
+				class="pt-4 flex flex-row justify-between"
 			>
-				<header class="pt-4 flex flex-row justify-between">
-					<h3 class="flex flex-wrap items-center gap-2">
-						<span>Comments : </span>
-						<span class="flex flex-row gap-2 items-center">
-							<Motion
-								animate={{ rotate: [0, -15, 15, -8, 8, 0] }}
-								transition={{
-									duration: 1,
-									delay: 0.5,
-									repeat: 0,
-								}}
-							>
-								<HelpIcon class="fill-lapis-100 min-w-fit" />
-							</Motion>
-							<p class="text-lapis-500 text-sm">
-								Comment this {props.section_type} to help your
-								AI assistant understand it better
-							</p>
-						</span>
-					</h3>
-					<Motion
-						hover={{ scale: 1.1 }}
-						press={{ scale: 0.95 }}
-						transition={{ duration: 0.15 }}
-					>
-						<button
-							onClick={() => {
-								show_note_form(true);
+				<h3 class="flex flex-wrap items-center gap-2">
+					<span>Comments : </span>
+					<span class="flex flex-row gap-2 items-center">
+						<Motion
+							animate={{ rotate: [0, -15, 15, -8, 8, 0] }}
+							transition={{
+								duration: 1,
+								delay: 0.5,
+								repeat: 0,
 							}}
-							title="add a new note"
-							disabled={showing_note_form()}
-							class="flex flex-row items-center gap-2"
 						>
-							<p class="text-2xl text-forest-900">+</p>
-							<NoteIcon class="fill-forest-900" />
-						</button>
-					</Motion>
-				</header>
-			</Motion>
+							<HelpIcon class="min-w-fit fill-lapis-100" />
+						</Motion>
+						<p class="text-lapis-500 text-sm">
+							Comment this {props.section_type} to help your AI
+							assistant understand it better
+						</p>
+					</span>
+				</h3>
+				<Motion.button
+					hover={{ scale: 1.1 }}
+					press={{ scale: 0.95 }}
+					transition={{ duration: 0.1 }}
+					onClick={() => {
+						show_note_form(true);
+					}}
+					title="add a new note"
+					disabled={showing_note_form()}
+					class="flex flex-row items-center gap-2"
+				>
+					<p class="text-2xl text-forest-900">+</p>
+					<NoteIcon class="min-w-fit fill-forest-900" />
+				</Motion.button>
+			</Motion.header>
 
 			<Presence>
 				<Show when={showing_note_form()}>
@@ -313,7 +289,7 @@ export function NoteList(props: NoteListProps) {
 				<For each={props.notes}>
 					{(note, index) => {
 						return (
-							<Motion
+							<Motion.li
 								initial={{ opacity: 0, y: 10 }}
 								animate={{ opacity: 1, y: 0 }}
 								transition={{
@@ -322,17 +298,15 @@ export function NoteList(props: NoteListProps) {
 									easing: "ease-out",
 								}}
 							>
-								<li>
-									<NoteView
-										content={note["content"] ?? ""}
-										type={note["note_type"] ?? ""}
-										note_id={note["note_id"]}
-										on_id={props.id}
-										section_type={props.section_type}
-										refetch={props.refetch}
-									/>
-								</li>
-							</Motion>
+								<NoteView
+									content={note["content"] ?? ""}
+									type={note["note_type"] ?? ""}
+									note_id={note["note_id"]}
+									on_id={props.id}
+									section_type={props.section_type}
+									refetch={props.refetch}
+								/>
+							</Motion.li>
 						);
 					}}
 				</For>

@@ -59,15 +59,6 @@ function ResumeAIPreview(props: ResumePreviewProps) {
 					if ((error as AxiosError).status === 402) {
 						navigate("/pricing");
 					}
-					if (
-						(error as AxiosError).status !== 401 &&
-						(error as AxiosError).status !== 402
-					)
-						fault.minor({
-							message:
-								((error as AxiosError).response?.data as any)
-									.error ?? (error as AxiosError).message,
-						});
 					return;
 				}
 			},
@@ -111,381 +102,360 @@ function ResumeAIPreview(props: ResumePreviewProps) {
 		} catch (error) {}
 	});
 	return (
-		<section class="overflow-y-auto w-full h-full flex flex-col gap-4">
-			<Motion
-				initial={{ opacity: 0 }}
-				animate={{ opacity: 1 }}
-				transition={{ duration: 0.4, easing: "ease-out" }}
-			>
-				<section class="rounded w-full p-4 bg-lapis-10 h-full flex flex-col gap-4 relative overflow-hidden">
+		<section class="overflow-y-auto overflow-x-clip w-full h-full flex flex-col gap-4 pb-4">
+			<Presence>
+				<Motion.section
+					initial={{ opacity: 0, y: 10 }}
+					animate={{ opacity: 1, y: 0 }}
+					transition={{ duration: 0.3, easing: "ease-out" }}
+					class="shadow rounded w-full p-4 bg-lapis-10 min-h-fit h-fit flex flex-col gap-4"
+				>
+					<Motion
+						initial={{ y: "-100%" }}
+						animate={{ y: "0%" }}
+						transition={{
+							duration: 0.4,
+							easing: "ease-out",
+							delay: 0.2,
+						}}
+						style={{
+							position: "absolute",
+							left: "50%",
+							top: "0",
+							width: "60%",
+							height: "3px",
+							"background-color": "var(--lapis-200)",
+							transform: "translateX(-50%)",
+						}}
+					></Motion>
+					<h2 class="text-center">
+						Paste the job description here to generate tailor made
+						resume
+					</h2>
+					<Motion
+						initial={{ opacity: 0, scale: 0.98 }}
+						animate={{ opacity: 1, scale: 1 }}
+						transition={{ duration: 0.3, delay: 0.1 }}
+					>
+						<textarea
+							value={job_description()}
+							oninput={(e) => {
+								set_job_description(e.target.value);
+							}}
+							class="w-full bg-gradient-to-br from-lapis-10 to-white rounded border border-lapis-50 p-4 outline-none hover:shadow-md smooth-transition"
+							rows={4}
+							placeholder="paste the job description"
+						/>
+					</Motion>
 					<Motion
 						initial={{ opacity: 0, y: 10 }}
 						animate={{ opacity: 1, y: 0 }}
-						transition={{ duration: 0.3, easing: "ease-out" }}
+						transition={{ duration: 0.3, delay: 0.2 }}
 					>
-						<Motion
-							initial={{ y: "-100%" }}
-							animate={{ y: "0%" }}
-							transition={{
-								duration: 0.4,
-								easing: "ease-out",
-								delay: 0.2,
-							}}
-							style={{
-								position: "absolute",
-								left: "50%",
-								top: "0",
-								width: "60%",
-								height: "3px",
-								"background-color": "var(--lapis-200)",
-								transform: "translateX(-50%)",
-							}}
-						></Motion>
-						<h2 class="text-center">
-							Paste the job description here to generate tailor
-							made resume
-						</h2>
+						<div class="flex flex-col gap-2 self-center items-center">
+							<Motion
+								hover={{ scale: 1.05 }}
+								press={{ scale: 0.95 }}
+								transition={{ duration: 0.1 }}
+							>
+								<FormCheckbox
+									label="with cover letter"
+									on_input={(value) => {
+										set_with_cover_letter(value);
+									}}
+									value={with_cover_letter()}
+								/>
+							</Motion>
+							<Motion
+								hover={{ scale: 1.03 }}
+								press={{ scale: 0.97 }}
+								transition={{ duration: 0.1 }}
+							>
+								<button
+									class="bg-forest-200 px-4 py-2 rounded text-snow-100 font-bold flex flex-row gap-2 w-fit"
+									onClick={async () => {
+										if (!job_description()) return;
+										try {
+											toGenerating(true);
+
+											const res = await api.post(
+												"/ai/session/resume",
+												{
+													job_description:
+														job_description(),
+													with_cover_letter:
+														with_cover_letter(),
+												}
+											);
+
+											refetch_profile();
+
+											const uuid = crypto.randomUUID();
+											set_resume_data({
+												resume_data: res.data
+													.result as ResumeData,
+												profile: profile(),
+												user: account(),
+											});
+											set_resume_id(uuid);
+											const resume_data = res.data
+												.result as ResumeData;
+											resume_data.certificates.forEach(
+												(v, i) => (v.certificate_id = i)
+											);
+											resume_data.experiences.forEach(
+												(v, i) => (v.experience_id = i)
+											);
+											resume_data.educations.forEach(
+												(v, i) => (v.education_id = i)
+											);
+											resume_data.projects.forEach(
+												(v, i) => (v.project_id = i)
+											);
+											resume_data.skills.forEach(
+												(v, i) => (v.skill_id = i)
+											);
+
+											DB_JOB_SPECIFIC_RESUMES.upsert(
+												db,
+												uuid,
+												{
+													resume_data: resume_data,
+													job_description:
+														job_description(),
+													title: resume_data.title,
+												}
+											);
+										} catch (error) {
+											if (
+												(error as AxiosError).status ===
+												402
+											) {
+												navigate("/pricing");
+											}
+											if (
+												(error as AxiosError).status !==
+													401 &&
+												(error as AxiosError).status !==
+													402
+											)
+												fault.major({
+													message:
+														"Failed to generate the resume",
+												});
+										} finally {
+											toGenerating(false);
+										}
+									}}
+									disabled={is_generating()}
+								>
+									Generate resume
+									<Show when={is_generating()}>
+										<LoadingSpinner />
+									</Show>
+								</button>
+							</Motion>
+
+							<Motion
+								hover={{ scale: 1.05 }}
+								press={{ scale: 0.95 }}
+								transition={{ duration: 0.1 }}
+							>
+								<button
+									class=""
+									onClick={async () => {
+										try {
+											toGenerating(true);
+											const res =
+												await api.get("/resume/data");
+											const data = res.data
+												.resume_data as ResumeData;
+
+											refetch_profile();
+
+											data.title = `${account()?.full_name?.replace(" ", "_")}_resume_${new Date().toISOString().slice(0, 10).replace(/-/g, "_")}`;
+											set_resume_data({
+												resume_data: data,
+												profile: profile(),
+												user: account(),
+											});
+										} catch (error) {
+											if (
+												(error as AxiosError).status ===
+												402
+											) {
+												navigate("/pricing");
+											}
+											if (
+												(error as AxiosError).status !==
+													401 &&
+												(error as AxiosError).status !==
+													402
+											)
+												fault.major({
+													message:
+														"Failed to generate the resume",
+												});
+										} finally {
+											toGenerating(false);
+										}
+									}}
+									disabled={is_generating()}
+								>
+									or build resume from profile
+								</button>
+							</Motion>
+						</div>
+					</Motion>
+				</Motion.section>
+			</Presence>
+
+			<Presence>
+				<Show when={resume_data()}>
+					<Motion.section
+						initial={{ opacity: 0, y: 20 }}
+						animate={{ opacity: 1, y: 0 }}
+						exit={{ opacity: 0, y: -10 }}
+						transition={{ duration: 0.4, easing: "ease-out" }}
+						class="shadow rounded w-full p-4 bg-lapis-10 h-fit flex flex-col gap-4"
+					>
+						<div class="self-center flex flex-row gap-4">
+							<h3>{`${account()?.full_name?.replace(" ", "_")}_resume_${new Date().toISOString().slice(0, 10).replace(/-/g, "_")}`}</h3>
+							<Motion
+								hover={{ scale: 1.1 }}
+								press={{ scale: 0.95 }}
+								transition={{ duration: 0.1 }}
+							>
+								<button
+									title="Edit"
+									onclick={() => {
+										navigate(`/resume/${resume_id()}`);
+									}}
+								>
+									<EditIcon class="fill-forest-900" />
+								</button>
+							</Motion>
+						</div>
+						<div class="flex flex-row self-center gap-4">
+							<Motion
+								hover={{ scale: 1.05 }}
+								press={{ scale: 0.95 }}
+								transition={{ duration: 0.1 }}
+							>
+								<button
+									class="bg-lapis-100 rounded text-snow-100 py-2 px-4 flex items-center gap-2"
+									onClick={async () => {
+										if (!cv_ref) return;
+										try {
+											toGenerating(true);
+											generatePDF(cv_ref, {
+												name: `${account()?.full_name?.replace(" ", "_")}_resume_${new Date().toISOString().slice(0, 10).replace(/-/g, "_")}.pdf`,
+											});
+											fault.info({
+												message:
+													"successfully generated the PDF",
+											});
+										} catch (error) {
+											fault.major({
+												message:
+													"Failed to generate the PDF",
+											});
+										} finally {
+											toGenerating(false);
+										}
+									}}
+									disabled={
+										is_generating() &&
+										resume_data() !== undefined
+									}
+								>
+									<Show
+										when={!is_generating()}
+										fallback={"Generating PDF..."}
+									>
+										<Motion
+											animate={
+												is_generating()
+													? { rotate: 360 }
+													: {}
+											}
+											transition={{
+												duration: 1,
+												repeat: Infinity,
+											}}
+											style={{
+												display: "inline-block",
+											}}
+										>
+											<DownloadIcon class="fill-white w-5 h-5" />
+										</Motion>
+										<span>Download PDF</span>
+									</Show>
+								</button>
+							</Motion>
+						</div>
+						<Motion.div
+							initial={{ opacity: 0, scale: 0.98 }}
+							animate={{ opacity: 1, scale: 1 }}
+							transition={{ duration: 0.4, delay: 0.2 }}
+							ref={cv_ref}
+							class="max-w-[210mm] h-fit md:block hidden"
+						>
+							<ExecutiveTemplate
+								data={resume_data()!}
+								settings={{
+									font_size: {
+										name: "2rem",
+										section_title: "1.25rem",
+										subsection_title: "1.1rem",
+										body: "0.9rem",
+									},
+									spacing: {
+										section: "1.5rem",
+										subsection: "1rem",
+										item: "0.75rem",
+									},
+									show_sections: {
+										summary: true,
+										experience: true,
+										education: true,
+										skills: true,
+										certificates: true,
+										projects: true,
+									},
+								}}
+							/>
+						</Motion.div>
+					</Motion.section>
+				</Show>
+			</Presence>
+
+			<Presence>
+				<Show when={resume_data()?.resume_data.letter}>
+					<Motion.section
+						initial={{ opacity: 0, y: 20 }}
+						animate={{ opacity: 1, y: 0 }}
+						exit={{ opacity: 0, y: -10 }}
+						transition={{
+							duration: 0.4,
+							easing: "ease-out",
+							delay: 0.2,
+						}}
+						class="shadow rounded w-full p-4 bg-lapis-10 h-fit flex flex-col gap-4"
+					>
+						<h2>Cover letter :</h2>
 						<Motion
 							initial={{ opacity: 0, scale: 0.98 }}
 							animate={{ opacity: 1, scale: 1 }}
 							transition={{ duration: 0.3, delay: 0.1 }}
 						>
-							<textarea
-								value={job_description()}
-								oninput={(e) => {
-									set_job_description(e.target.value);
-								}}
-								class="w-full bg-gradient-to-br from-lapis-10 to-white rounded border border-lapis-50 p-4 outline-none hover:shadow-md smooth-transition"
-								rows={4}
-								placeholder="paste the job description"
-							/>
-						</Motion>
-						<Motion
-							initial={{ opacity: 0, y: 10 }}
-							animate={{ opacity: 1, y: 0 }}
-							transition={{ duration: 0.3, delay: 0.2 }}
-						>
-							<div class="flex flex-col gap-2 self-center items-center">
-								<Motion
-									hover={{ scale: 1.05 }}
-									press={{ scale: 0.95 }}
-									transition={{ duration: 0.1 }}
-								>
-									<FormCheckbox
-										label="with cover letter"
-										on_input={(value) => {
-											set_with_cover_letter(value);
-										}}
-										value={with_cover_letter()}
-									/>
-								</Motion>
-								<Motion
-									hover={{ scale: 1.03 }}
-									press={{ scale: 0.97 }}
-									transition={{ duration: 0.1 }}
-								>
-									<button
-										class="bg-forest-200 px-4 py-2 rounded text-snow-100 font-bold flex flex-row gap-2 w-fit"
-										onClick={async () => {
-											if (!job_description()) return;
-											try {
-												toGenerating(true);
-
-												const res = await api.post(
-													"/ai/session/resume",
-													{
-														job_description:
-															job_description(),
-														with_cover_letter:
-															with_cover_letter(),
-													}
-												);
-
-												refetch_profile();
-												
-												const uuid =
-													crypto.randomUUID();
-												set_resume_data({
-													resume_data: res.data
-														.result as ResumeData,
-													profile: profile(),
-													user: account(),
-												});
-												set_resume_id(uuid);
-												const resume_data = res.data
-													.result as ResumeData;
-												resume_data.certificates.forEach(
-													(v, i) =>
-														(v.certificate_id = i)
-												);
-												resume_data.experiences.forEach(
-													(v, i) =>
-														(v.experience_id = i)
-												);
-												resume_data.educations.forEach(
-													(v, i) =>
-														(v.education_id = i)
-												);
-												resume_data.projects.forEach(
-													(v, i) => (v.project_id = i)
-												);
-												resume_data.skills.forEach(
-													(v, i) => (v.skill_id = i)
-												);
-
-												DB_JOB_SPECIFIC_RESUMES.upsert(
-													db,
-													uuid,
-													{
-														resume_data:
-															resume_data,
-														job_description:
-															job_description(),
-														title: resume_data.title,
-													}
-												);
-											} catch (error) {
-												if (
-													(error as AxiosError)
-														.status === 402
-												) {
-													navigate("/pricing");
-												}
-												if (
-													(error as AxiosError)
-														.status !== 401 &&
-													(error as AxiosError)
-														.status !== 402
-												)
-													fault.major({
-														message:
-															"Failed to generate the resume",
-													});
-											} finally {
-												toGenerating(false);
-											}
-										}}
-										disabled={is_generating()}
-									>
-										Generate resume
-										<Show when={is_generating()}>
-											<LoadingSpinner />
-										</Show>
-									</button>
-								</Motion>
-
-								<Motion
-									hover={{ scale: 1.05 }}
-									press={{ scale: 0.95 }}
-									transition={{ duration: 0.1 }}
-								>
-									<button
-										class=""
-										onClick={async () => {
-											try {
-												toGenerating(true);
-												const res =
-													await api.get(
-														"/resume/data"
-													);
-												const data = res.data
-													.resume_data as ResumeData;
-
-												refetch_profile();
-
-												data.title = `${account()?.full_name?.replace(" ", "_")}_resume_${new Date().toISOString().slice(0, 10).replace(/-/g, "_")}`;
-												set_resume_data({
-													resume_data: data,
-													profile: profile(),
-													user: account(),
-												});
-											} catch (error) {
-												if (
-													(error as AxiosError)
-														.status === 402
-												) {
-													navigate("/pricing");
-												}
-												if (
-													(error as AxiosError)
-														.status !== 401 &&
-													(error as AxiosError)
-														.status !== 402
-												)
-													fault.major({
-														message:
-															"Failed to generate the resume",
-													});
-											} finally {
-												toGenerating(false);
-											}
-										}}
-										disabled={is_generating()}
-									>
-										or build resume from profile
-									</button>
-								</Motion>
+							<div class="bg-white border-lapis-100 shadow px-4 py-8">
+								{formatText(resume_data()?.resume_data.letter!)}
 							</div>
 						</Motion>
-					</Motion>
-				</section>
-
-				<Presence>
-					<Show when={resume_data()}>
-						<Motion
-							initial={{ opacity: 0, y: 20 }}
-							animate={{ opacity: 1, y: 0 }}
-							exit={{ opacity: 0, y: -10 }}
-							transition={{ duration: 0.4, easing: "ease-out" }}
-						>
-							<section class="rounded w-full p-4 bg-lapis-10 h-fit flex flex-col gap-4">
-								<div class="self-center flex flex-row gap-4">
-									<h3>{`${account()?.full_name?.replace(" ", "_")}_resume_${new Date().toISOString().slice(0, 10).replace(/-/g, "_")}`}</h3>
-									<Motion
-										hover={{ scale: 1.1 }}
-										press={{ scale: 0.95 }}
-										transition={{ duration: 0.1 }}
-									>
-										<button
-											title="Edit"
-											onclick={() => {
-												navigate(
-													`/resume/${resume_id()}`
-												);
-											}}
-										>
-											<EditIcon class="fill-forest-900" />
-										</button>
-									</Motion>
-								</div>
-								<div class="flex flex-row self-center gap-4">
-									<Motion
-										hover={{ scale: 1.05 }}
-										press={{ scale: 0.95 }}
-										transition={{ duration: 0.1 }}
-									>
-										<button
-											class="bg-lapis-100 rounded text-snow-100 py-2 px-4 flex items-center gap-2"
-											onClick={async () => {
-												if (!cv_ref) return;
-												try {
-													toGenerating(true);
-													generatePDF(cv_ref, {
-														name: `${account()?.full_name?.replace(" ", "_")}_resume_${new Date().toISOString().slice(0, 10).replace(/-/g, "_")}.pdf`,
-													});
-													fault.info({
-														message:
-															"successfully generated the PDF",
-													});
-												} catch (error) {
-													fault.major({
-														message:
-															"Failed to generate the PDF",
-													});
-												} finally {
-													toGenerating(false);
-												}
-											}}
-											disabled={
-												is_generating() &&
-												resume_data() !== undefined
-											}
-										>
-											<Show
-												when={!is_generating()}
-												fallback={"Generating PDF..."}
-											>
-												<Motion
-													animate={
-														is_generating()
-															? { rotate: 360 }
-															: {}
-													}
-													transition={{
-														duration: 1,
-														repeat: Infinity,
-													}}
-													style={{
-														display: "inline-block",
-													}}
-												>
-													<DownloadIcon class="fill-white w-5 h-5" />
-												</Motion>
-												<span>Download PDF</span>
-											</Show>
-										</button>
-									</Motion>
-								</div>
-								<Motion
-									initial={{ opacity: 0, scale: 0.98 }}
-									animate={{ opacity: 1, scale: 1 }}
-									transition={{ duration: 0.4, delay: 0.2 }}
-								>
-									<div
-										ref={cv_ref}
-										class="max-w-[210mm] min-h-[297mm] md:block hidden"
-									>
-										<ExecutiveTemplate
-											data={resume_data()!}
-											settings={{
-												font_size: {
-													name: "2rem",
-													section_title: "1.25rem",
-													subsection_title: "1.1rem",
-													body: "0.9rem",
-												},
-												spacing: {
-													section: "1.5rem",
-													subsection: "1rem",
-													item: "0.75rem",
-												},
-												show_sections: {
-													summary: true,
-													experience: true,
-													education: true,
-													skills: true,
-													certificates: true,
-													projects: true,
-												},
-											}}
-										/>
-									</div>
-								</Motion>
-							</section>
-						</Motion>
-					</Show>
-				</Presence>
-
-				<Presence>
-					<Show when={resume_data()?.resume_data.letter}>
-						<Motion
-							initial={{ opacity: 0, y: 20 }}
-							animate={{ opacity: 1, y: 0 }}
-							exit={{ opacity: 0, y: -10 }}
-							transition={{
-								duration: 0.4,
-								easing: "ease-out",
-								delay: 0.2,
-							}}
-						>
-							<section class="rounded w-full p-4 bg-lapis-10 h-fit flex flex-col gap-4">
-								<h2>Cover letter :</h2>
-								<Motion
-									initial={{ opacity: 0, scale: 0.98 }}
-									animate={{ opacity: 1, scale: 1 }}
-									transition={{ duration: 0.3, delay: 0.1 }}
-								>
-									<div class="bg-white border-lapis-100 shadow px-4 py-8">
-										{formatText(
-											resume_data()?.resume_data.letter!
-										)}
-									</div>
-								</Motion>
-							</section>
-						</Motion>
-					</Show>
-				</Presence>
-			</Motion>
+					</Motion.section>
+				</Show>
+			</Presence>
 		</section>
 	);
 }

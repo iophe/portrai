@@ -7,6 +7,7 @@ import { EducationForm, EducationView } from "./education.view";
 import { Ordered } from "../ordered.util";
 import SectionHeader from "../utils/section.header";
 import LoadingSpinner from "@components/loading.spinner";
+import HelpIcon from "@assets/icons/help.svg?component-solid";
 import { createCachedResource } from "@utils/cache";
 import { useNavigate } from "@solidjs/router";
 
@@ -84,6 +85,16 @@ export function EducationList(props: EducationListProps) {
 						is_new
 					/>
 				)}
+				list={educations}
+				fallback={
+					<span class="flex flex-wrap gap-2 text-lapis-500">
+						<HelpIcon class="min-w-fit fill-lapis-400" />{" "}
+						<p>
+							Add your educational background and qualifications
+							in your resume
+						</p>{" "}
+					</span>
+				}
 			/>
 
 			<Suspense fallback={<LoadingSpinner />}>
@@ -263,6 +274,16 @@ export function OfflineEducationList(props: OfflineEducationListProps) {
 						offline
 					/>
 				)}
+				open={props.educations.length === 0}
+				fallback={
+					<span class="flex flex-wrap gap-2 text-lapis-500">
+						<HelpIcon class="min-w-fit fill-lapis-400" />{" "}
+						<p>
+							Add some educational background and qualifications
+							in this resume
+						</p>{" "}
+					</span>
+				}
 			/>
 
 			<Suspense fallback={<LoadingSpinner />}>
