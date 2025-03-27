@@ -138,7 +138,7 @@ function AboutUs(props: AboutUsPageProps) {
 		<main class="md:px-48 px-6 mx-auto justify-items-center py-4 flex flex-col gap-4 min-h-screen">
 			<Header />
 
-			<section class="w-full flex flex-col gap-8 py-8">
+			<section class="w-full flex flex-col gap-8 py-8 grow">
 				<header class="text-center mb-6">
 					<h1 class="text-4xl font-bold text-forest-900 mb-3">
 						About{" "}
