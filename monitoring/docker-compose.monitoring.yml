@@ -83,6 +83,7 @@ services:
 volumes:
   portrai_prometheus_data:
   portrai_grafana_data:
+  portrai_loki_data:
 
 networks:
   portrai_monitoring:
