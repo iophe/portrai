@@ -13,13 +13,13 @@ function Header() {
 				</h1>
 			</A>
 			<div class="md:w-fit w-full flex flex-row md:gap-16 md:justify-center justify-between items-center">
-				{/* <A
-					href="/blog"
+				<A
+					href="/blogs"
 					class="tracking-widest"
 					activeClass="text-forest-600"
 				>
-					<h2>Blog</h2>
-				</A> */}
+					<h1>Blog</h1>
+				</A>
 				<A
 					href="/pricing"
 					class="tracking-widest"

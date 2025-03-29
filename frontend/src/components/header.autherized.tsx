@@ -30,6 +30,13 @@ function Header(props: HeaderProps) {
 					<h1>Templates</h1>
 				</A>
 				<A
+					href="/blogs"
+					class="tracking-widest"
+					activeClass="text-forest-600"
+				>
+					<h1>Blog</h1>
+				</A>
+				<A
 					href="/account"
 					class="tracking-widest bg-forest-800 text-snow-100 py-2 px-4 rounded"
 					activeClass="text-forest-600"
