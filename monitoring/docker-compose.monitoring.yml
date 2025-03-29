@@ -74,7 +74,7 @@ services:
       - back
     volumes:
       - /var/log:/var/log
-      - ./promtail-config.yml:/etc/promtail/config.yml
+      - ./promtail/config.yml:/etc/promtail/config.yml
     command: -config.file=/etc/promtail/config.yml
     restart: unless-stopped
     depends_on:
