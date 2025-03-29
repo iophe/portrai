@@ -5,12 +5,12 @@ global:
 scrape_configs:
   - job_name: 'prometheus'
     static_configs:
-      - targets: ['localhost:9090']
+      - targets: ['portrai_prometheus:9090']
 
   - job_name: 'cv-generator'
     metrics_path: '/metrics'
     static_configs:
-      - targets: ['localhost:3000'] 
+      - targets: ['portrai_backend:3000'] 
         labels:
           service: 'cv-generator'
           env: 'development'

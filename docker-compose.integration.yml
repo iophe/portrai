@@ -26,7 +26,7 @@ services:
     build:
       context: ./backend
       dockerfile: dockerfile.integration
-    container_name: portrai_backend_integration
+    container_name: portrai_backend
     profiles: [app]
     image: portrai_backend:integration
     networks:
@@ -84,7 +84,7 @@ services:
         - NODE_ENV=production
         - VITE_API_URL=${BACKEND_RELATIVE_URL}
         - VITE_GOOGLE_CLIENT_ID=${GOTRUE_EXTERNAL_GOOGLE_CLIENT_ID}
-    container_name: portrai_frontend_integration
+    container_name: portrai_frontend
     profiles: [app]
     image: portrai_frontend:integration
     ports:
