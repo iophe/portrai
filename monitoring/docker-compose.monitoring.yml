@@ -63,8 +63,8 @@ services:
       - "3100:3100"
     volumes:
       - portrai_loki_data:/loki
-      - ./monitoring/loki/loki.yml:/etc/loki/loki-config.yml
-    command: -config.file=/etc/loki/loki-config.yml
+      - ./monitoring/loki/loki.yml:/etc/loki/loki.yml
+    command: -config.file=/etc/loki/loki.yml
     restart: unless-stopped
 
   portrai_promtail:
