@@ -95,6 +95,7 @@ function SigninPage(props: SigninPageProps) {
 							data-callback="handleGoogleSignin"
 							data-auto_prompt="false"
 							data-width="100%"
+							class="w-full"
 						></div>
 
 						<div

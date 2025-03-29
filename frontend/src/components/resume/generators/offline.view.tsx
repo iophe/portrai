@@ -131,15 +131,6 @@ function ResumePreview(props: ResumePreviewProps) {
 			if ((error as AxiosError).status === 402) {
 				navigate("/pricing");
 			}
-			if (
-				(error as AxiosError).status !== 401 &&
-				(error as AxiosError).status !== 402
-			)
-				fault.minor({
-					message:
-						((error as AxiosError).response?.data as any).error ??
-						(error as AxiosError).message,
-				});
 		}
 	});
 	return (
