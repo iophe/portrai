@@ -29,7 +29,8 @@ function SignupPage(props: SignupPageProps) {
 	const fault = useFault();
 	const navigate = useNavigate();
 	const location = useLocation();
-
+	console.log(location.query.redirectTo);
+	
 	const [email_signup_data, set_email_signup_data] =
 		createStore<EmailSignupData>({
 			name: "",
@@ -38,10 +39,11 @@ function SignupPage(props: SignupPageProps) {
 			confirm_password: "",
 			terms_accepted: false,
 		});
-	
+
 	const handle_input = (e: InputEvent) => {
 		const target = e.target as HTMLInputElement;
-		const value = target.type === "checkbox" ? target.checked : target.value;
+		const value =
+			target.type === "checkbox" ? target.checked : target.value;
 		const name = target.name;
 		set_email_signup_data({ [name]: value });
 	};
@@ -54,7 +56,7 @@ function SignupPage(props: SignupPageProps) {
 		script.defer = true;
 		document.head.appendChild(script);
 	});
-	
+
 	// const generate_nonce = () => {
 	// 	const array = new Uint8Array(16);
 	// 	window.crypto.getRandomValues(array);
@@ -71,20 +73,26 @@ function SignupPage(props: SignupPageProps) {
 			try {
 				// Check if terms have been accepted
 				if (!email_signup_data.terms_accepted) {
-					fault.minor({ message: "You must accept the Terms of Service to continue." });
+					fault.minor({
+						message:
+							"You must accept the Terms of Service to continue.",
+					});
 					return;
 				}
-				
+
 				// Send the ID token to your backend
 				await api.post("/auth/signin/google", {
 					id_token: response.credential,
-					terms_accepted: email_signup_data.terms_accepted
+					terms_accepted: email_signup_data.terms_accepted,
 				});
 
 				localStorage.setItem("IS_AUTHENTICATED", "true");
 
 				if (location.query.payment) {
 					Pay({ plan: location.query.payment as string });
+				}
+				else if (location.query.redirectTo ) {
+					navigate("/"+location.query.redirectTo, { replace: true });
 				} else {
 					navigate("/", { replace: true });
 				}
@@ -120,7 +128,7 @@ function SignupPage(props: SignupPageProps) {
 							data-ux_mode="popup"
 							data-callback="handleGoogleSignup"
 							data-auto_prompt="false"
-							data-width="100%"
+							class="w-full"
 						></div>
 
 						<div
@@ -130,7 +138,6 @@ function SignupPage(props: SignupPageProps) {
 							data-theme="outline"
 							data-text="signup_with"
 							data-size="large"
-							data-width="100%"
 							data-logo_alignment="left"
 						></div>
 					</div>
@@ -145,17 +152,20 @@ function SignupPage(props: SignupPageProps) {
 							</span>
 						</div>
 					</div>
-					
+
 					<form
 						onSubmit={async (e) => {
 							e.preventDefault();
-							
+
 							// Validate terms acceptance
 							if (!email_signup_data.terms_accepted) {
-								fault.minor({ message: "You must accept the Terms of Service to continue." });
+								fault.minor({
+									message:
+										"You must accept the Terms of Service to continue.",
+								});
 								return;
 							}
-							
+
 							try {
 								const response = await api.post(
 									"/auth/signup/email",
@@ -220,7 +230,7 @@ function SignupPage(props: SignupPageProps) {
 								/>
 							</div>
 						</fieldset>
-						
+
 						<fieldset class="flex items-start">
 							<div class="flex items-center h-5">
 								<input
@@ -235,12 +245,29 @@ function SignupPage(props: SignupPageProps) {
 								/>
 							</div>
 							<div class="ml-3 text-sm">
-								<label for="terms_accepted" class="font-medium text-lapis-600" id="terms-description">
-									I agree to the <A href="/policies/term-of-services" class="text-forest-700 hover:text-forest-600 smooth-transition">Terms of Service</A> and <A href="/policies/privacy" class="text-forest-700 hover:text-forest-600 smooth-transition">Privacy Policy</A>
+								<label
+									for="terms_accepted"
+									class="font-medium text-lapis-600"
+									id="terms-description"
+								>
+									I agree to the{" "}
+									<A
+										href="/policies/term-of-services"
+										class="text-forest-700 hover:text-forest-600 smooth-transition"
+									>
+										Terms of Service
+									</A>{" "}
+									and{" "}
+									<A
+										href="/policies/privacy"
+										class="text-forest-700 hover:text-forest-600 smooth-transition"
+									>
+										Privacy Policy
+									</A>
 								</label>
 							</div>
 						</fieldset>
-						
+
 						<button
 							type="submit"
 							class="w-full flex justify-center py-2 px-4 border border-transparent rounded shadow-sm text-sm font-medium text-white bg-forest-600 hover:bg-forest-400 smooth-transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-forest-500"

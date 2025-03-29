@@ -11,6 +11,7 @@ import Blog from "@pages/home/blog.page";
 const root = document.getElementById("root");
 
 const Landing = lazy(() => import("./pages/home/landing.page"));
+const Product = lazy(() => import("./pages/product/product.page"));
 const Support = lazy(() => import("./pages/support/support.page"));
 const Privacy = lazy(() => import("./pages/policies/privacy.page"));
 const TermService = lazy(() => import("./pages/policies/service.page"));
@@ -46,6 +47,7 @@ render(
 			<Router>
 				<Route path={["/", "/home"]} component={Home} />
 				<Route path={"/welcolm"} component={Landing} />
+				<Route path={"/product"} component={Product} />
 				<Route path={"/support"} component={Support} />
 				<Route path={"/policies/privacy"} component={Privacy} />
 				<Route
