@@ -4,7 +4,7 @@ import { api } from "@utils/api";
 import { A, useLocation, useNavigate } from "@solidjs/router";
 import { Pay } from "@utils/payment";
 import Footer from "@components/footer.default";
-import { Match, onMount, Switch } from "solid-js";
+import { createEffect, Match, onMount, Switch } from "solid-js";
 import { useFault } from "@components/fault";
 
 interface SignupPageProps {}
@@ -29,7 +29,6 @@ function SignupPage(props: SignupPageProps) {
 	const fault = useFault();
 	const navigate = useNavigate();
 	const location = useLocation();
-	console.log(location.query.redirectTo);
 	
 	const [email_signup_data, set_email_signup_data] =
 		createStore<EmailSignupData>({
