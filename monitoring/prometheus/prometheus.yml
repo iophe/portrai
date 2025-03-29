@@ -17,14 +17,7 @@ scrape_configs:
 
   - job_name: 'node-exporter'
     static_configs:
-      - targets: ['host.docker.internal:9100']
+      - targets: ['portrai_node_exporter:9100']
         labels:
           service: 'node-exporter'
-          env: 'development'
-
-  - job_name: 'docker'
-    static_configs:
-      - targets: ['host.docker.internal:9323']
-        labels:
-          service: 'docker'
           env: 'development'
