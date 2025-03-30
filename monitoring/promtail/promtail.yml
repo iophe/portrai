@@ -14,9 +14,6 @@ scrape_configs:
       - host: "unix:///var/run/docker.sock"
     relabel_configs:
       - source_labels: ["__meta_docker_container_name"]
-        regex: "/?(portrai_backend|portrai_nginx)"
-        action: keep  # Garde uniquement ces conteneurs
-      - source_labels: ["__meta_docker_container_name"]
         target_label: "container"
       - source_labels: ["__meta_docker_container_name"]
         action: replace
