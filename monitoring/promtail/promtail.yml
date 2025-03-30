@@ -9,10 +9,19 @@ clients:
   - url: http://portrai_loki:3100/loki/api/v1/push
 
 scrape_configs:
-  - job_name: "varlogs"
+  - job_name: "portrai_backend"
     static_configs:
       - targets:
           - localhost
         labels:
-          job: "varlogs"
-          __path__: /var/log/*.log  # Collecte les logs de /var/log
+          job: "portrai_backend"
+          __path__: /var/lib/docker/containers/*-portrai_backend-*.log
+
+  - job_name: "portrai_nginx"
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: "portrai_nginx"
+          __path__: /var/lib/docker/containers/*-portrai_nginx-*.log
+
