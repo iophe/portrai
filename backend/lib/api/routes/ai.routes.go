@@ -6,7 +6,6 @@ import (
 	"backend/lib/services/ai"
 	"backend/lib/services/cache"
 	"backend/lib/services/db"
-	"backend/lib/services/monitor"
 	"backend/lib/services/sess"
 	"backend/lib/utils"
 	"time"
@@ -39,38 +38,13 @@ func RegisterAIRoutes(group fiber.Router) {
 
 	session_group := ai_group.Group("/session")
 
-	session_group.Post("/resume", func(c *fiber.Ctx) error {
+	session_group.Post("/resume", middlewares.CVGenerationMiddleware("default"), func(c *fiber.Ctx) error {
 		var data handlers.BuildResumeData
 		if err := c.BodyParser(&data); err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 				"error": "Invalid request body",
 			})
 		}
-
-		// Démarrer le suivi de la génération du CV
-		err := monitor.TrackCVGeneration("default", func() error {
-			// Appeler la fonction HandleBuildResume existante
-			err := handlers.HandleBuildResume(data, c, &cache.CACHE, &db.DB, ai.ANTHROPIC)
-
-			// Si la génération échoue, retourner l'erreur
-			if err != nil {
-				return err
-			}
-
-			// Retourner les résultats du CV généré
-			return c.JSON(fiber.Map{
-				"message": "Resume generated successfully",
-			})
-		})
-
-		// Vérifier si le suivi a échoué
-		if err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"error": "Failed to generate resume",
-				"info":  err.Error(),
-			})
-		}
-
-		return nil
+		return handlers.HandleBuildResume(data, c, &cache.CACHE, &db.DB, ai.ANTHROPIC)
 	})
 }
