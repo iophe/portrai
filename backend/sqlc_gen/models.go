@@ -98,6 +98,15 @@ func (ns NullPricingType) Value() (driver.Value, error) {
 	return string(ns.PricingType), nil
 }
 
+type GeneratedResume struct {
+	ResumeFileID uuid.UUID          `json:"resume_file_id"`
+	Filename     string             `json:"filename"`
+	UserID       uuid.UUID          `json:"user_id"`
+	ResumeUid    pgtype.UUID        `json:"resume_uid"`
+	TemplateName string             `json:"template_name"`
+	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+}
+
 type PaymentCustomer struct {
 	ID               pgtype.UUID `json:"id"`
 	StripeCustomerID pgtype.Text `json:"stripe_customer_id"`
@@ -210,9 +219,10 @@ type ResumeItemNote struct {
 }
 
 type ResumeVersion struct {
-	VersionID int64     `json:"version_id"`
-	UserID    uuid.UUID `json:"user_id"`
-	Version   string    `json:"version"`
+	VersionID int64       `json:"version_id"`
+	UserID    uuid.UUID   `json:"user_id"`
+	Version   string      `json:"version"`
+	ResumeUid pgtype.UUID `json:"resume_uid"`
 }
 
 type User struct {

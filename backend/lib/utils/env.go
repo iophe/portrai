@@ -12,6 +12,9 @@ var LOG_FILEPATH = os.Getenv("LOG_FILEPATH")
 var APP_URL = os.Getenv("APP_URL")
 var SECURE_COOKIE = Must(strconv.ParseBool(os.Getenv("SECURE_COOKIE")))
 
+// LATEX SERVER
+var LATEX_SERVER = os.Getenv("LATEX_SERVER")
+
 // MAILER CONF
 var MAILER_SMTP_HOST = os.Getenv("MAILER_SMTP_HOST")
 var MAILER_SMTP_PORT = Must(strconv.Atoi(os.Getenv("MAILER_SMTP_PORT")))

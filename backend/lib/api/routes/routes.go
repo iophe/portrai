@@ -2,13 +2,8 @@ package routes
 
 import (
 	"backend/lib/services/monitor"
-	"backend/lib/services/sess"
-	"backend/lib/utils"
-	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/csrf"
-	futils "github.com/gofiber/fiber/v2/utils"
 )
 
 func RegisterRoutes(server *fiber.App) {
@@ -25,30 +20,12 @@ func RegisterRoutes(server *fiber.App) {
 	RegisterAccountRoutes(v1_group)
 	RegisterMailRoutes(v1_group)
 	RegisterTemplateRoutes(v1_group)
+	RegisterGenerationRoutes(v1_group)
+	RegisterCSRFRoutes(v1_group)
 
 	v1_group.Get("/ping",
 		func(c *fiber.Ctx) error {
-
 			return c.SendStatus(fiber.StatusOK)
 		},
 	)
-
-	csrf_group := v1_group.Group("/csrf")
-
-	csrf_group.Use(csrf.New(csrf.Config{
-		KeyLookup:         "header:X-Csrf-Token",
-		CookieName:        "csrf_",
-		CookieSameSite:    "Lax",
-		CookieSecure:      utils.SECURE_COOKIE,
-		CookieSessionOnly: true,
-		KeyGenerator:      futils.UUIDv4,
-		Expiration:        1 * time.Hour,
-		Session:           sess.SESSIONS,
-		SessionKey:        "fiber.csrf.token",
-		HandlerContextKey: "fiber.csrf.handler",
-	}))
-
-	csrf_group.Get("/update", func(c *fiber.Ctx) error {
-		return c.SendStatus(fiber.StatusOK)
-	})
 }

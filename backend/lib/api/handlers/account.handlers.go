@@ -108,7 +108,10 @@ func HandleProfileUpdate(data ProfileUpdateData, c *fiber.Ctx, db *db.Database) 
 	})
 
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).Send([]byte("Error update profile "))
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error":   "failed to update profile",
+			"details": err.Error(),
+		})
 	}
 
 	return c.SendStatus(fiber.StatusOK)
@@ -234,7 +237,6 @@ func HandleUploadProfileAvatar(c *fiber.Ctx) error {
 	}
 
 	body_string := string(body_bytes)
-	fmt.Printf("Response body: %s\n", body_string)
 
 	if response.StatusCode != http.StatusOK {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{

@@ -7,7 +7,7 @@ import { CertificateList } from "@components/resume/certificate/certificate.list
 import { SkillList } from "@components/resume/skill/skill.list";
 import { ProjectList } from "@components/resume/project/project.list";
 import { createSignal, Match, Switch } from "solid-js";
-import ResumeAIPreview from "@components/resume/generators/generator.view";
+import ResumeAIPreview from "@components/resume/generators/online.view";
 import ResumeSettings from "@components/resume/resume.settings";
 import Footer from "@components/footer.default";
 import AsideSelector from "@components/resume/selector.aside";

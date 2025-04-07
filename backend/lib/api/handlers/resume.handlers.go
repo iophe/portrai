@@ -2,9 +2,9 @@ package handlers
 
 import (
 	"backend/lib/api/middlewares"
-	"backend/lib/services/cache"
 	"backend/lib/services/db"
 	database "backend/lib/services/db"
+	"backend/lib/utils"
 	"backend/sqlc_gen"
 	"context"
 	"encoding/json"
@@ -34,7 +34,7 @@ func HandleGetResumeData(c *fiber.Ctx, db *database.Database) error {
 			"info":  err.Error(),
 		})
 	}
-	var resume_data cache.ResumeCachedData
+	var resume_data utils.StoredResumeData
 	if err := json.Unmarshal(resume_data_bytes, &resume_data); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to parse resume data",

@@ -26,8 +26,11 @@ type Querier interface {
 	DeleteResumeItem(ctx context.Context, arg DeleteResumeItemParams) error
 	DeleteResumeVersion(ctx context.Context, arg DeleteResumeVersionParams) error
 	GetConsumptionCost(ctx context.Context, userID uuid.UUID) (pgtype.Numeric, error)
+	GetCurrentResumeUID(ctx context.Context, userID uuid.UUID) (pgtype.UUID, error)
 	GetCustomerByStripeID(ctx context.Context, stripeCustomerID string) (PaymentCustomer, error)
 	GetCustomerByUserID(ctx context.Context, userID uuid.UUID) (PaymentCustomer, error)
+	GetGeneratedResumeByUID(ctx context.Context, arg GetGeneratedResumeByUIDParams) (GeneratedResume, error)
+	GetGeneratedResumeByUserID(ctx context.Context, userID uuid.UUID) (GeneratedResume, error)
 	GetPaymentValidity(ctx context.Context, userID uuid.UUID) (pgtype.Timestamptz, error)
 	GetPriceByPlan(ctx context.Context, plan string) (GetPriceByPlanRow, error)
 	GetPriceForPayment(ctx context.Context, userID uuid.UUID) (pgtype.Int8, error)
@@ -40,14 +43,17 @@ type Querier interface {
 	GetUserResumeVersions(ctx context.Context, userID uuid.UUID) (GetUserResumeVersionsRow, error)
 	GetUserValidityStatus(ctx context.Context, userID uuid.UUID) (GetUserValidityStatusRow, error)
 	GetValidityPeroidByProductID(ctx context.Context, productID string) (pgtype.Interval, error)
+	InsertGeneratedResume(ctx context.Context, arg InsertGeneratedResumeParams) error
 	InsertPayment(ctx context.Context, arg InsertPaymentParams) error
 	RenameResumeVersion(ctx context.Context, arg RenameResumeVersionParams) error
 	// Finally, update the priority of the moved item
 	ReorderResumeItem(ctx context.Context, arg ReorderResumeItemParams) error
 	ToggleResumeItemVisibility(ctx context.Context, arg ToggleResumeItemVisibilityParams) (pgtype.Bool, error)
+	UpdateGeneratedResume(ctx context.Context, arg UpdateGeneratedResumeParams) error
 	UpdateNote(ctx context.Context, arg UpdateNoteParams) error
 	UpdateProfile(ctx context.Context, arg UpdateProfileParams) error
 	UpdateResumeItem(ctx context.Context, arg UpdateResumeItemParams) error
+	UpdateResumeUIDinVersion(ctx context.Context, arg UpdateResumeUIDinVersionParams) error
 	UpdateUser(ctx context.Context, arg UpdateUserParams) error
 	UpsertPaymentValidity(ctx context.Context, arg UpsertPaymentValidityParams) error
 }
