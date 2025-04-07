@@ -49,7 +49,7 @@ func ConfigureServer(app *fiber.App, cfg *ServerCfg) {
 	})
 
 	app.Use(limiter.New(limiter.Config{
-		Max:               50,
+		Max:               100,
 		Expiration:        1 * time.Minute,
 		LimiterMiddleware: limiter.SlidingWindow{},
 	}))

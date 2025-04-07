@@ -18,6 +18,10 @@ INSERT INTO payment.usage_history (
    user_id,
    input_token_used,
    price_rate_input_token,
+   cached_input_token_used,
+   price_rate_cached_input_token_used,
+   cached_input_token_created,
+   price_rate_cached_input_token_created,
    output_token_used,
    price_rate_output_token,
    model,
@@ -30,22 +34,30 @@ INSERT INTO payment.usage_history (
    $3::decimal,
    $4::bigint,
    $5::decimal,
-   $6::text,
-   $7::interval,
-   $8::boolean,
+   $6::bigint,
+   $7::decimal,
+   $8::bigint,
+   $9::decimal,
+   $10::text,
+   $11::interval,
+   $12::boolean,
    CURRENT_TIMESTAMP
 )
 `
 
 type AddProductUsageParams struct {
-	UserID               uuid.UUID       `json:"user_id"`
-	InputTokenUsed       int64           `json:"input_token_used"`
-	PriceRateInputToken  pgtype.Numeric  `json:"price_rate_input_token"`
-	OutputTokenUsed      int64           `json:"output_token_used"`
-	PriceRateOutputToken pgtype.Numeric  `json:"price_rate_output_token"`
-	Model                string          `json:"model"`
-	Duration             pgtype.Interval `json:"duration"`
-	Valid                bool            `json:"valid"`
+	UserID                           uuid.UUID       `json:"user_id"`
+	InputTokenUsed                   int64           `json:"input_token_used"`
+	PriceRateInputToken              pgtype.Numeric  `json:"price_rate_input_token"`
+	CachedInputTokenUsed             int64           `json:"cached_input_token_used"`
+	PriceRateCachedInputTokenUsed    pgtype.Numeric  `json:"price_rate_cached_input_token_used"`
+	CachedInputTokenCreated          int64           `json:"cached_input_token_created"`
+	PriceRateCachedInputTokenCreated pgtype.Numeric  `json:"price_rate_cached_input_token_created"`
+	OutputTokenUsed                  int64           `json:"output_token_used"`
+	PriceRateOutputToken             pgtype.Numeric  `json:"price_rate_output_token"`
+	Model                            string          `json:"model"`
+	Duration                         pgtype.Interval `json:"duration"`
+	Valid                            bool            `json:"valid"`
 }
 
 func (q *Queries) AddProductUsage(ctx context.Context, arg AddProductUsageParams) error {
@@ -53,6 +65,10 @@ func (q *Queries) AddProductUsage(ctx context.Context, arg AddProductUsageParams
 		arg.UserID,
 		arg.InputTokenUsed,
 		arg.PriceRateInputToken,
+		arg.CachedInputTokenUsed,
+		arg.PriceRateCachedInputTokenUsed,
+		arg.CachedInputTokenCreated,
+		arg.PriceRateCachedInputTokenCreated,
 		arg.OutputTokenUsed,
 		arg.PriceRateOutputToken,
 		arg.Model,

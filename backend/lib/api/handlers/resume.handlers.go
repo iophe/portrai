@@ -2,15 +2,13 @@ package handlers
 
 import (
 	"backend/lib/api/middlewares"
-	"backend/lib/services/cache"
 	"backend/lib/services/db"
 	database "backend/lib/services/db"
+	"backend/lib/utils"
 	"backend/sqlc_gen"
-	"context"
 	"encoding/json"
 	"fmt"
 	"log/slog"
-	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -24,17 +22,16 @@ func HandleGetResumeData(c *fiber.Ctx, db *database.Database) error {
 			"error": "Unauthorized access",
 		})
 	}
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
+
 	queries := sqlc_gen.New(db.Pool)
-	resume_data_bytes, err := queries.GetResumeData(query_ctx, user_id)
+	resume_data_bytes, err := queries.GetResumeData(c.Context(), user_id)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to retrieve resume data",
 			"info":  err.Error(),
 		})
 	}
-	var resume_data cache.ResumeCachedData
+	var resume_data utils.StoredResumeData
 	if err := json.Unmarshal(resume_data_bytes, &resume_data); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to parse resume data",
@@ -61,12 +58,10 @@ func HandleCreateNote(data NoteCreationData, c *fiber.Ctx, db *database.Database
 		})
 	}
 
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
 	queries := sqlc_gen.New(db.Pool)
 
 	// Create note on the unified resume_items table
-	err = queries.CreateNoteOnResumeItem(query_ctx, sqlc_gen.CreateNoteOnResumeItemParams{
+	err = queries.CreateNoteOnResumeItem(c.Context(), sqlc_gen.CreateNoteOnResumeItemParams{
 		UserID:   user_id,
 		ItemID:   data.ItemID,
 		NoteType: data.Type,
@@ -97,11 +92,9 @@ func HandleDeleteNote(data NoteDeletionData, c *fiber.Ctx, db *database.Database
 		})
 	}
 
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
 	queries := sqlc_gen.New(db.Pool)
 
-	err = queries.DeleteNote(query_ctx, sqlc_gen.DeleteNoteParams{
+	err = queries.DeleteNote(c.Context(), sqlc_gen.DeleteNoteParams{
 		UserID: user_id,
 		NoteID: data.NoteID,
 		ItemID: data.ItemID,
@@ -139,8 +132,6 @@ func HandleResumeItemCreation(data ResumeItemCreationData, c *fiber.Ctx, db *dat
 		})
 	}
 
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
 	queries := sqlc_gen.New(db.Pool)
 
 	// Process dates
@@ -178,7 +169,7 @@ func HandleResumeItemCreation(data ResumeItemCreationData, c *fiber.Ctx, db *dat
 	}
 
 	// Create using the unified CreateResumeItem function
-	item_id, err := queries.CreateResumeItem(query_ctx, sqlc_gen.CreateResumeItemParams{
+	item_id, err := queries.CreateResumeItem(c.Context(), sqlc_gen.CreateResumeItemParams{
 		UserID:      user_id,
 		ItemType:    data.ItemType,
 		Title:       data.Title,
@@ -228,8 +219,6 @@ func HandleResumeItemUpdate(data ResumeItemUpdateData, c *fiber.Ctx, db *db.Data
 		})
 	}
 
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
 	queries := sqlc_gen.New(db.Pool)
 
 	// Process dates
@@ -266,7 +255,7 @@ func HandleResumeItemUpdate(data ResumeItemUpdateData, c *fiber.Ctx, db *db.Data
 		metadataJSON = []byte("{}")
 	}
 
-	err = queries.UpdateResumeItem(query_ctx, sqlc_gen.UpdateResumeItemParams{
+	err = queries.UpdateResumeItem(c.Context(), sqlc_gen.UpdateResumeItemParams{
 		ItemID:      data.ItemID,
 		UserID:      user_id,
 		Title:       data.Title,
@@ -304,11 +293,9 @@ func HandleGetItemsByType(params GetItemsByTypeParams, c *fiber.Ctx, db *db.Data
 		})
 	}
 
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
 	queries := sqlc_gen.New(db.Pool)
 
-	items, err := queries.GetResumeItemsByType(query_ctx, sqlc_gen.GetResumeItemsByTypeParams{
+	items, err := queries.GetResumeItemsByType(c.Context(), sqlc_gen.GetResumeItemsByTypeParams{
 		UserID:   user_id,
 		ItemType: params.ItemType,
 	})
@@ -340,11 +327,9 @@ func HandleGetItemById(params GetItemParams, c *fiber.Ctx, db *db.Database) erro
 		})
 	}
 
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
 	queries := sqlc_gen.New(db.Pool)
 
-	item, err := queries.GetResumeItemById(query_ctx, sqlc_gen.GetResumeItemByIdParams{
+	item, err := queries.GetResumeItemById(c.Context(), sqlc_gen.GetResumeItemByIdParams{
 		ItemID: params.ItemID,
 		UserID: user_id,
 	})
@@ -375,13 +360,11 @@ func HandleDeleteItem(data DeleteItemData, c *fiber.Ctx, db *db.Database) error 
 		})
 	}
 
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
 	queries := sqlc_gen.New(db.Pool)
 
 	slog.Info("deleting item", "item_id", data.ItemID, "item_type", data.ItemType, "user_id", user_id)
 
-	err = queries.DeleteResumeItem(query_ctx, sqlc_gen.DeleteResumeItemParams{
+	err = queries.DeleteResumeItem(c.Context(), sqlc_gen.DeleteResumeItemParams{
 		ItemID: data.ItemID,
 		UserID: user_id,
 	})
@@ -409,11 +392,9 @@ func HandleToggleItemVisibility(data ToggleItemVisibilityData, c *fiber.Ctx, db 
 		})
 	}
 
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
 	queries := sqlc_gen.New(db.Pool)
 
-	visibility, err := queries.ToggleResumeItemVisibility(query_ctx, sqlc_gen.ToggleResumeItemVisibilityParams{
+	visibility, err := queries.ToggleResumeItemVisibility(c.Context(), sqlc_gen.ToggleResumeItemVisibilityParams{
 		ItemID: data.ItemID,
 		UserID: user_id,
 	})
@@ -444,11 +425,9 @@ func HandleReorderItem(data ReorderItemData, c *fiber.Ctx, db *db.Database) erro
 		})
 	}
 
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
 	queries := sqlc_gen.New(db.Pool)
 
-	err = queries.ReorderResumeItem(query_ctx, sqlc_gen.ReorderResumeItemParams{
+	err = queries.ReorderResumeItem(c.Context(), sqlc_gen.ReorderResumeItemParams{
 		ItemID:  data.ItemID,
 		AfterID: data.AfterID,
 		UserID:  user_id,
@@ -471,11 +450,9 @@ func HandleGetResumeVersions(c *fiber.Ctx, db *db.Database) error {
 		})
 	}
 
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
 	queries := sqlc_gen.New(db.Pool)
 
-	versions, err := queries.GetUserResumeVersions(query_ctx, user_id)
+	versions, err := queries.GetUserResumeVersions(c.Context(), user_id)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "could not get all the versions",
@@ -497,11 +474,9 @@ func HandleChangeResumeVersion(data ChangeResumeVersionData, c *fiber.Ctx, db *d
 		})
 	}
 
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
 	queries := sqlc_gen.New(db.Pool)
 
-	err = queries.ChangeResumeVersion(query_ctx, sqlc_gen.ChangeResumeVersionParams{
+	err = queries.ChangeResumeVersion(c.Context(), sqlc_gen.ChangeResumeVersionParams{
 		Version: data.Version,
 		UserID:  user_id,
 	})
@@ -527,11 +502,9 @@ func HandleAddResumeVersion(data AddResumeVersionData, c *fiber.Ctx, db *db.Data
 		})
 	}
 
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
 	queries := sqlc_gen.New(db.Pool)
 
-	err = queries.AddResumeVersion(query_ctx, sqlc_gen.AddResumeVersionParams{
+	err = queries.AddResumeVersion(c.Context(), sqlc_gen.AddResumeVersionParams{
 		UserID:     user_id,
 		NewVersion: data.NewVersion,
 	})
@@ -556,11 +529,9 @@ func HandleDeleteResumeVersion(data DeleteResumeVersionData, c *fiber.Ctx, db *d
 		})
 	}
 
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
 	queries := sqlc_gen.New(db.Pool)
 
-	err = queries.DeleteResumeVersion(query_ctx, sqlc_gen.DeleteResumeVersionParams{
+	err = queries.DeleteResumeVersion(c.Context(), sqlc_gen.DeleteResumeVersionParams{
 		UserID:  user_id,
 		Version: data.Version,
 	})
@@ -587,11 +558,9 @@ func HandleRenameResumeVersion(data RenameResumeVersionData, c *fiber.Ctx, db *d
 		})
 	}
 
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
 	queries := sqlc_gen.New(db.Pool)
 
-	err = queries.RenameResumeVersion(query_ctx, sqlc_gen.RenameResumeVersionParams{
+	err = queries.RenameResumeVersion(c.Context(), sqlc_gen.RenameResumeVersionParams{
 		NewName: data.NewName,
 		OldName: data.OldName,
 		UserID:  user_id,

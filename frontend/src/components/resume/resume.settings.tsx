@@ -70,7 +70,10 @@ function ResumeSettings(props: ResumeSettingsProps) {
 			{ cache_key: "ResumeSettings:/resume/versions" },
 			(result) => {
 				if (result) {
-					update_version_form_data("current_version", result.version);
+					update_version_form_data(
+						"current_version",
+						result.current_version
+					);
 				}
 			}
 		);
@@ -185,7 +188,7 @@ function ResumeSettings(props: ResumeSettingsProps) {
 												Active Resume
 											</h3>
 											<strong class="text-forest-900 text-lg">
-												{versions()?.version ||
+												{versions()?.current_version ||
 													"Default"}
 											</strong>
 										</hgroup>
@@ -242,7 +245,7 @@ function ResumeSettings(props: ResumeSettingsProps) {
 																{
 																	version:
 																		versions()
-																			?.version,
+																			?.current_version,
 																}
 															);
 															refetch_version();
@@ -309,7 +312,7 @@ function ResumeSettings(props: ResumeSettingsProps) {
 															{
 																old_name:
 																	versions()
-																		?.version,
+																		?.current_version,
 																new_name:
 																	version_form_data.current_version,
 															}
@@ -396,10 +399,12 @@ function ResumeSettings(props: ResumeSettingsProps) {
 												class="text-xs px-2 py-1 rounded"
 												classList={{
 													"bg-forest-50 text-forest-800":
-														versions()?.version ===
+														versions()
+															?.current_version ===
 														version,
 													"bg-gray-100 text-gray-600":
-														versions()?.version !==
+														versions()
+															?.current_version !==
 														version,
 												}}
 											>

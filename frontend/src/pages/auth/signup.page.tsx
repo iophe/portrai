@@ -29,7 +29,7 @@ function SignupPage(props: SignupPageProps) {
 	const fault = useFault();
 	const navigate = useNavigate();
 	const location = useLocation();
-	
+
 	const [email_signup_data, set_email_signup_data] =
 		createStore<EmailSignupData>({
 			name: "",
@@ -89,9 +89,10 @@ function SignupPage(props: SignupPageProps) {
 
 				if (location.query.payment) {
 					Pay({ plan: location.query.payment as string });
-				}
-				else if (location.query.redirectTo ) {
-					navigate("/"+location.query.redirectTo, { replace: true });
+				} else if (location.query.redirectTo) {
+					navigate("/" + location.query.redirectTo, {
+						replace: true,
+					});
 				} else {
 					navigate("/", { replace: true });
 				}

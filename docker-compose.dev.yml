@@ -3,6 +3,7 @@ include:
   - monitoring/docker-compose.monitoring.yml
   - vault/docker-compose.vault.dev.yml
   - cache/docker-compose.cache.yml
+  - latex_server/docker-compose.dev.yml
 
 services :
   portrai_backend:

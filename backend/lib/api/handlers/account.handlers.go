@@ -6,14 +6,12 @@ import (
 	"backend/lib/utils"
 	"backend/sqlc_gen"
 	"bytes"
-	"context"
 	"encoding/hex"
 	"fmt"
 	"io"
 	"net/http"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -27,12 +25,10 @@ func HandleGetUser(c *fiber.Ctx, db *db.Database) error {
 		})
 	}
 
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
 	queries := sqlc_gen.New(db.Pool)
 
 	// Get user data
-	user, err := queries.GetUserById(query_ctx, user_id)
+	user, err := queries.GetUserById(c.Context(), user_id)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error":   "Could not get user",
@@ -60,11 +56,9 @@ func HandleUpdateUser(data UserUpdateData, c *fiber.Ctx, db *db.Database) error 
 		})
 	}
 
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
 	queries := sqlc_gen.New(db.Pool)
 
-	err = queries.UpdateUser(query_ctx, sqlc_gen.UpdateUserParams{
+	err = queries.UpdateUser(c.Context(), sqlc_gen.UpdateUserParams{
 		UserID:   user_id,
 		FullName: data.FullName,
 		Email:    data.Email,
@@ -89,8 +83,6 @@ type ProfileUpdateData struct {
 }
 
 func HandleProfileUpdate(data ProfileUpdateData, c *fiber.Ctx, db *db.Database) error {
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
 	queries := sqlc_gen.New(db.Pool)
 
 	user_id, err := middlewares.GetUserID(c)
@@ -100,7 +92,7 @@ func HandleProfileUpdate(data ProfileUpdateData, c *fiber.Ctx, db *db.Database) 
 		})
 	}
 
-	err = queries.UpdateProfile(query_ctx, sqlc_gen.UpdateProfileParams{
+	err = queries.UpdateProfile(c.Context(), sqlc_gen.UpdateProfileParams{
 		Linkedin:    data.LinkedIn,
 		Website:     data.Website,
 		Description: data.Description,
@@ -108,7 +100,10 @@ func HandleProfileUpdate(data ProfileUpdateData, c *fiber.Ctx, db *db.Database) 
 	})
 
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).Send([]byte("Error update profile "))
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error":   "failed to update profile",
+			"details": err.Error(),
+		})
 	}
 
 	return c.SendStatus(fiber.StatusOK)
@@ -122,11 +117,9 @@ func HandleGetProfile(c *fiber.Ctx, db *db.Database) error {
 		})
 	}
 
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
 	queries := sqlc_gen.New(db.Pool)
 
-	profile, err := queries.GetProfileByUserId(query_ctx, user_id)
+	profile, err := queries.GetProfileByUserId(c.Context(), user_id)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error":   "Could not get profile",
@@ -234,7 +227,6 @@ func HandleUploadProfileAvatar(c *fiber.Ctx) error {
 	}
 
 	body_string := string(body_bytes)
-	fmt.Printf("Response body: %s\n", body_string)
 
 	if response.StatusCode != http.StatusOK {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{

@@ -2,14 +2,23 @@ import Footer from "@components/footer.default";
 import Header from "@components/header.autherized";
 import { createSignal, For, Show, Switch, Match } from "solid-js";
 import { createStore } from "solid-js/store";
-import EXECUTING_RESUME from "@assets/templates/executive.jpg";
+import STANDARD_EXECUTING_RESUME from "@assets/templates/standard_executive.jpg";
+import LIGHT_EXECUTING_RESUME from "@assets/templates/light_executive.jpg";
 import { Motion, Presence } from "solid-motionone";
+import { useFault } from "@components/fault";
 
 interface TemplatesPage {}
 
 function TemplatesPage(props: TemplatesPage) {
-	const [selected_template_id, set_selected_template_id] =
-		createSignal("modern");
+	const fault = useFault();
+	const [selected_template_id, set_selected_template_id] = createSignal(
+		localStorage.getItem("template_name") || "standard-executive"
+	);
+	const [current_template_id, set_current_template_id] = createSignal(
+		localStorage.getItem("template_name") || "standard-executive"
+	);
+	const [selected_template_name, set_selected_template_name] =
+		createSignal("Executive");
 	const [filter_category, set_filter_category] = createSignal("all");
 
 	const [templates_store, set_templates_store] = createStore([
@@ -28,19 +37,19 @@ function TemplatesPage(props: TemplatesPage) {
 		// 		"Showcase your creative work with this eye-catching design.",
 		// 	image_url: "/templates/creative.jpg",
 		// },
-		// {
-		// 	id: "minimalist",
-		// 	name: "Minimalist",
-		// 	category: "simple",
-		// 	description: "Simple and elegant design with focus on content.",
-		// 	image_url: "/templates/minimalist.jpg",
-		// },
 		{
-			id: "executive",
+			id: "light-executive",
+			name: "Minimalist",
+			category: "simple",
+			description: "Simple and elegant design with focus on content.",
+			image_url: LIGHT_EXECUTING_RESUME,
+		},
+		{
+			id: "standard-executive",
 			name: "Executive",
 			category: "professional",
 			description: "Sophisticated layout for senior professionals.",
-			image_url: EXECUTING_RESUME,
+			image_url: STANDARD_EXECUTING_RESUME,
 		},
 		// {
 		// 	id: "technical",
@@ -94,14 +103,17 @@ function TemplatesPage(props: TemplatesPage) {
 
 	const handle_template_select = (template_id: string) => {
 		set_selected_template_id(template_id);
+		set_selected_template_name(
+			templates_store.filter((t) => t.id === template_id)[0].name
+		);
 	};
 
 	const use_selected_template = () => {
-		// Implementation to use the selected template
-		// This could navigate to another page or trigger an application event
-		console.log(`Using template with ID: ${selected_template_id()}`);
-		// Example: navigate to editor with the selected template
-		// window.location.href = `/editor?template=${selected_template_id()}`;
+		localStorage.setItem("template_name", selected_template_id());
+		set_current_template_id(selected_template_id());
+		fault.info({
+			message: `Selected the ${selected_template_name()} template. Good Choice!`,
+		});
 	};
 
 	return (
@@ -171,6 +183,9 @@ function TemplatesPage(props: TemplatesPage) {
 								<article
 									class="h-full p-2 flex flex-col gap-4 rounded overflow-hidden border-2 transition-all cursor-pointer hover:shadow-md"
 									classList={{
+										"border-lapis-600":
+											current_template_id() ===
+											template.id,
 										"border-forest-600":
 											selected_template_id() ===
 											template.id,
@@ -194,7 +209,9 @@ function TemplatesPage(props: TemplatesPage) {
 											<Show
 												when={
 													selected_template_id() ===
-													template.id
+														template.id &&
+													current_template_id() !==
+														template.id
 												}
 											>
 												<Motion

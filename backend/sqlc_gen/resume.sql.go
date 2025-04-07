@@ -199,6 +199,88 @@ func (q *Queries) DeleteResumeVersion(ctx context.Context, arg DeleteResumeVersi
 	return err
 }
 
+const getCurrentResumeUID = `-- name: GetCurrentResumeUID :one
+SELECT 
+    rv.resume_uid
+FROM 
+    public.users u
+JOIN 
+    public.resume_versions rv ON rv.version_id = u.current_resume_version AND rv.user_id = $1::uuid
+WHERE 
+    u.id = $1::uuid
+LIMIT 1
+`
+
+func (q *Queries) GetCurrentResumeUID(ctx context.Context, userID uuid.UUID) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, getCurrentResumeUID, userID)
+	var resume_uid pgtype.UUID
+	err := row.Scan(&resume_uid)
+	return resume_uid, err
+}
+
+const getGeneratedResumeByUID = `-- name: GetGeneratedResumeByUID :one
+SELECT 
+    resume_file_id,
+    filename,
+    user_id,
+    resume_uid,
+    template_name,
+    created_at
+FROM 
+    public.generated_resume
+WHERE 
+    resume_uid = $1::uuid and user_id = $2::uuid
+LIMIT 1
+`
+
+type GetGeneratedResumeByUIDParams struct {
+	ResumeUid uuid.UUID `json:"resume_uid"`
+	UserID    uuid.UUID `json:"user_id"`
+}
+
+func (q *Queries) GetGeneratedResumeByUID(ctx context.Context, arg GetGeneratedResumeByUIDParams) (GeneratedResume, error) {
+	row := q.db.QueryRow(ctx, getGeneratedResumeByUID, arg.ResumeUid, arg.UserID)
+	var i GeneratedResume
+	err := row.Scan(
+		&i.ResumeFileID,
+		&i.Filename,
+		&i.UserID,
+		&i.ResumeUid,
+		&i.TemplateName,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const getGeneratedResumeByUserID = `-- name: GetGeneratedResumeByUserID :one
+SELECT 
+    resume_file_id,
+    filename,
+    user_id,
+    resume_uid,
+    template_name,
+    created_at
+FROM 
+    public.generated_resume
+WHERE 
+    user_id = $1::uuid
+LIMIT 1
+`
+
+func (q *Queries) GetGeneratedResumeByUserID(ctx context.Context, userID uuid.UUID) (GeneratedResume, error) {
+	row := q.db.QueryRow(ctx, getGeneratedResumeByUserID, userID)
+	var i GeneratedResume
+	err := row.Scan(
+		&i.ResumeFileID,
+		&i.Filename,
+		&i.UserID,
+		&i.ResumeUid,
+		&i.TemplateName,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const getResumeData = `-- name: GetResumeData :one
 WITH resume_version AS (
     SELECT current_resume_version
@@ -555,30 +637,76 @@ func (q *Queries) GetResumeItemsByType(ctx context.Context, arg GetResumeItemsBy
 }
 
 const getUserResumeVersions = `-- name: GetUserResumeVersions :one
-SELECT
-    (SELECT version from public.resume_versions rv where rv.version_id = u.current_resume_version AND rv.user_id = $1::uuid),
+WITH user_data AS (
+    SELECT 
+        u.id, 
+        u.current_resume_version
+    FROM 
+        public.users u
+    WHERE 
+        u.id = $1::uuid
+)
+SELECT 
+    current_rv.version AS current_version,
     ARRAY(
         SELECT rv.version 
         FROM public.resume_versions rv 
-        WHERE rv.user_id = u.id
+        WHERE rv.user_id = ud.id
         ORDER BY rv.version
     )::text[] AS all_versions
 FROM 
-    public.users u
-WHERE 
-    u.id = $1::uuid
+    user_data ud
+JOIN 
+    public.resume_versions current_rv ON current_rv.version_id = ud.current_resume_version 
+                                     AND current_rv.user_id = $1::uuid
+LIMIT 1
 `
 
 type GetUserResumeVersionsRow struct {
-	Version     string   `json:"version"`
-	AllVersions []string `json:"all_versions"`
+	CurrentVersion string   `json:"current_version"`
+	AllVersions    []string `json:"all_versions"`
 }
 
 func (q *Queries) GetUserResumeVersions(ctx context.Context, userID uuid.UUID) (GetUserResumeVersionsRow, error) {
 	row := q.db.QueryRow(ctx, getUserResumeVersions, userID)
 	var i GetUserResumeVersionsRow
-	err := row.Scan(&i.Version, &i.AllVersions)
+	err := row.Scan(&i.CurrentVersion, &i.AllVersions)
 	return i, err
+}
+
+const insertGeneratedResume = `-- name: InsertGeneratedResume :exec
+INSERT INTO public.generated_resume (
+    resume_file_id,
+    filename,
+    user_id,
+    resume_uid,
+    template_name
+) VALUES (
+    $1::uuid,
+    $2::text,
+    $3::uuid,
+    $4::uuid,
+    $5::text
+)
+`
+
+type InsertGeneratedResumeParams struct {
+	ResumeFileID uuid.UUID `json:"resume_file_id"`
+	Filename     string    `json:"filename"`
+	UserID       uuid.UUID `json:"user_id"`
+	ResumeUid    uuid.UUID `json:"resume_uid"`
+	TemplateName string    `json:"template_name"`
+}
+
+func (q *Queries) InsertGeneratedResume(ctx context.Context, arg InsertGeneratedResumeParams) error {
+	_, err := q.db.Exec(ctx, insertGeneratedResume,
+		arg.ResumeFileID,
+		arg.Filename,
+		arg.UserID,
+		arg.ResumeUid,
+		arg.TemplateName,
+	)
+	return err
 }
 
 const renameResumeVersion = `-- name: RenameResumeVersion :exec
@@ -681,6 +809,34 @@ func (q *Queries) ToggleResumeItemVisibility(ctx context.Context, arg ToggleResu
 	return is_visible, err
 }
 
+const updateGeneratedResume = `-- name: UpdateGeneratedResume :exec
+UPDATE public.generated_resume
+SET
+    template_name = COALESCE($1::text, template_name),
+    resume_uid = COALESCE($2::uuid, resume_uid),
+    created_at = CURRENT_TIMESTAMP,
+    filename = COALESCE($3::text, filename)
+WHERE 
+    resume_file_id = $4::uuid
+`
+
+type UpdateGeneratedResumeParams struct {
+	TemplateName pgtype.Text `json:"template_name"`
+	ResumeUid    pgtype.UUID `json:"resume_uid"`
+	Filename     pgtype.Text `json:"filename"`
+	ResumeFileID uuid.UUID   `json:"resume_file_id"`
+}
+
+func (q *Queries) UpdateGeneratedResume(ctx context.Context, arg UpdateGeneratedResumeParams) error {
+	_, err := q.db.Exec(ctx, updateGeneratedResume,
+		arg.TemplateName,
+		arg.ResumeUid,
+		arg.Filename,
+		arg.ResumeFileID,
+	)
+	return err
+}
+
 const updateNote = `-- name: UpdateNote :exec
 UPDATE public.resume_item_notes 
 SET
@@ -762,5 +918,25 @@ func (q *Queries) UpdateResumeItem(ctx context.Context, arg UpdateResumeItemPara
 		arg.ItemID,
 		arg.UserID,
 	)
+	return err
+}
+
+const updateResumeUIDinVersion = `-- name: UpdateResumeUIDinVersion :exec
+UPDATE public.resume_versions
+SET 
+    resume_uid = $1::uuid
+WHERE 
+    user_id = $2::uuid
+    AND version_id = $3::bigint
+`
+
+type UpdateResumeUIDinVersionParams struct {
+	ResumeUid uuid.UUID `json:"resume_uid"`
+	UserID    uuid.UUID `json:"user_id"`
+	VersionID int64     `json:"version_id"`
+}
+
+func (q *Queries) UpdateResumeUIDinVersion(ctx context.Context, arg UpdateResumeUIDinVersionParams) error {
+	_, err := q.db.Exec(ctx, updateResumeUIDinVersion, arg.ResumeUid, arg.UserID, arg.VersionID)
 	return err
 }

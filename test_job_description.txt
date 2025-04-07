@@ -1,0 +1,57 @@
+ À propos de l’offre d’emploi
+
+Infotel Conseil accompagne les directions Informatiques et Métiers des grandes entreprises depuis plus de 40 ans (Airbus, BNP Paribas, Banque de France, BPCE, Air France, Arkéa, Stellantis, etc.). C’est aujourd’hui plus de 3 000 Infotéliens qui ont rejoint le groupe en France (Paris, Toulouse, Lyon, Bordeaux, Lille, Rennes, Nantes, etc.) et à l’étranger (UK, Monaco, Allemagne, US, Canada, Inde, Maroc). Nous avons ainsi réalisé en 2024 un chiffre d’affaires de 294,8 M€.
+
+Infotel Conseil, spécialiste des projets IT, intervient pour ses clients sur la gestion et l’évolution de leur patrimoine informatique.
+
+Vos missions 
+
+Le projet
+
+Nous développons et distribuons le logiciel DB/IQ pour la base de données IBM Db2 sur la plateforme Z/OS. La fonctionnalité principale de ce logiciel est d’analyser les ordres SQL afin d’en évaluer leurs conformités normatives et leurs performances. Le but est de garantir qu’une application Db2 une fois livrée en production, sera fiable, performante et capable de monter en charge de manière maitrisée.
+
+Dans ce contexte nous souhaitons améliorer un dictionnaire d’objets qui réside pour des contraintes de performance dans un espace mémoire partagé de taille fixe. Aujourd’hui ce dictionnaire ne peut être mis à jour que par reconstruction total.
+
+La fonctionnalité à étudier dans le cadre de ce stage est la mise en place d’une structure de données de type dictionnaire ou table de hash dans un espace mémoire pré-alloué de taille fixe.
+
+Le but est d’élaborer une API pour accéder, stocker, supprimer et mettre à jour des objets dans un espace mémoire donné. Cette API sera utilisée à terme en substitution de celle existante. Notre département logiciel possédant un socle technique déjà riche cette API devra être générique et respecter les normes en vigueurs afin de pouvoir être exploitée dans d’autres logiciels.
+
+Les grandes étapes à prévoir sont :
+
+    Une recherche de l’état de l’art.
+    Une étude des modules existants dans notre bibliothèques concernant les API de stockage et référencement d’objets.
+    Une analyse technique pour proposer des solutions qui adresse la problématique. La contrainte la plus forte étant d’être au moins aussi performant en accès que l’API existante (99% des cas d’usages).
+    Développer la solution retenue
+    Mettre en place des tests pour tester et valider l’API.
+    Vérifier que la solution développée respecte les contraintes de performances.
+
+L’environnement technique
+
+Sous la direction d’un chef de projet, vous travaillerez en collaboration avec les équipes Infotel utilisant les outils/technologies suivants (liste non exhaustive) :
+
+    langage C, assembleur, yacc
+    Git, Makefile
+
+Vous appréhenderez le travail de développeur d’un éditeur de logiciel dans toutes ses dimensions, vous serez confrontés à des attentes professionnelles exigeantes et de haute qualité.
+
+Vous participerez à toutes les étapes de la mise en place d’une solution logicielle, de l’étude et la conception jusqu’à la mise en œuvre et la personnalisation de produits.
+
+Vous pourrez vous confronter à des développements réellement techniques à un niveau dont la seule limite sera votre appétit d’apprendre et vos capacités de réflexion.
+
+Le suivi
+
+Sous le tutorat d’un maître de stage, vous pourrez être amené(e) à travailler en collaboration avec d’autres stagiaires et alternants autour de sujets connexes, ou bien avec d’autres équipes Infotel, selon le sujet.
+
+L’évolution
+
+La plupart de nos stagiaires ont intégré nos équipes, vous pouvez en faire partie.
+
+Votre potentiel, votre dynamisme, votre sérieux et votre implication vous permettront d’évoluer régulièrement au sein d’Infotel, de manière transversale soit sur du pilotage de projet, de l’expertise technique ou de la maitrise d’ouvrage pour nos collaborateurs souhaitant s’éloigner du monde de la technique.
+
+Votre profil
+
+Niveau Bac+5 d’une grande école d’ingénieur ou d’université avec une spécialisation en développement informatique, vous recherchez un stage de 6 mois de fin d’étude.
+
+Vous êtes fluent en Anglais (écrit/oral) et avez un excellent niveau de Français (écrit/oral).
+
+Vous cultivez un fort intérêt pour les technologies d’innovation et êtes de nature curieuse et autonome, force de proposition et doté(e) d’une excellente communication.

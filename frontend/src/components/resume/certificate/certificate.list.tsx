@@ -66,7 +66,6 @@ export function CertificateList(props: CertificateListProps) {
 	);
 
 	const [dragged_id, set_dragged_id] = createSignal<number | null>(null);
-	console.log(certificates());
 
 	return (
 		<section class="w-full flex flex-col gap-4 justify-items-center">

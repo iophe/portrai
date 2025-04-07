@@ -7,7 +7,6 @@ import (
 	"backend/lib/services/payment"
 	"backend/lib/utils"
 	"backend/sqlc_gen"
-	"context"
 	"encoding/json"
 	"log/slog"
 	"time"
@@ -45,12 +44,11 @@ func HandleCreateCheckoutSession(c *fiber.Ctx, data CreateCheckoutData, db *db.D
 			"error": "Unauthorized access",
 		})
 	}
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
+
 	queries := sqlc_gen.New(db.Pool)
 
 	// Get price details from database
-	price, err := queries.GetPriceByPlan(query_ctx, data.Plan)
+	price, err := queries.GetPriceByPlan(c.Context(), data.Plan)
 	if err != nil {
 		slog.Error("Error getting price", "err", err)
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
@@ -59,7 +57,7 @@ func HandleCreateCheckoutSession(c *fiber.Ctx, data CreateCheckoutData, db *db.D
 	}
 
 	// Get or create customer
-	customer, err := queries.GetCustomerByUserID(query_ctx, user_id)
+	customer, err := queries.GetCustomerByUserID(c.Context(), user_id)
 	if err != nil {
 		stripe_customer, err := payment.CreateStripeCustomer(user_email, "")
 		if err != nil {
@@ -69,7 +67,7 @@ func HandleCreateCheckoutSession(c *fiber.Ctx, data CreateCheckoutData, db *db.D
 			})
 		}
 
-		err = queries.CreateCustomer(query_ctx, sqlc_gen.CreateCustomerParams{
+		err = queries.CreateCustomer(c.Context(), sqlc_gen.CreateCustomerParams{
 			UserID:           user_id,
 			StripeCustomerID: stripe_customer.ID,
 			Email:            user_email,
@@ -117,8 +115,6 @@ func HandleWebhook(c *fiber.Ctx, DB *db.Database) error {
 		return c.Status(fiber.StatusBadRequest).Send([]byte("Webhook signature verification failed"))
 	}
 
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
 	queries := sqlc_gen.New(DB.Pool)
 
 	switch event.Type {
@@ -131,7 +127,7 @@ func HandleWebhook(c *fiber.Ctx, DB *db.Database) error {
 			return c.Status(fiber.StatusBadRequest).Send([]byte("Error parsing webhook payload"))
 		}
 
-		customer, err := queries.GetCustomerByStripeID(query_ctx, session_obj.Customer.ID)
+		customer, err := queries.GetCustomerByStripeID(c.Context(), session_obj.Customer.ID)
 		if err != nil {
 			slog.Error("getting customer", "err", err)
 			return c.Status(fiber.StatusBadRequest).Send([]byte("Error parsing webhook payload"))
@@ -142,7 +138,7 @@ func HandleWebhook(c *fiber.Ctx, DB *db.Database) error {
 			return c.Status(fiber.StatusBadRequest).Send([]byte("Error parsing webhook payload"))
 		}
 
-		err = queries.InsertPayment(query_ctx, sqlc_gen.InsertPaymentParams{
+		err = queries.InsertPayment(c.Context(), sqlc_gen.InsertPaymentParams{
 			PaymentID:        session_obj.PaymentIntent.ID,
 			UserID:           customer.ID.Bytes,
 			StripeCustomerID: customer.StripeCustomerID.String,
@@ -156,14 +152,14 @@ func HandleWebhook(c *fiber.Ctx, DB *db.Database) error {
 			slog.Error("InsertPayment", "err", err)
 			return c.Status(fiber.StatusInternalServerError).Send([]byte("Error processing webhook"))
 		}
-		period, err := queries.GetValidityPeroidByProductID(query_ctx, session_obj.Metadata["product_id"])
+		period, err := queries.GetValidityPeroidByProductID(c.Context(), session_obj.Metadata["product_id"])
 		if err != nil {
 			slog.Error("GetValidityPeroidByProductID", "err", err)
 			return c.Status(fiber.StatusInternalServerError).Send([]byte("Error processing webhook"))
 		}
 		period_duration := db.IntervalToDuration(period)
 
-		err = queries.UpsertPaymentValidity(query_ctx, sqlc_gen.UpsertPaymentValidityParams{
+		err = queries.UpsertPaymentValidity(c.Context(), sqlc_gen.UpsertPaymentValidityParams{
 			PaymentID: session_obj.PaymentIntent.ID,
 			UserID:    customer.ID.Bytes,
 			PriceID:   session_obj.Metadata["price_id"],
@@ -197,8 +193,7 @@ func HandleWebhook(c *fiber.Ctx, DB *db.Database) error {
 }
 
 func HandlePaymentValidityStatus(c *fiber.Ctx, DB *db.Database) error {
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
+
 	queries := sqlc_gen.New(DB.Pool)
 
 	user_id, err := middlewares.GetUserID(c)
@@ -208,7 +203,7 @@ func HandlePaymentValidityStatus(c *fiber.Ctx, DB *db.Database) error {
 		})
 	}
 
-	validity_status, err := queries.GetUserValidityStatus(query_ctx, user_id)
+	validity_status, err := queries.GetUserValidityStatus(c.Context(), user_id)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error":   "Could not get profile",
@@ -221,8 +216,7 @@ func HandlePaymentValidityStatus(c *fiber.Ctx, DB *db.Database) error {
 }
 
 func HandlePaymentHistory(c *fiber.Ctx, DB *db.Database) error {
-	query_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
+
 	queries := sqlc_gen.New(DB.Pool)
 
 	user_id, err := middlewares.GetUserID(c)
@@ -232,7 +226,7 @@ func HandlePaymentHistory(c *fiber.Ctx, DB *db.Database) error {
 		})
 	}
 
-	payment_history, err := queries.GetUserPaymentHistory(query_ctx, user_id)
+	payment_history, err := queries.GetUserPaymentHistory(c.Context(), user_id)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error":   "Could not get profile",

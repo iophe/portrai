@@ -48,17 +48,25 @@ function Resume(props: ResumeProps) {
 	const params = useParams();
 	const fault = useFault();
 
-	const [resume, { refetch, mutate }] = createResource(async () => {
-		try {
-			const res = await DB_JOB_SPECIFIC_RESUMES.get(db, params.id);
-			return res;
-		} catch (err) {
-			fault.major({
-				message: (err as JobSpecificResumeNotFoundError).message,
-			});
+	const [resume, { refetch: refetch_resume_data, mutate }] = createResource(
+		async () => {
+			try {
+				const res = await DB_JOB_SPECIFIC_RESUMES.get(db, params.id);
+				return res;
+			} catch (err) {
+				fault.major({
+					message: (err as JobSpecificResumeNotFoundError).message,
+				});
+			}
 		}
-	});
+	);
 	const [section, set_section] = createSignal("experience");
+	const [refresh, refresh_signal] = createSignal(0);
+
+	function refetch() {
+		refetch_resume_data();
+		refresh_signal((x) => (x + 1) % 100);
+	}
 
 	return (
 		<main class="md:px-48 px-6 mx-auto justify-items-center py-4 flex flex-col gap-4 min-h-screen md:max-h-screen">
@@ -834,7 +842,10 @@ function Resume(props: ResumeProps) {
 					</Show>
 				</section>
 				<Show when={resume()} fallback={<LoadingSpinner />}>
-					<ResumePreview job_specific_resume={resume()!} />
+					<ResumePreview
+						job_specific_resume={resume()!}
+						refresh_signal={refresh}
+					/>
 				</Show>
 			</section>
 			<Footer />
