@@ -1,5 +1,14 @@
 import { useFault } from "@components/fault";
-import { Accessor, createEffect, createResource, createSignal, For, onMount, Show } from "solid-js";
+import {
+	Accessor,
+	createEffect,
+	createResource,
+	createSignal,
+	For,
+	onMount,
+	Resource,
+	Show,
+} from "solid-js";
 import { Motion, Presence } from "solid-motionone";
 import { api } from "@utils/api";
 import { AxiosError } from "axios";
@@ -50,7 +59,7 @@ export function formatText(text: string) {
 
 interface ResumePreviewProps {
 	job_specific_resume: JobSpecificResume;
-	refresh_signal ?: Accessor<number>
+	refresh_signal?: Accessor<number>;
 }
 
 function ResumePreview(props: ResumePreviewProps) {
@@ -63,41 +72,44 @@ function ResumePreview(props: ResumePreviewProps) {
 		props.job_specific_resume.title
 	);
 	const [pdf_blob, set_pdf_blob] = createSignal<Blob | undefined>();
-	onMount(async () => {
-		try {			
-			const cached_pdf = await DB_RESUME_PDFS.get(db, props.job_specific_resume.id);
+	createEffect(async () => {
+		try {
+			const cached_pdf = await DB_RESUME_PDFS.get(
+				db,
+				props.job_specific_resume.id
+			);
 
-  			if (cached_pdf) {
+			if (cached_pdf) {
 				set_pdf_blob(cached_pdf.pdf_blob);
 				return;
 			}
 			// Generate the PDF
 			const response = await api.post(
-				"/generate/live/from-data/" + props.job_specific_resume.template,
+				"/generate/live/from-data/" +
+					props.job_specific_resume.template,
 				{
 					resume_data: props.job_specific_resume.resume_data,
 				},
 				{ responseType: "blob" }
 			);
-			
+
 			await DB_RESUME_PDFS.upsert(db, props.job_specific_resume.id, {
 				pdf_blob: response.data,
 				filename: props.job_specific_resume.filename,
 			});
 			set_pdf_blob(response.data);
-		} catch (error) {
-			
-		}
-	})
+		} catch (error) {}
+	});
 
 	const [old_refresh_signal, update_old_refresh_signal] = createSignal(0);
-	
+
 	createEffect(async () => {
 		if (!props.refresh_signal) return;
 		if (props.refresh_signal() !== old_refresh_signal()) {
-			update_old_refresh_signal(props.refresh_signal())
+			update_old_refresh_signal(props.refresh_signal());
 			const response = await api.post(
-				"/generate/live/from-data/" + props.job_specific_resume.template,
+				"/generate/live/from-data/" +
+					props.job_specific_resume.template,
 				{
 					resume_data: props.job_specific_resume.resume_data,
 				},
@@ -109,7 +121,7 @@ function ResumePreview(props: ResumePreviewProps) {
 			});
 			set_pdf_blob(response.data);
 		}
-	})
+	});
 
 	return (
 		<section class="overflow-y-auto w-full h-full flex flex-col gap-4">
@@ -312,7 +324,6 @@ function ResumePreview(props: ResumePreviewProps) {
 					</Motion>
 				</section>
 			</Motion>
-			
 
 			<Show when={pdf_blob()}>
 				<PDFView
@@ -320,7 +331,7 @@ function ResumePreview(props: ResumePreviewProps) {
 					document_name=""
 					pdf_data={pdf_blob()!}
 					document_title={props.job_specific_resume.title}
-					/>
+				/>
 			</Show>
 
 			<Presence>
@@ -361,9 +372,7 @@ function ResumePreview(props: ResumePreviewProps) {
 							transition={{ duration: 0.3, delay: 0.1 }}
 						>
 							<div class="bg-white border-lapis-100 shadow px-4 py-8">
-								{formatText(
-									props.job_specific_resume.letter
-								)}
+								{formatText(props.job_specific_resume.letter)}
 							</div>
 						</Motion>
 					</Motion.section>

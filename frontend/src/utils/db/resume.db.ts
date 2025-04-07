@@ -105,7 +105,6 @@ export const DB_JOB_SPECIFIC_RESUMES = {
 	},
 };
 
-
 export class ResumePdfNotFoundError extends Error {
 	constructor(id: number) {
 		super(`Resume PDF with id ${id} not found`);
@@ -114,15 +113,11 @@ export class ResumePdfNotFoundError extends Error {
 }
 
 export const DB_RESUME_PDFS = {
-
-
 	async get(
 		db: AppDatabase,
 		resumeId: string
 	): Promise<ResumePdf | undefined> {
-		return await db.resume_pdfs
-			.where("id")
-			.equals(resumeId).first();
+		return await db.resume_pdfs.where("id").equals(resumeId).first();
 	},
 
 	async upsert(
@@ -133,10 +128,7 @@ export const DB_RESUME_PDFS = {
 			filename: string;
 		}
 	): Promise<void> {
-		const existing = await db.resume_pdfs
-			.where("id")
-			.equals(id)
-			.first();
+		const existing = await db.resume_pdfs.where("id").equals(id).first();
 
 		if (existing) {
 			await db.resume_pdfs
@@ -147,13 +139,11 @@ export const DB_RESUME_PDFS = {
 					last_modified_at: new Date(),
 				});
 			return;
-		}
-		else {
-
+		} else {
 			if (!(updates.pdf_blob instanceof Blob)) {
 				throw new Error("Invalid PDF blob format");
 			}
-			
+
 			// Create new PDF entry with auto-incremented ID
 			await db.resume_pdfs.add({
 				id: id,
@@ -163,24 +153,17 @@ export const DB_RESUME_PDFS = {
 				last_modified_at: new Date(),
 			});
 		}
-		
-		
+
 		return;
 	},
 
 	async delete(db: AppDatabase, id: number): Promise<void> {
-		const count = await db.resume_pdfs
-			.where("id")
-			.equals(id)
-			.delete();
+		const count = await db.resume_pdfs.where("id").equals(id).delete();
 		if (count === 0) return;
 	},
 
 	async deleteByResumeId(db: AppDatabase, resumeId: string): Promise<void> {
-		await db.resume_pdfs
-			.where("id")
-			.equals(resumeId)
-			.delete();
+		await db.resume_pdfs.where("id").equals(resumeId).delete();
 	},
 
 	async clear(db: AppDatabase): Promise<void> {

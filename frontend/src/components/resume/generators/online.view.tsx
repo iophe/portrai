@@ -1,8 +1,4 @@
-import {
-	createSignal,
-	Show,
-	onMount,
-} from "solid-js";
+import { createSignal, Show, onMount } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 import { useFault } from "@components/fault";
 import BackIcon from "@assets/icons/back.svg?component-solid";
@@ -16,14 +12,14 @@ import { ResumeLoader } from "./resume_loading.view";
 import { DB_JOB_SPECIFIC_RESUMES } from "@utils/db/resume.db";
 import { db } from "@utils/db/db";
 
-interface ResumeAIPreviewProps {
-	template_name?: string;
-}
+interface ResumeAIPreviewProps {}
 
 function ResumeAIPreview(props: ResumeAIPreviewProps) {
 	const navigate = useNavigate();
 	const fault = useFault();
-	const template = props.template_name || "standard-executive";
+
+	const template =
+		localStorage.getItem("template_name") || "standard-executive";
 
 	const [pdf_blob, set_pdf_blob] = createSignal<Blob | undefined>();
 	const [resume_title, set_resume_title] = createSignal<string | undefined>();
@@ -51,7 +47,11 @@ function ResumeAIPreview(props: ResumeAIPreviewProps) {
 			loadSavedResume(saved_conversation_id);
 		}
 	});
-
+	onMount(() => {
+		if (!localStorage.getItem("template_name")) {
+			localStorage.setItem("template_name", "standard-executive");
+		}
+	});
 	// Function to load a saved resume using the conversation ID
 	const loadSavedResume = async (conv_id: string) => {
 		try {
@@ -84,7 +84,10 @@ function ResumeAIPreview(props: ResumeAIPreviewProps) {
 		}
 	};
 
-	const handleAIGenerated = async (job_description:string,data: GenerateResumeFromAIData) => {
+	const handleAIGenerated = async (
+		job_description: string,
+		data: GenerateResumeFromAIData
+	) => {
 		try {
 			set_conversation_id(data.conversation_id);
 
@@ -94,11 +97,12 @@ function ResumeAIPreview(props: ResumeAIPreviewProps) {
 					"/ai/conversation/metadata/" + data.conversation_id
 				);
 				const title = response_title.data.title as string;
-				const resume_data = response_title.data.resume_data as ResumeData;
+				const resume_data = response_title.data
+					.resume_data as ResumeData;
 
 				if (title && resume_data) {
 					set_resume_title(title);
-	
+
 					// Store in DB
 					resume_data.certificates.forEach(
 						(v, i) => (v.certificate_id = i)
@@ -109,25 +113,16 @@ function ResumeAIPreview(props: ResumeAIPreviewProps) {
 					resume_data.educations.forEach(
 						(v, i) => (v.education_id = i)
 					);
-					resume_data.projects.forEach(
-						(v, i) => (v.project_id = i)
-					);
-					resume_data.skills.forEach(
-						(v, i) => (v.skill_id = i)
-					);
-					
-					DB_JOB_SPECIFIC_RESUMES.upsert(
-						db,
-						data.conversation_id,
-						{
-							resume_data: resume_data,
-							job_description,
-							title: title,
-						}
-					);
+					resume_data.projects.forEach((v, i) => (v.project_id = i));
+					resume_data.skills.forEach((v, i) => (v.skill_id = i));
+
+					DB_JOB_SPECIFIC_RESUMES.upsert(db, data.conversation_id, {
+						resume_data: resume_data,
+						job_description,
+						template: template,
+						title: title,
+					});
 				}
-
-
 			} catch (err) {
 				console.error("Failed to get resume title", err);
 			}
@@ -181,7 +176,8 @@ function ResumeAIPreview(props: ResumeAIPreviewProps) {
 				const response_title = await api.get(
 					"/ai/conversation/metadata/" + conversation_id()
 				);
-				const resume_data = response_title.data.resume_data as ResumeData;
+				const resume_data = response_title.data
+					.resume_data as ResumeData;
 
 				if (resume_data) {
 					// Store in DB
@@ -194,23 +190,14 @@ function ResumeAIPreview(props: ResumeAIPreviewProps) {
 					resume_data.educations.forEach(
 						(v, i) => (v.education_id = i)
 					);
-					resume_data.projects.forEach(
-						(v, i) => (v.project_id = i)
-					);
-					resume_data.skills.forEach(
-						(v, i) => (v.skill_id = i)
-					);
-					
-					DB_JOB_SPECIFIC_RESUMES.upsert(
-						db,
-						conversation_id()!,
-						{
-							resume_data: resume_data,
-						}
-					);
+					resume_data.projects.forEach((v, i) => (v.project_id = i));
+					resume_data.skills.forEach((v, i) => (v.skill_id = i));
+
+					DB_JOB_SPECIFIC_RESUMES.upsert(db, conversation_id()!, {
+						resume_data: resume_data,
+						template: template,
+					});
 				}
-
-
 			} catch (err) {
 				console.error("Failed to get resume title", err);
 			}

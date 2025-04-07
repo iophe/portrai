@@ -1,7 +1,4 @@
-import {
-	createSignal,
-	Show,
-} from "solid-js";
+import { createSignal, Show } from "solid-js";
 import { Motion, Presence } from "solid-motionone";
 import { useFault } from "@components/fault";
 import HelpIcon from "@assets/icons/help.svg?component-solid";

@@ -61,6 +61,14 @@ type Project struct {
 	Tags                    []string `json:"tags" jsonschema_description:"Keywords from job description that this project demonstrates"`
 }
 
+type InputResumeData struct {
+	Experiences  []Experience  `json:"experiences" jsonschema_description:"A list of professional experiences ordered by relevance to the target position"`
+	Educations   []Education   `json:"educations" jsonschema_description:"A list of educational qualifications ordered by relevance to the target position"`
+	Skills       []Skill       `json:"skills" jsonschema_description:"A list of professional skills matching terminology from the target job description"`
+	Certificates []Certificate `json:"certificates" jsonschema_description:"A list of professional certifications relevant to the target position"`
+	Projects     []Project     `json:"projects" jsonschema_description:"A list of relevant projects demonstrating qualifications for the target position"`
+}
+
 type StoredExperience struct {
 	Experience
 	Notes []json.RawMessage `json:"notes"`
@@ -97,14 +105,6 @@ type StoredResumeData struct {
 	Skills       []StoredSkill       `json:"skills"`
 	Certificates []StoredCertificate `json:"certificates"`
 	Projects     []StoredProject     `json:"projects"`
-}
-
-type InputResumeData struct {
-	Experiences  []Experience  `json:"experiences" jsonschema_description:"A list of professional experiences ordered by relevance to the target position"`
-	Educations   []Education   `json:"educations" jsonschema_description:"A list of educational qualifications ordered by relevance to the target position"`
-	Skills       []Skill       `json:"skills" jsonschema_description:"A list of professional skills matching terminology from the target job description"`
-	Certificates []Certificate `json:"certificates" jsonschema_description:"A list of professional certifications relevant to the target position"`
-	Projects     []Project     `json:"projects" jsonschema_description:"A list of relevant projects demonstrating qualifications for the target position"`
 }
 
 type ToolResumeDataParams struct {

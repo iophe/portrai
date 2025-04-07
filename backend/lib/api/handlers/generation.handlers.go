@@ -74,12 +74,7 @@ type GenerateResumeFromProfileParams struct {
 }
 
 func (params *GenerateResumeFromProfileParams) Validate() bool {
-	switch params.TemplateName {
-	case "standard-executive":
-		return true
-	default:
-		return false
-	}
+	return resumetemplates.ValidateTemplateName(params.TemplateName)
 }
 
 func HandleGenerateResumeFromProfile(params GenerateResumeFromProfileParams, c *fiber.Ctx, db *db_lib.Database) error {
@@ -174,6 +169,7 @@ func HandleGenerateResumeFromProfile(params GenerateResumeFromProfileParams, c *
 				"details": err.Error(),
 			})
 		}
+
 		resume_name = fmt.Sprintf("%s_%s", strings.ReplaceAll(user.FullName, " ", "_"), time.Now().Format("2006_01_02"))
 
 		if create_resume_uid_flag {

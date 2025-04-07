@@ -1,8 +1,4 @@
-import {
-	Show,
-	createMemo,
-	onCleanup,
-} from "solid-js";
+import { Show, createMemo, onCleanup } from "solid-js";
 import { Motion, Presence } from "solid-motionone";
 import DocumentIcon from "@assets/icons/document.svg?component-solid";
 import DownloadIcon from "@assets/icons/download.svg?component-solid";

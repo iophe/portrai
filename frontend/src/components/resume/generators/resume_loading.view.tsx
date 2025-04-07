@@ -1,10 +1,4 @@
-import {
-	createSignal,
-	Show,
-	onCleanup,
-	onMount,
-	For,
-} from "solid-js";
+import { createSignal, Show, onCleanup, onMount, For } from "solid-js";
 import { Motion, Presence } from "solid-motionone";
 
 interface LoaderProps {

@@ -10,7 +10,7 @@ import {
 } from "solid-js";
 import { A } from "@solidjs/router";
 import Footer from "@components/footer.default";
-import EXECUTING_RESUME from "@assets/templates/executive.jpg";
+import STANDARD_EXECUTING_RESUME from "@assets/templates/standard_executive.jpg";
 
 interface LandingProps {}
 
@@ -539,7 +539,7 @@ function Landing(props: LandingProps) {
 						</header>
 
 						<ul class="flex flex-col md:flex-row md:justify-center gap-8">
-							<For each={[EXECUTING_RESUME]}>
+							<For each={[STANDARD_EXECUTING_RESUME]}>
 								{(template) => (
 									<li class="bg-white rounded-xl flex flex-col items-center gap-4 shadow-lg shadow-lapis-50 p-8 border border-gray-100 group hover:shadow-xl transition-all">
 										{/* <figure class="aspect-[3/4] bg-gradient-to-br from-lapis-10 to-white rounded-lg pb-6 group-hover:shadow-md transition-all" /> */}

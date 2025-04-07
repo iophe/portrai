@@ -1,10 +1,4 @@
-import {
-	createSignal,
-	Show,
-	Switch,
-	Match,
-    onCleanup,
-} from "solid-js";
+import { createSignal, Show, Switch, Match, onCleanup } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 import { Motion, Presence } from "solid-motionone";
 import { useFault } from "@components/fault";
@@ -16,7 +10,10 @@ import LoadingSpinner from "@components/loading.spinner";
 
 interface AIConversationProps {
 	template_name: string;
-	on_generated: (job_description:string,data: GenerateResumeFromAIData) => void;
+	on_generated: (
+		job_description: string,
+		data: GenerateResumeFromAIData
+	) => void;
 	start_loading: () => void;
 	end_loading: () => void;
 	initial_job_description?: string;
@@ -35,9 +32,9 @@ export default function AIConversation(props: AIConversationProps) {
 	const [show_instructions, set_show_instructions] = createSignal(false);
 
 	onCleanup(() => {
-		set_instruction("")
-		set_job_description("")
-	})
+		set_instruction("");
+		set_job_description("");
+	});
 
 	async function handleGenerateResume() {
 		if (!job_description()) return;
@@ -62,7 +59,7 @@ export default function AIConversation(props: AIConversationProps) {
 			localStorage.setItem("conversation_id", result.conversation_id);
 			localStorage.setItem("job_description", job_description());
 
-			props.on_generated(job_description(),result);
+			props.on_generated(job_description(), result);
 		} catch (error: any) {
 			if (error.status === 402) {
 				navigate("/pricing");
@@ -77,7 +74,7 @@ export default function AIConversation(props: AIConversationProps) {
 			props.end_loading();
 		}
 	}
-    
+
 	return (
 		<Presence>
 			<Motion.section

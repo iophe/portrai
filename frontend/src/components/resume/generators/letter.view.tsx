@@ -1,7 +1,4 @@
-import {
-	createSignal,
-	Show,
-} from "solid-js";
+import { createSignal, Show } from "solid-js";
 import { Motion, Presence } from "solid-motionone";
 import { useFault } from "@components/fault";
 import HelpIcon from "@assets/icons/help.svg?component-solid";
@@ -43,13 +40,9 @@ export function CoverLetter(props: CoverLetterProps) {
 				set_letter_content(response.data.letter);
 				set_has_letter(true);
 
-				DB_JOB_SPECIFIC_RESUMES.upsert(
-					db,
-					props.conversation_id,
-					{
-						letter:response.data.letter,
-					}
-				);
+				DB_JOB_SPECIFIC_RESUMES.upsert(db, props.conversation_id, {
+					letter: response.data.letter,
+				});
 			}
 
 			set_comment("");
@@ -72,19 +65,14 @@ export function CoverLetter(props: CoverLetterProps) {
 					instruction: instruction(),
 				}
 			);
-			console.log(response);
 
 			if (response.data && response.data.letter) {
 				set_letter_content(response.data.letter);
 				set_has_letter(true);
-				
-				DB_JOB_SPECIFIC_RESUMES.upsert(
-					db,
-					props.conversation_id,
-					{
-						letter:response.data.letter,
-					}
-				);
+
+				DB_JOB_SPECIFIC_RESUMES.upsert(db, props.conversation_id, {
+					letter: response.data.letter,
+				});
 			}
 
 			set_instruction("");

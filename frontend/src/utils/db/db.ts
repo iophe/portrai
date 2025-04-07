@@ -28,7 +28,7 @@ export class AppDatabase extends Dexie {
 		super("AppDatabase");
 		this.version(1).stores({
 			job_specific_resumes: "id, title, created_at",
-			resume_pdfs: "id, filename, created_at"
+			resume_pdfs: "id, filename, created_at",
 		});
 
 		// Add hooks for automatic date handling
@@ -57,8 +57,7 @@ export class AppDatabase extends Dexie {
 			"updating",
 			function (modifications, primary_key, obj) {
 				if (typeof modifications === "object") {
-					(modifications as ResumePdf).last_modified_at =
-						new Date();
+					(modifications as ResumePdf).last_modified_at = new Date();
 				}
 			}
 		);

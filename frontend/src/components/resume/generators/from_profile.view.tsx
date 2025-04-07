@@ -1,7 +1,4 @@
-import {
-	createSignal,
-	Show,
-} from "solid-js";
+import { createSignal, Show } from "solid-js";
 import { Motion, Presence } from "solid-motionone";
 import { useFault } from "@components/fault";
 import api from "@utils/api";
@@ -14,7 +11,9 @@ interface GenerateResumeFromProfileProps {
 	end_loading: () => void;
 }
 
-export function GenerateResumeFromProfile(props: GenerateResumeFromProfileProps) {
+export function GenerateResumeFromProfile(
+	props: GenerateResumeFromProfileProps
+) {
 	const [is_generating, set_is_generating] = createSignal(false);
 	const fault = useFault();
 
