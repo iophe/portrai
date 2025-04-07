@@ -112,10 +112,6 @@ type ToolResumeDataParams struct {
 	Title string `json:"title" jsonschema_description:"A title for the resume based on the job description"`
 }
 
-type ToolTitleParams struct {
-	Title string `json:"title" jsonschema_description:"A title for the resume based on the job description"`
-}
-
 type ToolCoverLetterParams struct {
 	CoverLetter string `json:"cover_letter" jsonschema_description:"A cover letter based on the user provided data and resume for the job offer"`
 }

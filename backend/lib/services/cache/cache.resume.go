@@ -6,7 +6,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"slices"
 	"time"
 
 	"github.com/anthropics/anthropic-sdk-go"
@@ -16,14 +15,8 @@ import (
 )
 
 const (
-	// USER_RESUME_DATA_KEY = ""
-	// USER_RESUME_DATA_TTL = 1 * time.Hour
-
 	USER_AI_CONVERSATION_KEY = "ai:conversations"
 	USER_AI_CONVERSATION_TTL = 24 * time.Hour
-
-	USER_AI_RESUME_HASH_KEY = "ai:hash"
-	USER_AI_RESUME_HASH_TTL = 24 * time.Hour
 )
 
 func CreateConversation(user_id uuid.UUID, resume_uid uuid.UUID, c context.Context, cache *Cache) (uuid.UUID, error) {
@@ -39,7 +32,7 @@ func CreateConversation(user_id uuid.UUID, resume_uid uuid.UUID, c context.Conte
 	return conversation_id, err
 }
 
-func StoreAI_TitleResult(user_id uuid.UUID, conversation_id uuid.UUID, title utils.ToolTitleParams, c context.Context, cache *Cache) error {
+func StoreAI_TitleResult(user_id uuid.UUID, conversation_id uuid.UUID, title string, c context.Context, cache *Cache) error {
 
 	title_json, err := json.Marshal(title)
 	if err != nil {
@@ -91,34 +84,6 @@ func StoreAI_CoverLetterResult(user_id uuid.UUID, conversation_id uuid.UUID, let
 }
 
 func StoreAI_Conversation(user_id uuid.UUID, conversation_id uuid.UUID, conversation []anthropic.MessageParam, c context.Context, cache *Cache) error {
-	// Temporary fix to Marshal/UnMarshal []anthropic.MessageParam
-	// TODO : To remove when fix !!!
-	/*buffer := make([]string, len(conversation))
-	for i, c := range conversation {
-		json, err := c.MarshalJSON()
-		if err != nil {
-			return fmt.Errorf("Failed to marshal the created cover letter")
-		}
-		buffer[i] = string(json)
-	}*/
-	/*
-		for _, msg := range conversation {
-			slog.Info("StoreAI_Conversation", "from", msg.Role)
-			for _, content := range msg.Content {
-				if content.OfRequestTextBlock != nil {
-					slog.Info("StoreAI_Conversation", "type", "text")
-					slog.Info("StoreAI_Conversation", "content", content.OfRequestTextBlock.Text[:25])
-				} else if content.OfRequestToolUseBlock != nil {
-					slog.Info("StoreAI_Conversation", "type", "tool_use")
-				} else if content.OfRequestToolResultBlock != nil {
-					slog.Info("StoreAI_Conversation", "type", "tool_result")
-				} else {
-					slog.Info("StoreAI_Conversation", "type", "nil")
-				}
-				slog.Info("--------------------")
-			}
-		}*/
-
 	conversation_json, err := json.Marshal(conversation)
 	if err != nil {
 		return fmt.Errorf("Failed to marshal the created cover letter")
@@ -154,7 +119,7 @@ func GetResumeData(user_id uuid.UUID, conversation_id uuid.UUID, c context.Conte
 	return data, nil
 }
 
-func GetResumeTitle(user_id uuid.UUID, conversation_id uuid.UUID, c context.Context, cache *Cache) (utils.ToolTitleParams, error) {
+func GetResumeTitle(user_id uuid.UUID, conversation_id uuid.UUID, c context.Context, cache *Cache) (string, error) {
 	title_key := fmt.Sprintf(
 		"%s:%s:%s:title",
 		USER_AI_CONVERSATION_KEY,
@@ -163,12 +128,12 @@ func GetResumeTitle(user_id uuid.UUID, conversation_id uuid.UUID, c context.Cont
 	)
 	data_json, err := cache.Client.Get(c, title_key).Result()
 	if err != nil {
-		return utils.ToolTitleParams{}, fmt.Errorf("failed to get resume title from cache: %w", err)
+		return "", fmt.Errorf("failed to get resume title from cache: %w", err)
 	}
 
-	var data utils.ToolTitleParams
+	var data string
 	if err := json.Unmarshal([]byte(data_json), &data); err != nil {
-		return utils.ToolTitleParams{}, fmt.Errorf("failed to unmarshal resume title: %w", err)
+		return "", fmt.Errorf("failed to unmarshal resume title: %w", err)
 	}
 
 	return data, nil
@@ -303,23 +268,6 @@ func GetConversation(user_id uuid.UUID, conversation_id uuid.UUID, c context.Con
 			Content: content,
 		}
 	}
-	/*
-		for _, msg := range data {
-			slog.Info("GetConversation", "from", msg.Role)
-			for _, content := range msg.Content {
-				if content.OfRequestTextBlock != nil {
-					slog.Info("GetConversation", "type", "text")
-					slog.Info("GetConversation", "content", content.OfRequestTextBlock.Text[:25])
-				} else if content.OfRequestToolUseBlock != nil {
-					slog.Info("GetConversation", "type", "tool_use")
-				} else if content.OfRequestToolResultBlock != nil {
-					slog.Info("GetConversation", "type", "tool_result")
-				} else {
-					slog.Info("GetConversation", "type", "nil")
-				}
-			}
-			slog.Info("--------------------------")
-		}*/
 
-	return slices.Clip(data), nil
+	return data, nil
 }

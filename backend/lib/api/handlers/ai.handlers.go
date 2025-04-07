@@ -128,7 +128,7 @@ func HandleGetMetadata(params GetMetadataParams, c *fiber.Ctx, cache *ca.Cache) 
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"title":       title.Title,
+		"title":       title,
 		"resume_data": resume_data,
 	})
 }
@@ -155,11 +155,10 @@ func HandleCreateResume(params CreateResumeParams, data CreateResumeData, c *fib
 			"details": err.Error(),
 		})
 	}
-	query_ctx, cancel := context.WithTimeout(c.Context(), 10*time.Second)
-	defer cancel()
+
 	queries := sqlc_gen.New(db.Pool)
 
-	model, err := assertUsabilityAndGetModel(user_id, query_ctx, queries)
+	model, err := assertUsabilityAndGetModel(user_id, c.Context(), queries)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error":   "Unable to use the model",
@@ -174,7 +173,21 @@ func HandleCreateResume(params CreateResumeParams, data CreateResumeData, c *fib
 			"details": err.Error(),
 		})
 	}
-	slog.Info("Successfuly created resume", "usage", usage)
+	_ = queries.AddProductUsage(c.Context(), sqlc_gen.AddProductUsageParams{
+		UserID:                           user_id,
+		InputTokenUsed:                   usage.Usage.InputTokens,
+		OutputTokenUsed:                  usage.Usage.OutputTokens,
+		CachedInputTokenUsed:             usage.Usage.CacheReadInputTokens,
+		CachedInputTokenCreated:          usage.Usage.CacheCreationInputTokens,
+		Valid:                            usage.Valid,
+		Model:                            model.model,
+		Duration:                         db_lib.DurationToInterval(usage.Duration),
+		PriceRateInputToken:              model.numeric_priceRateInputToken,
+		PriceRateOutputToken:             model.numeric_priceRateOutputToken,
+		PriceRateCachedInputTokenCreated: model.numeric_priceRateCachedInputTokenCreated,
+		PriceRateCachedInputTokenUsed:    model.numeric_priceRateCachedInputTokenUsed,
+	})
+
 	return c.SendStatus(fiber.StatusOK)
 }
 
@@ -200,11 +213,10 @@ func HandleCommentResume(params CommentResumeParams, data CommentResumeData, c *
 			"details": err.Error(),
 		})
 	}
-	query_ctx, cancel := context.WithTimeout(c.Context(), 10*time.Second)
-	defer cancel()
+
 	queries := sqlc_gen.New(db.Pool)
 
-	model, err := assertUsabilityAndGetModel(user_id, query_ctx, queries)
+	model, err := assertUsabilityAndGetModel(user_id, c.Context(), queries)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error":   "Unable to start the conversation",
@@ -219,8 +231,20 @@ func HandleCommentResume(params CommentResumeParams, data CommentResumeData, c *
 			"details": err.Error(),
 		})
 	}
-	slog.Info("Successfuly commented on resume", "usage", usage)
-
+	_ = queries.AddProductUsage(c.Context(), sqlc_gen.AddProductUsageParams{
+		UserID:                           user_id,
+		InputTokenUsed:                   usage.Usage.InputTokens,
+		OutputTokenUsed:                  usage.Usage.OutputTokens,
+		CachedInputTokenUsed:             usage.Usage.CacheReadInputTokens,
+		CachedInputTokenCreated:          usage.Usage.CacheCreationInputTokens,
+		Valid:                            usage.Valid,
+		Model:                            model.model,
+		Duration:                         db_lib.DurationToInterval(usage.Duration),
+		PriceRateInputToken:              model.numeric_priceRateInputToken,
+		PriceRateOutputToken:             model.numeric_priceRateOutputToken,
+		PriceRateCachedInputTokenCreated: model.numeric_priceRateCachedInputTokenCreated,
+		PriceRateCachedInputTokenUsed:    model.numeric_priceRateCachedInputTokenUsed,
+	})
 	return c.SendStatus(fiber.StatusOK)
 }
 
@@ -246,11 +270,10 @@ func HandleCommentCoverLetter(params CommentCoverLetterParams, data CommentCover
 			"details": err.Error(),
 		})
 	}
-	query_ctx, cancel := context.WithTimeout(c.Context(), 10*time.Second)
-	defer cancel()
+
 	queries := sqlc_gen.New(db.Pool)
 
-	model, err := assertUsabilityAndGetModel(user_id, query_ctx, queries)
+	model, err := assertUsabilityAndGetModel(user_id, c.Context(), queries)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error":   "Unable to start the conversation",
@@ -265,7 +288,20 @@ func HandleCommentCoverLetter(params CommentCoverLetterParams, data CommentCover
 			"details": err.Error(),
 		})
 	}
-	slog.Info("Successfuly commented on cover letter", "usage", usage)
+	_ = queries.AddProductUsage(c.Context(), sqlc_gen.AddProductUsageParams{
+		UserID:                           user_id,
+		InputTokenUsed:                   usage.Usage.InputTokens,
+		OutputTokenUsed:                  usage.Usage.OutputTokens,
+		CachedInputTokenUsed:             usage.Usage.CacheReadInputTokens,
+		CachedInputTokenCreated:          usage.Usage.CacheCreationInputTokens,
+		Valid:                            usage.Valid,
+		Model:                            model.model,
+		Duration:                         db_lib.DurationToInterval(usage.Duration),
+		PriceRateInputToken:              model.numeric_priceRateInputToken,
+		PriceRateOutputToken:             model.numeric_priceRateOutputToken,
+		PriceRateCachedInputTokenCreated: model.numeric_priceRateCachedInputTokenCreated,
+		PriceRateCachedInputTokenUsed:    model.numeric_priceRateCachedInputTokenUsed,
+	})
 	cover_letter, err := ca.GetResumeCoverLetter(user_id, conversation_id, c.Context(), cache)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -301,11 +337,10 @@ func HandleCreateCoverLetter(params CreateCoverLetterParams, data CreateCoverLet
 			"details": err.Error(),
 		})
 	}
-	query_ctx, cancel := context.WithTimeout(c.Context(), 10*time.Second)
-	defer cancel()
+
 	queries := sqlc_gen.New(db.Pool)
 
-	model, err := assertUsabilityAndGetModel(user_id, query_ctx, queries)
+	model, err := assertUsabilityAndGetModel(user_id, c.Context(), queries)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error":   "Unable to start the conversation",
@@ -320,7 +355,20 @@ func HandleCreateCoverLetter(params CreateCoverLetterParams, data CreateCoverLet
 			"details": err.Error(),
 		})
 	}
-	slog.Info("Successfuly created cover letter", "usage", usage)
+	_ = queries.AddProductUsage(c.Context(), sqlc_gen.AddProductUsageParams{
+		UserID:                           user_id,
+		InputTokenUsed:                   usage.Usage.InputTokens,
+		OutputTokenUsed:                  usage.Usage.OutputTokens,
+		CachedInputTokenUsed:             usage.Usage.CacheReadInputTokens,
+		CachedInputTokenCreated:          usage.Usage.CacheCreationInputTokens,
+		Valid:                            usage.Valid,
+		Model:                            model.model,
+		Duration:                         db_lib.DurationToInterval(usage.Duration),
+		PriceRateInputToken:              model.numeric_priceRateInputToken,
+		PriceRateOutputToken:             model.numeric_priceRateOutputToken,
+		PriceRateCachedInputTokenCreated: model.numeric_priceRateCachedInputTokenCreated,
+		PriceRateCachedInputTokenUsed:    model.numeric_priceRateCachedInputTokenUsed,
+	})
 	cover_letter, err := ca.GetResumeCoverLetter(user_id, conversation_id, c.Context(), cache)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -335,9 +383,11 @@ func HandleCreateCoverLetter(params CreateCoverLetterParams, data CreateCoverLet
 }
 
 type modelAndPrices struct {
-	model                        anthropic.Model
-	numeric_priceRateInputToken  pgtype.Numeric
-	numeric_priceRateOutputToken pgtype.Numeric
+	model                                    anthropic.Model
+	numeric_priceRateInputToken              pgtype.Numeric
+	numeric_priceRateOutputToken             pgtype.Numeric
+	numeric_priceRateCachedInputTokenCreated pgtype.Numeric
+	numeric_priceRateCachedInputTokenUsed    pgtype.Numeric
 }
 
 func assertUsabilityAndGetModel(user_id uuid.UUID, query_ctx context.Context, queries *sqlc_gen.Queries) (modelAndPrices, error) {
@@ -368,22 +418,43 @@ func assertUsabilityAndGetModel(user_id uuid.UUID, query_ctx context.Context, qu
 
 	var priceRateInputToken float64
 	var priceRateOutputToken float64
+	var priceRateCachedInputTokenCreated float64
+	var priceRateCachedInputTokenUsed float64
 	var numeric_priceRateInputToken pgtype.Numeric
 	var numeric_priceRateOutputToken pgtype.Numeric
+	var numeric_priceRateCachedInputTokenCreated pgtype.Numeric
+	var numeric_priceRateCachedInputTokenUsed pgtype.Numeric
+
 	switch model {
 	case anthropic.ModelClaude3_5SonnetLatest:
 		priceRateInputToken = 0.000003 // $3 per million input tokens
 		numeric_priceRateInputToken.Scan(strconv.FormatFloat(priceRateInputToken, 'f', -1, 64))
 		priceRateOutputToken = 0.000015 // $15 per million output tokens
 		numeric_priceRateOutputToken.Scan(strconv.FormatFloat(priceRateOutputToken, 'f', -1, 64))
+
+		priceRateCachedInputTokenCreated = 0.000003 * 1.25 // $3 per million input tokens * 1.25 : 25% more expensive
+		numeric_priceRateCachedInputTokenCreated.Scan(strconv.FormatFloat(priceRateCachedInputTokenCreated, 'f', -1, 64))
+		priceRateCachedInputTokenUsed = 0.000003 * 0.1 // $3 per million input tokens * 0.1 : 90% less expensive
+		numeric_priceRateCachedInputTokenUsed.Scan(strconv.FormatFloat(priceRateCachedInputTokenUsed, 'f', -1, 64))
 	case anthropic.ModelClaude3_5HaikuLatest:
 		priceRateInputToken = 0.00000080 // $0.80 per million input tokens
 		numeric_priceRateInputToken.Scan(strconv.FormatFloat(priceRateInputToken, 'f', -1, 64))
 		priceRateOutputToken = 0.000004 // $4 per million output tokens
 		numeric_priceRateOutputToken.Scan(strconv.FormatFloat(priceRateOutputToken, 'f', -1, 64))
+
+		priceRateCachedInputTokenCreated = 0.00000080 * 1.25 // $0.80 per million input tokens * 1.25 : 25% more expensive
+		numeric_priceRateCachedInputTokenCreated.Scan(strconv.FormatFloat(priceRateCachedInputTokenCreated, 'f', -1, 64))
+		priceRateCachedInputTokenUsed = 0.00000080 * 0.1 // $0.80 per million input tokens * 0.1 : 90% less expensive
+		numeric_priceRateCachedInputTokenUsed.Scan(strconv.FormatFloat(priceRateCachedInputTokenUsed, 'f', -1, 64))
 	default: // Not possible
 	}
-	return modelAndPrices{model: model, numeric_priceRateInputToken: numeric_priceRateInputToken, numeric_priceRateOutputToken: numeric_priceRateOutputToken}, nil
+	return modelAndPrices{
+		model:                                    model,
+		numeric_priceRateInputToken:              numeric_priceRateInputToken,
+		numeric_priceRateOutputToken:             numeric_priceRateOutputToken,
+		numeric_priceRateCachedInputTokenCreated: numeric_priceRateCachedInputTokenCreated,
+		numeric_priceRateCachedInputTokenUsed:    numeric_priceRateCachedInputTokenUsed,
+	}, nil
 }
 
 func getOrCreateCurrentResumeUID(user_id uuid.UUID, query_ctx context.Context, queries *sqlc_gen.Queries) (uuid.UUID, error) {
@@ -410,123 +481,3 @@ func getOrCreateCurrentResumeUID(user_id uuid.UUID, query_ctx context.Context, q
 	}
 	return opt_resume_uid.Bytes, nil
 }
-
-/*
-
-type BuildResumeData struct {
-	JobDescription  string `json:"job_description"`
-	WithCoverLetter bool   `json:"with_cover_letter"`
-}
-
-func HandleBuildResume(data BuildResumeData, c *fiber.Ctx, cache *ca.Cache, db *database.Database, claude *anthropic.Client) error {
-	user_id, err := middlewares.GetUserID(c)
-	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Unauthorized access",
-		})
-	}
-
-	query_ctx := c.Context()
-	queries := sqlc_gen.New(db.Pool)
-
-	var resume_data ca.ResumeData
-	resume_data_bytes, err := queries.GetResumeData(query_ctx, user_id)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Failed to retrieve resume data",
-		})
-	}
-	if err := json.Unmarshal(resume_data_bytes, &resume_data); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Failed to parse resume data",
-			"info":  err,
-		})
-	}
-
-	paid_price, err := queries.GetPriceForPayment(query_ctx, user_id)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Failed to retrieve the cost",
-		})
-	}
-
-	cost, err := queries.GetConsumptionCost(query_ctx, user_id)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Failed to retrieve the cost",
-		})
-	}
-	float_cost, err := cost.Float64Value()
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Failed to retrieve the cost",
-		})
-	}
-	if float_cost.Float64 >= (float64(paid_price.Int64)/100)*PROFIT_MARGIN {
-		return c.Status(fiber.StatusNotAcceptable).JSON(fiber.Map{
-			"error": "maximum usage limits has been reach",
-		})
-	}
-
-	var model anthropic.Model
-	if float_cost.Float64 <= (float64(paid_price.Int64)/100)*HIGH_TIER {
-		model = anthropic.ModelClaude3_5SonnetLatest
-	} else {
-		model = anthropic.ModelClaude3_5HaikuLatest
-	}
-	var priceRateInputToken float64
-	var priceRateOutputToken float64
-	var numeric_priceRateInputToken pgtype.Numeric
-	var numeric_priceRateOutputToken pgtype.Numeric
-	switch model {
-	case anthropic.ModelClaude3_5SonnetLatest:
-		priceRateInputToken = 0.000003 // $3 per million input tokens
-		numeric_priceRateInputToken.Scan(strconv.FormatFloat(priceRateInputToken, 'f', -1, 64))
-		priceRateOutputToken = 0.000015 // $15 per million output tokens
-		numeric_priceRateOutputToken.Scan(strconv.FormatFloat(priceRateOutputToken, 'f', -1, 64))
-	case anthropic.ModelClaude3_5HaikuLatest:
-		priceRateInputToken = 0.00000080 // $0.80 per million input tokens
-		numeric_priceRateInputToken.Scan(strconv.FormatFloat(priceRateInputToken, 'f', -1, 64))
-		priceRateOutputToken = 0.000004 // $4 per million output tokens
-		numeric_priceRateOutputToken.Scan(strconv.FormatFloat(priceRateOutputToken, 'f', -1, 64))
-	default: // Not possible
-	}
-	result, usage, err := ai.GenerateResume(c.Context(), user_id, resume_data, data.JobDescription, data.WithCoverLetter, model, claude, cache)
-
-	slog.Info("Generated resume", "usage", sqlc_gen.AddProductUsageParams{
-		UserID:               user_id,
-		InputTokenUsed:       int64(usage.InputTokenUsed),
-		OutputTokenUsed:      int64(usage.OutputTokenUsed),
-		Valid:                usage.Valid,
-		Model:                model,
-		Duration:             database.DurationToInterval(usage.Duration),
-		PriceRateInputToken:  numeric_priceRateInputToken,
-		PriceRateOutputToken: numeric_priceRateOutputToken,
-	})
-	err_query := queries.AddProductUsage(query_ctx, sqlc_gen.AddProductUsageParams{
-		UserID:               user_id,
-		InputTokenUsed:       int64(usage.InputTokenUsed),
-		OutputTokenUsed:      int64(usage.OutputTokenUsed),
-		Valid:                usage.Valid,
-		Model:                model,
-		Duration:             database.DurationToInterval(usage.Duration),
-		PriceRateInputToken:  numeric_priceRateInputToken,
-		PriceRateOutputToken: numeric_priceRateOutputToken,
-	})
-	if err_query != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Failed to generate the resume with claude",
-			"info":  err_query.Error(),
-		})
-	}
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Failed to generate the resume with claude",
-			"info":  err.Error(),
-		})
-	}
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"result": result,
-	})
-}
-*/

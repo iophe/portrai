@@ -89,11 +89,10 @@ func HandleGenerateResumeFromProfile(params GenerateResumeFromProfileParams, c *
 			"error": "Unauthorized access",
 		})
 	}
-	query_ctx, cancel := context.WithTimeout(c.Context(), 10*time.Second)
-	defer cancel()
+
 	queries := sqlc_gen.New(db.Pool)
 
-	opt_resume_uid, err := queries.GetCurrentResumeUID(query_ctx, user_id)
+	opt_resume_uid, err := queries.GetCurrentResumeUID(c.Context(), user_id)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error":   "Failed to retrieve resume uid",
@@ -111,7 +110,7 @@ func HandleGenerateResumeFromProfile(params GenerateResumeFromProfileParams, c *
 
 	if opt_resume_uid.Valid {
 		resume_uid = opt_resume_uid.Bytes
-		generated_resume, err := queries.GetGeneratedResumeByUID(query_ctx, sqlc_gen.GetGeneratedResumeByUIDParams{
+		generated_resume, err := queries.GetGeneratedResumeByUID(c.Context(), sqlc_gen.GetGeneratedResumeByUIDParams{
 			ResumeUid: resume_uid,
 			UserID:    user_id,
 		})
@@ -122,7 +121,7 @@ func HandleGenerateResumeFromProfile(params GenerateResumeFromProfileParams, c *
 				"details": err.Error(),
 			})
 		} else if err == pgx.ErrNoRows {
-			generated_resume, err := queries.GetGeneratedResumeByUserID(query_ctx, user_id)
+			generated_resume, err := queries.GetGeneratedResumeByUserID(c.Context(), user_id)
 			if err != nil && err != pgx.ErrNoRows {
 				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 					"error":   "Failed to retrieve generated resume",
@@ -160,7 +159,7 @@ func HandleGenerateResumeFromProfile(params GenerateResumeFromProfileParams, c *
 			"resume_name": resume_name,
 		})
 	} else {
-		resume_data, user, profile, err := getResumeData(user_id, query_ctx, queries)
+		resume_data, user, profile, err := getResumeData(user_id, c.Context(), queries)
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 				"error":   "Could get the data of the resume",
@@ -178,7 +177,7 @@ func HandleGenerateResumeFromProfile(params GenerateResumeFromProfileParams, c *
 		resume_name = fmt.Sprintf("%s_%s", strings.ReplaceAll(user.FullName, " ", "_"), time.Now().Format("2006_01_02"))
 
 		if create_resume_uid_flag {
-			err = queries.UpdateResumeUIDinVersion(query_ctx, sqlc_gen.UpdateResumeUIDinVersionParams{
+			err = queries.UpdateResumeUIDinVersion(c.Context(), sqlc_gen.UpdateResumeUIDinVersionParams{
 				UserID:    user_id,
 				ResumeUid: resume_uid,
 				VersionID: user.CurrentResumeVersion,
@@ -192,7 +191,7 @@ func HandleGenerateResumeFromProfile(params GenerateResumeFromProfileParams, c *
 		}
 
 		if create_generated_resume_row_flag {
-			err = queries.InsertGeneratedResume(query_ctx, sqlc_gen.InsertGeneratedResumeParams{
+			err = queries.InsertGeneratedResume(c.Context(), sqlc_gen.InsertGeneratedResumeParams{
 				ResumeFileID: file_id,
 				Filename:     resume_name,
 				UserID:       user_id,
@@ -206,7 +205,7 @@ func HandleGenerateResumeFromProfile(params GenerateResumeFromProfileParams, c *
 				})
 			}
 		} else {
-			err = queries.UpdateGeneratedResume(query_ctx, sqlc_gen.UpdateGeneratedResumeParams{
+			err = queries.UpdateGeneratedResume(c.Context(), sqlc_gen.UpdateGeneratedResumeParams{
 				ResumeFileID: file_id,
 				Filename:     pgtype.Text{String: resume_name, Valid: true},
 				ResumeUid:    pgtype.UUID{Bytes: resume_uid, Valid: true},
@@ -247,11 +246,10 @@ func HandleGenerateLiveResumeFromData(params GenerateResumeFromProfileParams, da
 			"error": "Unauthorized access",
 		})
 	}
-	query_ctx, cancel := context.WithTimeout(c.Context(), 10*time.Second)
-	defer cancel()
+
 	queries := sqlc_gen.New(db.Pool)
 
-	user, err := queries.GetUserById(query_ctx, user_id)
+	user, err := queries.GetUserById(c.Context(), user_id)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error":   "failed to retrieve user data",
@@ -259,7 +257,7 @@ func HandleGenerateLiveResumeFromData(params GenerateResumeFromProfileParams, da
 		})
 	}
 
-	profile, err := queries.GetProfileByUserId(query_ctx, user_id)
+	profile, err := queries.GetProfileByUserId(c.Context(), user_id)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error":   "failed to retrieve profile data",
@@ -301,11 +299,10 @@ func HandleGenerateLiveResumeFromCache(params GenerateResumeFromProfileParams, d
 			"error": "Unauthorized access",
 		})
 	}
-	query_ctx, cancel := context.WithTimeout(c.Context(), 10*time.Second)
-	defer cancel()
+
 	queries := sqlc_gen.New(db.Pool)
 
-	user, err := queries.GetUserById(query_ctx, user_id)
+	user, err := queries.GetUserById(c.Context(), user_id)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error":   "failed to retrieve user data",
@@ -313,7 +310,7 @@ func HandleGenerateLiveResumeFromCache(params GenerateResumeFromProfileParams, d
 		})
 	}
 
-	profile, err := queries.GetProfileByUserId(query_ctx, user_id)
+	profile, err := queries.GetProfileByUserId(c.Context(), user_id)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error":   "failed to retrieve profile data",
@@ -358,9 +355,9 @@ func HandleGenerateLiveResumeFromCache(params GenerateResumeFromProfileParams, d
 	return c.Send(pdf_data)
 }
 
-func getResumeData(user_id uuid.UUID, query_ctx context.Context, queries *sqlc_gen.Queries) (utils.StoredResumeData, sqlc_gen.GetUserByIdRow, sqlc_gen.GetProfileByUserIdRow, error) {
+func getResumeData(user_id uuid.UUID, c context.Context, queries *sqlc_gen.Queries) (utils.StoredResumeData, sqlc_gen.GetUserByIdRow, sqlc_gen.GetProfileByUserIdRow, error) {
 
-	resume_data_bytes, err := queries.GetResumeData(query_ctx, user_id)
+	resume_data_bytes, err := queries.GetResumeData(c, user_id)
 	if err != nil {
 		return utils.StoredResumeData{}, sqlc_gen.GetUserByIdRow{}, sqlc_gen.GetProfileByUserIdRow{}, err
 	}
@@ -369,12 +366,12 @@ func getResumeData(user_id uuid.UUID, query_ctx context.Context, queries *sqlc_g
 		return utils.StoredResumeData{}, sqlc_gen.GetUserByIdRow{}, sqlc_gen.GetProfileByUserIdRow{}, err
 	}
 
-	user, err := queries.GetUserById(query_ctx, user_id)
+	user, err := queries.GetUserById(c, user_id)
 	if err != nil {
 		return utils.StoredResumeData{}, sqlc_gen.GetUserByIdRow{}, sqlc_gen.GetProfileByUserIdRow{}, err
 	}
 
-	profile, err := queries.GetProfileByUserId(query_ctx, user_id)
+	profile, err := queries.GetProfileByUserId(c, user_id)
 	if err != nil {
 		return utils.StoredResumeData{}, sqlc_gen.GetUserByIdRow{}, sqlc_gen.GetProfileByUserIdRow{}, err
 	}

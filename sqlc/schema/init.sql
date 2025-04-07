@@ -328,7 +328,11 @@ CREATE TRIGGER on_user_payment_creation
 create table payment.usage_history (
   user_id uuid not null references auth.users on delete cascade,
   input_token_used bigint not null default 0,
+  cached_input_token_used bigint not null default 0,
+  cached_input_token_created bigint not null default 0,
   price_rate_input_token decimal not null,
+  price_rate_cached_input_token_created decimal not null,
+  price_rate_cached_input_token_used decimal not null,
   output_token_used bigint not null default 0,
   price_rate_output_token decimal not null,
   model text not null,
@@ -342,8 +346,16 @@ RETURNS TRIGGER AS $$
 BEGIN
     UPDATE payment.usage_analytics
     SET 
-        total_cost_per_payment = total_cost_per_payment + (NEW.input_token_used * NEW.price_rate_input_token) + (NEW.output_token_used * NEW.price_rate_output_token),
-        all_time_cost = all_time_cost + (NEW.input_token_used * NEW.price_rate_input_token) + (NEW.output_token_used * NEW.price_rate_output_token)
+        total_cost_per_payment = total_cost_per_payment 
+          + (NEW.input_token_used * NEW.price_rate_input_token)
+          + (NEW.output_token_used * NEW.price_rate_output_token)
+          + (NEW.cached_input_token_used * NEW.price_rate_cached_input_token_used)
+          + (NEW.cached_input_token_created * NEW.price_rate_cached_input_token_created),
+        all_time_cost = all_time_cost
+          + (NEW.input_token_used * NEW.price_rate_input_token)
+          + (NEW.output_token_used * NEW.price_rate_output_token)
+          + (NEW.cached_input_token_used * NEW.price_rate_cached_input_token_used)
+          + (NEW.cached_input_token_created * NEW.price_rate_cached_input_token_created)
     WHERE user_id = NEW.user_id;
 
     RETURN NEW;
