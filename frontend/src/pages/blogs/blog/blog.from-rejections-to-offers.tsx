@@ -210,9 +210,7 @@ export default function FromRejectionsToOffers(): JSX.Element {
 					<ul class="flex flex-wrap gap-2">
 						{metadata.tags.map((tag) => (
 							<li>
-								<span
-									class="px-4 py-2 bg-gray-100 text-gray-700 rounded text-sm"
-								>
+								<span class="px-4 py-2 bg-gray-100 text-gray-700 rounded text-sm">
 									{tag}
 								</span>
 							</li>
