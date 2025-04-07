@@ -4,7 +4,7 @@ import { api } from "@utils/api";
 import { A, useLocation, useNavigate } from "@solidjs/router";
 import { Pay } from "@utils/payment";
 import Footer from "@components/footer.default";
-import { Match, onMount, Switch } from "solid-js";
+import { createEffect, Match, onMount, Switch } from "solid-js";
 import { useFault } from "@components/fault";
 
 interface SignupPageProps {}
@@ -29,7 +29,7 @@ function SignupPage(props: SignupPageProps) {
 	const fault = useFault();
 	const navigate = useNavigate();
 	const location = useLocation();
-
+	
 	const [email_signup_data, set_email_signup_data] =
 		createStore<EmailSignupData>({
 			name: "",
@@ -89,6 +89,9 @@ function SignupPage(props: SignupPageProps) {
 
 				if (location.query.payment) {
 					Pay({ plan: location.query.payment as string });
+				}
+				else if (location.query.redirectTo ) {
+					navigate("/"+location.query.redirectTo, { replace: true });
 				} else {
 					navigate("/", { replace: true });
 				}
@@ -124,7 +127,7 @@ function SignupPage(props: SignupPageProps) {
 							data-ux_mode="popup"
 							data-callback="handleGoogleSignup"
 							data-auto_prompt="false"
-							data-width="100%"
+							class="w-full"
 						></div>
 
 						<div
@@ -134,7 +137,6 @@ function SignupPage(props: SignupPageProps) {
 							data-theme="outline"
 							data-text="signup_with"
 							data-size="large"
-							data-width="100%"
 							data-logo_alignment="left"
 						></div>
 					</div>
