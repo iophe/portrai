@@ -1,5 +1,6 @@
 import { Component, Show } from "solid-js";
 import { A } from "@solidjs/router";
+import LogoIcon from "@assets/icons/logo.svg?component-solid";
 import { api } from "@utils/api";
 
 function Header() {
@@ -8,8 +9,8 @@ function Header() {
 	return (
 		<header class="w-full flex md:flex-row flex-col gap-4 justify-between items-center">
 			<A href="/">
-				<h1 class="text-2xl tracking-widest">
-					PORTR<span class="alice-regular text-forest-900">AI</span>
+				<h1 class="text-2xl tracking-widest flex flex-row gap-2 items-center">
+				<LogoIcon /><span>PORTR<span class="alice-regular text-forest-900">AI</span></span>
 				</h1>
 			</A>
 			<div class="md:w-fit w-full text-sm md:text-xl flex flex-row md:gap-16 md:justify-center justify-between items-center">
