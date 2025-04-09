@@ -42,23 +42,4 @@ func RegisterPaymentRoutes(group fiber.Router) {
 			return handlers.HandlePaymentHistory(c, &db.DB)
 		},
 	)
-	payment_group.Get("/refresh",
-		middlewares.Protected(),
-		func(c *fiber.Ctx) error {
-			user_id, err := middlewares.GetUserID(c)
-			if err != nil {
-				return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-					"error": "Unauthorized access",
-				})
-			}
-			token, err := middlewares.RefreshPaymentToken(user_id, &db.DB)
-			if err != nil {
-				return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-					"error": "failed to create payment token",
-				})
-			}
-			middlewares.SetPaymentCookies(c, token)
-			return c.SendStatus(fiber.StatusOK)
-		},
-	)
 }

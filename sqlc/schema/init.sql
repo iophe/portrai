@@ -212,7 +212,9 @@ create table payment.products (
   -- A URL of the product image in Stripe, meant to be displayable to the customer.
   image text,
   -- Set of key-value pairs, used to store additional information about the object in a structured format.
-  metadata jsonb
+  metadata jsonb,
+  -- Usage limit of this product per features
+  usage jsonb
 );
 
 
@@ -265,7 +267,9 @@ create table payment.prices (
     -- User payment validity, once expired the user loses access to paying features
     expired_at timestamp with time zone,
     -- Set of key-value pairs, used to store additional information about the object in a structured format.
-    metadata jsonb
+    metadata jsonb,
+    -- Set of key-value pairs, used to store additional information about the object in a structured format.
+    usage jsonb not null default '{}'
 );
 
 create table payment.payments (

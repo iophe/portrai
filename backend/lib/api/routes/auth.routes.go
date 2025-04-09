@@ -124,6 +124,25 @@ func RegisterAuthRoutes(group fiber.Router) {
 		},
 	)
 
+	auth_group.Post("/signup/google",
+		func(c *fiber.Ctx) error {
+			var data handlers.GoogleSignupData
+			if err := c.BodyParser(&data); err != nil {
+				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+					"error": "Invalid request body",
+				})
+			}
+			res, err := handlers.HandleGoogleSignup(c, data, &db.DB)
+			if err != nil {
+				slog.Error("Google sign-in failed", "err", err)
+				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+					"error": err.Error(),
+				})
+			}
+			return c.Status(fiber.StatusOK).JSON(res)
+		},
+	)
+
 	auth_group.Post("/signin/google",
 		func(c *fiber.Ctx) error {
 			var data handlers.GoogleSignupData

@@ -1,6 +1,6 @@
 import { useFault } from "@components/fault";
 import Footer from "@components/footer.default";
-import Header from "@components/header.default";
+import Header from "@components/header.autherized";
 import { A } from "@solidjs/router";
 import api from "@utils/api";
 import { AxiosError } from "axios";

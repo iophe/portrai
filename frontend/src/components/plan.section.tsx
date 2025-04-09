@@ -69,7 +69,7 @@ export function PlanSection(props: PlanSectionProps) {
 								class="flex flex-row items-center gap-4"
 							>
 								<VerifiedIcon class="min-w-fit fill-forest-500" />
-								<p>Your account is active</p>
+								<p>Your account is active, your current plan is {status()?.price_description}</p>
 							</Motion.span>
 							<Motion.div
 								initial={{ opacity: 0 }}

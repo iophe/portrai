@@ -1,5 +1,5 @@
 import Footer from "@components/footer.default";
-import Header from "@components/header.default";
+import Header from "@components/header.autherized";
 import { createSignal, Show, For } from "solid-js";
 
 interface AboutUsPageProps {}

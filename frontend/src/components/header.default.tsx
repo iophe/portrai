@@ -12,7 +12,7 @@ function Header() {
 					PORTR<span class="alice-regular text-forest-900">AI</span>
 				</h1>
 			</A>
-			<div class="md:w-fit w-full flex flex-row md:gap-16 md:justify-center justify-between items-center">
+			<div class="md:w-fit w-full text-sm md:text-xl flex flex-row md:gap-16 md:justify-center justify-between items-center">
 				<A
 					href="/blogs"
 					class="tracking-widest"

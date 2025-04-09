@@ -1,5 +1,5 @@
 import Footer from "@components/footer.default";
-import Header from "@components/header.default";
+import Header from "@components/header.autherized";
 import { createResource, createSignal, For, Show } from "solid-js";
 import { Motion } from "solid-motionone";
 import { A } from "@solidjs/router";

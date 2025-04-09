@@ -24,6 +24,7 @@ import LoadingSpinner from "@components/loading.spinner";
 import { ItemText } from "./utils/item.content";
 import { clear_cache, createCachedResource } from "@utils/cache";
 import { useNavigate } from "@solidjs/router";
+import { ProcessMajorError } from "@utils/payment";
 
 interface ResumeSettingsProps {
 	offline?: boolean;
@@ -52,18 +53,7 @@ function ResumeSettings(props: ResumeSettingsProps) {
 
 					return result;
 				} catch (error) {
-					if ((error as AxiosError).status === 402) {
-						navigate("/pricing");
-					}
-					if (
-						(error as AxiosError).status !== 401 &&
-						(error as AxiosError).status !== 402
-					)
-						fault.minor({
-							message:
-								((error as AxiosError).response?.data as any)
-									.error ?? (error as AxiosError).message,
-						});
+					ProcessMajorError(error, navigate, fault);
 					return;
 				}
 			},
@@ -251,35 +241,11 @@ function ResumeSettings(props: ResumeSettingsProps) {
 															refetch_version();
 															refetch_profile();
 														} catch (error) {
-															if (
-																(
-																	error as AxiosError
-																).status === 402
-															) {
-																navigate(
-																	"/pricing"
-																);
-															}
-															if (
-																(
-																	error as AxiosError
-																).status !== 401
-															)
-																fault.minor({
-																	message:
-																		(
-																			(
-																				error as AxiosError
-																			)
-																				.response
-																				?.data as any
-																		)
-																			.error ??
-																		(
-																			error as AxiosError
-																		)
-																			.message,
-																});
+															ProcessMajorError(
+																error,
+																navigate,
+																fault
+															);
 														}
 													}
 												}}
@@ -320,33 +286,11 @@ function ResumeSettings(props: ResumeSettingsProps) {
 														refetch_version();
 														refetch_profile();
 													} catch (error) {
-														if (
-															(
-																error as AxiosError
-															).status === 402
-														) {
-															navigate(
-																"/pricing"
-															);
-														}
-														if (
-															(
-																error as AxiosError
-															).status !== 401
-														)
-															fault.minor({
-																message:
-																	(
-																		(
-																			error as AxiosError
-																		)
-																			.response
-																			?.data as any
-																	).error ??
-																	(
-																		error as AxiosError
-																	).message,
-															});
+														ProcessMajorError(
+															error,
+															navigate,
+															fault
+														);
 													}
 													edit_version(false);
 												}}
@@ -424,35 +368,11 @@ function ResumeSettings(props: ResumeSettingsProps) {
 															refetch_version();
 															refetch_profile();
 														} catch (error) {
-															if (
-																(
-																	error as AxiosError
-																).status === 402
-															) {
-																navigate(
-																	"/pricing"
-																);
-															}
-															if (
-																(
-																	error as AxiosError
-																).status !== 401
-															)
-																fault.minor({
-																	message:
-																		(
-																			(
-																				error as AxiosError
-																			)
-																				.response
-																				?.data as any
-																		)
-																			.error ??
-																		(
-																			error as AxiosError
-																		)
-																			.message,
-																});
+															ProcessMajorError(
+																error,
+																navigate,
+																fault
+															);
 														}
 													}}
 												>
@@ -473,69 +393,6 @@ function ResumeSettings(props: ResumeSettingsProps) {
 										<AddIcon class="min-w-fit fill-forest-800 " />
 									</Motion.button>
 								</menu>
-								{/* <div class="flex flex-row gap-4 items-center w-full">
-											<FormSelect
-												value={""}
-												on_input={async (value) => {
-													update_version_form_data(
-														"selected_version",
-														value
-													);
-
-													if (
-														!version_form_data.selected_version ||
-														version_form_data.selected_version ===
-															version_form_data.current_version
-													)
-														return;
-													try {
-														await api.post(
-															"/resume/change-version",
-															{
-																version:
-																	version_form_data.selected_version,
-															}
-														);
-														clear_cache();
-														refetch_version();
-														refetch_profile();
-													} catch (error) {
-														if (
-															(
-																error as AxiosError
-															).status === 402
-														) {
-															navigate(
-																"/pricing"
-															);
-														}
-														if (
-															(
-																error as AxiosError
-															).status !== 401
-														)
-															fault.minor({
-																message:
-																	(
-																		(
-																			error as AxiosError
-																		)
-																			.response
-																			?.data as any
-																	).error ??
-																	(
-																		error as AxiosError
-																	).message,
-															});
-													}
-												}}
-												choices={
-													versions()?.all_versions ??
-													[]
-												}
-												select_label="Select a version"
-											/>
-										</div> */}
 							</fieldset>
 
 							<Presence>
@@ -610,39 +467,11 @@ function ResumeSettings(props: ResumeSettingsProps) {
 																	false
 																);
 															} catch (error) {
-																if (
-																	(
-																		error as AxiosError
-																	).status ===
-																	402
-																) {
-																	navigate(
-																		"/pricing"
-																	);
-																}
-																if (
-																	(
-																		error as AxiosError
-																	).status !==
-																	401
-																)
-																	fault.minor(
-																		{
-																			message:
-																				(
-																					(
-																						error as AxiosError
-																					)
-																						.response
-																						?.data as any
-																				)
-																					.error ??
-																				(
-																					error as AxiosError
-																				)
-																					.message,
-																		}
-																	);
+																ProcessMajorError(
+																	error,
+																	navigate,
+																	fault
+																);
 															}
 														}}
 													>

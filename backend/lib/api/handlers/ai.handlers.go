@@ -187,7 +187,12 @@ func HandleCreateResume(params CreateResumeParams, data CreateResumeData, c *fib
 		PriceRateCachedInputTokenCreated: model.numeric_priceRateCachedInputTokenCreated,
 		PriceRateCachedInputTokenUsed:    model.numeric_priceRateCachedInputTokenUsed,
 	})
-
+	err = middlewares.IncrementUsage(c, user_id, middlewares.RESUME_GENERATION, db)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Unexpected error",
+		})
+	}
 	return c.SendStatus(fiber.StatusOK)
 }
 
@@ -369,6 +374,12 @@ func HandleCreateCoverLetter(params CreateCoverLetterParams, data CreateCoverLet
 		PriceRateCachedInputTokenCreated: model.numeric_priceRateCachedInputTokenCreated,
 		PriceRateCachedInputTokenUsed:    model.numeric_priceRateCachedInputTokenUsed,
 	})
+	err = middlewares.IncrementUsage(c, user_id, middlewares.COVER_LETTER_GENERATION, db)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Unexpected error",
+		})
+	}
 	cover_letter, err := ca.GetResumeCoverLetter(user_id, conversation_id, c.Context(), cache)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{

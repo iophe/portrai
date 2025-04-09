@@ -31,7 +31,7 @@ func RegisterGenerationRoutes(group fiber.Router) {
 		HandlerContextKey: "fiber.csrf.handler",
 	}))
 
-	generation_group.Use(middlewares.Protected(), middlewares.PayingFeature())
+	generation_group.Use(middlewares.Protected(), middlewares.ActiveAccount())
 
 	generation_group.Get("/:file_id", func(c *fiber.Ctx) error {
 		var params handlers.GetPDFResumeParams
@@ -45,26 +45,28 @@ func RegisterGenerationRoutes(group fiber.Router) {
 
 	live := generation_group.Group("/live")
 
-	live.Post("/from-cache/:template_name", func(c *fiber.Ctx) error {
-		var params handlers.GenerateResumeFromProfileParams
-		if err := c.ParamsParser(&params); err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "invalid query parameters",
-			})
-		}
-		if !params.Validate() {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "invalid query parameters",
-			})
-		}
-		var data handlers.GenerateLiveResumeFromCache
-		if err := c.BodyParser(&data); err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "Invalid request body",
-			})
-		}
-		return handlers.HandleGenerateLiveResumeFromCache(params, data, c, &cache.CACHE, &db.DB)
-	})
+	live.Post("/from-cache/:template_name",
+		middlewares.PayingFeature(middlewares.RESUME_GENERATION, &db.DB),
+		func(c *fiber.Ctx) error {
+			var params handlers.GenerateResumeFromProfileParams
+			if err := c.ParamsParser(&params); err != nil {
+				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+					"error": "invalid query parameters",
+				})
+			}
+			if !params.Validate() {
+				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+					"error": "invalid query parameters",
+				})
+			}
+			var data handlers.GenerateLiveResumeFromCache
+			if err := c.BodyParser(&data); err != nil {
+				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+					"error": "Invalid request body",
+				})
+			}
+			return handlers.HandleGenerateLiveResumeFromCache(params, data, c, &cache.CACHE, &db.DB)
+		})
 
 	live.Post("/from-data/:template_name", func(c *fiber.Ctx) error {
 		var params handlers.GenerateResumeFromProfileParams

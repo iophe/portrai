@@ -10,6 +10,7 @@ import LoadingSpinner from "@components/loading.spinner";
 import HelpIcon from "@assets/icons/help.svg?component-solid";
 import { createCachedResource } from "@utils/cache";
 import { useNavigate } from "@solidjs/router";
+import { ProcessMajorError } from "@utils/payment";
 
 interface ProjectListProps {}
 
@@ -41,18 +42,7 @@ export function ProjectList(props: ProjectListProps) {
 
 				return projectItems as Project[];
 			} catch (error) {
-				if ((error as AxiosError).status === 402) {
-					navigate("/pricing");
-				}
-				if (
-					(error as AxiosError).status !== 401 &&
-					(error as AxiosError).status !== 402
-				)
-					fault.minor({
-						message:
-							((error as AxiosError).response?.data as any)
-								.error ?? (error as AxiosError).message,
-					});
+				ProcessMajorError(error, navigate, fault);
 				return [];
 			}
 		},
@@ -121,24 +111,11 @@ export function ProjectList(props: ProjectListProps) {
 											}
 										);
 									} catch (error) {
-										if (
-											(error as AxiosError).status === 402
-										) {
-											navigate("/pricing");
-										}
-										if (
-											(error as AxiosError).status !== 401
-										)
-											fault.minor({
-												message:
-													(
-														(error as AxiosError)
-															.response
-															?.data as any
-													).error ??
-													(error as AxiosError)
-														.message,
-											});
+										ProcessMajorError(
+											error,
+											navigate,
+											fault
+										);
 									}
 								}}
 							>
@@ -177,28 +154,11 @@ export function ProjectList(props: ProjectListProps) {
 												);
 												refetch();
 											} catch (error) {
-												if (
-													(error as AxiosError)
-														.status === 402
-												) {
-													navigate("/pricing");
-												}
-												if (
-													(error as AxiosError)
-														.status !== 401
-												)
-													fault.minor({
-														message:
-															(
-																(
-																	error as AxiosError
-																).response
-																	?.data as any
-															).error ??
-															(
-																error as AxiosError
-															).message,
-													});
+												ProcessMajorError(
+													error,
+													navigate,
+													fault
+												);
 											}
 										}}
 										onCancel={() => {

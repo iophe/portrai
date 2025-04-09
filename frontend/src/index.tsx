@@ -30,7 +30,7 @@ const Blog1 = lazy(
 );
 
 // Protected Pages
-const Home = Protected({ fallback: Landing })(
+const Home = Protected({ fallback: Product })(
 	lazy(() => import("./pages/home/home.page"))
 );
 const Account = Protected({ redirect: "/" })(
@@ -51,7 +51,7 @@ render(
 		<FaultProvider>
 			<Router>
 				<Route path={["/", "/home"]} component={Home} />
-				<Route path={"/welcolm"} component={Landing} />
+				<Route path={"/welcolm"} component={Product} />
 				<Route path={"/product"} component={Product} />
 				<Route path={"/support"} component={Support} />
 				<Route path={"/blogs"} component={Blogs} />

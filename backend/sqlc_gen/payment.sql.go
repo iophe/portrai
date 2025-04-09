@@ -101,6 +101,27 @@ func (q *Queries) CreateCustomer(ctx context.Context, arg CreateCustomerParams) 
 	return err
 }
 
+const decrementResumeVersioningUsage = `-- name: DecrementResumeVersioningUsage :exec
+UPDATE payment.validity
+SET usage = jsonb_set(
+  CASE 
+    WHEN usage->'RESUME_VERSIONING' IS NULL THEN 
+      jsonb_set(usage, '{RESUME_VERSIONING}', '{"current": 0, "limit": 0}'::jsonb)
+    ELSE 
+      usage
+  END,
+  '{RESUME_VERSIONING,current}',
+  (GREATEST(COALESCE((usage->'RESUME_VERSIONING'->>'current')::int, 0) - 1, 0))::text::jsonb
+)
+WHERE user_id = $1::uuid
+`
+
+// Decrements the current resume versioning usage for a user
+func (q *Queries) DecrementResumeVersioningUsage(ctx context.Context, userID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, decrementResumeVersioningUsage, userID)
+	return err
+}
+
 const deletePayment = `-- name: DeletePayment :exec
 DELETE FROM payment.payments 
 WHERE payment_id = $1::text
@@ -157,18 +178,37 @@ func (q *Queries) GetCustomerByUserID(ctx context.Context, userID uuid.UUID) (Pa
 	return i, err
 }
 
+const getFeaturesUsageByProductID = `-- name: GetFeaturesUsageByProductID :one
+SELECT 
+    usage
+FROM payment.products 
+WHERE id = $1::text
+`
+
+func (q *Queries) GetFeaturesUsageByProductID(ctx context.Context, productID string) ([]byte, error) {
+	row := q.db.QueryRow(ctx, getFeaturesUsageByProductID, productID)
+	var usage []byte
+	err := row.Scan(&usage)
+	return usage, err
+}
+
 const getPaymentValidity = `-- name: GetPaymentValidity :one
 SELECT
-    expired_at
+    expired_at,usage
 FROM payment.validity 
 WHERE user_id = $1::uuid
 `
 
-func (q *Queries) GetPaymentValidity(ctx context.Context, userID uuid.UUID) (pgtype.Timestamptz, error) {
+type GetPaymentValidityRow struct {
+	ExpiredAt pgtype.Timestamptz `json:"expired_at"`
+	Usage     []byte             `json:"usage"`
+}
+
+func (q *Queries) GetPaymentValidity(ctx context.Context, userID uuid.UUID) (GetPaymentValidityRow, error) {
 	row := q.db.QueryRow(ctx, getPaymentValidity, userID)
-	var expired_at pgtype.Timestamptz
-	err := row.Scan(&expired_at)
-	return expired_at, err
+	var i GetPaymentValidityRow
+	err := row.Scan(&i.ExpiredAt, &i.Usage)
+	return i, err
 }
 
 const getPriceByPlan = `-- name: GetPriceByPlan :one
@@ -262,27 +302,38 @@ func (q *Queries) GetUserPaymentHistory(ctx context.Context, userID uuid.UUID) (
 
 const getUserValidityStatus = `-- name: GetUserValidityStatus :one
 SELECT 
-    created_at,
-    expired_at,
+    v.created_at,
+    v.expired_at,
     CASE 
-        WHEN expired_at IS NULL THEN false
-        WHEN expired_at > current_timestamp THEN true
+        WHEN v.expired_at IS NULL THEN false
+        WHEN v.expired_at > current_timestamp THEN true
         ELSE false
-    END AS is_valid
-FROM payment.validity
-WHERE user_id = $1::uuid
+    END AS is_valid,
+    p.plan,
+    p.description AS price_description
+FROM payment.validity v
+LEFT JOIN payment.prices p ON v.price_id = p.id
+WHERE v.user_id = $1::uuid
 `
 
 type GetUserValidityStatusRow struct {
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
-	ExpiredAt pgtype.Timestamptz `json:"expired_at"`
-	IsValid   bool               `json:"is_valid"`
+	CreatedAt        pgtype.Timestamptz `json:"created_at"`
+	ExpiredAt        pgtype.Timestamptz `json:"expired_at"`
+	IsValid          bool               `json:"is_valid"`
+	Plan             pgtype.Text        `json:"plan"`
+	PriceDescription pgtype.Text        `json:"price_description"`
 }
 
 func (q *Queries) GetUserValidityStatus(ctx context.Context, userID uuid.UUID) (GetUserValidityStatusRow, error) {
 	row := q.db.QueryRow(ctx, getUserValidityStatus, userID)
 	var i GetUserValidityStatusRow
-	err := row.Scan(&i.CreatedAt, &i.ExpiredAt, &i.IsValid)
+	err := row.Scan(
+		&i.CreatedAt,
+		&i.ExpiredAt,
+		&i.IsValid,
+		&i.Plan,
+		&i.PriceDescription,
+	)
 	return i, err
 }
 
@@ -298,6 +349,69 @@ func (q *Queries) GetValidityPeroidByProductID(ctx context.Context, productID st
 	var validity_period pgtype.Interval
 	err := row.Scan(&validity_period)
 	return validity_period, err
+}
+
+const incrementCoverLetterGenerationUsage = `-- name: IncrementCoverLetterGenerationUsage :exec
+UPDATE payment.validity
+SET usage = jsonb_set(
+  CASE 
+    WHEN usage->'COVER_LETTER_GENERATION' IS NULL THEN 
+      jsonb_set(usage, '{COVER_LETTER_GENERATION}', '{"current": 0, "limit": 0}'::jsonb)
+    ELSE 
+      usage
+  END,
+  '{COVER_LETTER_GENERATION,current}',
+  (COALESCE((usage->'COVER_LETTER_GENERATION'->>'current')::int, 0) + 1)::text::jsonb
+)
+WHERE user_id = $1::uuid
+`
+
+// Increments the current cover letter generation usage for a user
+func (q *Queries) IncrementCoverLetterGenerationUsage(ctx context.Context, userID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, incrementCoverLetterGenerationUsage, userID)
+	return err
+}
+
+const incrementResumeGenerationUsage = `-- name: IncrementResumeGenerationUsage :exec
+UPDATE payment.validity
+SET usage = jsonb_set(
+  CASE 
+    WHEN usage->'RESUME_GENERATION' IS NULL THEN 
+      jsonb_set(usage, '{RESUME_GENERATION}', '{"current": 0, "limit": 0}'::jsonb)
+    ELSE 
+      usage
+  END,
+  '{RESUME_GENERATION,current}',
+  (COALESCE((usage->'RESUME_GENERATION'->>'current')::int, 0) + 1)::text::jsonb
+)
+WHERE user_id = $1::uuid
+`
+
+// Increments the current resume generation usage for a user
+func (q *Queries) IncrementResumeGenerationUsage(ctx context.Context, userID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, incrementResumeGenerationUsage, userID)
+	return err
+}
+
+const incrementResumeVersioningUsage = `-- name: IncrementResumeVersioningUsage :exec
+UPDATE payment.validity
+SET usage = jsonb_set(
+  CASE 
+    WHEN usage->'RESUME_VERSIONING' IS NULL THEN 
+      jsonb_set(usage, '{RESUME_VERSIONING}', '{"current": 0, "limit": 0}'::jsonb)
+    ELSE 
+      usage
+  END,
+  '{RESUME_VERSIONING,current}',
+  (COALESCE((usage->'RESUME_VERSIONING'->>'current')::int, 0) + 1)::text::jsonb
+)
+WHERE user_id = $1::uuid
+`
+
+// Increments the current resume versioning usage for a user
+func (q *Queries) IncrementResumeVersioningUsage(ctx context.Context, userID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, incrementResumeVersioningUsage, userID)
+	return err
 }
 
 const insertPayment = `-- name: InsertPayment :exec
@@ -353,19 +467,22 @@ INSERT INTO payment.validity (
     payment_id,
     price_id,
     expired_at,
-    metadata
+    metadata,
+    usage
 ) VALUES (
     $1::uuid,
     $2::text,
     $3::text,
     $4::timestamptz,
-    $5::jsonb
+    $5::jsonb,
+    $6::jsonb
 )
 ON CONFLICT (user_id) DO UPDATE SET
     payment_id = EXCLUDED.payment_id,
     price_id = EXCLUDED.price_id,
     expired_at = EXCLUDED.expired_at,
-    metadata = EXCLUDED.metadata
+    metadata = EXCLUDED.metadata,
+    usage = EXCLUDED.usage
 `
 
 type UpsertPaymentValidityParams struct {
@@ -374,6 +491,7 @@ type UpsertPaymentValidityParams struct {
 	PriceID   string    `json:"price_id"`
 	ExpiredAt time.Time `json:"expired_at"`
 	Metadata  []byte    `json:"metadata"`
+	Usage     []byte    `json:"usage"`
 }
 
 func (q *Queries) UpsertPaymentValidity(ctx context.Context, arg UpsertPaymentValidityParams) error {
@@ -383,6 +501,7 @@ func (q *Queries) UpsertPaymentValidity(ctx context.Context, arg UpsertPaymentVa
 		arg.PriceID,
 		arg.ExpiredAt,
 		arg.Metadata,
+		arg.Usage,
 	)
 	return err
 }

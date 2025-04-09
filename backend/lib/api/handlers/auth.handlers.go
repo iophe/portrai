@@ -3,10 +3,10 @@ package handlers
 import (
 	"backend/lib/api/middlewares"
 	ca "backend/lib/services/cache"
-	"backend/lib/services/db"
 	database "backend/lib/services/db"
 	"backend/lib/services/mailer"
 	"backend/lib/utils"
+	"backend/sqlc_gen"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -17,6 +17,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 // Response structure from Supabase Auth
@@ -38,7 +39,7 @@ type EmailSignupData struct {
 	DataInRedirect bool   `json:"data_in_redirect,omitempty"` // Whether to include user data in redirect
 }
 
-func HandleEmailSignup(c *fiber.Ctx, data EmailSignupData, db *db.Database) (AuthResponse, error) {
+func HandleEmailSignup(c *fiber.Ctx, data EmailSignupData, db *database.Database) (AuthResponse, error) {
 	// Validate input
 	if data.Email == "" || data.Password == "" {
 		return AuthResponse{}, fmt.Errorf("Email and password are required")
@@ -47,7 +48,6 @@ func HandleEmailSignup(c *fiber.Ctx, data EmailSignupData, db *db.Database) (Aut
 	data.RedirectTo = "http:localhost:5050/verify-account"
 	response, err := makeSupabaseRequest("POST", "signup", data)
 	if err != nil {
-		slog.Error("")
 		return AuthResponse{}, fmt.Errorf("failed to communicate with auth service: %w", err)
 	}
 
@@ -60,6 +60,49 @@ func HandleEmailSignup(c *fiber.Ctx, data EmailSignupData, db *db.Database) (Aut
 		AccessToken:  auth_response.AccessToken,
 		RefreshToken: auth_response.RefreshToken,
 	})
+
+	user_id, err := middlewares.GetUserID(c)
+	if err != nil {
+		return AuthResponse{}, err
+	}
+
+	tx, err := db.Pool.Begin(c.Context())
+	if err != nil {
+		return AuthResponse{}, fmt.Errorf("Failed to start transaction")
+	}
+	defer tx.Rollback(c.Context())
+	queries := sqlc_gen.New(tx)
+
+	price, err := queries.GetPriceByPlan(c.Context(), utils.DEFAULT_PLAN)
+	if err != nil {
+		return AuthResponse{}, err
+	}
+	period, err := queries.GetValidityPeroidByProductID(c.Context(), price.ProductID.String)
+	if err != nil {
+		return AuthResponse{}, err
+	}
+	period_duration := database.IntervalToDuration(period)
+
+	usage, err := queries.GetFeaturesUsageByProductID(c.Context(), price.ProductID.String)
+	if err != nil {
+		return AuthResponse{}, err
+	}
+	err = queries.UpsertPaymentValidity(c.Context(), sqlc_gen.UpsertPaymentValidityParams{
+		PaymentID: uuid.NewString(),
+		UserID:    user_id,
+		PriceID:   price.ID,
+		ExpiredAt: time.Now().Add(period_duration),
+		Metadata:  []byte("{}"),
+		Usage:     usage,
+	})
+	if err != nil {
+		slog.Error("UpsertPaymentValidity", "err", err)
+		return AuthResponse{}, err
+	}
+
+	if err = tx.Commit(c.Context()); err != nil {
+		return AuthResponse{}, err
+	}
 	slog.Info("successfully signed up",
 		"email", auth_response.User.Email,
 		"id", auth_response.User.Id,
@@ -103,6 +146,84 @@ func HandleEmailSignin(c *fiber.Ctx, data EmailSigninData) (AuthResponse, error)
 type GoogleSignupData struct {
 	IdToken       string `json:"id_token"`
 	TermsAccepted bool   `json:"terms_accepted"`
+}
+
+func HandleGoogleSignup(c *fiber.Ctx, data GoogleSignupData, db *database.Database) (AuthResponse, error) {
+	if data.IdToken == "" {
+		return AuthResponse{}, fmt.Errorf("id_token is required")
+	}
+
+	// Prepare request data for Supabase (GoTrue)
+	requestBody := map[string]interface{}{
+		"id_token": data.IdToken,
+		"provider": "google",
+	}
+
+	// Make request to Supabase Auth (GoTrue) using the token endpoint with OAuth grant type
+	response, err := makeSupabaseRequest("POST", "token?grant_type=id_token", requestBody)
+	if err != nil {
+		return AuthResponse{}, fmt.Errorf("failed to communicate with auth service: %w", err)
+	}
+
+	auth_response, err := handleSupabaseResponse(response)
+	if err != nil {
+		return AuthResponse{}, err
+	}
+
+	// Set auth cookies, same as in email auth
+	middlewares.SetAuthCookies(c, &middlewares.RefreshResponse{
+		AccessToken:  auth_response.AccessToken,
+		RefreshToken: auth_response.RefreshToken,
+	})
+
+	user_id, err := middlewares.GetUserID(c)
+	if err != nil {
+		return AuthResponse{}, err
+	}
+
+	tx, err := db.Pool.Begin(c.Context())
+	if err != nil {
+		return AuthResponse{}, fmt.Errorf("Failed to start transaction")
+	}
+	defer tx.Rollback(c.Context())
+	queries := sqlc_gen.New(tx)
+
+	price, err := queries.GetPriceByPlan(c.Context(), utils.DEFAULT_PLAN)
+	if err != nil {
+		return AuthResponse{}, err
+	}
+	period, err := queries.GetValidityPeroidByProductID(c.Context(), price.ProductID.String)
+	if err != nil {
+		return AuthResponse{}, err
+	}
+	period_duration := database.IntervalToDuration(period)
+
+	usage, err := queries.GetFeaturesUsageByProductID(c.Context(), price.ProductID.String)
+	if err != nil {
+		return AuthResponse{}, err
+	}
+	err = queries.UpsertPaymentValidity(c.Context(), sqlc_gen.UpsertPaymentValidityParams{
+		PaymentID: uuid.NewString(),
+		UserID:    user_id,
+		PriceID:   price.ID,
+		ExpiredAt: time.Now().Add(period_duration),
+		Metadata:  []byte("{}"),
+		Usage:     usage,
+	})
+	if err != nil {
+		slog.Error("UpsertPaymentValidity", "err", err)
+		return AuthResponse{}, err
+	}
+
+	if err = tx.Commit(c.Context()); err != nil {
+		return AuthResponse{}, err
+	}
+	slog.Info("successfully signed in with Google",
+		"email", auth_response.User.Email,
+		"id", auth_response.User.Id,
+	)
+
+	return auth_response, nil
 }
 
 func HandleGoogleSignin(c *fiber.Ctx, data GoogleSignupData) (AuthResponse, error) {
@@ -230,7 +351,7 @@ func HandleLogout(c *fiber.Ctx) error {
 
 	// Clear auth cookies regardless of Supabase response
 	middlewares.ClearAuthCookies(c)
-	middlewares.ClearPaymentCookies(c)
+	middlewares.ClearActiveAccountCookies(c)
 
 	slog.Info("successfully signed out", "email", claims.Email, "id", claims.UserId)
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
@@ -286,7 +407,7 @@ func HandleDeleteAccount(c *fiber.Ctx, cache *ca.Cache, db *database.Database) e
 	}
 	// Clear auth cookies after successful deletion
 	middlewares.ClearAuthCookies(c)
-	middlewares.ClearPaymentCookies(c)
+	middlewares.ClearActiveAccountCookies(c)
 
 	slog.Info("successfully deleted", "id", user_id)
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{

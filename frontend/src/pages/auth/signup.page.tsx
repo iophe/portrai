@@ -79,8 +79,7 @@ function SignupPage(props: SignupPageProps) {
 					return;
 				}
 
-				// Send the ID token to your backend
-				await api.post("/auth/signin/google", {
+				await api.post("/auth/signup/google", {
 					id_token: response.credential,
 					terms_accepted: email_signup_data.terms_accepted,
 				});
@@ -88,7 +87,11 @@ function SignupPage(props: SignupPageProps) {
 				localStorage.setItem("IS_AUTHENTICATED", "true");
 
 				if (location.query.payment) {
-					Pay({ plan: location.query.payment as string });
+					if (
+						location.query.payment != import.meta.env.DEFAULT_PLAN
+					) {
+						Pay({ plan: location.query.payment as string });
+					}
 				} else if (location.query.redirectTo) {
 					navigate("/" + location.query.redirectTo, {
 						replace: true,
