@@ -5,6 +5,7 @@ include:
   - monitoring/docker-compose.monitoring.yml
   - vault/docker-compose.vault.integration.yml
   - cache/docker-compose.cache.yml
+  - latex_server/docker-compose.integration.yml
 
 services:
   nginx:
@@ -38,6 +39,7 @@ services:
       PORT: ${BACKEND_PORT}
       LOG_FILEPATH: ${LOG_FILEPATH}
       NODE_ENV: integration
+      LATEX_SERVER: ${LATEX_SERVER}
       # DATABASE CONF
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_HOST: ${POSTGRES_HOST}
