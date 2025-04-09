@@ -55,78 +55,6 @@ func HandleEmailSignup(c *fiber.Ctx, data EmailSignupData, db *database.Database
 	if err != nil {
 		return AuthResponse{}, err
 	}
-
-	middlewares.SetAuthCookies(c, &middlewares.RefreshResponse{
-		AccessToken:  auth_response.AccessToken,
-		RefreshToken: auth_response.RefreshToken,
-	})
-
-	token, err := jwt.ParseWithClaims(auth_response.AccessToken, &middlewares.UserClaims{}, func(token *jwt.Token) (interface{}, error) {
-		// Verify signing algorithm
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-		}
-
-		// Get JWT secret from environment
-		secret := utils.JWT_SECRET
-		if secret == "" {
-			return nil, fmt.Errorf("JWT_SECRET not set")
-		}
-
-		return []byte(secret), nil
-	})
-	claims, ok := token.Claims.(*middlewares.UserClaims)
-	if !ok {
-		return AuthResponse{}, err
-	}
-	c.Locals("USER_CLAIMS", *claims)
-
-	user_id, err := middlewares.GetUserID(c)
-	if err != nil {
-		return AuthResponse{}, err
-	}
-
-	tx, err := db.Pool.Begin(c.Context())
-	if err != nil {
-		return AuthResponse{}, fmt.Errorf("Failed to start transaction")
-	}
-	defer tx.Rollback(c.Context())
-	queries := sqlc_gen.New(tx)
-
-	price, err := queries.GetPriceByPlan(c.Context(), utils.DEFAULT_PLAN)
-	if err != nil {
-		return AuthResponse{}, err
-	}
-	period, err := queries.GetValidityPeroidByProductID(c.Context(), price.ProductID.String)
-	if err != nil {
-		return AuthResponse{}, err
-	}
-	period_duration := database.IntervalToDuration(period)
-
-	usage, err := queries.GetFeaturesUsageByProductID(c.Context(), price.ProductID.String)
-	if err != nil {
-		return AuthResponse{}, err
-	}
-	err = queries.UpsertPaymentValidity(c.Context(), sqlc_gen.UpsertPaymentValidityParams{
-		PaymentID: uuid.NewString(),
-		UserID:    user_id,
-		PriceID:   price.ID,
-		ExpiredAt: time.Now().Add(period_duration),
-		Metadata:  []byte("{}"),
-		Usage:     usage,
-	})
-	if err != nil {
-		slog.Error("UpsertPaymentValidity", "err", err)
-		return AuthResponse{}, err
-	}
-
-	if err = tx.Commit(c.Context()); err != nil {
-		return AuthResponse{}, err
-	}
-	slog.Info("successfully signed up",
-		"email", auth_response.User.Email,
-		"id", auth_response.User.Id,
-	)
 	return auth_response, nil
 }
 
@@ -190,13 +118,8 @@ func HandleGoogleSignup(c *fiber.Ctx, data GoogleSignupData, db *database.Databa
 		return AuthResponse{}, err
 	}
 
-	// Set auth cookies, same as in email auth
-	middlewares.SetAuthCookies(c, &middlewares.RefreshResponse{
-		AccessToken:  auth_response.AccessToken,
-		RefreshToken: auth_response.RefreshToken,
-	})
-
-	token, err := jwt.ParseWithClaims(auth_response.AccessToken, &middlewares.UserClaims{}, func(token *jwt.Token) (interface{}, error) {
+	var token *jwt.Token
+	token, err = jwt.ParseWithClaims(auth_response.AccessToken, &middlewares.UserClaims{}, func(token *jwt.Token) (interface{}, error) {
 		// Verify signing algorithm
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -210,10 +133,15 @@ func HandleGoogleSignup(c *fiber.Ctx, data GoogleSignupData, db *database.Databa
 
 		return []byte(secret), nil
 	})
+	if err != nil {
+		return AuthResponse{}, err
+	}
+
 	claims, ok := token.Claims.(*middlewares.UserClaims)
 	if !ok {
 		return AuthResponse{}, err
 	}
+
 	c.Locals("USER_CLAIMS", *claims)
 
 	user_id, err := middlewares.GetUserID(c)
@@ -511,7 +439,7 @@ type VerifyEmailData struct {
 }
 
 // VerifyEmail handles email verification token
-func HandleVerifyEmail(c *fiber.Ctx, data VerifyEmailData) error {
+func HandleVerifyEmail(c *fiber.Ctx, data VerifyEmailData, db *database.Database) error {
 	if data.Token == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Token is required",
@@ -546,7 +474,7 @@ func HandleVerifyEmail(c *fiber.Ctx, data VerifyEmailData) error {
 	// Handle response
 	auth_response, err := handleSupabaseResponse(response)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),
 		})
 	}
@@ -561,11 +489,96 @@ func HandleVerifyEmail(c *fiber.Ctx, data VerifyEmailData) error {
 		Email: auth_response.User.Email,
 	})
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+	var token *jwt.Token
+	token, err = jwt.ParseWithClaims(auth_response.AccessToken, &middlewares.UserClaims{}, func(token *jwt.Token) (interface{}, error) {
+		// Verify signing algorithm
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+
+		// Get JWT secret from environment
+		secret := utils.JWT_SECRET
+		if secret == "" {
+			return nil, fmt.Errorf("JWT_SECRET not set")
+		}
+
+		return []byte(secret), nil
+	})
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),
 		})
 	}
 
+	claims, ok := token.Claims.(*middlewares.UserClaims)
+	if !ok {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	c.Locals("USER_CLAIMS", *claims)
+
+	user_id, err := middlewares.GetUserID(c)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	tx, err := db.Pool.Begin(c.Context())
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+	defer tx.Rollback(c.Context())
+	queries := sqlc_gen.New(tx)
+
+	price, err := queries.GetPriceByPlan(c.Context(), utils.DEFAULT_PLAN)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+	period, err := queries.GetValidityPeroidByProductID(c.Context(), price.ProductID.String)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+	period_duration := database.IntervalToDuration(period)
+
+	usage, err := queries.GetFeaturesUsageByProductID(c.Context(), price.ProductID.String)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+	err = queries.UpsertPaymentValidity(c.Context(), sqlc_gen.UpsertPaymentValidityParams{
+		PaymentID: uuid.NewString(),
+		UserID:    user_id,
+		PriceID:   price.ID,
+		ExpiredAt: time.Now().Add(period_duration),
+		Metadata:  []byte("{}"),
+		Usage:     usage,
+	})
+	if err != nil {
+		slog.Error("UpsertPaymentValidity", "err", err)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	if err = tx.Commit(c.Context()); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
 	slog.Info("Successfully verified email",
 		"email", auth_response.User.Email,
 		"id", auth_response.User.Id,

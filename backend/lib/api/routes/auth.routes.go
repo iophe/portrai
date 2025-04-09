@@ -90,7 +90,7 @@ func RegisterAuthRoutes(group fiber.Router) {
 					"error": "Invalid request body",
 				})
 			}
-			return handlers.HandleVerifyEmail(c, data)
+			return handlers.HandleVerifyEmail(c, data, &db.DB)
 		},
 	)
 
