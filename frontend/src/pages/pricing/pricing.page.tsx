@@ -36,7 +36,7 @@ function Pricing(props: PricingProps) {
 			  "Generate 10 tailored cover letters",
 			  "Customize up to 5 versions per resume",
 			],
-			envKey: import.meta.env.DEFAULT_PLAN,
+			envKey: import.meta.env.VITE_DEFAULT_PLAN,
 			action:"Start Now",
 		  },
 		  {
@@ -49,7 +49,7 @@ function Pricing(props: PricingProps) {
 			  "Generate 50 tailored cover letters",
 			  "Customize up to 10 versions per resume",
 			],
-			envKey: import.meta.env.PLAN_1_MONTH,
+			envKey: import.meta.env.VITE_PLAN_1_MONTH,
 			action:"Buy Now",
 		  },
 		  {
@@ -62,7 +62,7 @@ function Pricing(props: PricingProps) {
 			  "Generate 100 tailored cover letters",
 			  "Unlimited resume versions and customizations",
 			],
-			envKey: import.meta.env.PLAN_3_MONTH,
+			envKey: import.meta.env.VITE_PLAN_3_MONTH,
 			action:"Buy Now",
 		  }
 	];

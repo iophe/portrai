@@ -88,7 +88,7 @@ function SignupPage(props: SignupPageProps) {
 
 				if (location.query.payment) {
 					if (
-						location.query.payment != import.meta.env.DEFAULT_PLAN
+						location.query.payment != import.meta.env.VITE_DEFAULT_PLAN
 					) {
 						Pay({ plan: location.query.payment as string });
 					}
