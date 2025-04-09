@@ -7,6 +7,7 @@ import PlusIcon from "@assets/icons/plus.svg?component-solid";
 import MinusIcon from "@assets/icons/minus.svg?component-solid";
 import api from "@utils/api";
 import LoadingSpinner from "@components/loading.spinner";
+import { ProcessMajorError } from "@utils/payment";
 
 interface AIConversationProps {
 	template_name: string;
@@ -61,14 +62,12 @@ export default function AIConversation(props: AIConversationProps) {
 
 			props.on_generated(job_description(), result);
 		} catch (error: any) {
-			if (error.status === 402) {
-				navigate("/pricing");
-			}
-			if (error.status !== 401 && error.status !== 402) {
-				fault.major({
-					message: "Failed to generate the resume",
-				});
-			}
+			ProcessMajorError(
+				error,
+				navigate,
+				fault,
+				"Failed to generate the resume"
+			);
 		} finally {
 			set_is_generating(false);
 			props.end_loading();

@@ -2,10 +2,14 @@ import { A } from "@solidjs/router";
 import { Show } from "solid-js";
 import HomeIcon from "@assets/icons/home.svg?component-solid";
 import { api } from "@utils/api";
+import DefaultHeader from "@components/header.default";
 
 interface HeaderProps {}
 
 function Header(props: HeaderProps) {
+	if (!localStorage.getItem("IS_AUTHENTICATED")) {
+		return <DefaultHeader />;
+	}
 	return (
 		<header class="w-full flex md:flex-row flex-col gap-4 justify-between items-center">
 			<A href="/">
@@ -13,7 +17,7 @@ function Header(props: HeaderProps) {
 					PORTR<span class="alice-regular text-forest-900">AI</span>
 				</h1>
 			</A>
-			<div class="md:w-fit w-full flex flex-row md:gap-16 md:justify-center justify-between items-center">
+			<div class="md:w-fit w-full text-sm md:text-xl flex flex-row md:gap-16 md:justify-center justify-between items-center">
 				<A
 					href="/history"
 					class="tracking-widest"

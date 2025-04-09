@@ -114,8 +114,14 @@ func HandleWebhook(c *fiber.Ctx, DB *db.Database) error {
 		slog.Error("verifying webhook signature", "err", err)
 		return c.Status(fiber.StatusBadRequest).Send([]byte("Webhook signature verification failed"))
 	}
-
-	queries := sqlc_gen.New(DB.Pool)
+	tx, err := DB.Pool.Begin(c.Context())
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to start transaction",
+		})
+	}
+	defer tx.Rollback(c.Context())
+	queries := sqlc_gen.New(tx)
 
 	switch event.Type {
 	case "checkout.session.completed":
@@ -135,7 +141,6 @@ func HandleWebhook(c *fiber.Ctx, DB *db.Database) error {
 		metadata, err := json.Marshal(session_obj)
 		if err != nil {
 			slog.Error("marshaling metadata", "err", err)
-			return c.Status(fiber.StatusBadRequest).Send([]byte("Error parsing webhook payload"))
 		}
 
 		err = queries.InsertPayment(c.Context(), sqlc_gen.InsertPaymentParams{
@@ -159,26 +164,28 @@ func HandleWebhook(c *fiber.Ctx, DB *db.Database) error {
 		}
 		period_duration := db.IntervalToDuration(period)
 
+		usage, err := queries.GetFeaturesUsageByProductID(c.Context(), session_obj.Metadata["product_id"])
+		if err != nil {
+			slog.Error("GetFeaturesUsageByProductID", "err", err)
+			return c.Status(fiber.StatusInternalServerError).Send([]byte("Error processing webhook"))
+		}
+
 		err = queries.UpsertPaymentValidity(c.Context(), sqlc_gen.UpsertPaymentValidityParams{
 			PaymentID: session_obj.PaymentIntent.ID,
 			UserID:    customer.ID.Bytes,
 			PriceID:   session_obj.Metadata["price_id"],
 			ExpiredAt: time.Now().Add(period_duration),
 			Metadata:  metadata,
+			Usage:     usage,
 		})
 		if err != nil {
 			slog.Error("UpsertPaymentValidity", "err", err)
 			return c.Status(fiber.StatusInternalServerError).Send([]byte("Error processing webhook"))
 		}
 
-		err = mailer.MailThanksPayment(mailer.ThanksPaymentData{
+		_ = mailer.MailThanksPayment(mailer.ThanksPaymentData{
 			Email: customer.Email.String,
 		})
-		if err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": err.Error(),
-			})
-		}
 
 	case "checkout.session.expired", "payment_intent.payment_failed":
 		var session_obj stripe.CheckoutSession
@@ -189,6 +196,11 @@ func HandleWebhook(c *fiber.Ctx, DB *db.Database) error {
 		slog.Warn("payement failed", "payment_id", session_obj.PaymentIntent.ID)
 	}
 
+	if err = tx.Commit(c.Context()); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to commit transaction",
+		})
+	}
 	return c.SendString("Webhook processed successfully")
 }
 

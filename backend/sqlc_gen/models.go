@@ -147,6 +147,7 @@ type PaymentProduct struct {
 	Description    pgtype.Text     `json:"description"`
 	Image          pgtype.Text     `json:"image"`
 	Metadata       []byte          `json:"metadata"`
+	Usage          []byte          `json:"usage"`
 }
 
 type PaymentUsageAnalytic struct {
@@ -178,6 +179,7 @@ type PaymentValidity struct {
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 	ExpiredAt pgtype.Timestamptz `json:"expired_at"`
 	Metadata  []byte             `json:"metadata"`
+	Usage     []byte             `json:"usage"`
 }
 
 type Profile struct {

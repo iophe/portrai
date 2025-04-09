@@ -56,7 +56,11 @@ function SigninPage(props: SigninPageProps) {
 				localStorage.setItem("IS_AUTHENTICATED", "true");
 
 				if (location.query.payment) {
-					Pay({ plan: location.query.payment as string });
+					if (
+						location.query.payment != import.meta.env.DEFAULT_PLAN
+					) {
+						Pay({ plan: location.query.payment as string });
+					}
 				} else {
 					navigate("/", { replace: true });
 				}
@@ -134,9 +138,15 @@ function SigninPage(props: SigninPageProps) {
 									"true"
 								);
 								if (location.query.payment) {
-									Pay({
-										plan: location.query.payment as string,
-									});
+									if (
+										location.query.payment !=
+										import.meta.env.DEFAULT_PLAN
+									) {
+										Pay({
+											plan: location.query
+												.payment as string,
+										});
+									}
 								} else {
 									navigate("/", { replace: true });
 								}

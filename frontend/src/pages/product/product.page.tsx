@@ -2,7 +2,7 @@ import Footer from "@components/footer.default";
 import Header from "@components/header.default";
 import { createSignal, For, Show } from "solid-js";
 import { Motion } from "solid-motionone";
-import EXECUTING_RESUME from "@assets/templates/executive.jpg";
+import EXECUTING_RESUME from "@assets/templates/standard_executive.jpg";
 import { A } from "@solidjs/router";
 
 interface ProductPageProps {}

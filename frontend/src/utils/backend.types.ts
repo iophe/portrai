@@ -156,6 +156,8 @@ interface UserValidityStatus {
 	created_at: string;
 	expired_at: string;
 	is_valid: boolean;
+	plan:string;
+	price_description:string;
 }
 
 interface UserPaymentHistory {

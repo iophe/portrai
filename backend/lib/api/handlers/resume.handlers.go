@@ -509,8 +509,15 @@ func HandleAddResumeVersion(data AddResumeVersionData, c *fiber.Ctx, db *db.Data
 		NewVersion: data.NewVersion,
 	})
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "could not get add this version",
+		})
+	}
+
+	err = middlewares.IncrementUsage(c, user_id, middlewares.RESUME_VERSIONING, db)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Unexpected error",
 		})
 	}
 
@@ -539,6 +546,13 @@ func HandleDeleteResumeVersion(data DeleteResumeVersionData, c *fiber.Ctx, db *d
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error":   "could not delete this version",
 			"details": err.Error(),
+		})
+	}
+
+	err = middlewares.IncrementUsage(c, user_id, middlewares.RESUME_VERSIONING, db)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Unexpected error",
 		})
 	}
 

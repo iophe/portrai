@@ -19,6 +19,7 @@ import {
 	FormTextArea,
 } from "../utils/form.input";
 import { useNavigate } from "@solidjs/router";
+import { ProcessMajorError } from "@utils/payment";
 
 interface ExperienceViewProps {
 	experience: Experience;
@@ -54,20 +55,7 @@ export function ExperienceView(props: ExperienceViewProps) {
 						});
 						props.refetch();
 					} catch (error) {
-						if ((error as AxiosError).status === 402) {
-							navigate("/pricing");
-						}
-						if (
-							(error as AxiosError).status !== 401 &&
-							(error as AxiosError).status !== 402
-						)
-							fault.minor({
-								message:
-									(
-										(error as AxiosError).response
-											?.data as any
-									).error ?? (error as AxiosError).message,
-							});
+						ProcessMajorError(error, navigate, fault);
 					}
 				}
 			}}
@@ -156,18 +144,7 @@ export function ExperienceForm(props: ExperienceFormProps) {
 					notes: [],
 				});
 			} catch (error) {
-				if ((error as AxiosError).status === 402) {
-					navigate("/pricing");
-				}
-				if (
-					(error as AxiosError).status !== 401 &&
-					(error as AxiosError).status !== 402
-				)
-					fault.minor({
-						message:
-							((error as AxiosError).response?.data as any)
-								.error ?? (error as AxiosError).message,
-					});
+				ProcessMajorError(error, navigate, fault);
 			}
 		} else {
 			try {
@@ -207,18 +184,7 @@ export function ExperienceForm(props: ExperienceFormProps) {
 					notes: [],
 				});
 			} catch (error) {
-				if ((error as AxiosError).status === 402) {
-					navigate("/pricing");
-				}
-				if (
-					(error as AxiosError).status !== 401 &&
-					(error as AxiosError).status !== 402
-				)
-					fault.minor({
-						message:
-							((error as AxiosError).response?.data as any)
-								.error ?? (error as AxiosError).message,
-					});
+				ProcessMajorError(error, navigate, fault);
 			}
 		}
 	}

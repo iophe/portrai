@@ -1,7 +1,7 @@
 // File path: /blog/from-rejections-to-offers.tsx
 import { JSX } from "solid-js";
 import Footer from "@components/footer.default";
-import Header from "@components/header.default";
+import Header from "@components/header.autherized";
 import { A } from "@solidjs/router";
 
 export const metadata = {
