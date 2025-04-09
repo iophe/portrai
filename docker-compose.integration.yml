@@ -5,6 +5,7 @@ include:
   - monitoring/docker-compose.monitoring.yml
   - vault/docker-compose.vault.integration.yml
   - cache/docker-compose.cache.yml
+  - latex_server/docker-compose.integration.yml
 
 services:
   nginx:
