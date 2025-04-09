@@ -88,6 +88,8 @@ services:
         - VITE_API_URL=${BACKEND_RELATIVE_URL}
         - VITE_GOOGLE_CLIENT_ID=${GOTRUE_EXTERNAL_GOOGLE_CLIENT_ID}
         - VITE_DEFAULT_PLAN=${DEFAULT_PLAN}
+        - VITE_PLAN_1_MONTH=${PLAN_1_MONTH}
+        - VITE_PLAN_3_MONTH=${PLAN_3_MONTH}
     container_name: portrai_frontend_integration
     profiles: [app]
     image: portrai_frontend:integration
