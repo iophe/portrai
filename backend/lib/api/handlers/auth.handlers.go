@@ -61,6 +61,26 @@ func HandleEmailSignup(c *fiber.Ctx, data EmailSignupData, db *database.Database
 		RefreshToken: auth_response.RefreshToken,
 	})
 
+	token, err := jwt.ParseWithClaims(auth_response.AccessToken, &middlewares.UserClaims{}, func(token *jwt.Token) (interface{}, error) {
+		// Verify signing algorithm
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+
+		// Get JWT secret from environment
+		secret := utils.JWT_SECRET
+		if secret == "" {
+			return nil, fmt.Errorf("JWT_SECRET not set")
+		}
+
+		return []byte(secret), nil
+	})
+	claims, ok := token.Claims.(*middlewares.UserClaims)
+	if !ok {
+		return AuthResponse{}, err
+	}
+	c.Locals("USER_CLAIMS", *claims)
+
 	user_id, err := middlewares.GetUserID(c)
 	if err != nil {
 		return AuthResponse{}, err
@@ -175,6 +195,26 @@ func HandleGoogleSignup(c *fiber.Ctx, data GoogleSignupData, db *database.Databa
 		AccessToken:  auth_response.AccessToken,
 		RefreshToken: auth_response.RefreshToken,
 	})
+
+	token, err := jwt.ParseWithClaims(auth_response.AccessToken, &middlewares.UserClaims{}, func(token *jwt.Token) (interface{}, error) {
+		// Verify signing algorithm
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+
+		// Get JWT secret from environment
+		secret := utils.JWT_SECRET
+		if secret == "" {
+			return nil, fmt.Errorf("JWT_SECRET not set")
+		}
+
+		return []byte(secret), nil
+	})
+	claims, ok := token.Claims.(*middlewares.UserClaims)
+	if !ok {
+		return AuthResponse{}, err
+	}
+	c.Locals("USER_CLAIMS", *claims)
 
 	user_id, err := middlewares.GetUserID(c)
 	if err != nil {
