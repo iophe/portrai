@@ -4,6 +4,7 @@ import { createSignal, For, Show, Switch, Match } from "solid-js";
 import { createStore } from "solid-js/store";
 import STANDARD_EXECUTING_RESUME from "@assets/templates/standard_executive.jpg";
 import LIGHT_EXECUTING_RESUME from "@assets/templates/light_executive.jpg";
+import COLUMNS_EXECUTING_RESUME from "@assets/templates/columns_executive.jpg";
 import { Motion, Presence } from "solid-motionone";
 import { useFault } from "@components/fault";
 
@@ -45,6 +46,13 @@ function TemplatesPage(props: TemplatesPage) {
 			image_url: LIGHT_EXECUTING_RESUME,
 		},
 		{
+			id: "columns-executive",
+			name: "Light",
+			category: "simple",
+			description: "Light and temperate design.",
+			image_url: COLUMNS_EXECUTING_RESUME,
+		},
+		{
 			id: "standard-executive",
 			name: "Executive",
 			category: "professional",
@@ -84,9 +92,9 @@ function TemplatesPage(props: TemplatesPage) {
 
 	const categories = [
 		{ id: "all", name: "All Templates" },
-		// { id: "professional", name: "Professional" },
-		// { id: "creative", name: "Creative" },
-		// { id: "simple", name: "Simple" },
+		{ id: "professional", name: "Professional" },
+		//{ id: "creative", name: "Creative" },
+		{ id: "simple", name: "Simple" },
 		// { id: "technical", name: "Technical" },
 		// { id: "education", name: "Education" },
 	];

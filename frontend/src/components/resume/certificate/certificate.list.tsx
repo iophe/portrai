@@ -12,45 +12,51 @@ import { createCachedResource } from "@utils/cache";
 import { useNavigate } from "@solidjs/router";
 import { ProcessMajorError } from "@utils/payment";
 
-interface CertificateListProps {}
+interface CertificateListProps {
+	on_refetch: () => void;
+}
 
 export function CertificateList(props: CertificateListProps) {
 	const fault = useFault();
 	const navigate = useNavigate();
 
-	const [certificates, { mutate, refetch }] = createCachedResource(
-		async () => {
-			try {
-				const response = await api.get(
-					"/resume/items/by-type?item_type=certificate"
-				);
-				const result = response.data.items as ResumeItem[];
+	const [certificates, { mutate, refetch: refetch_items }] =
+		createCachedResource(
+			async () => {
+				try {
+					const response = await api.get(
+						"/resume/items/by-type?item_type=certificate"
+					);
+					const result = response.data.items as ResumeItem[];
 
-				const certificateItems = result.map((item) => ({
-					certificate_id: item.item_id,
-					certificate_name: item.title,
-					optional_issuer: item.subtitle,
-					optional_location: item.location,
-					optional_granted_date: item.start_date,
-					description: item.description,
-					priority: item.priority,
-					is_visible: item.is_visible,
-					tags: item.tags,
-					notes: item.notes,
-				}));
+					const certificateItems = result.map((item) => ({
+						certificate_id: item.item_id,
+						certificate_name: item.title,
+						optional_issuer: item.subtitle,
+						optional_location: item.location,
+						optional_granted_date: item.start_date,
+						description: item.description,
+						priority: item.priority,
+						is_visible: item.is_visible,
+						tags: item.tags,
+						notes: item.notes,
+					}));
 
-				return certificateItems as Certificate[];
-			} catch (error) {
-				ProcessMajorError(error, navigate, fault);
-				return [];
+					return certificateItems as Certificate[];
+				} catch (error) {
+					ProcessMajorError(error, navigate, fault);
+					return [];
+				}
+			},
+			{
+				cache_key:
+					"CertificateList:/resume/items/by-type?item_type=certificate",
 			}
-		},
-		{
-			cache_key:
-				"CertificateList:/resume/items/by-type?item_type=certificate",
-		}
-	);
-
+		);
+	function refetch() {
+		refetch_items();
+		props.on_refetch();
+	}
 	const [editing_certificates, updateEditingCertificates] = createStore(
 		[] as number[]
 	);

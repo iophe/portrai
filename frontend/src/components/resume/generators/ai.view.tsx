@@ -18,6 +18,7 @@ interface AIConversationProps {
 	start_loading: () => void;
 	end_loading: () => void;
 	initial_job_description?: string;
+	activate : () => void;
 }
 
 export default function AIConversation(props: AIConversationProps) {
@@ -42,7 +43,7 @@ export default function AIConversation(props: AIConversationProps) {
 		try {
 			set_is_generating(true);
 			props.start_loading();
-
+			props.activate();
 			const res = await api.post("/ai/conversation/start", {
 				job_description: job_description(),
 				template_name: props.template_name,

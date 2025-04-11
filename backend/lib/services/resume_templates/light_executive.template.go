@@ -18,7 +18,8 @@ func ConvertResumeToLatex_LIGHT_EXECUTIVE(resume_data utils.InputResumeData, use
 	// Format and add resume sections
 	template_data["education"] = format_education_section(resume_data.Educations)
 	template_data["experience"] = format_experience_section(resume_data.Experiences)
-	template_data["skills"] = format_skills_for_light_executive_template(resume_data.Skills)
+	template_data["skills"] = format_skills_section(resume_data.Skills)
+	template_data["languages"] = format_languages_section(resume_data.Skills)
 	template_data["projects"] = format_projects_section(resume_data.Projects)
 	template_data["certificates"] = format_certificates_section(resume_data.Certificates)
 
@@ -137,6 +138,15 @@ const light_executive_template = `\documentclass[11pt, a4paper]{article}
 \item <<escape_latex .name>><<if .level>> (<<escape_latex .level>>)<<end>>
 <<end>>
 \end{itemize} 
+
+<<if .languages>>
+\headleft{Languages}
+\begin{itemize}
+<<range .languages>>
+\item <<escape_latex .name>><<if .level>> (<<escape_latex .level>>)<<end>>
+<<end>>
+\end{itemize}
+<<end>>
 
 <<if .certificates>>
 \headleft{Certifications}

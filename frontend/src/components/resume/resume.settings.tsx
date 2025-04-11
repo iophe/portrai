@@ -28,6 +28,7 @@ import { ProcessMajorError } from "@utils/payment";
 
 interface ResumeSettingsProps {
 	offline?: boolean;
+	on_refetch: () => void;
 }
 
 function ResumeSettings(props: ResumeSettingsProps) {
@@ -43,7 +44,7 @@ function ResumeSettings(props: ResumeSettingsProps) {
 		website: undefined,
 		description: undefined,
 	});
-	const [versions, { mutate, refetch: refetch_version }] =
+	const [versions, { mutate, refetch: refetch_version_inner }] =
 		createCachedResource(
 			async () => {
 				if (props.offline) return;
@@ -67,31 +68,40 @@ function ResumeSettings(props: ResumeSettingsProps) {
 				}
 			}
 		);
+	function refetch_version() {
+		refetch_version_inner();
+		props.on_refetch();
+	}
+	const [
+		profile,
+		{ mutate: mutate_profile, refetch: refetch_profile_inner },
+	] = createCachedResource(
+		async () => {
+			try {
+				const response = await api.get("/account/profile");
+				const result = response.data.profile as Profile;
 
-	const [profile, { mutate: mutate_profile, refetch: refetch_profile }] =
-		createCachedResource(
-			async () => {
-				try {
-					const response = await api.get("/account/profile");
-					const result = response.data.profile as Profile;
-
-					return result;
-				} catch (error) {
-					fault.minor({
-						message:
-							((error as AxiosError).response?.data as any)
-								.error ?? (error as AxiosError).message,
-					});
-					return;
-				}
-			},
-			{ cache_key: "/account/profile" },
-			(result) => {
-				if (result) {
-					update_profile_form_data(result);
-				}
+				return result;
+			} catch (error) {
+				fault.minor({
+					message:
+						((error as AxiosError).response?.data as any).error ??
+						(error as AxiosError).message,
+				});
+				return;
 			}
-		);
+		},
+		{ cache_key: "/account/profile" },
+		(result) => {
+			if (result) {
+				update_profile_form_data(result);
+			}
+		}
+	);
+	function refetch_profile() {
+		refetch_profile_inner();
+		props.on_refetch();
+	}
 	const [editing_version, edit_version] = createSignal(false);
 	const [adding_version, add_version] = createSignal(false);
 

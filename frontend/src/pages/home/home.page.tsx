@@ -18,6 +18,11 @@ function Home(props: HomeProps) {
 	const navigate = useNavigate();
 
 	const [section, set_section] = createSignal("experience");
+	const [refresh, refresh_signal] = createSignal(0);
+
+	function refetch() {
+		refresh_signal((x) => (x + 1) % 100);
+	}
 
 	return (
 		<main class="md:px-48 px-6 mx-auto justify-items-center py-4 flex flex-col gap-4 min-h-screen md:max-h-screen">
@@ -34,27 +39,27 @@ function Home(props: HomeProps) {
 					<br />
 					<Switch>
 						<Match when={section() === "experience"}>
-							<ExperienceList />
+							<ExperienceList on_refetch={refetch} />
 						</Match>
 						<Match when={section() === "education"}>
-							<EducationList />
+							<EducationList on_refetch={refetch} />
 						</Match>
 						<Match when={section() === "certificate"}>
-							<CertificateList />
+							<CertificateList on_refetch={refetch} />
 						</Match>
 						<Match when={section() === "project"}>
-							<ProjectList />
+							<ProjectList on_refetch={refetch} />
 						</Match>
 						<Match when={section() === "skill"}>
-							<SkillList />
+							<SkillList on_refetch={refetch} />
 						</Match>
 						<Match when={section() === "settings"}>
-							<ResumeSettings />
+							<ResumeSettings on_refetch={refetch} />
 						</Match>
 					</Switch>
 				</section>
 
-				<ResumeAIPreview />
+				<ResumeAIPreview refresh_signal={refresh} />
 			</section>
 
 			<Footer />

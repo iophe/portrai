@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"sort"
 	"strings"
@@ -22,22 +23,26 @@ func ValidateTemplateName(template_name string) bool {
 		return true
 	case "light-executive":
 		return true
+	case "columns-executive":
+		return true
 	default:
 		return false
 	}
 }
 
 func ConvertResumeToLatex(template_name string, resume_data utils.InputResumeData, user sqlc_gen.GetUserByIdRow, profile sqlc_gen.GetProfileByUserIdRow) (string, error) {
+	slog.Info("Chosen template", "name", template_name)
 	switch template_name {
 	case "standard-executive":
 		return ConvertResumeToLatex_STANDARD_EXECUTIVE(resume_data, user, profile)
 	case "light-executive":
 		return ConvertResumeToLatex_LIGHT_EXECUTIVE(resume_data, user, profile)
+	case "columns-executive":
+		return ConvertResumeToLatex_COLUMNS_EXECUTIVE(resume_data, user, profile)
 	default:
 		return "", fmt.Errorf("Unknown template")
 	}
 }
-
 func GenerateResumePDFFile(latex_file string, file_id uuid.UUID, resume_name string, store bool) ([]byte, error) {
 	request_body := map[string]any{
 		"latex_file": latex_file,
@@ -64,11 +69,11 @@ func GenerateResumePDFFile(latex_file string, file_id uuid.UUID, resume_name str
 	}
 	defer response.Body.Close()
 	body_bytes, err := io.ReadAll(response.Body)
+
+	slog.Warn("Status code genration", "code", response.StatusCode)
 	if response.StatusCode != http.StatusOK {
 		body_string := string(body_bytes)
-		if err != nil {
-			return nil, fmt.Errorf(body_string)
-		}
+		return nil, fmt.Errorf(body_string)
 	}
 	return body_bytes, nil
 }
@@ -76,8 +81,9 @@ func GenerateResumePDFFile(latex_file string, file_id uuid.UUID, resume_name str
 // Helper function to render the LaTeX document
 func render_latex_document(template_data map[string]any, template_name string, resume_template string) (string, error) {
 	tmpl, err := template.New(template_name).Delims("<<", ">>").Funcs(template.FuncMap{
-		"escape_latex": escape_latex_special_chars,
-		"split":        split,
+		"escape_latex":   escape_latex_special_chars,
+		"split":          split,
+		"get_skill_icon": get_skill_type_icon,
 	}).Parse(resume_template)
 
 	if err != nil {
@@ -178,14 +184,55 @@ func format_experience_section(experiences []utils.Experience) []map[string]any 
 	return formatted_experiences
 }
 
-// Helper function to format skills section
-func format_skills_section(skills []utils.Skill) map[string][]map[string]string {
+// Helper function to format regular skills (non-language) section
+func format_skills_section(skills []utils.Skill) []map[string]string {
 	if len(skills) == 0 {
-		return map[string][]map[string]string{}
+		return []map[string]string{}
 	}
 
-	// Group skills by type
-	skill_groups := make(map[string][]map[string]string)
+	formatted_skills := make([]map[string]string, 0)
+
+	// Sort skills by priority
+	sort.Slice(skills, func(i, j int) bool {
+		return skills[i].Priority < skills[j].Priority
+	})
+
+	for _, skill := range skills {
+		if !skill.IsVisible {
+			continue
+		}
+		// Skip language skills - they'll be handled by format_languages_section
+		if strings.EqualFold(skill.OptionalSkillType, "Language") ||
+			strings.EqualFold(skill.OptionalSkillType, "Languages") {
+			continue
+		}
+
+		skill_type := skill.OptionalSkillType
+		if skill_type == "" {
+			skill_type = "General"
+		}
+
+		// Create a map with name, type, and level
+		skill_info := map[string]string{
+			"name":        skill.SkillName,
+			"type":        skill.OptionalSkillType,
+			"description": skill.Description,
+			"level":       skill.OptionalSkillLevel,
+		}
+
+		formatted_skills = append(formatted_skills, skill_info)
+	}
+
+	return formatted_skills
+}
+
+// Helper function to format language skills section
+func format_languages_section(skills []utils.Skill) []map[string]string {
+	if len(skills) == 0 {
+		return []map[string]string{}
+	}
+
+	language_skills := make([]map[string]string, 0)
 
 	// Sort skills by priority
 	sort.Slice(skills, func(i, j int) bool {
@@ -197,22 +244,20 @@ func format_skills_section(skills []utils.Skill) map[string][]map[string]string 
 			continue
 		}
 
-		skill_type := skill.OptionalSkillType
-		if skill_type == "" {
-			skill_type = "General"
-		}
+		// Only include language skills
+		if strings.EqualFold(skill.OptionalSkillType, "Language") ||
+			strings.EqualFold(skill.OptionalSkillType, "Languages") {
+			language_info := map[string]string{
+				"name":        skill.SkillName,
+				"description": skill.Description,
+				"level":       skill.OptionalSkillLevel,
+			}
 
-		// Create a map with name and description
-		skill_info := map[string]string{
-			"name":        skill.SkillName,
-			"description": skill.Description,
-			"level":       skill.OptionalSkillLevel,
+			language_skills = append(language_skills, language_info)
 		}
-
-		skill_groups[skill_type] = append(skill_groups[skill_type], skill_info)
 	}
 
-	return skill_groups
+	return language_skills
 }
 
 // Helper function to format projects section
@@ -394,4 +439,25 @@ func escape_latex_special_chars(text string) string {
 
 func split(s string, sep string) []string {
 	return strings.Split(s, sep)
+}
+
+func get_skill_type_icon(skill_type string) string {
+	switch skill_type {
+	case "Technical":
+		return "\\footnotesize\\faCode"
+	case "Soft":
+		return "\\footnotesize\\faHandshake"
+	case "Language":
+		return "\\footnotesize\\faLanguage"
+	case "Tool":
+		return "\\footnotesize\\faTools"
+	case "Framework":
+		return "\\footnotesize\\faCubes"
+	case "Platform":
+		return "\\footnotesize\\faServer"
+	case "Other":
+		return "\\footnotesize\\faStar"
+	default:
+		return "\\footnotesize\\faStar" // Default icon
+	}
 }

@@ -14,49 +14,56 @@ import { ProcessMajorError } from "@utils/payment";
 
 interface ExperienceListProps {
 	onOrder?: (experienceIds: number[]) => void;
+	on_refetch: () => void;
 }
 
 export function ExperienceList(props: ExperienceListProps) {
 	const fault = useFault();
 	const navigate = useNavigate();
 
-	const [experiences, { mutate, refetch }] = createCachedResource(
-		async () => {
-			try {
-				const response = await api.get(
-					"/resume/items/by-type?item_type=experience"
-				);
-				const result = response.data.items as ResumeItem[];
+	const [experiences, { mutate, refetch: refetch_items }] =
+		createCachedResource(
+			async () => {
+				try {
+					const response = await api.get(
+						"/resume/items/by-type?item_type=experience"
+					);
+					const result = response.data.items as ResumeItem[];
 
-				const experienceItems: Experience[] = result.map(
-					(item) =>
-						({
-							experience_id: item.item_id,
-							job_title: item.title,
-							company_name: item.subtitle,
-							location: item.location,
-							start_date: item.start_date,
-							optional_end_date: item.end_date,
-							is_current: item.is_current,
-							description: item.description,
-							priority: item.priority,
-							is_visible: item.is_visible,
-							tags: item.tags,
-							notes: item.notes,
-						}) as Experience
-				);
+					const experienceItems: Experience[] = result.map(
+						(item) =>
+							({
+								experience_id: item.item_id,
+								job_title: item.title,
+								company_name: item.subtitle,
+								location: item.location,
+								start_date: item.start_date,
+								optional_end_date: item.end_date,
+								is_current: item.is_current,
+								description: item.description,
+								priority: item.priority,
+								is_visible: item.is_visible,
+								tags: item.tags,
+								notes: item.notes,
+							}) as Experience
+					);
 
-				return experienceItems;
-			} catch (error) {
-				ProcessMajorError(error, navigate, fault);
-				return [];
+					return experienceItems;
+				} catch (error) {
+					ProcessMajorError(error, navigate, fault);
+					return [];
+				}
+			},
+			{
+				cache_key:
+					"ExperienceList:/resume/items/by-type?item_type=experience",
 			}
-		},
-		{
-			cache_key:
-				"ExperienceList:/resume/items/by-type?item_type=experience",
-		}
-	);
+		);
+
+	function refetch() {
+		refetch_items();
+		props.on_refetch();
+	}
 
 	const [editing_experiences, updateEditingExperiences] = createStore(
 		[] as number[]

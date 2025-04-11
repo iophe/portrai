@@ -836,7 +836,12 @@ function Resume(props: ResumeProps) {
 								/>
 							</Match>
 							<Match when={section() === "settings"}>
-								<ResumeSettings offline />
+								<ResumeSettings
+									offline
+									on_refetch={() => {
+										refresh_signal((x) => (x + 1) % 100);
+									}}
+								/>
 							</Match>
 						</Switch>
 					</Show>

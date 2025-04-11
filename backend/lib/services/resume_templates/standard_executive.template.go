@@ -19,6 +19,7 @@ func ConvertResumeToLatex_STANDARD_EXECUTIVE(resume_data utils.InputResumeData, 
 	template_data["education"] = format_education_section(resume_data.Educations)
 	template_data["experience"] = format_experience_section(resume_data.Experiences)
 	template_data["skills"] = format_skills_section(resume_data.Skills)
+	template_data["languages"] = format_languages_section(resume_data.Skills)
 	template_data["projects"] = format_projects_section(resume_data.Projects)
 	template_data["certificates"] = format_certificates_section(resume_data.Certificates)
 
@@ -53,9 +54,9 @@ const resume_template = `\documentclass[10pt, letterpaper]{article}
 \usepackage{fontawesome5} % for using icons
 \usepackage{amsmath} % for math
 \usepackage[
-    pdftitle={ <<escape_latex .user.FullName>>'s CV},
+    pdftitle={Portrai_Resume_<<escape_latex .user.FullName>>},
     pdfauthor={ <<escape_latex .user.FullName>> },
-    pdfcreator={LaTeX with RenderCV},
+    pdfcreator={Portrai},
     colorlinks=true,
     urlcolor=primaryColor
 ]{hyperref} % for links, metadata and bookmarks
@@ -324,21 +325,27 @@ const resume_template = `\documentclass[10pt, letterpaper]{article}
         \vspace{0.2 cm}
     <<end>>
     <<end>>
-    
+        
     <<if .skills>>
     \section{Skills}
-    <<range $type, $skills := .skills>>
-        \begin{onecolentry}
-            \textbf{<<escape_latex $type>>}
-            \begin{highlights}
-                <<range $index, $skill := $skills>>
-                    \item \textbf{<<escape_latex $skill.name>>}<<if $skill.description>>: <<escape_latex $skill.description>><<end>> % <<if $skill.level>> - \textit{<<escape_latex $skill.level>>}<<end>>
-                <<end>>
-            \end{highlights}
-        \end{onecolentry}
+    \begin{highlights}
+        <<range $index, $skill := .skills>>
+            \item \textbf{<<escape_latex $skill.name>>}<<if $skill.description>>: <<escape_latex $skill.description>><<end>> % <<if $skill.level>> - \textit{<<escape_latex $skill.level>>}<<end>>
+        <<end>>
+    \end{highlights}
     <<end>>
+
+   <<if .languages>>
+    \section{Languages}
+    \begin{onecolentry}
+        \begin{highlights}
+            <<range $index, $language := .languages>>
+                \item \textbf{<<escape_latex $language.name>>}<<if $language.level>> - \textit{<<escape_latex $language.level>>}<<end>><<if $language.description>> \textit{(<<escape_latex $language.description>>)}<<end>>
+            <<end>>
+        \end{highlights}
+    \end{onecolentry}
     <<end>>
-    
+
     <<if .certificates>>
     \section{Certifications}
     <<range .certificates>>

@@ -9,6 +9,7 @@ interface GenerateResumeFromProfileProps {
 	on_generated: (data: GenerateResumeFromProfileData) => void;
 	start_loading: () => void;
 	end_loading: () => void;
+	activate : () => void;
 }
 
 export function GenerateResumeFromProfile(
@@ -29,6 +30,7 @@ export function GenerateResumeFromProfile(
 					onClick={async () => {
 						set_is_generating(true);
 						props.start_loading();
+						props.activate();
 						try {
 							const response = await api.post(
 								"/generate/from-profile/" + props.template_name

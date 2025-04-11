@@ -1,4 +1,4 @@
-import { createSignal, Show, onMount } from "solid-js";
+import { createSignal, Show, onMount, Accessor, createEffect } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 import { useFault } from "@components/fault";
 import BackIcon from "@assets/icons/back.svg?component-solid";
@@ -12,7 +12,9 @@ import { ResumeLoader } from "./resume_loading.view";
 import { DB_JOB_SPECIFIC_RESUMES } from "@utils/db/resume.db";
 import { db } from "@utils/db/db";
 
-interface ResumeAIPreviewProps {}
+interface ResumeAIPreviewProps {
+	refresh_signal: Accessor<number>;
+}
 
 function ResumeAIPreview(props: ResumeAIPreviewProps) {
 	const navigate = useNavigate();
@@ -30,9 +32,10 @@ function ResumeAIPreview(props: ResumeAIPreviewProps) {
 	const [is_loading, set_is_loading] = createSignal<boolean>(false);
 	const [job_description, set_job_description] = createSignal<string>("");
 	const [conversation_id, set_conversation_id] = createSignal<
-		string | undefined
+	string | undefined
 	>();
-
+	
+	const [view, set_view] = createSignal<string | undefined>();
 	// Load saved data from localStorage on component mount
 	onMount(() => {
 		const saved_job_description = localStorage.getItem("job_description");
@@ -52,6 +55,31 @@ function ResumeAIPreview(props: ResumeAIPreviewProps) {
 			localStorage.setItem("template_name", "standard-executive");
 		}
 	});
+
+	const [old_refresh_signal, update_old_refresh_signal] = createSignal(0);
+	createEffect(async () => {
+		if (!props.refresh_signal) return;
+		if (props.refresh_signal() !== old_refresh_signal()) {
+			update_old_refresh_signal(props.refresh_signal());
+			
+			if (view() === "profile") {
+				try {
+					const response = await api.post(
+						"/generate/from-profile/" + template
+					);
+					const result = response.data as GenerateResumeFromProfileData;
+					handleProfileGenerated(result);
+				} catch (error) {
+					fault.major({
+						message: "Failed to build your resume from profile",
+					});
+				}
+			} else if (view() === "ai") {
+
+			}
+		}
+	});
+
 	// Function to load a saved resume using the conversation ID
 	const loadSavedResume = async (conv_id: string) => {
 		try {
@@ -218,6 +246,7 @@ function ResumeAIPreview(props: ResumeAIPreviewProps) {
 		set_resume_title(undefined);
 		set_resume_id(undefined);
 		set_job_description("");
+		set_view(undefined);
 	};
 
 	return (
@@ -228,6 +257,7 @@ function ResumeAIPreview(props: ResumeAIPreviewProps) {
 					start_loading={() => set_is_loading(true)}
 					end_loading={() => set_is_loading(false)}
 					on_generated={handleProfileGenerated}
+					activate={() => set_view("profile")}
 				/>
 
 				<aside class="flex justify-center items-center w-full">
@@ -242,6 +272,7 @@ function ResumeAIPreview(props: ResumeAIPreviewProps) {
 					end_loading={() => set_is_loading(false)}
 					on_generated={handleAIGenerated}
 					initial_job_description={job_description()}
+					activate={() => set_view("ai")}
 				/>
 			</Show>
 

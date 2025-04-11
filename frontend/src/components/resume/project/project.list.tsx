@@ -12,13 +12,15 @@ import { createCachedResource } from "@utils/cache";
 import { useNavigate } from "@solidjs/router";
 import { ProcessMajorError } from "@utils/payment";
 
-interface ProjectListProps {}
+interface ProjectListProps {
+	on_refetch: () => void;
+}
 
 export function ProjectList(props: ProjectListProps) {
 	const fault = useFault();
 	const navigate = useNavigate();
 
-	const [projects, { mutate, refetch }] = createCachedResource(
+	const [projects, { mutate, refetch: refetch_items }] = createCachedResource(
 		async () => {
 			try {
 				const response = await api.get(
@@ -48,7 +50,10 @@ export function ProjectList(props: ProjectListProps) {
 		},
 		{ cache_key: "ProjectList:/resume/items/by-type?item_type=project" }
 	);
-
+	function refetch() {
+		refetch_items();
+		props.on_refetch();
+	}
 	const [editing_projects, updateEditingProjects] = createStore(
 		[] as number[]
 	);

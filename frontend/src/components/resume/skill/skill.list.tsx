@@ -12,13 +12,15 @@ import { createCachedResource } from "@utils/cache";
 import { useNavigate } from "@solidjs/router";
 import { ProcessMajorError } from "@utils/payment";
 
-interface SkillListProps {}
+interface SkillListProps {
+	on_refetch: () => void;
+}
 
 export function SkillList(props: SkillListProps) {
 	const fault = useFault();
 	const navigate = useNavigate();
 
-	const [skills, { mutate, refetch }] = createCachedResource(
+	const [skills, { mutate, refetch: refetch_items }] = createCachedResource(
 		async () => {
 			try {
 				const response = await api.get(
@@ -47,7 +49,10 @@ export function SkillList(props: SkillListProps) {
 		},
 		{ cache_key: "SkillList:/resume/items/by-type?item_type=skill" }
 	);
-
+	function refetch() {
+		refetch_items();
+		props.on_refetch();
+	}
 	const [editing_skills, updateEditingSkills] = createStore([] as number[]);
 
 	const [creating_new, createNew] = createSignal(false);

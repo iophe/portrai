@@ -30,7 +30,7 @@ type Education struct {
 
 type Skill struct {
 	SkillName          string   `json:"skill_name" jsonschema_description:"Name of skill, using terminology from job description"`
-	OptionalSkillType  string   `json:"optional_skill_type" jsonschema_description:"Category of skill"`
+	OptionalSkillType  string   `json:"optional_skill_type" jsonschema_description:"Category of skill, do not modify"`
 	OptionalSkillLevel string   `json:"optional_skill_level" jsonschema_description:"Proficiency level"`
 	Description        string   `json:"description" jsonschema_description:"Brief description or context for the skill as it relates to the target position"`
 	Priority           int32    `json:"priority" jsonschema_description:"do not modify"`
