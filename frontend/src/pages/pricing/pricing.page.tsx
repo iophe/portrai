@@ -36,7 +36,7 @@ export const PRICING_PLANS: PricingPlan[] = [
 	{
 		id: "one-month",
 		title: "Career Accelerator",
-		price: 10,
+		price: 9.99,
 		duration: "for one month (no subcription)",
 		features: [
 			"Create 50 AI-optimized professional resumes",
@@ -49,7 +49,7 @@ export const PRICING_PLANS: PricingPlan[] = [
 	{
 		id: "three-month",
 		title: "Career Advantage",
-		price: 20,
+		price: 19.99,
 		duration: "for 3 months (best value)",
 		features: [
 			"Create 100 AI-optimized professional resumes",
@@ -100,13 +100,21 @@ export function PricingCard(plan: PricingPlan) {
 				</h2>
 				<p class="text-center">
 					{plan.price > 0 && (
-						<span class="text-base font-medium text-gray-600">
-							{plan.price === 10 ? "Only " : ""}
+						<span class="text-base font-medium text-gray-600 alice-regular">
+							{plan.price < 11 ? "Only " : ""}
 						</span>
 					)}
 					{plan.price > 0 && (
-						<strong class="text-4xl font-extrabold text-forest-900">
-							{plan.price}€
+						<strong class="text-4xl font-extrabold text-forest-700 alice-regular">
+							{plan.price.toString().split(".")[0]}
+							{plan.price.toString().split(".").length > 1 ? (
+								<span class="text-3xl opacity-70">
+									.{plan.price.toString().split(".")[1]}
+								</span>
+							) : (
+								""
+							)}
+							€
 						</strong>
 					)}
 					<span class="text-base font-medium text-gray-600">
