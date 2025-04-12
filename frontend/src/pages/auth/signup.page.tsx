@@ -92,6 +92,8 @@ function SignupPage(props: SignupPageProps) {
 						import.meta.env.VITE_DEFAULT_PLAN
 					) {
 						Pay({ plan: location.query.payment as string });
+					} else {
+						navigate("/", { replace: true });
 					}
 				} else if (location.query.redirectTo) {
 					navigate("/" + location.query.redirectTo, {
