@@ -52,10 +52,7 @@ function AsideSelector(props: AsideSelectorProps) {
 		<aside class="flex gap-4 overflow-auto justify-between text-sm pb-2 border-b-2 border-forest-900">
 			<For each={navItems}>
 				{(item) => (
-					<Motion.button
-						hover={{ scale: 1.04 }}
-						press={{ scale: 0.98 }}
-						transition={{ duration: 0.1 }}
+					<button
 						onclick={() => props.set_section(item.id)}
 						class="overflow-clip flex flex-no-wrap gap-2 items-center rounded opacity-70 hover:opacity-100"
 						classList={{
@@ -104,7 +101,7 @@ function AsideSelector(props: AsideSelectorProps) {
 								}}
 							></Motion>
 						</Show>
-					</Motion.button>
+					</button>
 				)}
 			</For>
 		</aside>
