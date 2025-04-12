@@ -10,14 +10,17 @@ import LoadingSpinner from "@components/loading.spinner";
 import HelpIcon from "@assets/icons/help.svg?component-solid";
 import { createCachedResource } from "@utils/cache";
 import { useNavigate } from "@solidjs/router";
+import { ProcessMajorError } from "@utils/api";
 
-interface SkillListProps {}
+interface SkillListProps {
+	on_refetch: () => void;
+}
 
 export function SkillList(props: SkillListProps) {
 	const fault = useFault();
 	const navigate = useNavigate();
 
-	const [skills, { mutate, refetch }] = createCachedResource(
+	const [skills, { mutate, refetch: refetch_items }] = createCachedResource(
 		async () => {
 			try {
 				const response = await api.get(
@@ -40,24 +43,16 @@ export function SkillList(props: SkillListProps) {
 
 				return skillItems as Skill[];
 			} catch (error) {
-				if ((error as AxiosError).status === 402) {
-					navigate("/pricing");
-				}
-				if (
-					(error as AxiosError).status !== 401 &&
-					(error as AxiosError).status !== 402
-				)
-					fault.minor({
-						message:
-							((error as AxiosError).response?.data as any)
-								.error ?? (error as AxiosError).message,
-					});
+				ProcessMajorError(error, navigate, fault);
 				return [];
 			}
 		},
 		{ cache_key: "SkillList:/resume/items/by-type?item_type=skill" }
 	);
-
+	function refetch() {
+		refetch_items();
+		props.on_refetch();
+	}
 	const [editing_skills, updateEditingSkills] = createStore([] as number[]);
 
 	const [creating_new, createNew] = createSignal(false);
@@ -113,21 +108,7 @@ export function SkillList(props: SkillListProps) {
 										item_type: "skill", // Specify the item type
 									});
 								} catch (error) {
-									if ((error as AxiosError).status === 402) {
-										navigate("/pricing");
-									}
-									if (
-										(error as AxiosError).status !== 401 &&
-										(error as AxiosError).status !== 402
-									)
-										fault.minor({
-											message:
-												(
-													(error as AxiosError)
-														.response?.data as any
-												).error ??
-												(error as AxiosError).message,
-										});
+									ProcessMajorError(error, navigate, fault);
 								}
 							}}
 						>
@@ -163,27 +144,11 @@ export function SkillList(props: SkillListProps) {
 											);
 											refetch();
 										} catch (error) {
-											if (
-												(error as AxiosError).status ===
-												402
-											) {
-												navigate("/pricing");
-											}
-											if (
-												(error as AxiosError).status !==
-												401
-											)
-												fault.minor({
-													message:
-														(
-															(
-																error as AxiosError
-															).response
-																?.data as any
-														).error ??
-														(error as AxiosError)
-															.message,
-												});
+											ProcessMajorError(
+												error,
+												navigate,
+												fault
+											);
 										}
 									}}
 									onCancel={() => {

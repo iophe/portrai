@@ -15,6 +15,27 @@ import (
 	futils "github.com/gofiber/fiber/v2/utils"
 )
 
+func RegisterCSRFRoutes(group fiber.Router) {
+	csrf_group := group.Group("/csrf")
+
+	csrf_group.Use(csrf.New(csrf.Config{
+		KeyLookup:         "header:X-Csrf-Token",
+		CookieName:        "csrf_",
+		CookieSameSite:    "Lax",
+		CookieSecure:      utils.SECURE_COOKIE,
+		CookieSessionOnly: true,
+		KeyGenerator:      futils.UUIDv4,
+		Expiration:        1 * time.Hour,
+		Session:           sess.SESSIONS,
+		SessionKey:        "fiber.csrf.token",
+		HandlerContextKey: "fiber.csrf.handler",
+	}))
+
+	csrf_group.Get("/update", func(c *fiber.Ctx) error {
+		return c.SendStatus(fiber.StatusOK)
+	})
+}
+
 func RegisterAuthRoutes(group fiber.Router) {
 	auth_group := group.Group("/auth")
 	auth_group.Use(csrf.New(csrf.Config{
@@ -69,7 +90,7 @@ func RegisterAuthRoutes(group fiber.Router) {
 					"error": "Invalid request body",
 				})
 			}
-			return handlers.HandleVerifyEmail(c, data)
+			return handlers.HandleVerifyEmail(c, data, &db.DB)
 		},
 	)
 
@@ -95,6 +116,25 @@ func RegisterAuthRoutes(group fiber.Router) {
 			}
 			res, err := handlers.HandleEmailSignin(c, data)
 			if err != nil {
+				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+					"error": err.Error(),
+				})
+			}
+			return c.Status(fiber.StatusOK).JSON(res)
+		},
+	)
+
+	auth_group.Post("/signup/google",
+		func(c *fiber.Ctx) error {
+			var data handlers.GoogleSignupData
+			if err := c.BodyParser(&data); err != nil {
+				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+					"error": "Invalid request body",
+				})
+			}
+			res, err := handlers.HandleGoogleSignup(c, data, &db.DB)
+			if err != nil {
+				slog.Error("Google sign-in failed", "err", err)
 				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 					"error": err.Error(),
 				})

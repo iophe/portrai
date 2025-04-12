@@ -1,0 +1,19 @@
+
+services:
+  portrai_latex_server:
+    profiles: [dev,backend,latex]
+    build:
+      context: .
+      dockerfile: dockerfile.dev
+    container_name: portrai_latex_server
+    restart: unless-stopped
+    ports:
+      - "3780:3780"
+    environment:
+      KONG_AUTH_HOST : ${KONG_AUTH_HOST}
+      KONG_AUTH_PORT : ${KONG_AUTH_PORT}
+      SERVICE_ROLE_KEY : ${SERVICE_ROLE_KEY}
+      JWT_SECRET : ${JWT_SECRET}
+      PORT : 3780
+    volumes:
+      - ./latex_logs:/tmp

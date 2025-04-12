@@ -24,9 +24,11 @@ import LoadingSpinner from "@components/loading.spinner";
 import { ItemText } from "./utils/item.content";
 import { clear_cache, createCachedResource } from "@utils/cache";
 import { useNavigate } from "@solidjs/router";
+import { ProcessMajorError } from "@utils/api";
 
 interface ResumeSettingsProps {
 	offline?: boolean;
+	on_refetch: () => void;
 }
 
 function ResumeSettings(props: ResumeSettingsProps) {
@@ -42,7 +44,7 @@ function ResumeSettings(props: ResumeSettingsProps) {
 		website: undefined,
 		description: undefined,
 	});
-	const [versions, { mutate, refetch: refetch_version }] =
+	const [versions, { mutate, refetch: refetch_version_inner }] =
 		createCachedResource(
 			async () => {
 				if (props.offline) return;
@@ -52,53 +54,54 @@ function ResumeSettings(props: ResumeSettingsProps) {
 
 					return result;
 				} catch (error) {
-					if ((error as AxiosError).status === 402) {
-						navigate("/pricing");
-					}
-					if (
-						(error as AxiosError).status !== 401 &&
-						(error as AxiosError).status !== 402
-					)
-						fault.minor({
-							message:
-								((error as AxiosError).response?.data as any)
-									.error ?? (error as AxiosError).message,
-						});
+					ProcessMajorError(error, navigate, fault);
 					return;
 				}
 			},
 			{ cache_key: "ResumeSettings:/resume/versions" },
 			(result) => {
 				if (result) {
-					update_version_form_data("current_version", result.version);
+					update_version_form_data(
+						"current_version",
+						result.current_version
+					);
 				}
 			}
 		);
+	function refetch_version() {
+		refetch_version_inner();
+		props.on_refetch();
+	}
+	const [
+		profile,
+		{ mutate: mutate_profile, refetch: refetch_profile_inner },
+	] = createCachedResource(
+		async () => {
+			try {
+				const response = await api.get("/account/profile");
+				const result = response.data.profile as Profile;
 
-	const [profile, { mutate: mutate_profile, refetch: refetch_profile }] =
-		createCachedResource(
-			async () => {
-				try {
-					const response = await api.get("/account/profile");
-					const result = response.data.profile as Profile;
-
-					return result;
-				} catch (error) {
-					fault.minor({
-						message:
-							((error as AxiosError).response?.data as any)
-								.error ?? (error as AxiosError).message,
-					});
-					return;
-				}
-			},
-			{ cache_key: "/account/profile" },
-			(result) => {
-				if (result) {
-					update_profile_form_data(result);
-				}
+				return result;
+			} catch (error) {
+				fault.minor({
+					message:
+						((error as AxiosError).response?.data as any).error ??
+						(error as AxiosError).message,
+				});
+				return;
 			}
-		);
+		},
+		{ cache_key: "/account/profile" },
+		(result) => {
+			if (result) {
+				update_profile_form_data(result);
+			}
+		}
+	);
+	function refetch_profile() {
+		refetch_profile_inner();
+		props.on_refetch();
+	}
 	const [editing_version, edit_version] = createSignal(false);
 	const [adding_version, add_version] = createSignal(false);
 
@@ -185,7 +188,7 @@ function ResumeSettings(props: ResumeSettingsProps) {
 												Active Resume
 											</h3>
 											<strong class="text-forest-900 text-lg">
-												{versions()?.version ||
+												{versions()?.current_version ||
 													"Default"}
 											</strong>
 										</hgroup>
@@ -242,41 +245,17 @@ function ResumeSettings(props: ResumeSettingsProps) {
 																{
 																	version:
 																		versions()
-																			?.version,
+																			?.current_version,
 																}
 															);
 															refetch_version();
 															refetch_profile();
 														} catch (error) {
-															if (
-																(
-																	error as AxiosError
-																).status === 402
-															) {
-																navigate(
-																	"/pricing"
-																);
-															}
-															if (
-																(
-																	error as AxiosError
-																).status !== 401
-															)
-																fault.minor({
-																	message:
-																		(
-																			(
-																				error as AxiosError
-																			)
-																				.response
-																				?.data as any
-																		)
-																			.error ??
-																		(
-																			error as AxiosError
-																		)
-																			.message,
-																});
+															ProcessMajorError(
+																error,
+																navigate,
+																fault
+															);
 														}
 													}
 												}}
@@ -309,7 +288,7 @@ function ResumeSettings(props: ResumeSettingsProps) {
 															{
 																old_name:
 																	versions()
-																		?.version,
+																		?.current_version,
 																new_name:
 																	version_form_data.current_version,
 															}
@@ -317,33 +296,11 @@ function ResumeSettings(props: ResumeSettingsProps) {
 														refetch_version();
 														refetch_profile();
 													} catch (error) {
-														if (
-															(
-																error as AxiosError
-															).status === 402
-														) {
-															navigate(
-																"/pricing"
-															);
-														}
-														if (
-															(
-																error as AxiosError
-															).status !== 401
-														)
-															fault.minor({
-																message:
-																	(
-																		(
-																			error as AxiosError
-																		)
-																			.response
-																			?.data as any
-																	).error ??
-																	(
-																		error as AxiosError
-																	).message,
-															});
+														ProcessMajorError(
+															error,
+															navigate,
+															fault
+														);
 													}
 													edit_version(false);
 												}}
@@ -396,10 +353,12 @@ function ResumeSettings(props: ResumeSettingsProps) {
 												class="text-xs px-2 py-1 rounded"
 												classList={{
 													"bg-forest-50 text-forest-800":
-														versions()?.version ===
+														versions()
+															?.current_version ===
 														version,
 													"bg-gray-100 text-gray-600":
-														versions()?.version !==
+														versions()
+															?.current_version !==
 														version,
 												}}
 											>
@@ -419,35 +378,11 @@ function ResumeSettings(props: ResumeSettingsProps) {
 															refetch_version();
 															refetch_profile();
 														} catch (error) {
-															if (
-																(
-																	error as AxiosError
-																).status === 402
-															) {
-																navigate(
-																	"/pricing"
-																);
-															}
-															if (
-																(
-																	error as AxiosError
-																).status !== 401
-															)
-																fault.minor({
-																	message:
-																		(
-																			(
-																				error as AxiosError
-																			)
-																				.response
-																				?.data as any
-																		)
-																			.error ??
-																		(
-																			error as AxiosError
-																		)
-																			.message,
-																});
+															ProcessMajorError(
+																error,
+																navigate,
+																fault
+															);
 														}
 													}}
 												>
@@ -468,69 +403,6 @@ function ResumeSettings(props: ResumeSettingsProps) {
 										<AddIcon class="min-w-fit fill-forest-800 " />
 									</Motion.button>
 								</menu>
-								{/* <div class="flex flex-row gap-4 items-center w-full">
-											<FormSelect
-												value={""}
-												on_input={async (value) => {
-													update_version_form_data(
-														"selected_version",
-														value
-													);
-
-													if (
-														!version_form_data.selected_version ||
-														version_form_data.selected_version ===
-															version_form_data.current_version
-													)
-														return;
-													try {
-														await api.post(
-															"/resume/change-version",
-															{
-																version:
-																	version_form_data.selected_version,
-															}
-														);
-														clear_cache();
-														refetch_version();
-														refetch_profile();
-													} catch (error) {
-														if (
-															(
-																error as AxiosError
-															).status === 402
-														) {
-															navigate(
-																"/pricing"
-															);
-														}
-														if (
-															(
-																error as AxiosError
-															).status !== 401
-														)
-															fault.minor({
-																message:
-																	(
-																		(
-																			error as AxiosError
-																		)
-																			.response
-																			?.data as any
-																	).error ??
-																	(
-																		error as AxiosError
-																	).message,
-															});
-													}
-												}}
-												choices={
-													versions()?.all_versions ??
-													[]
-												}
-												select_label="Select a version"
-											/>
-										</div> */}
 							</fieldset>
 
 							<Presence>
@@ -605,39 +477,11 @@ function ResumeSettings(props: ResumeSettingsProps) {
 																	false
 																);
 															} catch (error) {
-																if (
-																	(
-																		error as AxiosError
-																	).status ===
-																	402
-																) {
-																	navigate(
-																		"/pricing"
-																	);
-																}
-																if (
-																	(
-																		error as AxiosError
-																	).status !==
-																	401
-																)
-																	fault.minor(
-																		{
-																			message:
-																				(
-																					(
-																						error as AxiosError
-																					)
-																						.response
-																						?.data as any
-																				)
-																					.error ??
-																				(
-																					error as AxiosError
-																				)
-																					.message,
-																		}
-																	);
+																ProcessMajorError(
+																	error,
+																	navigate,
+																	fault
+																);
 															}
 														}}
 													>

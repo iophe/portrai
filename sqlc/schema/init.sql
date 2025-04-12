@@ -18,6 +18,7 @@ CREATE TABLE public.resume_versions (
   version_id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
   user_id uuid NOT NULL REFERENCES auth.users ON DELETE CASCADE,
   version text NOT NULL DEFAULT 'main',
+  resume_uid uuid,
   CONSTRAINT unique_user_version_id UNIQUE (user_id, version_id),
   CONSTRAINT unique_user_version UNIQUE (user_id, version)
 );
@@ -211,7 +212,9 @@ create table payment.products (
   -- A URL of the product image in Stripe, meant to be displayable to the customer.
   image text,
   -- Set of key-value pairs, used to store additional information about the object in a structured format.
-  metadata jsonb
+  metadata jsonb,
+  -- Usage limit of this product per features
+  usage jsonb
 );
 
 
@@ -264,7 +267,9 @@ create table payment.prices (
     -- User payment validity, once expired the user loses access to paying features
     expired_at timestamp with time zone,
     -- Set of key-value pairs, used to store additional information about the object in a structured format.
-    metadata jsonb
+    metadata jsonb,
+    -- Set of key-value pairs, used to store additional information about the object in a structured format.
+    usage jsonb not null default '{}'
 );
 
 create table payment.payments (
@@ -327,7 +332,11 @@ CREATE TRIGGER on_user_payment_creation
 create table payment.usage_history (
   user_id uuid not null references auth.users on delete cascade,
   input_token_used bigint not null default 0,
+  cached_input_token_used bigint not null default 0,
+  cached_input_token_created bigint not null default 0,
   price_rate_input_token decimal not null,
+  price_rate_cached_input_token_created decimal not null,
+  price_rate_cached_input_token_used decimal not null,
   output_token_used bigint not null default 0,
   price_rate_output_token decimal not null,
   model text not null,
@@ -341,8 +350,16 @@ RETURNS TRIGGER AS $$
 BEGIN
     UPDATE payment.usage_analytics
     SET 
-        total_cost_per_payment = total_cost_per_payment + (NEW.input_token_used * NEW.price_rate_input_token) + (NEW.output_token_used * NEW.price_rate_output_token),
-        all_time_cost = all_time_cost + (NEW.input_token_used * NEW.price_rate_input_token) + (NEW.output_token_used * NEW.price_rate_output_token)
+        total_cost_per_payment = total_cost_per_payment 
+          + (NEW.input_token_used * NEW.price_rate_input_token)
+          + (NEW.output_token_used * NEW.price_rate_output_token)
+          + (NEW.cached_input_token_used * NEW.price_rate_cached_input_token_used)
+          + (NEW.cached_input_token_created * NEW.price_rate_cached_input_token_created),
+        all_time_cost = all_time_cost
+          + (NEW.input_token_used * NEW.price_rate_input_token)
+          + (NEW.output_token_used * NEW.price_rate_output_token)
+          + (NEW.cached_input_token_used * NEW.price_rate_cached_input_token_used)
+          + (NEW.cached_input_token_created * NEW.price_rate_cached_input_token_created)
     WHERE user_id = NEW.user_id;
 
     RETURN NEW;
@@ -432,3 +449,96 @@ EXECUTE FUNCTION update_updated_at_column();
 CREATE INDEX resume_items_user_idx ON public.resume_items(user_id);
 CREATE INDEX resume_items_type_idx ON public.resume_items(item_type);
 CREATE INDEX resume_items_user_type_idx ON public.resume_items(user_id, item_type);
+
+
+-- STORED RESUME
+
+-- Function for profiles table
+CREATE OR REPLACE FUNCTION public.update_resume_uid_on_profile_change()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Update the resume_uid in resume_versions with a new UUID
+    UPDATE public.resume_versions
+    SET resume_uid = gen_random_uuid()::uuid
+    WHERE version_id = NEW.version_id
+    AND user_id = NEW.user_id;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function for resume_items table
+CREATE OR REPLACE FUNCTION public.update_resume_uid_on_resume_item_change()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Update the resume_uid in resume_versions with a new UUID
+    UPDATE public.resume_versions
+    SET resume_uid = gen_random_uuid()::uuid
+    WHERE version_id = NEW.version_id
+    AND user_id = NEW.user_id;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function for resume_item_notes table
+CREATE OR REPLACE FUNCTION public.update_resume_uid_on_resume_note_change()
+RETURNS TRIGGER AS $$
+DECLARE
+    item_version_id bigint;
+BEGIN
+    -- Get the version_id from the parent resume_item
+    SELECT version_id INTO item_version_id
+    FROM public.resume_items 
+    WHERE item_id = NEW.item_id;
+    
+    -- Update the resume_uid in resume_versions with a new UUID
+    UPDATE public.resume_versions
+    SET resume_uid = gen_random_uuid()::uuid
+    WHERE version_id = item_version_id
+    AND user_id = NEW.user_id;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Trigger for profiles table
+CREATE OR REPLACE TRIGGER update_resume_uid_on_profile_change
+AFTER INSERT OR UPDATE ON public.profiles
+FOR EACH ROW
+EXECUTE FUNCTION public.update_resume_uid_on_profile_change();
+
+-- Trigger for resume_items table
+CREATE OR REPLACE TRIGGER update_resume_uid_on_resume_item_change
+AFTER INSERT OR UPDATE ON public.resume_items
+FOR EACH ROW
+EXECUTE FUNCTION public.update_resume_uid_on_resume_item_change();
+
+-- Trigger for resume_item_notes table
+CREATE OR REPLACE TRIGGER update_resume_uid_on_resume_note_change
+AFTER INSERT OR UPDATE ON public.resume_item_notes
+FOR EACH ROW
+EXECUTE FUNCTION public.update_resume_uid_on_resume_note_change();
+
+
+CREATE TABLE public.generated_resume(
+  resume_file_id uuid PRIMARY KEY not null,
+  filename text not null default '',
+  user_id uuid NOT NULL REFERENCES auth.users ON DELETE CASCADE,
+  resume_uid uuid,
+  template_name text not null,
+
+  -- resume_title text,
+  -- job_description text,
+  -- cover_letter text,
+
+  created_at timestamp with time zone DEFAULT current_timestamp
+);
+CREATE INDEX generated_resume_resume_uid ON public.generated_resume(resume_uid);
+CREATE INDEX generated_resume_user_id ON public.generated_resume(user_id);
+
+-- Add latex bucket for the pdf resume
+insert into storage.buckets
+  (id, name)
+values
+  ('latex', 'latex');

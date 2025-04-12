@@ -98,6 +98,15 @@ func (ns NullPricingType) Value() (driver.Value, error) {
 	return string(ns.PricingType), nil
 }
 
+type GeneratedResume struct {
+	ResumeFileID uuid.UUID          `json:"resume_file_id"`
+	Filename     string             `json:"filename"`
+	UserID       uuid.UUID          `json:"user_id"`
+	ResumeUid    pgtype.UUID        `json:"resume_uid"`
+	TemplateName string             `json:"template_name"`
+	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+}
+
 type PaymentCustomer struct {
 	ID               pgtype.UUID `json:"id"`
 	StripeCustomerID pgtype.Text `json:"stripe_customer_id"`
@@ -138,6 +147,7 @@ type PaymentProduct struct {
 	Description    pgtype.Text     `json:"description"`
 	Image          pgtype.Text     `json:"image"`
 	Metadata       []byte          `json:"metadata"`
+	Usage          []byte          `json:"usage"`
 }
 
 type PaymentUsageAnalytic struct {
@@ -147,15 +157,19 @@ type PaymentUsageAnalytic struct {
 }
 
 type PaymentUsageHistory struct {
-	UserID               uuid.UUID          `json:"user_id"`
-	InputTokenUsed       int64              `json:"input_token_used"`
-	PriceRateInputToken  pgtype.Numeric     `json:"price_rate_input_token"`
-	OutputTokenUsed      int64              `json:"output_token_used"`
-	PriceRateOutputToken pgtype.Numeric     `json:"price_rate_output_token"`
-	Model                string             `json:"model"`
-	Duration             pgtype.Interval    `json:"duration"`
-	Valid                bool               `json:"valid"`
-	Date                 pgtype.Timestamptz `json:"date"`
+	UserID                           uuid.UUID          `json:"user_id"`
+	InputTokenUsed                   int64              `json:"input_token_used"`
+	CachedInputTokenUsed             int64              `json:"cached_input_token_used"`
+	CachedInputTokenCreated          int64              `json:"cached_input_token_created"`
+	PriceRateInputToken              pgtype.Numeric     `json:"price_rate_input_token"`
+	PriceRateCachedInputTokenCreated pgtype.Numeric     `json:"price_rate_cached_input_token_created"`
+	PriceRateCachedInputTokenUsed    pgtype.Numeric     `json:"price_rate_cached_input_token_used"`
+	OutputTokenUsed                  int64              `json:"output_token_used"`
+	PriceRateOutputToken             pgtype.Numeric     `json:"price_rate_output_token"`
+	Model                            string             `json:"model"`
+	Duration                         pgtype.Interval    `json:"duration"`
+	Valid                            bool               `json:"valid"`
+	Date                             pgtype.Timestamptz `json:"date"`
 }
 
 type PaymentValidity struct {
@@ -165,6 +179,7 @@ type PaymentValidity struct {
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 	ExpiredAt pgtype.Timestamptz `json:"expired_at"`
 	Metadata  []byte             `json:"metadata"`
+	Usage     []byte             `json:"usage"`
 }
 
 type Profile struct {
@@ -210,9 +225,10 @@ type ResumeItemNote struct {
 }
 
 type ResumeVersion struct {
-	VersionID int64     `json:"version_id"`
-	UserID    uuid.UUID `json:"user_id"`
-	Version   string    `json:"version"`
+	VersionID int64       `json:"version_id"`
+	UserID    uuid.UUID   `json:"user_id"`
+	Version   string      `json:"version"`
+	ResumeUid pgtype.UUID `json:"resume_uid"`
 }
 
 type User struct {

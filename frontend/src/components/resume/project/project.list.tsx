@@ -10,14 +10,17 @@ import LoadingSpinner from "@components/loading.spinner";
 import HelpIcon from "@assets/icons/help.svg?component-solid";
 import { createCachedResource } from "@utils/cache";
 import { useNavigate } from "@solidjs/router";
+import { ProcessMajorError } from "@utils/api";
 
-interface ProjectListProps {}
+interface ProjectListProps {
+	on_refetch: () => void;
+}
 
 export function ProjectList(props: ProjectListProps) {
 	const fault = useFault();
 	const navigate = useNavigate();
 
-	const [projects, { mutate, refetch }] = createCachedResource(
+	const [projects, { mutate, refetch: refetch_items }] = createCachedResource(
 		async () => {
 			try {
 				const response = await api.get(
@@ -41,24 +44,16 @@ export function ProjectList(props: ProjectListProps) {
 
 				return projectItems as Project[];
 			} catch (error) {
-				if ((error as AxiosError).status === 402) {
-					navigate("/pricing");
-				}
-				if (
-					(error as AxiosError).status !== 401 &&
-					(error as AxiosError).status !== 402
-				)
-					fault.minor({
-						message:
-							((error as AxiosError).response?.data as any)
-								.error ?? (error as AxiosError).message,
-					});
+				ProcessMajorError(error, navigate, fault);
 				return [];
 			}
 		},
 		{ cache_key: "ProjectList:/resume/items/by-type?item_type=project" }
 	);
-
+	function refetch() {
+		refetch_items();
+		props.on_refetch();
+	}
 	const [editing_projects, updateEditingProjects] = createStore(
 		[] as number[]
 	);
@@ -121,24 +116,11 @@ export function ProjectList(props: ProjectListProps) {
 											}
 										);
 									} catch (error) {
-										if (
-											(error as AxiosError).status === 402
-										) {
-											navigate("/pricing");
-										}
-										if (
-											(error as AxiosError).status !== 401
-										)
-											fault.minor({
-												message:
-													(
-														(error as AxiosError)
-															.response
-															?.data as any
-													).error ??
-													(error as AxiosError)
-														.message,
-											});
+										ProcessMajorError(
+											error,
+											navigate,
+											fault
+										);
 									}
 								}}
 							>
@@ -177,28 +159,11 @@ export function ProjectList(props: ProjectListProps) {
 												);
 												refetch();
 											} catch (error) {
-												if (
-													(error as AxiosError)
-														.status === 402
-												) {
-													navigate("/pricing");
-												}
-												if (
-													(error as AxiosError)
-														.status !== 401
-												)
-													fault.minor({
-														message:
-															(
-																(
-																	error as AxiosError
-																).response
-																	?.data as any
-															).error ??
-															(
-																error as AxiosError
-															).message,
-													});
+												ProcessMajorError(
+													error,
+													navigate,
+													fault
+												);
 											}
 										}}
 										onCancel={() => {

@@ -6,6 +6,7 @@ import { Pay } from "@utils/payment";
 import { Match, onMount, Switch } from "solid-js";
 import Footer from "@components/footer.default";
 import { useFault } from "@components/fault";
+import { AxiosError } from "axios";
 
 interface SigninPageProps {}
 
@@ -56,7 +57,12 @@ function SigninPage(props: SigninPageProps) {
 				localStorage.setItem("IS_AUTHENTICATED", "true");
 
 				if (location.query.payment) {
-					Pay({ plan: location.query.payment as string });
+					if (
+						location.query.payment !=
+						import.meta.env.VITE_DEFAULT_PLAN
+					) {
+						Pay({ plan: location.query.payment as string });
+					}
 				} else {
 					navigate("/", { replace: true });
 				}
@@ -95,6 +101,7 @@ function SigninPage(props: SigninPageProps) {
 							data-callback="handleGoogleSignin"
 							data-auto_prompt="false"
 							data-width="100%"
+							class="w-full"
 						></div>
 
 						<div
@@ -133,14 +140,33 @@ function SigninPage(props: SigninPageProps) {
 									"true"
 								);
 								if (location.query.payment) {
-									Pay({
-										plan: location.query.payment as string,
-									});
+									if (
+										location.query.payment !=
+										import.meta.env.VITE_DEFAULT_PLAN
+									) {
+										Pay({
+											plan: location.query
+												.payment as string,
+										});
+									}
 								} else {
 									navigate("/", { replace: true });
 								}
 							} catch (error) {
 								console.error("Signin error:", error);
+								const msg =
+									((
+										(error as AxiosError).response
+											?.data as any
+									).error as string) ?? "";
+								if (msg.includes("Email not confirmed")) {
+									fault.major({
+										message:
+											"Please confirm your email address",
+									});
+									navigate("/verify-account");
+									return;
+								}
 								fault.major({
 									message:
 										"Invalid password or email address",
