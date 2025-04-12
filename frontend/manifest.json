@@ -1,0 +1,21 @@
+{
+    "name": "Portrai",
+    "short_name": "Portrai",
+    "description": "AI-powered resume and cover letter builder that creates tailored documents to increase interview chances.",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#000000",
+    "icons": [
+      {
+        "src": "/favicon.ico",
+        "sizes": "64x64 32x32 24x24 16x16",
+        "type": "image/x-icon"
+      }
+    ],
+    "orientation": "portrait",
+    "categories": ["productivity", "business", "tools"],
+    "related_applications": [],
+    "prefer_related_applications": false,
+    "lang": "en-US"
+  }
