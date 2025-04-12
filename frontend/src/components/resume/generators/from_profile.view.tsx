@@ -9,7 +9,7 @@ interface GenerateResumeFromProfileProps {
 	on_generated: (data: GenerateResumeFromProfileData) => void;
 	start_loading: () => void;
 	end_loading: () => void;
-	activate : () => void;
+	activate: () => void;
 }
 
 export function GenerateResumeFromProfile(

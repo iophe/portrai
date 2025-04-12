@@ -10,7 +10,7 @@ import HelpIcon from "@assets/icons/help.svg?component-solid";
 import LoadingSpinner from "@components/loading.spinner";
 import { createCachedResource } from "@utils/cache";
 import { useNavigate } from "@solidjs/router";
-import { ProcessMajorError } from "@utils/payment";
+import { ProcessMajorError } from "@utils/api";
 
 interface CertificateListProps {
 	on_refetch: () => void;

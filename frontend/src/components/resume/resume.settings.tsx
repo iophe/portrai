@@ -24,7 +24,7 @@ import LoadingSpinner from "@components/loading.spinner";
 import { ItemText } from "./utils/item.content";
 import { clear_cache, createCachedResource } from "@utils/cache";
 import { useNavigate } from "@solidjs/router";
-import { ProcessMajorError } from "@utils/payment";
+import { ProcessMajorError } from "@utils/api";
 
 interface ResumeSettingsProps {
 	offline?: boolean;

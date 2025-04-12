@@ -6,6 +6,7 @@ import { Pay } from "@utils/payment";
 import { Match, onMount, Switch } from "solid-js";
 import Footer from "@components/footer.default";
 import { useFault } from "@components/fault";
+import { AxiosError } from "axios";
 
 interface SigninPageProps {}
 
@@ -153,6 +154,19 @@ function SigninPage(props: SigninPageProps) {
 								}
 							} catch (error) {
 								console.error("Signin error:", error);
+								const msg =
+									((
+										(error as AxiosError).response
+											?.data as any
+									).error as string) ?? "";
+								if (msg.includes("Email not confirmed")) {
+									fault.major({
+										message:
+											"Please confirm your email address",
+									});
+									navigate("/verify-account");
+									return;
+								}
 								fault.major({
 									message:
 										"Invalid password or email address",

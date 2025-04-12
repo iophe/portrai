@@ -18,7 +18,7 @@ import {
 	FormTextArea,
 } from "../utils/form.input";
 import { useNavigate } from "@solidjs/router";
-import { ProcessMajorError } from "@utils/payment";
+import { ProcessMajorError } from "@utils/api";
 
 interface CertificateViewProps {
 	certificate: Certificate;

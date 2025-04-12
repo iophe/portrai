@@ -7,7 +7,7 @@ import PlusIcon from "@assets/icons/plus.svg?component-solid";
 import MinusIcon from "@assets/icons/minus.svg?component-solid";
 import api from "@utils/api";
 import LoadingSpinner from "@components/loading.spinner";
-import { ProcessMajorError } from "@utils/payment";
+import { ProcessMajorError } from "@utils/api";
 
 interface AIConversationProps {
 	template_name: string;
@@ -18,7 +18,7 @@ interface AIConversationProps {
 	start_loading: () => void;
 	end_loading: () => void;
 	initial_job_description?: string;
-	activate : () => void;
+	activate: () => void;
 }
 
 export default function AIConversation(props: AIConversationProps) {

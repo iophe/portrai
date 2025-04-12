@@ -32,9 +32,9 @@ function ResumeAIPreview(props: ResumeAIPreviewProps) {
 	const [is_loading, set_is_loading] = createSignal<boolean>(false);
 	const [job_description, set_job_description] = createSignal<string>("");
 	const [conversation_id, set_conversation_id] = createSignal<
-	string | undefined
+		string | undefined
 	>();
-	
+
 	const [view, set_view] = createSignal<string | undefined>();
 	// Load saved data from localStorage on component mount
 	onMount(() => {
@@ -61,13 +61,14 @@ function ResumeAIPreview(props: ResumeAIPreviewProps) {
 		if (!props.refresh_signal) return;
 		if (props.refresh_signal() !== old_refresh_signal()) {
 			update_old_refresh_signal(props.refresh_signal());
-			
+
 			if (view() === "profile") {
 				try {
 					const response = await api.post(
 						"/generate/from-profile/" + template
 					);
-					const result = response.data as GenerateResumeFromProfileData;
+					const result =
+						response.data as GenerateResumeFromProfileData;
 					handleProfileGenerated(result);
 				} catch (error) {
 					fault.major({
@@ -75,7 +76,6 @@ function ResumeAIPreview(props: ResumeAIPreviewProps) {
 					});
 				}
 			} else if (view() === "ai") {
-
 			}
 		}
 	});

@@ -213,8 +213,11 @@ function LandingPage(props: LandingPageProps) {
 								href="#pricing"
 								onClick={(e) => {
 									e.preventDefault();
-									const element = document.getElementById("pricing");
-									element?.scrollIntoView({ behavior: "smooth" });
+									const element =
+										document.getElementById("pricing");
+									element?.scrollIntoView({
+										behavior: "smooth",
+									});
 								}}
 								class="bg-forest-900 text-white px-8 py-4 rounded-lg text-lg font-medium inline-flex items-center gap-3 hover:shadow-lg transition-all group"
 							>
@@ -571,10 +574,11 @@ function LandingPage(props: LandingPageProps) {
 								</div>
 								<div class="text-center">
 									<h3 class="font-medium text-lg text-forest-900">
-									Minimalist
+										Minimalist
 									</h3>
 									<p class="text-gray-600 pt-2">
-									Simple and elegant design with focus on content.
+										Simple and elegant design with focus on
+										content.
 									</p>
 								</div>
 							</article>
@@ -588,10 +592,10 @@ function LandingPage(props: LandingPageProps) {
 								</div>
 								<div class="text-center">
 									<h3 class="font-medium text-lg text-forest-900">
-									Light
+										Light
 									</h3>
 									<p class="text-gray-600 pt-2">
-									Light and temperate design.
+										Light and temperate design.
 									</p>
 								</div>
 							</article>
@@ -623,7 +627,10 @@ function LandingPage(props: LandingPageProps) {
 				</section>
 
 				{/* Pricing Section */}
-				<section id={"pricing"} class="w-full py-16 bg-white rounded-xl shadow-md border border-gray-100 p-8">
+				<section
+					id={"pricing"}
+					class="w-full py-16 bg-white rounded-xl shadow-md border border-gray-100 p-8"
+				>
 					<header class="text-center mb-12">
 						<h2 class="text-3xl font-bold text-forest-900 mb-4">
 							Simple Pricing
@@ -637,9 +644,9 @@ function LandingPage(props: LandingPageProps) {
 						class="w-full flex flex-col md:flex-row justify-center items-center gap-8"
 						aria-label="Pricing plans"
 					>
-					<For each={PRICING_PLANS}>
-						{(plan) => <PricingCard {...plan} />}
-					</For>
+						<For each={PRICING_PLANS}>
+							{(plan) => <PricingCard {...plan} />}
+						</For>
 					</section>
 				</section>
 

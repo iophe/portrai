@@ -7,7 +7,7 @@ import NoteIcon from "@assets/icons/notes.svg?component-solid";
 import CloseIcon from "@assets/icons/close.svg?component-solid";
 import HelpIcon from "@assets/icons/help.svg?component-solid";
 import { useNavigate } from "@solidjs/router";
-import { ProcessMajorError } from "@utils/payment";
+import { ProcessMajorError } from "@utils/api";
 
 interface NoteFormProps {
 	section_type: string;

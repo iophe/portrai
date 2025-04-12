@@ -45,7 +45,7 @@ func HandleEmailSignup(c *fiber.Ctx, data EmailSignupData, db *database.Database
 		return AuthResponse{}, fmt.Errorf("Email and password are required")
 	}
 	data.EmailConfirm = true
-	data.RedirectTo = "http:localhost:5050/verify-account"
+	data.RedirectTo = utils.APP_URL + "/verify-account"
 	response, err := makeSupabaseRequest("POST", "signup", data)
 	if err != nil {
 		return AuthResponse{}, fmt.Errorf("failed to communicate with auth service: %w", err)
@@ -1132,9 +1132,11 @@ func createSupabaseAdminToken() (string, error) {
 }
 
 type SupabaseError struct {
-	Message   string `json:"message,omitempty"`
-	Error     string `json:"error,omitempty"`
-	ErrorCode string `json:"error_code,omitempty"`
+	Message    string `json:"message,omitempty"`
+	Msg        string `json:"msg,omitempty"`
+	Error      string `json:"error,omitempty"`
+	ErrorCode  string `json:"error_code,omitempty"`
+	HTTPStatus string `json:"code,omitempty"`
 }
 
 func makeSupabaseRequest(method, endpoint string, data interface{}) (*http.Response, error) {
@@ -1172,6 +1174,9 @@ func handleSupabaseResponse(response *http.Response) (AuthResponse, error) {
 		}
 		slog.Error("Supabase error while handling the request", "body", string(body_bytes))
 		error_msg := error_resp.Message
+		if error_msg == "" {
+			error_msg = error_resp.Msg
+		}
 		if error_msg == "" {
 			error_msg = error_resp.Error
 		}

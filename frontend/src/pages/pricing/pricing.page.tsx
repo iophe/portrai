@@ -63,16 +63,12 @@ export const PRICING_PLANS: PricingPlan[] = [
 
 // Pricing card component for DRY code
 export function PricingCard(plan: PricingPlan) {
-	if (
-		localStorage.getItem("IS_AUTHENTICATED") &&
-		plan.id === "free-trial"
-	) {
+	if (localStorage.getItem("IS_AUTHENTICATED") && plan.id === "free-trial") {
 		return;
 	}
 	const navigate = useNavigate();
 	const [loading, setLoading] = createSignal<boolean>(false);
 	const [activePlan, setActivePlan] = createSignal<string | null>(null);
-
 
 	const handlePayment = async (plan: string) => {
 		try {
@@ -94,7 +90,6 @@ export function PricingCard(plan: PricingPlan) {
 		}
 	};
 
-
 	const isLoading = () => loading() && activePlan() === plan.envKey;
 
 	return (
@@ -115,9 +110,7 @@ export function PricingCard(plan: PricingPlan) {
 						</strong>
 					)}
 					<span class="text-base font-medium text-gray-600">
-						{plan.price > 0
-							? " " + plan.duration
-							: plan.duration}
+						{plan.price > 0 ? " " + plan.duration : plan.duration}
 					</span>
 				</p>
 				<ul
@@ -154,10 +147,9 @@ export function PricingCard(plan: PricingPlan) {
 			</section>
 		</article>
 	);
-};
+}
 
 function Pricing(props: PricingProps) {
-
 	return (
 		<main class="md:px-48 px-8 mx-auto justify-items-center  p-4 flex flex-col gap-4 md:h-screen min-h-screen">
 			<Header />
