@@ -1,6 +1,7 @@
 import { A } from "@solidjs/router";
 import { Show } from "solid-js";
 import LogoIcon from "@assets/icons/logo.svg?component-solid";
+import HomeIcon from "@assets/icons/home.svg?component-solid";
 import { api } from "@utils/api";
 import DefaultHeader from "@components/header.default";
 
@@ -23,13 +24,19 @@ function Header(props: HeaderProps) {
 			</A>
 			<div class="md:w-fit w-full text-sm md:text-xl flex flex-row md:gap-16 md:justify-center justify-between items-center">
 				<A
+					href="/"
+					class="tracking-widest hidden md:block"
+					activeClass="text-forest-600"
+				>
+					<HomeIcon class="fill-forest-500"/>
+				</A>
+				<A
 					href="/history"
 					class="tracking-widest"
 					activeClass="text-forest-600"
 				>
 					<h1>History</h1>
 				</A>
-
 				<A
 					href="/my-templates"
 					class="tracking-widest"

@@ -1132,11 +1132,10 @@ func createSupabaseAdminToken() (string, error) {
 }
 
 type SupabaseError struct {
-	Message    string `json:"message,omitempty"`
-	Msg        string `json:"msg,omitempty"`
-	Error      string `json:"error,omitempty"`
-	ErrorCode  string `json:"error_code,omitempty"`
-	HTTPStatus string `json:"code,omitempty"`
+	Message   string `json:"message,omitempty"`
+	Msg       string `json:"msg,omitempty"`
+	Error     string `json:"error,omitempty"`
+	ErrorCode string `json:"error_code,omitempty"`
 }
 
 func makeSupabaseRequest(method, endpoint string, data interface{}) (*http.Response, error) {
@@ -1168,7 +1167,9 @@ func handleSupabaseResponse(response *http.Response) (AuthResponse, error) {
 
 	if response.StatusCode >= 400 {
 		var error_resp SupabaseError
+		slog.Info(string(body_bytes))
 		if err := json.Unmarshal(body_bytes, &error_resp); err != nil {
+			slog.Error("", "err", err)
 			return AuthResponse{}, fmt.Errorf("auth service error (status %d): failed to parse error response",
 				response.StatusCode)
 		}
