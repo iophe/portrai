@@ -7,7 +7,6 @@ import (
 	db_lib "backend/lib/services/db"
 	"backend/sqlc_gen"
 	"context"
-	"fmt"
 	"log/slog"
 	"strconv"
 	"time"
@@ -403,29 +402,8 @@ type modelAndPrices struct {
 
 func assertUsabilityAndGetModel(user_id uuid.UUID, query_ctx context.Context, queries *sqlc_gen.Queries) (modelAndPrices, error) {
 
-	paid_price, err := queries.GetPriceForPayment(query_ctx, user_id)
-	if err != nil {
-		return modelAndPrices{}, fmt.Errorf("Failed to retrieve the cost")
-	}
-
-	cost, err := queries.GetConsumptionCost(query_ctx, user_id)
-	if err != nil {
-		return modelAndPrices{}, fmt.Errorf("Failed to retrieve the cost")
-	}
-	float_cost, err := cost.Float64Value()
-	if err != nil {
-		return modelAndPrices{}, fmt.Errorf("Failed to retrieve the cost")
-	}
-	if float_cost.Float64 >= (float64(paid_price.Int64)/100)*PROFIT_MARGIN {
-		return modelAndPrices{}, fmt.Errorf("maximum usage limits has been reach")
-	}
-
 	var model anthropic.Model
-	if float_cost.Float64 <= (float64(paid_price.Int64)/100)*HIGH_TIER {
-		model = anthropic.ModelClaude3_5SonnetLatest
-	} else {
-		model = anthropic.ModelClaude3_5HaikuLatest
-	}
+	model = anthropic.ModelClaude3_7SonnetLatest
 
 	var priceRateInputToken float64
 	var priceRateOutputToken float64
@@ -437,7 +415,7 @@ func assertUsabilityAndGetModel(user_id uuid.UUID, query_ctx context.Context, qu
 	var numeric_priceRateCachedInputTokenUsed pgtype.Numeric
 
 	switch model {
-	case anthropic.ModelClaude3_5SonnetLatest:
+	case anthropic.ModelClaude3_7SonnetLatest:
 		priceRateInputToken = 0.000003 // $3 per million input tokens
 		numeric_priceRateInputToken.Scan(strconv.FormatFloat(priceRateInputToken, 'f', -1, 64))
 		priceRateOutputToken = 0.000015 // $15 per million output tokens
