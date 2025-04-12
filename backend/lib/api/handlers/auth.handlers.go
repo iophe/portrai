@@ -3,10 +3,10 @@ package handlers
 import (
 	"backend/lib/api/middlewares"
 	ca "backend/lib/services/cache"
-	"backend/lib/services/db"
 	database "backend/lib/services/db"
 	"backend/lib/services/mailer"
 	"backend/lib/utils"
+	"backend/sqlc_gen"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -17,6 +17,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 // Response structure from Supabase Auth
@@ -38,16 +39,15 @@ type EmailSignupData struct {
 	DataInRedirect bool   `json:"data_in_redirect,omitempty"` // Whether to include user data in redirect
 }
 
-func HandleEmailSignup(c *fiber.Ctx, data EmailSignupData, db *db.Database) (AuthResponse, error) {
+func HandleEmailSignup(c *fiber.Ctx, data EmailSignupData, db *database.Database) (AuthResponse, error) {
 	// Validate input
 	if data.Email == "" || data.Password == "" {
 		return AuthResponse{}, fmt.Errorf("Email and password are required")
 	}
 	data.EmailConfirm = true
-	data.RedirectTo = "http:localhost:5050/verify-account"
+	data.RedirectTo = utils.APP_URL + "/verify-account"
 	response, err := makeSupabaseRequest("POST", "signup", data)
 	if err != nil {
-		slog.Error("")
 		return AuthResponse{}, fmt.Errorf("failed to communicate with auth service: %w", err)
 	}
 
@@ -55,15 +55,6 @@ func HandleEmailSignup(c *fiber.Ctx, data EmailSignupData, db *db.Database) (Aut
 	if err != nil {
 		return AuthResponse{}, err
 	}
-
-	middlewares.SetAuthCookies(c, &middlewares.RefreshResponse{
-		AccessToken:  auth_response.AccessToken,
-		RefreshToken: auth_response.RefreshToken,
-	})
-	slog.Info("successfully signed up",
-		"email", auth_response.User.Email,
-		"id", auth_response.User.Id,
-	)
 	return auth_response, nil
 }
 
@@ -103,6 +94,104 @@ func HandleEmailSignin(c *fiber.Ctx, data EmailSigninData) (AuthResponse, error)
 type GoogleSignupData struct {
 	IdToken       string `json:"id_token"`
 	TermsAccepted bool   `json:"terms_accepted"`
+}
+
+func HandleGoogleSignup(c *fiber.Ctx, data GoogleSignupData, db *database.Database) (AuthResponse, error) {
+	if data.IdToken == "" {
+		return AuthResponse{}, fmt.Errorf("id_token is required")
+	}
+
+	// Prepare request data for Supabase (GoTrue)
+	requestBody := map[string]interface{}{
+		"id_token": data.IdToken,
+		"provider": "google",
+	}
+
+	// Make request to Supabase Auth (GoTrue) using the token endpoint with OAuth grant type
+	response, err := makeSupabaseRequest("POST", "token?grant_type=id_token", requestBody)
+	if err != nil {
+		return AuthResponse{}, fmt.Errorf("failed to communicate with auth service: %w", err)
+	}
+
+	auth_response, err := handleSupabaseResponse(response)
+	if err != nil {
+		return AuthResponse{}, err
+	}
+
+	var token *jwt.Token
+	token, err = jwt.ParseWithClaims(auth_response.AccessToken, &middlewares.UserClaims{}, func(token *jwt.Token) (interface{}, error) {
+		// Verify signing algorithm
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+
+		// Get JWT secret from environment
+		secret := utils.JWT_SECRET
+		if secret == "" {
+			return nil, fmt.Errorf("JWT_SECRET not set")
+		}
+
+		return []byte(secret), nil
+	})
+	if err != nil {
+		return AuthResponse{}, err
+	}
+
+	claims, ok := token.Claims.(*middlewares.UserClaims)
+	if !ok {
+		return AuthResponse{}, err
+	}
+
+	c.Locals("USER_CLAIMS", *claims)
+
+	user_id, err := middlewares.GetUserID(c)
+	if err != nil {
+		return AuthResponse{}, err
+	}
+
+	tx, err := db.Pool.Begin(c.Context())
+	if err != nil {
+		return AuthResponse{}, fmt.Errorf("Failed to start transaction")
+	}
+	defer tx.Rollback(c.Context())
+	queries := sqlc_gen.New(tx)
+
+	price, err := queries.GetPriceByPlan(c.Context(), utils.DEFAULT_PLAN)
+	if err != nil {
+		return AuthResponse{}, err
+	}
+	period, err := queries.GetValidityPeroidByProductID(c.Context(), price.ProductID.String)
+	if err != nil {
+		return AuthResponse{}, err
+	}
+	period_duration := database.IntervalToDuration(period)
+
+	usage, err := queries.GetFeaturesUsageByProductID(c.Context(), price.ProductID.String)
+	if err != nil {
+		return AuthResponse{}, err
+	}
+	err = queries.UpsertPaymentValidity(c.Context(), sqlc_gen.UpsertPaymentValidityParams{
+		PaymentID: uuid.NewString(),
+		UserID:    user_id,
+		PriceID:   price.ID,
+		ExpiredAt: time.Now().Add(period_duration),
+		Metadata:  []byte("{}"),
+		Usage:     usage,
+	})
+	if err != nil {
+		slog.Error("UpsertPaymentValidity", "err", err)
+		return AuthResponse{}, err
+	}
+
+	if err = tx.Commit(c.Context()); err != nil {
+		return AuthResponse{}, err
+	}
+	slog.Info("successfully signed in with Google",
+		"email", auth_response.User.Email,
+		"id", auth_response.User.Id,
+	)
+
+	return auth_response, nil
 }
 
 func HandleGoogleSignin(c *fiber.Ctx, data GoogleSignupData) (AuthResponse, error) {
@@ -230,7 +319,7 @@ func HandleLogout(c *fiber.Ctx) error {
 
 	// Clear auth cookies regardless of Supabase response
 	middlewares.ClearAuthCookies(c)
-	middlewares.ClearPaymentCookies(c)
+	middlewares.ClearActiveAccountCookies(c)
 
 	slog.Info("successfully signed out", "email", claims.Email, "id", claims.UserId)
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
@@ -286,7 +375,7 @@ func HandleDeleteAccount(c *fiber.Ctx, cache *ca.Cache, db *database.Database) e
 	}
 	// Clear auth cookies after successful deletion
 	middlewares.ClearAuthCookies(c)
-	middlewares.ClearPaymentCookies(c)
+	middlewares.ClearActiveAccountCookies(c)
 
 	slog.Info("successfully deleted", "id", user_id)
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
@@ -350,7 +439,7 @@ type VerifyEmailData struct {
 }
 
 // VerifyEmail handles email verification token
-func HandleVerifyEmail(c *fiber.Ctx, data VerifyEmailData) error {
+func HandleVerifyEmail(c *fiber.Ctx, data VerifyEmailData, db *database.Database) error {
 	if data.Token == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Token is required",
@@ -385,7 +474,7 @@ func HandleVerifyEmail(c *fiber.Ctx, data VerifyEmailData) error {
 	// Handle response
 	auth_response, err := handleSupabaseResponse(response)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),
 		})
 	}
@@ -400,11 +489,96 @@ func HandleVerifyEmail(c *fiber.Ctx, data VerifyEmailData) error {
 		Email: auth_response.User.Email,
 	})
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+	var token *jwt.Token
+	token, err = jwt.ParseWithClaims(auth_response.AccessToken, &middlewares.UserClaims{}, func(token *jwt.Token) (interface{}, error) {
+		// Verify signing algorithm
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+
+		// Get JWT secret from environment
+		secret := utils.JWT_SECRET
+		if secret == "" {
+			return nil, fmt.Errorf("JWT_SECRET not set")
+		}
+
+		return []byte(secret), nil
+	})
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),
 		})
 	}
 
+	claims, ok := token.Claims.(*middlewares.UserClaims)
+	if !ok {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	c.Locals("USER_CLAIMS", *claims)
+
+	user_id, err := middlewares.GetUserID(c)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	tx, err := db.Pool.Begin(c.Context())
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+	defer tx.Rollback(c.Context())
+	queries := sqlc_gen.New(tx)
+
+	price, err := queries.GetPriceByPlan(c.Context(), utils.DEFAULT_PLAN)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+	period, err := queries.GetValidityPeroidByProductID(c.Context(), price.ProductID.String)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+	period_duration := database.IntervalToDuration(period)
+
+	usage, err := queries.GetFeaturesUsageByProductID(c.Context(), price.ProductID.String)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+	err = queries.UpsertPaymentValidity(c.Context(), sqlc_gen.UpsertPaymentValidityParams{
+		PaymentID: uuid.NewString(),
+		UserID:    user_id,
+		PriceID:   price.ID,
+		ExpiredAt: time.Now().Add(period_duration),
+		Metadata:  []byte("{}"),
+		Usage:     usage,
+	})
+	if err != nil {
+		slog.Error("UpsertPaymentValidity", "err", err)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	if err = tx.Commit(c.Context()); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
 	slog.Info("Successfully verified email",
 		"email", auth_response.User.Email,
 		"id", auth_response.User.Id,
@@ -959,6 +1133,7 @@ func createSupabaseAdminToken() (string, error) {
 
 type SupabaseError struct {
 	Message   string `json:"message,omitempty"`
+	Msg       string `json:"msg,omitempty"`
 	Error     string `json:"error,omitempty"`
 	ErrorCode string `json:"error_code,omitempty"`
 }
@@ -992,12 +1167,17 @@ func handleSupabaseResponse(response *http.Response) (AuthResponse, error) {
 
 	if response.StatusCode >= 400 {
 		var error_resp SupabaseError
+		slog.Info(string(body_bytes))
 		if err := json.Unmarshal(body_bytes, &error_resp); err != nil {
+			slog.Error("", "err", err)
 			return AuthResponse{}, fmt.Errorf("auth service error (status %d): failed to parse error response",
 				response.StatusCode)
 		}
 		slog.Error("Supabase error while handling the request", "body", string(body_bytes))
 		error_msg := error_resp.Message
+		if error_msg == "" {
+			error_msg = error_resp.Msg
+		}
 		if error_msg == "" {
 			error_msg = error_resp.Error
 		}

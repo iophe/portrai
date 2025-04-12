@@ -49,7 +49,7 @@ function AsideSelector(props: AsideSelectorProps) {
 	];
 
 	return (
-		<aside class="flex gap-4 justify-between text-sm pb-2 border-b-2 border-forest-900">
+		<aside class="flex gap-4 overflow-auto justify-between text-sm pb-2 border-b-2 border-forest-900">
 			<For each={navItems}>
 				{(item) => (
 					<Motion.button
@@ -57,7 +57,7 @@ function AsideSelector(props: AsideSelectorProps) {
 						press={{ scale: 0.98 }}
 						transition={{ duration: 0.1 }}
 						onclick={() => props.set_section(item.id)}
-						class="relative flex flex-wrap gap-2 items-center rounded opacity-70 hover:opacity-100"
+						class="overflow-clip flex flex-no-wrap gap-2 items-center rounded opacity-70 hover:opacity-100"
 						classList={{
 							"bg-forest-50 px-4 py-2 opacity-100":
 								props.section() === item.id,
@@ -65,7 +65,7 @@ function AsideSelector(props: AsideSelectorProps) {
 					>
 						<Show when={!item.hideLabel}>
 							<label
-								class="hidden md:block"
+								class="hidden md:block text-ellipsis overflow-clip"
 								classList={{
 									"text-forest-900":
 										props.section() === item.id,
@@ -78,7 +78,7 @@ function AsideSelector(props: AsideSelectorProps) {
 						</Show>
 
 						<item.icon
-							class=""
+							class="min-w-fit"
 							classList={{
 								"fill-forest-900": props.section() === item.id,
 								"fill-forest-700": props.section() !== item.id,

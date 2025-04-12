@@ -30,7 +30,7 @@ func RegisterResumeRoutes(group fiber.Router) {
 		HandlerContextKey: "fiber.csrf.handler",
 	}))
 
-	resume_group.Use(middlewares.Protected(), middlewares.PayingFeature())
+	resume_group.Use(middlewares.Protected(), middlewares.ActiveAccount())
 
 	// Main resume data endpoint
 	resume_group.Get("/data", func(c *fiber.Ctx) error {
@@ -48,15 +48,17 @@ func RegisterResumeRoutes(group fiber.Router) {
 		}
 		return handlers.HandleChangeResumeVersion(data, c, &db.DB)
 	})
-	resume_group.Post("/add-version", func(c *fiber.Ctx) error {
-		var data handlers.AddResumeVersionData
-		if err := c.BodyParser(&data); err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "Invalid request body",
-			})
-		}
-		return handlers.HandleAddResumeVersion(data, c, &db.DB)
-	})
+	resume_group.Post("/add-version",
+		middlewares.PayingFeature(middlewares.RESUME_VERSIONING, &db.DB),
+		func(c *fiber.Ctx) error {
+			var data handlers.AddResumeVersionData
+			if err := c.BodyParser(&data); err != nil {
+				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+					"error": "Invalid request body",
+				})
+			}
+			return handlers.HandleAddResumeVersion(data, c, &db.DB)
+		})
 	resume_group.Post("/delete-version", func(c *fiber.Ctx) error {
 		var data handlers.DeleteResumeVersionData
 		if err := c.BodyParser(&data); err != nil {

@@ -4,19 +4,18 @@ import (
 	ca "backend/lib/services/cache"
 	"backend/lib/utils"
 	"context"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"strings"
+	"log/slog"
 	"time"
 
 	"github.com/anthropics/anthropic-sdk-go"
 	"github.com/anthropics/anthropic-sdk-go/option"
 	"github.com/google/uuid"
-	"github.com/redis/go-redis/v9"
+	"github.com/invopop/jsonschema"
 )
 
-var ANTHROPIC *anthropic.Client = anthropic.NewClient(
+var ANTHROPIC anthropic.Client = anthropic.NewClient(
 	option.WithAPIKey(utils.ANTHROPIC_SECRET_KEY),
 )
 
@@ -162,9 +161,10 @@ When rewriting content for each section:
    - Highlight collaborative aspects if teamwork is emphasized in job
    - Include metrics and outcomes that demonstrate job-relevant skills
 
-## Output JSON Structure
+### Tool Usage Instructions
 
-After completing your analysis, compile the transformed information into this JSON structure:
+1. Organize the analyzed information into the required format for the tool
+2. Call the 'write_json_resume' tool with the following parameters:
 
 json
 {
@@ -241,335 +241,730 @@ json
 - Focus on ethical optimization - never fabricate experience or qualifications
 - Target 95%+ keyword match with job description
 - Keep descriptions concise, impactful, and achievement-focused
+- The resume must fit in one page unless requested otherwise
 	`
 	EN_INIT_PROMPT_TEMPLATE = `
-Here is the user's resume data that we'll use for all future job descriptions: %s
-	`
+The user's resume data we'll use: 
+<USER_RESUME_DATA>
+%s
+<USER_RESUME_DATA/>
+`
+	EN_JOB_DESCRIPTION_TEMPLATE = `
+The following job description, will be used when the user ask for creating the resume and the cover letter.
+<JOB_DESCRIPTION>
+	%s
+<JOB_DESCRIPTION/>
+`
+
+	EN_CREATE_RESUME_WITH_INSTRUCTION_TEMPLATE = `
+Based on the following instruction from the user :
+<INSTRUCTION>
+	%s
+<INSTRUCTION/>
+Please analyze the job description and select the most relevant experiences, skills,
+projects, certificates, and education from the user's data, to create a optimized and tailored made resume.
+First Use the 'write_json_resume' tool to create the resume.
+Then Use the 'write_conversation_title' tool to create the title of the resume.
+`
+
+	EN_CREATE_RESUME_TEMPLATE = `
+Please analyze the job description and select the most relevant experiences, skills,
+projects, certificates, and education from the user's data, to create a optimized and tailored made resume.
+First Use the 'write_json_resume' tool to create the resume.
+Then Use the 'write_conversation_title' tool to create the title of the resume.
+`
+
+	EN_COMMENT_RESUME_PROMPT_TEMPLATE = `
+Based on the following comment from the user :
+<COMMENT>
+	%s
+<COMMENT/>
+Please update the resume to create a optimized and tailored made resume that respond to the user's comment.
+Use the 'write_json_resume' tool to create the resume.
+`
+
+	EN_COVER_LETTER_WITH_INSTRUCTION_PROMPT_TEMPLATE = `
+Based on the following instruction from the user :
+<INSTRUCTION>
+	%s
+<INSTRUCTION/>
+Please analyze the job description and the resume to create a optimized and tailored made cover letter.
+Use the 'write_cover_letter' tool to create the resume.
+`
+
+	EN_COVER_LETTER_PROMPT_TEMPLATE = `
+Please analyze the job description and the resume to create a optimized and tailored made cover letter.
+Use the 'write_cover_letter' tool to create the resume.
+`
+
+	EN_COMMENT_LETTER_PROMPT_TEMPLATE = `
+Based on the following comment from the user :
+<COMMENT>
+	%s
+<COMMENT/>
+Please update the cover letter to create a optimized and tailored made cover letter that respond to the user's comment.
+Use the 'write_cover_letter' tool to create the resume.
+`
 )
 
-type OutputResumeData struct {
-	Experiences []struct {
-		CompanyName     string   `json:"company_name"`
-		JobTitle        string   `json:"job_title"`
-		Location        string   `json:"location"`
-		StartDate       string   `json:"start_date"`
-		OptionalEndDate string   `json:"optional_end_date"`
-		IsCurrent       bool     `json:"is_current"`
-		Description     string   `json:"description"`
-		Priority        int32    `json:"priority"`
-		IsVisible       bool     `json:"is_visible"`
-		Tags            []string `json:"tags"`
-	} `json:"experiences"`
-	Educations []struct {
-		School          string   `json:"school"`
-		Degree          string   `json:"degree"`
-		Location        string   `json:"location"`
-		StartDate       string   `json:"start_date"`
-		OptionalEndDate string   `json:"optional_end_date"`
-		IsCurrent       bool     `json:"is_current"`
-		Description     string   `json:"description"`
-		Priority        int32    `json:"priority"`
-		IsVisible       bool     `json:"is_visible"`
-		Tags            []string `json:"tags"`
-	} `json:"educations"`
-	Skills []struct {
-		SkillName          string   `json:"skill_name"`
-		OptionalSkillType  string   `json:"optional_skill_type"`
-		OptionalSkillLevel string   `json:"optional_skill_level"`
-		Description        string   `json:"description"`
-		Priority           int32    `json:"priority"`
-		IsVisible          bool     `json:"is_visible"`
-		Tags               []string `json:"tags"`
-	} `json:"skills"`
-	Certificates []struct {
-		CertificateName     string   `json:"certificate_name"`
-		OptionalIssuer      string   `json:"optional_issuer"`
-		OptionalLocation    string   `json:"optional_location"`
-		OptionalGrantedDate string   `json:"optional_granted_date"`
-		Description         string   `json:"description"`
-		Priority            int32    `json:"priority"`
-		IsVisible           bool     `json:"is_visible"`
-		Tags                []string `json:"tags"`
-	} `json:"certificates"`
-	Projects []struct {
-		ProjectTitle            string   `json:"project_title"`
-		OptionalProjectSubtitle string   `json:"optional_project_subtitle"`
-		StartDate               string   `json:"start_date"`
-		OptionalEndDate         string   `json:"optional_end_date"`
-		IsCurrent               bool     `json:"is_current"`
-		Description             string   `json:"description"`
-		Priority                int32    `json:"priority"`
-		IsVisible               bool     `json:"is_visible"`
-		Tags                    []string `json:"tags"`
-	} `json:"projects"`
-	Letter string `json:"letter"`
-	Title  string `json:"title"`
+func GenerateSchema[T any]() anthropic.ToolInputSchemaParam {
+	reflector := jsonschema.Reflector{
+		AllowAdditionalProperties: false,
+		DoNotReference:            true,
+	}
+	var v T
+
+	schema := reflector.Reflect(v)
+
+	return anthropic.ToolInputSchemaParam{
+		Properties: schema.Properties,
+	}
 }
+
+var WriteJsonResumeInputSchema = GenerateSchema[utils.ToolResumeDataParams]()
+var WriteCoverLetterInputSchema = GenerateSchema[utils.ToolCoverLetterParams]()
 
 const (
 	MAX_HISTORY_MESSAGES = 3
 )
 
 type Usage struct {
-	InputTokenUsed  int
-	OutputTokenUsed int
-	Duration        time.Duration
-	Valid           bool
+	Usage    anthropic.Usage
+	Duration time.Duration
+	Valid    bool
 }
 
-func GenerateResume(
+var EN_SYSTEM_MESSAGE = anthropic.NewAssistantMessage(anthropic.ContentBlockParamUnion{
+	OfRequestTextBlock: &anthropic.TextBlockParam{
+		Text:         EN_SYSTEM_PROMPTS,
+		CacheControl: anthropic.CacheControlEphemeralParam{Type: "ephemeral"},
+	}})
+
+var TOOL_WRITE_JSON_RESUME_NAME = "write_json_resume"
+var TOOL_WRITE_JSON_RESUME_DESCRIPTION = `
+Generates an optimized resume based on the provided structured data.
+This tool transforms the resume information into a professionally formatted document
+tailored to match the target job description.
+The tool handles the formatting and organization of the resume sections
+(experiences, education, skills, certificates, and projects),
+optimizing keyword placement and content presentation for ATS compatibility.
+All content should be tailored to highlight qualifications that match the target job requirements.
+`
+
+var PROMPT_RESUME_RESULT = "The resume has been successfully generated"
+var TOOL_RESULT_RESUME = []anthropic.ToolResultBlockParamContentUnion{
+	{
+		OfRequestTextBlock: &anthropic.TextBlockParam{
+			Text: PROMPT_RESUME_RESULT,
+		},
+	},
+}
+
+var PROMPT_LETER_RESULT = "The cover letter has been successfully generated"
+var TOOL_RESULT_LETTER = []anthropic.ToolResultBlockParamContentUnion{
+	{
+		OfRequestTextBlock: &anthropic.TextBlockParam{
+			Text: PROMPT_LETER_RESULT,
+		},
+	},
+}
+
+var TOOL_WRITE_TITLE_NAME = "write_conversation_title"
+var TOOL_WRITE_TITLE_DESCRIPTION = `
+Store the title of this conversation, for the user to easily remember and use the generated resume based on the job description
+`
+
+var TOOL_WRITE_COVER_LETTER_NAME = "write_cover_letter"
+var TOOL_WRITE_COVER_LETTER_DESCRIPTION = `
+Generates a optimized cover letter based on the provided cover letter.
+`
+
+var EN_TOOLS = []anthropic.ToolUnionParam{
+	{
+		OfTool: &anthropic.ToolParam{
+			Name:        TOOL_WRITE_JSON_RESUME_NAME,
+			Description: anthropic.String(TOOL_WRITE_JSON_RESUME_DESCRIPTION),
+			InputSchema: anthropic.ToolInputSchemaParam{
+				Properties:  WriteJsonResumeInputSchema.Properties,
+				Type:        WriteJsonResumeInputSchema.Type,
+				ExtraFields: WriteJsonResumeInputSchema.ExtraFields,
+			},
+			CacheControl: anthropic.CacheControlEphemeralParam{Type: "ephemeral"},
+		},
+	},
+	{
+		OfTool: &anthropic.ToolParam{
+			Name:        TOOL_WRITE_COVER_LETTER_NAME,
+			Description: anthropic.String(TOOL_WRITE_COVER_LETTER_DESCRIPTION),
+			InputSchema: anthropic.ToolInputSchemaParam{
+				Properties:  WriteCoverLetterInputSchema.Properties,
+				Type:        WriteCoverLetterInputSchema.Type,
+				ExtraFields: WriteCoverLetterInputSchema.ExtraFields,
+			},
+			//CacheControl: anthropic.CacheControlEphemeralParam{Type: "ephemeral"},
+		},
+	},
+}
+
+func StartConversation(
 	ctx context.Context,
 	user_id uuid.UUID,
-	resume_data ca.ResumeCachedData,
+	conversation_id uuid.UUID,
 	job_description string,
-	with_cover_letter bool,
+	resume_data_json string,
 	model anthropic.Model,
 	claude *anthropic.Client,
-	cache *ca.Cache) (OutputResumeData, Usage, error) {
+	cache *ca.Cache,
+) error {
+	conversation := []anthropic.MessageParam{
+		EN_SYSTEM_MESSAGE,
+
+		// Resume data
+		anthropic.NewUserMessage(anthropic.ContentBlockParamUnion{
+			OfRequestTextBlock: &anthropic.TextBlockParam{
+				Text:         fmt.Sprintf(EN_INIT_PROMPT_TEMPLATE, resume_data_json),
+				CacheControl: anthropic.CacheControlEphemeralParam{Type: "ephemeral"},
+			}}),
+		anthropic.NewAssistantMessage(anthropic.NewTextBlock("I understand, I will use this to create the most fitting resume according to the job description and the provided json template")),
+
+		// Job description
+		anthropic.NewUserMessage(anthropic.ContentBlockParamUnion{
+			OfRequestTextBlock: &anthropic.TextBlockParam{
+				Text:         fmt.Sprintf(EN_JOB_DESCRIPTION_TEMPLATE, job_description),
+				CacheControl: anthropic.CacheControlEphemeralParam{Type: "ephemeral"},
+			}}),
+		anthropic.NewAssistantMessage(anthropic.NewTextBlock("I understand, I will use this job description to create the most fitting resume")),
+	}
+
+	// Store conversation
+	err := ca.StoreAI_Conversation(user_id, conversation_id, conversation, ctx, cache)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func CreateResume(
+	ctx context.Context,
+	user_id uuid.UUID,
+	conversation_id uuid.UUID,
+	instruction string,
+	model anthropic.Model,
+	claude *anthropic.Client,
+	cache *ca.Cache) (Usage, error) {
 	start_time := time.Now()
 
-	resume_data_json, err := json.Marshal(resume_data)
+	conversation, err := ca.GetConversation(user_id, conversation_id, ctx, cache)
 	if err != nil {
-		response_time := time.Since(start_time)
-		return OutputResumeData{}, Usage{Duration: response_time, Valid: false}, fmt.Errorf("failed to marshal user data: %w", err)
-	}
-	prompt := fmt.Sprintf(`Based on the following job description, create an optimized resume. 
-	Job Description:
-	%s
-		
-	Please analyze the job description and select the most relevant experiences, skills, projects, certificates, and education from the user's data. Return the response in the specified JSON format, create also a title for this resume based on the provided job description that you will put in the "title" key of the created json.Your response must be a single JSON object no additional text, explanations, or markdown formatting.`,
-		job_description)
-
-	resume_hash := utils.Hash(resume_data_json)
-	cached_resume_hash, err := ca.GetResumeHash(user_id, ctx, cache)
-	if err != nil && err != redis.Nil {
-		response_time := time.Since(start_time)
-		return OutputResumeData{}, Usage{Duration: response_time, Valid: false}, err
+		return Usage{
+			Usage:    anthropic.Usage{},
+			Duration: time.Since(start_time),
+			Valid:    false,
+		}, err
 	}
 
-	ascii_resume_cache := hex.EncodeToString(resume_hash[:])
-
-	var history []anthropic.MessageParam
-	if ascii_resume_cache != cached_resume_hash {
-		// Re-create a new conversation with the new resume
-		history = []anthropic.MessageParam{
-			anthropic.NewAssistantMessage(anthropic.TextBlockParam{
-				Text: anthropic.F(EN_SYSTEM_PROMPTS),
-				CacheControl: anthropic.F(anthropic.CacheControlEphemeralParam{
-					Type: anthropic.F(anthropic.CacheControlEphemeralTypeEphemeral),
-				}),
-				Type: anthropic.F(anthropic.TextBlockParamTypeText),
-			}),
-			anthropic.NewUserMessage(anthropic.TextBlockParam{
-				Text: anthropic.F(fmt.Sprintf(EN_INIT_PROMPT_TEMPLATE, string(resume_data_json))),
-				CacheControl: anthropic.F(anthropic.CacheControlEphemeralParam{
-					Type: anthropic.F(anthropic.CacheControlEphemeralTypeEphemeral),
-				}),
-				Type: anthropic.F(anthropic.TextBlockParamTypeText),
-			}),
-			anthropic.NewAssistantMessage(anthropic.NewTextBlock("I understand, I will use this to create the most fitting resume according to the job description and the provided json template")),
-		}
-		ca.SetResumeHash(user_id, ascii_resume_cache, ctx, cache)
+	if instruction != "" {
+		conversation = append(conversation, anthropic.NewUserMessage(anthropic.ContentBlockParamUnion{
+			OfRequestTextBlock: &anthropic.TextBlockParam{
+				Text: fmt.Sprintf(EN_CREATE_RESUME_WITH_INSTRUCTION_TEMPLATE, instruction),
+			}}))
 	} else {
-		// load the conversation
-		history_json, err := ca.GetJsonConversation(user_id, ctx, cache)
-		if err != nil && err != redis.Nil {
-			ca.DelConversation(user_id, ctx, cache)
-			response_time := time.Since(start_time)
-			return OutputResumeData{}, Usage{Duration: response_time, Valid: false}, err
-		} else if err == redis.Nil {
-			history = []anthropic.MessageParam{
-				anthropic.NewAssistantMessage(anthropic.NewTextBlock(EN_SYSTEM_PROMPTS)),
-				anthropic.NewUserMessage(anthropic.NewTextBlock(fmt.Sprintf(EN_INIT_PROMPT_TEMPLATE, string(resume_data_json)))),
-			}
-		} else {
-			history, err = deserializeHistory(history_json)
-			if err != nil {
-				ca.DelConversation(user_id, ctx, cache)
-				response_time := time.Since(start_time)
-				return OutputResumeData{}, Usage{Duration: response_time, Valid: false}, fmt.Errorf("failed to unmarshal cached conversation history: %w,\nhistory: %s", err, history_json)
-			}
-		}
-	}
-
-	if len(history)+1 > MAX_HISTORY_MESSAGES {
-		// clean conversation
-		history = append(history[:3], anthropic.NewUserMessage(anthropic.TextBlockParam{
-			Text: anthropic.F(prompt),
-			CacheControl: anthropic.F(anthropic.CacheControlEphemeralParam{
-				Type: anthropic.F(anthropic.CacheControlEphemeralTypeEphemeral),
-			}),
-			Type: anthropic.F(anthropic.TextBlockParamTypeText),
-		}))
-	} else {
-		history = append(history, anthropic.NewUserMessage(anthropic.TextBlockParam{
-			Text: anthropic.F(prompt),
-			CacheControl: anthropic.F(anthropic.CacheControlEphemeralParam{
-				Type: anthropic.F(anthropic.CacheControlEphemeralTypeEphemeral),
-			}),
-			Type: anthropic.F(anthropic.TextBlockParamTypeText),
-		}))
+		conversation = append(conversation, anthropic.NewUserMessage(anthropic.ContentBlockParamUnion{
+			OfRequestTextBlock: &anthropic.TextBlockParam{
+				Text: EN_CREATE_RESUME_TEMPLATE,
+			}}))
 	}
 
 	message, err := claude.Messages.New(ctx, anthropic.MessageNewParams{
-		Model:     anthropic.F(model),
-		MaxTokens: anthropic.F(int64(4096)), // Increased token limit for larger responses
-		Messages:  anthropic.F(history),
+		Model:     model,
+		MaxTokens: int64(4096),
+		Messages:  conversation,
+		Tools:     EN_TOOLS,
 	})
-	inputTokenUsed :=
-		int(message.Usage.InputTokens)
-	outputTokenUsed :=
-		int(message.Usage.OutputTokens)
 	if err != nil {
-		response_time := time.Since(start_time)
-		return OutputResumeData{}, Usage{InputTokenUsed: inputTokenUsed, OutputTokenUsed: outputTokenUsed, Duration: response_time, Valid: false}, fmt.Errorf("failed to generate resume: %w", err)
-	}
-
-	history_json, err := serializeHistory(history)
-	if err == nil {
-		err = ca.UpsertConversation(user_id, string(history_json), ctx, cache)
-	}
-
-	content := message.Content[0].Text
-	json_content, err := extractJSONFromString(content)
-	if err != nil {
-		response_time := time.Since(start_time)
-		return OutputResumeData{}, Usage{InputTokenUsed: inputTokenUsed, OutputTokenUsed: outputTokenUsed, Duration: response_time, Valid: false}, fmt.Errorf("failed to extract JSON from response: %w", err)
-	}
-
-	var outputResume OutputResumeData
-	if err := json.Unmarshal([]byte(json_content), &outputResume); err != nil {
-		response_time := time.Since(start_time)
-		return OutputResumeData{}, Usage{InputTokenUsed: inputTokenUsed, OutputTokenUsed: outputTokenUsed, Duration: response_time, Valid: false}, fmt.Errorf("failed to parse AI response: %w", err)
-	}
-	if with_cover_letter {
-		cover_letter_prompt := fmt.Sprintf(`The profile of the user is : %s
-		Please write a cover letter for this job offer,
-		Your response must be a single JSON object with a single key 'letter' with a string as value
-		and with no additional text, explanations, or markdown formatting.`,
-			"",
-		)
-
-		history = append(history, message.ToParam())
-		history = append(history, anthropic.NewUserMessage(anthropic.NewTextBlock(cover_letter_prompt)))
-		cover_letter_message, err := claude.Messages.New(ctx, anthropic.MessageNewParams{
-			Model:     anthropic.F(model),
-			MaxTokens: anthropic.F(int64(4096)),
-			Messages:  anthropic.F(history),
-		})
-		inputTokenUsed +=
-			int(cover_letter_message.Usage.InputTokens)
-		outputTokenUsed +=
-			int(cover_letter_message.Usage.OutputTokens)
-		if err != nil {
-			response_time := time.Since(start_time)
-			return OutputResumeData{}, Usage{InputTokenUsed: inputTokenUsed, OutputTokenUsed: outputTokenUsed, Duration: response_time, Valid: false}, fmt.Errorf("failed to generate resume: %w", err)
-		}
-
-		content := cover_letter_message.Content[0].Text
-		json_content, err = extractJSONFromString(content)
-		if err != nil {
-			response_time := time.Since(start_time)
-			return OutputResumeData{}, Usage{InputTokenUsed: inputTokenUsed, OutputTokenUsed: outputTokenUsed, Duration: response_time, Valid: false}, fmt.Errorf("failed to extract JSON from response: %w", err)
-		}
-
-		var letter struct {
-			Letter string `json:"letter"`
-		}
-		if err := json.Unmarshal([]byte(json_content), &letter); err != nil {
-			response_time := time.Since(start_time)
-			return OutputResumeData{}, Usage{InputTokenUsed: inputTokenUsed, OutputTokenUsed: outputTokenUsed, Duration: response_time, Valid: false}, fmt.Errorf("failed to parse AI response: %w", err)
-		}
-		outputResume.Letter = letter.Letter
-	}
-
-	response_time := time.Since(start_time)
-	return outputResume, Usage{InputTokenUsed: inputTokenUsed, OutputTokenUsed: outputTokenUsed, Duration: response_time, Valid: true}, nil
-}
-
-func extractJSONFromString(s string) (string, error) {
-	// Find the first occurrence of '{'
-	start := strings.Index(s, "{")
-	if start == -1 {
-		return "", fmt.Errorf("no JSON object found in string")
-	}
-
-	// Find the last occurrence of '}'
-	end := strings.LastIndex(s, "}")
-	if end == -1 {
-		return "", fmt.Errorf("no closing brace found in JSON string")
-	}
-
-	// Extract the JSON substring
-	jsonStr := s[start : end+1]
-
-	// Validate that it's a valid JSON
-	var js json.RawMessage
-	if err := json.Unmarshal([]byte(jsonStr), &js); err != nil {
-		return "", fmt.Errorf("invalid JSON structure: %w", err)
-	}
-
-	return jsonStr, nil
-}
-
-type SerializedMessage struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
-}
-
-// serializeHistory converts []anthropic.MessageParam to JSON string
-func serializeHistory(history []anthropic.MessageParam) (string, error) {
-	serialized := make([]SerializedMessage, len(history))
-
-	for i, msg := range history {
-		// Extract role and content from MessageParam
-		var role string
-		if msg.Role.Value.IsKnown() {
-			role = msg.Role.String()
-		}
-
-		// Get content from the first text block
-		var content string
-		if msg.Content.Present && len(msg.Content.Value) > 0 {
-			content = msg.Content.String()
-		}
-
-		serialized[i] = SerializedMessage{
-			Role:    role,
-			Content: content,
-		}
-	}
-
-	// Marshal to JSON
-	jsonBytes, err := json.Marshal(serialized)
-	if err != nil {
-		return "", fmt.Errorf("failed to marshal message history: %w", err)
-	}
-
-	return string(jsonBytes), nil
-}
-
-// deserializeHistory converts JSON string back to []anthropic.MessageParam
-func deserializeHistory(jsonStr string) ([]anthropic.MessageParam, error) {
-	var serialized []SerializedMessage
-
-	// Unmarshal JSON
-	if err := json.Unmarshal([]byte(jsonStr), &serialized); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal message history: %w", err)
-	}
-
-	// Convert back to MessageParam
-	history := make([]anthropic.MessageParam, len(serialized))
-	for i, msg := range serialized {
-		var messageParam anthropic.MessageParam
-		if msg.Role == "assistant" {
-			messageParam = anthropic.NewAssistantMessage(anthropic.NewTextBlock(msg.Content))
+		if message != nil {
+			return Usage{
+				Usage:    message.Usage,
+				Duration: time.Since(start_time),
+				Valid:    false,
+			}, err
 		} else {
-			messageParam = anthropic.NewUserMessage(anthropic.NewTextBlock(msg.Content))
-
+			return Usage{
+				Usage:    anthropic.Usage{},
+				Duration: time.Since(start_time),
+				Valid:    false,
+			}, err
 		}
-		history[i] = messageParam
 	}
 
-	return history, nil
+	conversation = append(conversation, message.ToParam())
+	if message.StopReason == anthropic.MessageStopReasonToolUse {
+		err = analyseToolUse(message, ToolUseCallback{
+			OnResume: func(input utils.ToolResumeDataParams, block anthropic.ContentBlockUnion) error {
+				err = tool_CreateResume(user_id, conversation_id, input, ctx, cache)
+				if err != nil {
+					return err
+				}
+
+				conversation = append(conversation, anthropic.NewUserMessage(anthropic.ContentBlockParamUnion{
+					OfRequestToolResultBlock: &anthropic.ToolResultBlockParam{
+						ToolUseID: block.ID,
+						Content:   TOOL_RESULT_RESUME,
+					}}))
+				return nil
+			},
+		})
+		if err != nil {
+			if message != nil {
+				return Usage{
+					Usage:    message.Usage,
+					Duration: time.Since(start_time),
+					Valid:    false,
+				}, err
+			} else {
+				return Usage{
+					Usage:    anthropic.Usage{},
+					Duration: time.Since(start_time),
+					Valid:    false,
+				}, err
+			}
+		}
+	} else {
+		return Usage{
+			Usage:    message.Usage,
+			Duration: time.Since(start_time),
+			Valid:    false,
+		}, fmt.Errorf("Invalid response from the AI assistant")
+	}
+
+	// Store conversation
+	err = ca.StoreAI_Conversation(user_id, conversation_id, conversation, ctx, cache)
+	if err != nil {
+		if message != nil {
+			return Usage{
+				Usage:    message.Usage,
+				Duration: time.Since(start_time),
+				Valid:    false,
+			}, err
+		} else {
+			return Usage{
+				Usage:    anthropic.Usage{},
+				Duration: time.Since(start_time),
+				Valid:    false,
+			}, err
+		}
+	}
+
+	return Usage{
+		Usage:    message.Usage,
+		Duration: time.Since(start_time),
+		Valid:    true,
+	}, nil
+}
+
+func CommentAndRecreateResume(
+	ctx context.Context,
+	user_id uuid.UUID,
+	conversation_id uuid.UUID,
+	comment string,
+	model anthropic.Model,
+	claude *anthropic.Client,
+	cache *ca.Cache,
+) (Usage, error) {
+	start_time := time.Now()
+	conversation, err := ca.GetConversation(user_id, conversation_id, ctx, cache)
+	if err != nil {
+		return Usage{
+			Usage:    anthropic.Usage{},
+			Duration: time.Since(start_time),
+			Valid:    false,
+		}, err
+	}
+	conversation = append(conversation, anthropic.NewUserMessage(anthropic.ContentBlockParamUnion{
+		OfRequestTextBlock: &anthropic.TextBlockParam{
+			Text: fmt.Sprintf(EN_COMMENT_RESUME_PROMPT_TEMPLATE, comment),
+		}}))
+
+	message, err := claude.Messages.New(ctx, anthropic.MessageNewParams{
+		Model:     model,
+		MaxTokens: int64(4096),
+		Messages:  conversation,
+		Tools:     EN_TOOLS,
+	})
+	if err != nil {
+		if message != nil {
+			return Usage{
+				Usage:    message.Usage,
+				Duration: time.Since(start_time),
+				Valid:    false,
+			}, err
+		} else {
+			return Usage{
+				Usage:    anthropic.Usage{},
+				Duration: time.Since(start_time),
+				Valid:    false,
+			}, err
+		}
+	}
+	conversation = append(conversation, message.ToParam())
+	if message.StopReason == anthropic.MessageStopReasonToolUse {
+		err = analyseToolUse(message, ToolUseCallback{
+			OnResume: func(input utils.ToolResumeDataParams, block anthropic.ContentBlockUnion) error {
+				err = tool_CreateResume(user_id, conversation_id, input, ctx, cache)
+				if err != nil {
+					return err
+				}
+				conversation = append(conversation, anthropic.NewUserMessage(anthropic.ContentBlockParamUnion{
+					OfRequestToolResultBlock: &anthropic.ToolResultBlockParam{
+						ToolUseID: block.ID,
+						Content:   TOOL_RESULT_RESUME,
+					}}))
+				return nil
+			},
+		})
+		if err != nil {
+			if message != nil {
+				return Usage{
+					Usage:    message.Usage,
+					Duration: time.Since(start_time),
+					Valid:    false,
+				}, err
+			} else {
+				return Usage{
+					Usage:    anthropic.Usage{},
+					Duration: time.Since(start_time),
+					Valid:    false,
+				}, err
+			}
+		}
+	} else {
+		return Usage{
+			Usage:    message.Usage,
+			Duration: time.Since(start_time),
+			Valid:    false,
+		}, fmt.Errorf("Invalid response from the AI assistant")
+	}
+	err = ca.StoreAI_Conversation(user_id, conversation_id, conversation, ctx, cache)
+	if err != nil {
+		if message != nil {
+			return Usage{
+				Usage:    message.Usage,
+				Duration: time.Since(start_time),
+				Valid:    false,
+			}, err
+		} else {
+			return Usage{
+				Usage:    anthropic.Usage{},
+				Duration: time.Since(start_time),
+				Valid:    false,
+			}, err
+		}
+	}
+
+	return Usage{
+		Usage:    message.Usage,
+		Duration: time.Since(start_time),
+		Valid:    true,
+	}, nil
+}
+
+func CreateCoverLetter(
+	ctx context.Context,
+	user_id uuid.UUID,
+	conversation_id uuid.UUID,
+	instruction string,
+	model anthropic.Model,
+	claude *anthropic.Client,
+	cache *ca.Cache,
+) (Usage, error) {
+	start_time := time.Now()
+	conversation, err := ca.GetConversation(user_id, conversation_id, ctx, cache)
+	if err != nil {
+		return Usage{
+			Usage:    anthropic.Usage{},
+			Duration: time.Since(start_time),
+			Valid:    false,
+		}, err
+	}
+	if instruction != "" {
+		conversation = append(conversation, anthropic.NewUserMessage(anthropic.ContentBlockParamUnion{
+			OfRequestTextBlock: &anthropic.TextBlockParam{
+				Text: fmt.Sprintf(EN_COVER_LETTER_WITH_INSTRUCTION_PROMPT_TEMPLATE, instruction),
+			}}))
+	} else {
+		conversation = append(conversation, anthropic.NewUserMessage(anthropic.ContentBlockParamUnion{
+			OfRequestTextBlock: &anthropic.TextBlockParam{
+				Text: EN_COVER_LETTER_PROMPT_TEMPLATE,
+			}}))
+	}
+
+	message, err := claude.Messages.New(ctx, anthropic.MessageNewParams{
+		Model:     model,
+		MaxTokens: int64(4096),
+		Messages:  conversation,
+		Tools:     EN_TOOLS,
+	})
+	if err != nil {
+		if message != nil {
+			return Usage{
+				Usage:    message.Usage,
+				Duration: time.Since(start_time),
+				Valid:    false,
+			}, err
+		} else {
+			return Usage{
+				Usage:    anthropic.Usage{},
+				Duration: time.Since(start_time),
+				Valid:    false,
+			}, err
+		}
+	}
+	conversation = append(conversation, message.ToParam())
+	if message.StopReason == anthropic.MessageStopReasonToolUse {
+		err = analyseToolUse(message, ToolUseCallback{
+			OnLetter: func(input utils.ToolCoverLetterParams, block anthropic.ContentBlockUnion) error {
+
+				slog.Info("Create cover letter", "letter", input)
+				err = tool_CreateCoverLetter(user_id, conversation_id, input, ctx, cache)
+				if err != nil {
+					return err
+				}
+				conversation = append(conversation, anthropic.NewUserMessage(anthropic.ContentBlockParamUnion{
+					OfRequestToolResultBlock: &anthropic.ToolResultBlockParam{
+						ToolUseID: block.ID,
+						Content:   TOOL_RESULT_LETTER,
+					}}))
+				return nil
+			},
+		})
+		if err != nil {
+			if message != nil {
+				return Usage{
+					Usage:    message.Usage,
+					Duration: time.Since(start_time),
+					Valid:    false,
+				}, err
+			} else {
+				return Usage{
+					Usage:    anthropic.Usage{},
+					Duration: time.Since(start_time),
+					Valid:    false,
+				}, err
+			}
+		}
+	} else {
+		return Usage{
+			Usage:    message.Usage,
+			Duration: time.Since(start_time),
+			Valid:    false,
+		}, fmt.Errorf("Invalid response from the AI assistant")
+	}
+	err = ca.StoreAI_Conversation(user_id, conversation_id, conversation, ctx, cache)
+	if err != nil {
+		if message != nil {
+			return Usage{
+				Usage:    message.Usage,
+				Duration: time.Since(start_time),
+				Valid:    false,
+			}, err
+		} else {
+			return Usage{
+				Usage:    anthropic.Usage{},
+				Duration: time.Since(start_time),
+				Valid:    false,
+			}, err
+		}
+	}
+
+	return Usage{
+		Usage:    message.Usage,
+		Duration: time.Since(start_time),
+		Valid:    true,
+	}, nil
+}
+
+func CommentAndRecreateCoverLetter(
+	ctx context.Context,
+	user_id uuid.UUID,
+	conversation_id uuid.UUID,
+	comment string,
+	model anthropic.Model,
+	claude *anthropic.Client,
+	cache *ca.Cache,
+) (Usage, error) {
+	start_time := time.Now()
+	conversation, err := ca.GetConversation(user_id, conversation_id, ctx, cache)
+	if err != nil {
+		return Usage{
+			Usage:    anthropic.Usage{},
+			Duration: time.Since(start_time),
+			Valid:    false,
+		}, err
+	}
+
+	conversation = append(conversation, anthropic.NewUserMessage(anthropic.ContentBlockParamUnion{
+		OfRequestTextBlock: &anthropic.TextBlockParam{
+			Text: fmt.Sprintf(EN_COMMENT_LETTER_PROMPT_TEMPLATE, comment),
+		}}))
+
+	message, err := claude.Messages.New(ctx, anthropic.MessageNewParams{
+		Model:     model,
+		MaxTokens: int64(4096),
+		Messages:  conversation,
+		Tools:     EN_TOOLS,
+	})
+	if err != nil {
+		if message != nil {
+			return Usage{
+				Usage:    message.Usage,
+				Duration: time.Since(start_time),
+				Valid:    false,
+			}, err
+		} else {
+			return Usage{
+				Usage:    anthropic.Usage{},
+				Duration: time.Since(start_time),
+				Valid:    false,
+			}, err
+		}
+	}
+
+	conversation = append(conversation, message.ToParam())
+	if message.StopReason == anthropic.MessageStopReasonToolUse {
+		err = analyseToolUse(message, ToolUseCallback{
+			OnLetter: func(input utils.ToolCoverLetterParams, block anthropic.ContentBlockUnion) error {
+				err = tool_CreateCoverLetter(user_id, conversation_id, input, ctx, cache)
+				if err != nil {
+					return err
+				}
+				conversation = append(conversation, anthropic.NewUserMessage(anthropic.ContentBlockParamUnion{
+					OfRequestToolResultBlock: &anthropic.ToolResultBlockParam{
+						ToolUseID: block.ID,
+						Content:   TOOL_RESULT_LETTER,
+					}}))
+				return nil
+			},
+		})
+		if err != nil {
+			if message != nil {
+				return Usage{
+					Usage:    message.Usage,
+					Duration: time.Since(start_time),
+					Valid:    false,
+				}, err
+			} else {
+				return Usage{
+					Usage:    anthropic.Usage{},
+					Duration: time.Since(start_time),
+					Valid:    false,
+				}, err
+			}
+		}
+	} else {
+		return Usage{
+			Usage:    message.Usage,
+			Duration: time.Since(start_time),
+			Valid:    false,
+		}, fmt.Errorf("Invalid response from the AI assistant")
+	}
+	err = ca.StoreAI_Conversation(user_id, conversation_id, conversation, ctx, cache)
+	if err != nil {
+		if message != nil {
+			return Usage{
+				Usage:    message.Usage,
+				Duration: time.Since(start_time),
+				Valid:    false,
+			}, err
+		} else {
+			return Usage{
+				Usage:    anthropic.Usage{},
+				Duration: time.Since(start_time),
+				Valid:    false,
+			}, err
+		}
+	}
+
+	return Usage{
+		Usage:    message.Usage,
+		Duration: time.Since(start_time),
+		Valid:    true,
+	}, nil
+}
+
+type ToolUseCallback struct {
+	OnResume func(input utils.ToolResumeDataParams, block anthropic.ContentBlockUnion) error
+	OnLetter func(input utils.ToolCoverLetterParams, block anthropic.ContentBlockUnion) error
+}
+
+func analyseToolUse(message *anthropic.Message, callbacks ToolUseCallback) error {
+	for _, block := range message.Content {
+		switch variant := block.AsAny().(type) {
+		case anthropic.ToolUseBlock:
+			switch block.Name {
+			case TOOL_WRITE_JSON_RESUME_NAME:
+				var input utils.ToolResumeDataParams
+				err := json.Unmarshal([]byte(variant.JSON.Input.Raw()), &input)
+				if err != nil {
+					return err
+				}
+
+				if callbacks.OnResume != nil {
+					err = callbacks.OnResume(input, block)
+					if err != nil {
+						return err
+					}
+				}
+			case TOOL_WRITE_COVER_LETTER_NAME:
+				var input utils.ToolCoverLetterParams
+				err := json.Unmarshal([]byte(variant.JSON.Input.Raw()), &input)
+				if err != nil {
+					return err
+				}
+
+				if callbacks.OnLetter != nil {
+					err = callbacks.OnLetter(input, block)
+					if err != nil {
+						return err
+					}
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func tool_CreateResume(
+	user_id uuid.UUID,
+	conversation_id uuid.UUID,
+	params utils.ToolResumeDataParams,
+	c context.Context,
+	cache *ca.Cache,
+) error {
+	err := ca.StoreAI_ResumeResult(user_id, conversation_id, params, c, cache)
+	if err != nil {
+		slog.Warn("Failed to StoreAI_ResumeResult", "error", err.Error())
+		return err
+	}
+	err = ca.StoreAI_TitleResult(user_id, conversation_id, params.Title, c, cache)
+	if err != nil {
+		slog.Warn("Failed to StoreAI_ResumeResult", "error", err.Error())
+		return err
+	}
+	return nil
+}
+
+func tool_CreateCoverLetter(
+	user_id uuid.UUID,
+	conversation_id uuid.UUID,
+	params utils.ToolCoverLetterParams,
+	c context.Context,
+	cache *ca.Cache,
+) error {
+	err := ca.StoreAI_CoverLetterResult(user_id, conversation_id, params, c, cache)
+	if err != nil {
+		slog.Warn("Failed to StoreAI_CoverLetterResult", "error", err.Error())
+		return err
+	}
+	return nil
 }

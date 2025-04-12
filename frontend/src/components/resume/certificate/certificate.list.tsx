@@ -10,63 +10,58 @@ import HelpIcon from "@assets/icons/help.svg?component-solid";
 import LoadingSpinner from "@components/loading.spinner";
 import { createCachedResource } from "@utils/cache";
 import { useNavigate } from "@solidjs/router";
+import { ProcessMajorError } from "@utils/api";
 
-interface CertificateListProps {}
+interface CertificateListProps {
+	on_refetch: () => void;
+}
 
 export function CertificateList(props: CertificateListProps) {
 	const fault = useFault();
 	const navigate = useNavigate();
 
-	const [certificates, { mutate, refetch }] = createCachedResource(
-		async () => {
-			try {
-				const response = await api.get(
-					"/resume/items/by-type?item_type=certificate"
-				);
-				const result = response.data.items as ResumeItem[];
+	const [certificates, { mutate, refetch: refetch_items }] =
+		createCachedResource(
+			async () => {
+				try {
+					const response = await api.get(
+						"/resume/items/by-type?item_type=certificate"
+					);
+					const result = response.data.items as ResumeItem[];
 
-				const certificateItems = result.map((item) => ({
-					certificate_id: item.item_id,
-					certificate_name: item.title,
-					optional_issuer: item.subtitle,
-					optional_location: item.location,
-					optional_granted_date: item.start_date,
-					description: item.description,
-					priority: item.priority,
-					is_visible: item.is_visible,
-					tags: item.tags,
-					notes: item.notes,
-				}));
+					const certificateItems = result.map((item) => ({
+						certificate_id: item.item_id,
+						certificate_name: item.title,
+						optional_issuer: item.subtitle,
+						optional_location: item.location,
+						optional_granted_date: item.start_date,
+						description: item.description,
+						priority: item.priority,
+						is_visible: item.is_visible,
+						tags: item.tags,
+						notes: item.notes,
+					}));
 
-				return certificateItems as Certificate[];
-			} catch (error) {
-				if ((error as AxiosError).status === 402) {
-					navigate("/pricing");
+					return certificateItems as Certificate[];
+				} catch (error) {
+					ProcessMajorError(error, navigate, fault);
+					return [];
 				}
-				if (
-					(error as AxiosError).status !== 401 &&
-					(error as AxiosError).status !== 402
-				)
-					fault.minor({
-						message:
-							((error as AxiosError).response?.data as any)
-								.error ?? (error as AxiosError).message,
-					});
-				return [];
+			},
+			{
+				cache_key:
+					"CertificateList:/resume/items/by-type?item_type=certificate",
 			}
-		},
-		{
-			cache_key:
-				"CertificateList:/resume/items/by-type?item_type=certificate",
-		}
-	);
-
+		);
+	function refetch() {
+		refetch_items();
+		props.on_refetch();
+	}
 	const [editing_certificates, updateEditingCertificates] = createStore(
 		[] as number[]
 	);
 
 	const [dragged_id, set_dragged_id] = createSignal<number | null>(null);
-	console.log(certificates());
 
 	return (
 		<section class="w-full flex flex-col gap-4 justify-items-center">
@@ -127,24 +122,11 @@ export function CertificateList(props: CertificateListProps) {
 											}
 										);
 									} catch (error) {
-										if (
-											(error as AxiosError).status === 402
-										) {
-											navigate("/pricing");
-										}
-										if (
-											(error as AxiosError).status !== 401
-										)
-											fault.minor({
-												message:
-													(
-														(error as AxiosError)
-															.response
-															?.data as any
-													).error ??
-													(error as AxiosError)
-														.message,
-											});
+										ProcessMajorError(
+											error,
+											navigate,
+											fault
+										);
 									}
 								}}
 							>
@@ -186,28 +168,11 @@ export function CertificateList(props: CertificateListProps) {
 												);
 												refetch();
 											} catch (error) {
-												if (
-													(error as AxiosError)
-														.status === 402
-												) {
-													navigate("/pricing");
-												}
-												if (
-													(error as AxiosError)
-														.status !== 401
-												)
-													fault.minor({
-														message:
-															(
-																(
-																	error as AxiosError
-																).response
-																	?.data as any
-															).error ??
-															(
-																error as AxiosError
-															).message,
-													});
+												ProcessMajorError(
+													error,
+													navigate,
+													fault
+												);
 											}
 										}}
 										onCancel={() => {

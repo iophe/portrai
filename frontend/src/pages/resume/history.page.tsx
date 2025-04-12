@@ -17,10 +17,6 @@ import {
 	Suspense,
 } from "solid-js";
 import EditIcon from "@assets/icons/edit.svg?component-solid";
-import DeleteIcon from "@assets/icons/delete.svg?component-solid";
-import CloseIcon from "@assets/icons/close.svg?component-solid";
-import { FormInputText } from "@components/resume/utils/form.input";
-import { randomUUID } from "crypto";
 import Footer from "@components/footer.default";
 
 interface HistoryPageProps {}
