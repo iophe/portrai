@@ -5,8 +5,6 @@ import { createStore } from "solid-js/store";
 import STANDARD_EXECUTING_RESUME from "@assets/templates/standard_executive.jpg";
 import LIGHT_EXECUTING_RESUME from "@assets/templates/light_executive.jpg";
 import COLUMNS_EXECUTING_RESUME from "@assets/templates/columns_executive.jpg";
-import SENIOR_EXECUTING_RESUME from "@assets/templates/senior_executive.jpg";
-import RESEARCHER_RESUME from "@assets/templates/researcher.jpg";
 import { Motion, Presence } from "solid-motionone";
 import { useFault } from "@components/fault";
 
@@ -40,13 +38,13 @@ function TemplatesPage(props: TemplatesPage) {
 		// 		"Showcase your creative work with this eye-catching design.",
 		// 	image_url: "/templates/creative.jpg",
 		// },
-		/*{
+		{
 			id: "light-executive",
 			name: "Minimalist",
 			category: "simple",
 			description: "Simple and elegant design with focus on content.",
 			image_url: LIGHT_EXECUTING_RESUME,
-		},*/
+		},
 		{
 			id: "columns-executive",
 			name: "Light",
@@ -60,20 +58,6 @@ function TemplatesPage(props: TemplatesPage) {
 			category: "professional",
 			description: "Sophisticated layout for senior professionals.",
 			image_url: STANDARD_EXECUTING_RESUME,
-		},
-		{
-			id: "senior-executive",
-			name: "Senior",
-			category: "professional",
-			description: "Sophisticated layout for senior professionals.",
-			image_url: SENIOR_EXECUTING_RESUME,
-		},
-		{
-			id: "researcher",
-			name: "Researcher",
-			category: "education",
-			description: "Sophisticated layout for senior professionals.",
-			image_url: RESEARCHER_RESUME,
 		},
 		// {
 		// 	id: "technical",
@@ -112,7 +96,7 @@ function TemplatesPage(props: TemplatesPage) {
 		//{ id: "creative", name: "Creative" },
 		{ id: "simple", name: "Simple" },
 		// { id: "technical", name: "Technical" },
-		{ id: "education", name: "Education" },
+		// { id: "education", name: "Education" },
 	];
 
 	const filtered_templates = () => {
