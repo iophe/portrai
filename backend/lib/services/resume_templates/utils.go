@@ -3,6 +3,7 @@ package resumetemplates
 import (
 	"backend/lib/utils"
 	"backend/sqlc_gen"
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -21,9 +22,11 @@ func ValidateTemplateName(template_name string) bool {
 	switch template_name {
 	case "standard-executive":
 		return true
-	case "light-executive":
-		return true
 	case "columns-executive":
+		return true
+	case "senior-executive":
+		return true
+	case "researcher":
 		return true
 	default:
 		return false
@@ -35,10 +38,12 @@ func ConvertResumeToLatex(template_name string, resume_data utils.InputResumeDat
 	switch template_name {
 	case "standard-executive":
 		return ConvertResumeToLatex_STANDARD_EXECUTIVE(resume_data, user, profile)
-	case "light-executive":
-		return ConvertResumeToLatex_LIGHT_EXECUTIVE(resume_data, user, profile)
 	case "columns-executive":
 		return ConvertResumeToLatex_COLUMNS_EXECUTIVE(resume_data, user, profile)
+	case "senior-executive":
+		return ConvertResumeToLatex_SENIOR_EXECUTIVE(resume_data, user, profile)
+	case "researcher":
+		return ConvertResumeToLatex_RESEARCHER(resume_data, user, profile)
 	default:
 		return "", fmt.Errorf("Unknown template")
 	}
@@ -124,8 +129,13 @@ func format_education_section(educations []utils.Education) []map[string]any {
 			"degree":       edu.Degree,
 			"location":     edu.Location,
 			"start_date":   format_date(edu.StartDate),
-			"description":  edu.Description,
 			"is_raw_latex": is_latex,
+		}
+
+		if is_latex {
+			edu_entry["description"] = edu.Description
+		} else {
+			edu_entry["description"] = removeEmptyLines(edu.Description)
 		}
 
 		if edu.IsCurrent {
@@ -166,10 +176,14 @@ func format_experience_section(experiences []utils.Experience) []map[string]any 
 			"title":        exp.JobTitle,
 			"location":     exp.Location,
 			"start_date":   format_date(exp.StartDate),
-			"description":  exp.Description,
 			"is_raw_latex": is_latex,
 		}
 
+		if is_latex {
+			exp_entry["description"] = exp.Description
+		} else {
+			exp_entry["description"] = removeEmptyLines(exp.Description)
+		}
 		if exp.IsCurrent {
 			exp_entry["end_date"] = "Present"
 		} else if exp.OptionalEndDate != "" {
@@ -216,7 +230,7 @@ func format_skills_section(skills []utils.Skill) []map[string]string {
 		skill_info := map[string]string{
 			"name":        skill.SkillName,
 			"type":        skill.OptionalSkillType,
-			"description": skill.Description,
+			"description": removeEmptyLines(skill.Description),
 			"level":       skill.OptionalSkillLevel,
 		}
 
@@ -249,7 +263,7 @@ func format_languages_section(skills []utils.Skill) []map[string]string {
 			strings.EqualFold(skill.OptionalSkillType, "Languages") {
 			language_info := map[string]string{
 				"name":        skill.SkillName,
-				"description": skill.Description,
+				"description": removeEmptyLines(skill.Description),
 				"level":       skill.OptionalSkillLevel,
 			}
 
@@ -283,8 +297,13 @@ func format_projects_section(projects []utils.Project) []map[string]any {
 			"title":        proj.ProjectTitle,
 			"subtitle":     proj.OptionalProjectSubtitle,
 			"start_date":   format_date(proj.OptionalStartDate),
-			"description":  proj.Description,
 			"is_raw_latex": is_latex,
+		}
+
+		if is_latex {
+			proj_entry["description"] = proj.Description
+		} else {
+			proj_entry["description"] = removeEmptyLines(proj.Description)
 		}
 
 		end_date_str := ""
@@ -336,10 +355,14 @@ func format_certificates_section(certificates []utils.Certificate) []map[string]
 			"issuer":       cert.OptionalIssuer,
 			"location":     cert.OptionalLocation,
 			"granted_date": format_date(cert.OptionalGrantedDate),
-			"description":  cert.Description,
 			"is_raw_latex": is_latex,
 		}
 
+		if is_latex {
+			cert_entry["description"] = cert.Description
+		} else {
+			cert_entry["description"] = removeEmptyLines(cert.Description)
+		}
 		formatted_certificates = append(formatted_certificates, cert_entry)
 	}
 
@@ -439,6 +462,27 @@ func escape_latex_special_chars(text string) string {
 
 func split(s string, sep string) []string {
 	return strings.Split(s, sep)
+}
+
+func removeEmptyLines(input string) string {
+	var result strings.Builder
+	scanner := bufio.NewScanner(strings.NewReader(input))
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.TrimSpace(line) != "" {
+			result.WriteString(line)
+			result.WriteString("\n")
+		}
+	}
+
+	// Remove potential trailing newline
+	resultStr := result.String()
+	if len(resultStr) > 0 {
+		resultStr = strings.TrimSuffix(resultStr, "\n")
+	}
+
+	return resultStr
 }
 
 func get_skill_type_icon(skill_type string) string {
