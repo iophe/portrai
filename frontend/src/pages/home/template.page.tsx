@@ -3,7 +3,6 @@ import Header from "@components/header.autherized";
 import { createSignal, For, Show, Switch, Match } from "solid-js";
 import { createStore } from "solid-js/store";
 import STANDARD_EXECUTING_RESUME from "@assets/templates/standard_executive.jpg";
-import LIGHT_EXECUTING_RESUME from "@assets/templates/light_executive.jpg";
 import COLUMNS_EXECUTING_RESUME from "@assets/templates/columns_executive.jpg";
 import SENIOR_EXECUTING_RESUME from "@assets/templates/senior_executive.jpg";
 import RESEARCHER_RESUME from "@assets/templates/researcher.jpg";
@@ -49,30 +48,30 @@ function TemplatesPage(props: TemplatesPage) {
 		},*/
 		{
 			id: "columns-executive",
-			name: "Light",
+			name: "Modern",
 			category: "simple",
-			description: "Light and temperate design.",
+			description: "Clean, minimalist and modern design.",
 			image_url: COLUMNS_EXECUTING_RESUME,
 		},
 		{
 			id: "standard-executive",
 			name: "Executive",
 			category: "professional",
-			description: "Sophisticated layout for senior professionals.",
+			description: "Sophisticated layout for professionals.",
 			image_url: STANDARD_EXECUTING_RESUME,
 		},
 		{
 			id: "senior-executive",
 			name: "Senior",
 			category: "professional",
-			description: "Sophisticated layout for senior professionals.",
+			description: "Professional design for C-suite and senior leadership.",
 			image_url: SENIOR_EXECUTING_RESUME,
 		},
 		{
 			id: "researcher",
 			name: "Researcher",
 			category: "education",
-			description: "Sophisticated layout for senior professionals.",
+			description: "Academic-focused layout for researchers and students.",
 			image_url: RESEARCHER_RESUME,
 		},
 		// {

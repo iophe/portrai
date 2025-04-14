@@ -3,7 +3,6 @@ import Header from "@components/header.default";
 import { createSignal, For, Show } from "solid-js";
 import { Motion } from "solid-motionone";
 import EXECUTING_RESUME from "@assets/templates/standard_executive.jpg";
-import LIGHT_EXECUTING_RESUME from "@assets/templates/light_executive.jpg";
 import COLUMNS_EXECUTING_RESUME from "@assets/templates/columns_executive.jpg";
 import { A } from "@solidjs/router";
 import { PRICING_PLANS, PricingCard } from "@pages/pricing/pricing.page";
@@ -564,24 +563,7 @@ function LandingPage(props: LandingPageProps) {
 									</p>
 								</div>
 							</article>
-							<article class="bg-white rounded-xl flex flex-col items-center gap-4 shadow-lg p-6 border border-gray-100 group hover:shadow-xl transition-all w-full md:w-96">
-								<div class="w-full aspect-[3/4]">
-									<img
-										src={LIGHT_EXECUTING_RESUME}
-										alt="Executive template preview"
-										class="object-cover w-full h-full rounded-lg"
-									/>
-								</div>
-								<div class="text-center">
-									<h3 class="font-medium text-lg text-forest-900">
-										Minimalist
-									</h3>
-									<p class="text-gray-600 pt-2">
-										Simple and elegant design with focus on
-										content.
-									</p>
-								</div>
-							</article>
+							
 							<article class="bg-white rounded-xl flex flex-col items-center gap-4 shadow-lg p-6 border border-gray-100 group hover:shadow-xl transition-all w-full md:w-96">
 								<div class="w-full aspect-[3/4]">
 									<img
