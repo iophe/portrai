@@ -170,6 +170,12 @@ func HandleGenerateResumeFromProfile(params GenerateResumeFromProfileParams, c *
 			})
 		}
 
+		fmt.Println()
+		fmt.Println()
+		fmt.Println(latex_file)
+		fmt.Println()
+		fmt.Println()
+
 		resume_name = fmt.Sprintf("%s_%s", strings.ReplaceAll(user.FullName, " ", "_"), time.Now().Format("2006_01_02"))
 
 		if create_resume_uid_flag {
