@@ -116,12 +116,12 @@ button {
 
 	/* Handle */
 	::-webkit-scrollbar-thumb {
-		background: #474747;
+		background: #677a8a;
 	}
 
 	/* Handle on hover */
 	::-webkit-scrollbar-thumb:hover {
-		background: #5c5c5c;
+		background: rgb(144, 181, 212);
 	}
 
 	.alice-regular {
