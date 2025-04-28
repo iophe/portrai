@@ -69,13 +69,13 @@ function Resume(props: ResumeProps) {
 	}
 
 	return (
-		<main class="md:px-48 px-6 mx-auto justify-items-center py-4 flex flex-col gap-4 min-h-screen md:max-h-screen">
+		<main class="lg:px-48 px-6 mx-auto justify-items-center py-4 flex flex-col gap-4 min-h-screen lg:max-h-screen">
 			<Header />
 			<section
-				class="md:grid md:grid-cols-2 flex flex-col-reverse justify-end md:gap-4 gap-16 grow h-full md:min-h-full overflow-hidden
+				class="lg:grid lg:grid-cols-2 flex flex-col-reverse justify-end lg:gap-4 gap-16 grow h-full lg:min-h-full overflow-hidden
 			 items-start text-forest-900"
 			>
-				<section class="md:overflow-y-auto md:pr-4 md:h-full w-full">
+				<section class="lg:overflow-y-auto lg:pr-4 lg:h-full w-full">
 					<AsideSelector
 						section={section}
 						set_section={set_section}

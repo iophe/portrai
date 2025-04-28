@@ -142,7 +142,7 @@ function LandingPage(props: LandingPageProps) {
 	];
 
 	return (
-		<main class="md:px-48 px-6 mx-auto justify-items-center py-4 flex flex-col gap-4">
+		<main class="lg:px-48 px-6 mx-auto justify-items-center py-4 flex flex-col gap-4">
 			<Header />
 
 			<section class="w-full flex flex-col gap-16 py-8 items-start text-forest-900">
@@ -151,10 +151,10 @@ function LandingPage(props: LandingPageProps) {
 					initial={{ opacity: 0, y: 20 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ duration: 0.6 }}
-					class="w-full flex md:flex-row flex-col gap-12 items-center py-16"
+					class="w-full flex lg:flex-row flex-col gap-12 items-center py-16"
 				>
-					<article class="md:w-1/2 flex flex-col gap-6">
-						<h1 class="text-4xl md:text-5xl font-bold text-forest-900 leading-tight">
+					<article class="lg:w-1/2 flex flex-col gap-6">
+						<h1 class="text-4xl lg:text-5xl font-bold text-forest-900 leading-tight">
 							Your perfect resume for
 							<span class="block alice-regular text-forest-100">
 								every job application
@@ -228,7 +228,7 @@ function LandingPage(props: LandingPageProps) {
 						</div>
 					</article>
 
-					<figure class="md:w-1/2">
+					<figure class="lg:w-1/2">
 						<div class="relative max-w-lg mx-auto">
 							<div class="w-full bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden p-6">
 								<div class="flex flex-col gap-4">
@@ -290,7 +290,7 @@ function LandingPage(props: LandingPageProps) {
 						</p>
 					</header>
 
-					<div class="grid md:grid-cols-2 gap-12 max-w-5xl mx-auto">
+					<div class="grid lg:grid-cols-2 gap-12 max-w-5xl mx-auto">
 						<article class="flex flex-col gap-4">
 							<h3 class="text-2xl font-semibold text-forest-800">
 								The Problem
@@ -393,7 +393,7 @@ function LandingPage(props: LandingPageProps) {
 						</p>
 					</header>
 
-					<div class="grid md:grid-cols-2 gap-16 max-w-6xl mx-auto">
+					<div class="grid lg:grid-cols-2 gap-16 max-w-6xl mx-auto">
 						<ol class="flex flex-col gap-12 relative before:content-[''] before:absolute before:left-[14px] before:top-[28px] before:bottom-[28px] before:w-0.5 before:bg-forest-100">
 							<For each={workflow_steps}>
 								{(step, index) => (
@@ -514,7 +514,7 @@ function LandingPage(props: LandingPageProps) {
 						</p>
 					</header>
 
-					<ul class="flex flex-col md:flex-row justify-center gap-12 max-w-4xl mx-auto">
+					<ul class="flex flex-col lg:flex-row justify-center gap-12 max-w-4xl mx-auto">
 						<For each={advantages}>
 							{(advantage) => (
 								<li class="text-center flex-1">
@@ -544,8 +544,8 @@ function LandingPage(props: LandingPageProps) {
 					</header>
 
 					<figure class="max-w-4xl mx-auto">
-						<div class="flex flex-col md:flex-row justify-center gap-8">
-							<article class="bg-white rounded-xl flex flex-col items-center gap-4 shadow-lg p-6 border border-gray-100 group hover:shadow-xl transition-all w-full md:w-96">
+						<div class="flex flex-col lg:flex-row justify-center gap-8">
+							<article class="bg-white rounded-xl flex flex-col items-center gap-4 shadow-lg p-6 border border-gray-100 group hover:shadow-xl transition-all w-full lg:w-96">
 								<div class="w-full aspect-[3/4]">
 									<img
 										src={EXECUTING_RESUME}
@@ -563,8 +563,8 @@ function LandingPage(props: LandingPageProps) {
 									</p>
 								</div>
 							</article>
-							
-							<article class="bg-white rounded-xl flex flex-col items-center gap-4 shadow-lg p-6 border border-gray-100 group hover:shadow-xl transition-all w-full md:w-96">
+
+							<article class="bg-white rounded-xl flex flex-col items-center gap-4 shadow-lg p-6 border border-gray-100 group hover:shadow-xl transition-all w-full lg:w-96">
 								<div class="w-full aspect-[3/4]">
 									<img
 										src={COLUMNS_EXECUTING_RESUME}
@@ -623,7 +623,7 @@ function LandingPage(props: LandingPageProps) {
 					</header>
 
 					<section
-						class="w-full flex flex-col md:flex-row justify-center items-center gap-8"
+						class="w-full flex flex-col lg:flex-row justify-center items-center gap-8"
 						aria-label="Pricing plans"
 					>
 						<For each={PRICING_PLANS}>

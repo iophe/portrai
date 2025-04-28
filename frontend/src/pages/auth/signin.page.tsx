@@ -81,9 +81,9 @@ function SigninPage(props: SigninPageProps) {
 	});
 
 	return (
-		<main class="md:px-48 px-8 mx-auto justify-items-center  p-4 flex flex-col gap-4 h-screen max-h-screen">
+		<main class="lg:px-48 px-8 mx-auto justify-items-center  p-4 flex flex-col gap-4 h-screen max-h-screen">
 			<Header />
-			<section class="md:py-16 py-8 h-full flex flex-col gap-16 items-center">
+			<section class="lg:py-16 py-8 h-full flex flex-col gap-16 items-center">
 				<section class="max-w-md w-full space-y-8 grow">
 					<h2 class="text-center text-3xl text-forest-900">
 						Sign in to your account
@@ -94,7 +94,7 @@ function SigninPage(props: SigninPageProps) {
 							id="g_id_onload"
 							data-client_id={
 								import.meta.env.VITE_GOOGLE_CLIENT_ID ??
-								"379453756631-b7kpec1652oq9ihd2bl1n5gvnu48j2gl.apps.googleusercontent.com"
+								"379453756631-48ig2rjv0qp8juto3jpcc2j6d9ro9k09.apps.googleusercontent.com"
 							}
 							data-context="signin"
 							data-ux_mode="popup"

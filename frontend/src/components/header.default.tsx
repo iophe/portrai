@@ -7,7 +7,7 @@ function Header() {
 	const is_authenticated = localStorage.getItem("IS_AUTHENTICATED");
 
 	return (
-		<header class="w-full flex md:flex-row flex-col gap-4 justify-between items-center">
+		<header class="w-full flex lg:flex-row flex-col gap-4 justify-between items-center">
 			<A href="/">
 				<h1 class="text-2xl tracking-widest flex flex-row gap-2 items-center">
 					<LogoIcon />
@@ -17,7 +17,7 @@ function Header() {
 					</span>
 				</h1>
 			</A>
-			<div class="md:w-fit w-full text-sm md:text-xl flex flex-row md:gap-16 md:justify-center justify-between items-center">
+			<div class="lg:w-fit w-full text-sm lg:text-xl flex flex-row lg:gap-16 lg:justify-center justify-between items-center">
 				<A
 					href="/blogs"
 					class="tracking-widest"

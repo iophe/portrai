@@ -18,7 +18,7 @@ export const metadata = {
 
 export default function FromRejectionsToOffers(): JSX.Element {
 	return (
-		<main class="md:px-48 px-6 mx-auto justify-items-center py-4 flex flex-col gap-4">
+		<main class="lg:px-48 px-6 mx-auto justify-items-center py-4 flex flex-col gap-4">
 			<Header />
 
 			<section class="w-full flex flex-col gap-8 py-8 max-w-3xl mx-auto">
@@ -29,7 +29,7 @@ export default function FromRejectionsToOffers(): JSX.Element {
 							{metadata.category}
 						</span>
 					</div>
-					<h1 class="text-3xl md:text-4xl font-bold text-forest-900 mb-4">
+					<h1 class="text-3xl lg:text-4xl font-bold text-forest-900 mb-4">
 						{metadata.title}
 					</h1>
 					<div class="flex items-center justify-center gap-4 text-gray-600">

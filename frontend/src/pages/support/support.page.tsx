@@ -52,7 +52,7 @@ function Support(props: SupportPageProps) {
 	};
 
 	return (
-		<main class="md:px-48 px-6 mx-auto justify-items-center py-4 flex flex-col gap-4 min-h-screen">
+		<main class="lg:px-48 px-6 mx-auto justify-items-center py-4 flex flex-col gap-4 min-h-screen">
 			<Header />
 
 			<section class="w-full flex flex-col gap-8 py-8">
@@ -66,7 +66,7 @@ function Support(props: SupportPageProps) {
 					</p>
 				</header>
 
-				<div class="grid md:grid-cols-2 gap-12 mt-4">
+				<div class="grid lg:grid-cols-2 gap-12 mt-4">
 					{/* Left column - FAQs */}
 					<section class="flex flex-col gap-6">
 						<h2 class="text-2xl font-semibold text-forest-800">

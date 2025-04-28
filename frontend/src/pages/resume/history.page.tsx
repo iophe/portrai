@@ -53,14 +53,14 @@ function HistoryPage(props: HistoryPageProps) {
 	});
 
 	return (
-		<main class="md:px-48 px-6 mx-auto justify-items-center py-4 flex flex-col gap-4 min-h-screen md:max-h-screen">
+		<main class="lg:px-48 px-6 mx-auto justify-items-center py-4 flex flex-col gap-4 min-h-screen lg:max-h-screen">
 			<Header />
 			<section
-				class="md:grid md:grid-cols-2 flex flex-col md:gap-4 gap-16 justify-start h-full grow overflow-hidden
+				class="lg:grid lg:grid-cols-2 flex flex-col lg:gap-4 gap-16 justify-start h-full grow overflow-hidden
 			 items-start text-forest-900"
 			>
-				<section class="overflow-y-hidden pr-4 md:h-full  md:max-h-full max-h-96 w-full">
-					<div class="overflow-y-hidden md:h-full  md:max-h-full max-h-96 flex flex-col gap-4">
+				<section class="overflow-y-hidden pr-4 lg:h-full  lg:max-h-full max-h-96 w-full">
+					<div class="overflow-y-hidden lg:h-full  lg:max-h-full max-h-96 flex flex-col gap-4">
 						<h2 class="w-full border-b-2 border-forest-900 pb-2">
 							Recently created resumes :
 						</h2>
@@ -103,7 +103,7 @@ function HistoryPage(props: HistoryPageProps) {
 												</div>
 												<A
 													href={`/resume/${resume.id}`}
-													class="flex-shrink-0 md:hidden md:group-hover:block"
+													class="flex-shrink-0 lg:hidden lg:group-hover:block"
 												>
 													<EditIcon class="min-w-fit fill-forest-900" />
 												</A>

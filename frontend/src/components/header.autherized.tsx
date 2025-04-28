@@ -12,7 +12,7 @@ function Header(props: HeaderProps) {
 		return <DefaultHeader />;
 	}
 	return (
-		<header class="w-full flex md:flex-row flex-col gap-4 justify-between items-center">
+		<header class="w-full flex lg:flex-row flex-col gap-4 justify-between items-center">
 			<A href="/">
 				<h1 class="text-2xl tracking-widest flex flex-row gap-2 items-center">
 					<LogoIcon />
@@ -22,13 +22,13 @@ function Header(props: HeaderProps) {
 					</span>
 				</h1>
 			</A>
-			<div class="md:w-fit w-full text-sm md:text-xl flex flex-row md:gap-16 md:justify-center justify-between items-center">
+			<div class="lg:w-fit w-full text-sm lg:text-xl flex flex-row lg:gap-16 lg:justify-center justify-between items-center">
 				<A
 					href="/"
-					class="tracking-widest hidden md:block"
+					class="tracking-widest hidden lg:block"
 					activeClass="text-forest-600"
 				>
-					<HomeIcon class="fill-forest-500"/>
+					<HomeIcon class="fill-forest-500" />
 				</A>
 				<A
 					href="/history"
@@ -65,13 +65,13 @@ function Header(props: HeaderProps) {
 
 export function AccountHeader(props: HeaderProps) {
 	return (
-		<header class="w-full flex md:flex-row flex-col gap-4 justify-between items-center">
+		<header class="w-full flex lg:flex-row flex-col gap-4 justify-between items-center">
 			<A href="/">
 				<h1 class="text-2xl tracking-widest">
 					PORTR<span class="alice-regular text-forest-900">AI</span>
 				</h1>
 			</A>
-			<div class="md:w-fit w-full flex flex-row md:gap-16 md:justify-center justify-between items-center">
+			<div class="lg:w-fit w-full flex flex-row lg:gap-16 lg:justify-center justify-between items-center">
 				<A
 					href="/blog"
 					class="tracking-widest"

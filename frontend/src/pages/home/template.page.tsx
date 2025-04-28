@@ -64,14 +64,16 @@ function TemplatesPage(props: TemplatesPage) {
 			id: "senior-executive",
 			name: "Senior",
 			category: "professional",
-			description: "Professional design for C-suite and senior leadership.",
+			description:
+				"Professional design for C-suite and senior leadership.",
 			image_url: SENIOR_EXECUTING_RESUME,
 		},
 		{
 			id: "researcher",
 			name: "Researcher",
 			category: "education",
-			description: "Academic-focused layout for researchers and students.",
+			description:
+				"Academic-focused layout for researchers and students.",
 			image_url: RESEARCHER_RESUME,
 		},
 		// {
@@ -140,7 +142,7 @@ function TemplatesPage(props: TemplatesPage) {
 	};
 
 	return (
-		<main class="md:px-48 px-6 mx-auto justify-items-center py-4 flex flex-col gap-4 md:h-screen md:max-h-screen min-h-screen">
+		<main class="lg:px-48 px-6 mx-auto justify-items-center py-4 flex flex-col gap-4 lg:h-screen lg:max-h-screen min-h-screen">
 			<Header />
 
 			<section class="w-full grow h-full flex flex-col gap-6 justify-start overflow-hidden items-start text-forest-900">
@@ -166,7 +168,7 @@ function TemplatesPage(props: TemplatesPage) {
 					initial={{ opacity: 0, y: 10 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ duration: 0.3, delay: 0.2 }}
-					class="w-full border-b border-gray-200 flex flex-wrap gap-2 md:gap-0"
+					class="w-full border-b border-gray-200 flex flex-wrap gap-2 lg:gap-0"
 					aria-label="Template categories"
 				>
 					<For each={categories}>
@@ -174,7 +176,7 @@ function TemplatesPage(props: TemplatesPage) {
 							<button
 								onClick={() => set_filter_category(category.id)}
 								classList={{
-									"px-5 py-3 font-medium text-sm md:text-base":
+									"px-5 py-3 font-medium text-sm lg:text-base":
 										true,
 									"border-b-2 border-forest-600 text-forest-600":
 										filter_category() === category.id,

@@ -15,14 +15,14 @@ function TermsPage(props: TermsPageProps) {
 		}
 	};
 	return (
-		<main class="md:px-48 px-6 mx-auto justify-items-center py-4 flex flex-col gap-4 md:h-screen md:max-h-screen">
+		<main class="lg:px-48 px-6 mx-auto justify-items-center py-4 flex flex-col gap-4 lg:h-screen lg:max-h-screen">
 			<Header />
 
 			<section class="w-full flex flex-col gap-4 justify-start h-full overflow-y-auto items-start">
 				<main class="terms-of-service">
 					<article class="terms-container">
 						<header class="flex flex-col gap-2 py-6 border-b border-lapis-200">
-							<h1 class="text-3xl md:text-4xl font-bold text-forest-900">
+							<h1 class="text-3xl lg:text-4xl font-bold text-forest-900">
 								TERMS OF SERVICE
 							</h1>
 							<p class="text-sm text-forest-700">
@@ -31,7 +31,7 @@ function TermsPage(props: TermsPageProps) {
 						</header>
 
 						<section class="py-6 flex flex-col gap-4">
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								AGREEMENT TO OUR LEGAL TERMS
 							</h2>
 							<p class="">
@@ -112,7 +112,7 @@ function TermsPage(props: TermsPageProps) {
 						</section>
 
 						<nav id="toc" class="py-6 border-b border-lapis-200">
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								TABLE OF CONTENTS
 							</h2>
 							<ol class="list-decimal pl-5 flex flex-col gap-2">
@@ -432,7 +432,7 @@ function TermsPage(props: TermsPageProps) {
 							id="our-services"
 							class="py-6 border-b border-lapis-200"
 						>
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								1. OUR SERVICES
 							</h2>
 							<p class="mb-4">
@@ -466,7 +466,7 @@ function TermsPage(props: TermsPageProps) {
 							id="intellectual-property"
 							class="py-6 border-b border-lapis-200"
 						>
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								2. INTELLECTUAL PROPERTY RIGHTS
 							</h2>
 							<div class="flex flex-col gap-6">
@@ -746,7 +746,7 @@ function TermsPage(props: TermsPageProps) {
 							id="user-representations"
 							class="py-6 border-b border-lapis-200"
 						>
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								3. USER REPRESENTATIONS
 							</h2>
 							<p class="mb-4">
@@ -798,7 +798,7 @@ function TermsPage(props: TermsPageProps) {
 							id="user-registration"
 							class="py-6 border-b border-lapis-200"
 						>
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								4. USER REGISTRATION
 							</h2>
 							<p>
@@ -817,7 +817,7 @@ function TermsPage(props: TermsPageProps) {
 							id="purchases"
 							class="py-6 border-b border-lapis-200"
 						>
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								5. PURCHASES AND PAYMENT
 							</h2>
 							<p class="mb-4">
@@ -871,7 +871,7 @@ function TermsPage(props: TermsPageProps) {
 							id="subscriptions"
 							class="py-6 border-b border-lapis-200"
 						>
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								6. SUBSCRIPTIONS
 							</h2>
 							<div class="flex flex-col gap-4">
@@ -923,7 +923,7 @@ function TermsPage(props: TermsPageProps) {
 						</section>
 
 						<section id="prohibited" class="py-6">
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								7. PROHIBITED ACTIVITIES
 							</h2>
 							<p class="mb-4">
@@ -1090,7 +1090,7 @@ function TermsPage(props: TermsPageProps) {
 							id="contributions"
 							class="py-6 border-b border-lapis-200"
 						>
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								8. USER GENERATED CONTRIBUTIONS
 							</h2>
 							<p class="mb-4">
@@ -1213,7 +1213,7 @@ function TermsPage(props: TermsPageProps) {
 							id="license"
 							class="py-6 border-b border-lapis-200"
 						>
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								9. CONTRIBUTION LICENSE
 							</h2>
 							<p class="mb-4">
@@ -1286,7 +1286,7 @@ function TermsPage(props: TermsPageProps) {
 							id="social-media"
 							class="py-6 border-b border-lapis-200"
 						>
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								10. SOCIAL MEDIA
 							</h2>
 							<p class="mb-4">
@@ -1382,7 +1382,7 @@ function TermsPage(props: TermsPageProps) {
 							id="services-management"
 							class="py-6 border-b border-lapis-200"
 						>
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								11. SERVICES MANAGEMENT
 							</h2>
 							<p>
@@ -1413,7 +1413,7 @@ function TermsPage(props: TermsPageProps) {
 							id="privacy-policy"
 							class="py-6 border-b border-lapis-200"
 						>
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								12. PRIVACY POLICY
 							</h2>
 							<p>
@@ -1444,7 +1444,7 @@ function TermsPage(props: TermsPageProps) {
 							id="term"
 							class="py-6 border-b border-lapis-200"
 						>
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								13. TERM AND TERMINATION
 							</h2>
 							<p class="mb-4">
@@ -1483,7 +1483,7 @@ function TermsPage(props: TermsPageProps) {
 							id="modifications"
 							class="py-6 border-b border-lapis-200"
 						>
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								14. MODIFICATIONS AND INTERRUPTIONS
 							</h2>
 							<p class="mb-4">
@@ -1521,7 +1521,7 @@ function TermsPage(props: TermsPageProps) {
 							id="governing-law"
 							class="py-6 border-b border-lapis-200"
 						>
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								15. GOVERNING LAW
 							</h2>
 							<p>
@@ -1547,7 +1547,7 @@ function TermsPage(props: TermsPageProps) {
 							id="dispute"
 							class="py-6 border-b border-lapis-200"
 						>
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								16. DISPUTE RESOLUTION
 							</h2>
 							<div class="flex flex-col gap-4">
@@ -1657,7 +1657,7 @@ function TermsPage(props: TermsPageProps) {
 							id="corrections"
 							class="py-6 border-b border-lapis-200"
 						>
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								17. CORRECTIONS
 							</h2>
 							<p>
@@ -1676,7 +1676,7 @@ function TermsPage(props: TermsPageProps) {
 							id="disclaimer"
 							class="py-6 border-b border-lapis-200"
 						>
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								18. DISCLAIMER
 							</h2>
 							<p class="font-semibold">
@@ -1730,7 +1730,7 @@ function TermsPage(props: TermsPageProps) {
 							id="liability"
 							class="py-6 border-b border-lapis-200"
 						>
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								19. LIMITATIONS OF LIABILITY
 							</h2>
 							<p class="font-semibold">
@@ -1762,7 +1762,7 @@ function TermsPage(props: TermsPageProps) {
 							id="indemnification"
 							class="py-6 border-b border-lapis-200"
 						>
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								20. INDEMNIFICATION
 							</h2>
 							<p>
@@ -1798,7 +1798,7 @@ function TermsPage(props: TermsPageProps) {
 							id="user-data"
 							class="py-6 border-b border-lapis-200"
 						>
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								21. USER DATA
 							</h2>
 							<p>
@@ -1822,7 +1822,7 @@ function TermsPage(props: TermsPageProps) {
 							id="electronic"
 							class="py-6 border-b border-lapis-200"
 						>
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								22. ELECTRONIC COMMUNICATIONS, TRANSACTIONS, AND
 								SIGNATURES
 							</h2>
@@ -1854,7 +1854,7 @@ function TermsPage(props: TermsPageProps) {
 							id="california"
 							class="py-6 border-b border-lapis-200"
 						>
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								23. CALIFORNIA USERS AND RESIDENTS
 							</h2>
 							<p>
@@ -1872,7 +1872,7 @@ function TermsPage(props: TermsPageProps) {
 							id="miscellaneous"
 							class="py-6 border-b border-lapis-200"
 						>
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								24. MISCELLANEOUS
 							</h2>
 							<p class="mb-4">
@@ -1915,7 +1915,7 @@ function TermsPage(props: TermsPageProps) {
 							</p>
 						</section>
 						<section id="contact" class="py-6">
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								25. CONTACT US
 							</h2>
 							<p>

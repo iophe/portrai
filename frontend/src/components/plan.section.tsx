@@ -165,7 +165,7 @@ export function PlanSection(props: PlanSectionProps) {
 												duration: 0.15,
 												delay: 0.05 * (index() + 1), // Staggered animation
 											}}
-											class="w-full md:w-1/2 flex flex-row justify-between"
+											class="w-full lg:w-1/2 flex flex-row justify-between"
 										>
 											<span>
 												{new Date(

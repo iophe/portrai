@@ -25,7 +25,7 @@ export function DangerZone(props: DangerZoneProps) {
 				<h2 class="text-sm text-gray-500 uppercase">Danger Zone</h2>
 			</Motion.header>
 
-			<article class="w-full mt-4 flex flex-col-reverse md:flex-row gap-4">
+			<article class="w-full mt-4 flex flex-col-reverse lg:flex-row gap-4">
 				<Motion.div
 					initial={{ opacity: 0, y: 10 }}
 					animate={{ opacity: 1, y: 0 }}
