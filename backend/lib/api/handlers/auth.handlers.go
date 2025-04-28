@@ -191,6 +191,11 @@ func HandleGoogleSignup(c *fiber.Ctx, data GoogleSignupData, db *database.Databa
 		"id", auth_response.User.Id,
 	)
 
+	middlewares.SetAuthCookies(c, &middlewares.RefreshResponse{
+		AccessToken:  auth_response.AccessToken,
+		RefreshToken: auth_response.RefreshToken,
+	})
+
 	return auth_response, nil
 }
 

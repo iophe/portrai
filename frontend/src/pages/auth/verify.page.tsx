@@ -115,7 +115,7 @@ function VerifyPage(props: VerifyPageProps) {
 	});
 
 	return (
-		<main class="md:px-48 px-6 mx-auto justify-items-center py-4 flex flex-col gap-4 h-screen md:max-h-screen">
+		<main class="lg:px-48 px-6 mx-auto justify-items-center py-4 flex flex-col gap-4 h-screen lg:max-h-screen">
 			<Header />
 
 			<section class="w-full flex flex-col gap-4 justify-start h-full overflow-y-auto items-center text-forest-900">

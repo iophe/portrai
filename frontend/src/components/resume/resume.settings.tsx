@@ -114,6 +114,211 @@ function ResumeSettings(props: ResumeSettingsProps) {
 			transition={{ duration: 0.3, easing: "ease-out" }}
 			class="flex flex-col gap-4 pb-4"
 		>
+			<Motion.section
+				initial={{ opacity: 0, y: 5 }}
+				animate={{ opacity: 1, y: 0 }}
+				transition={{ duration: 0.3, delay: 0.2 }}
+				class="p-4 border bg-white border-lapis-50 rounded-lg flex flex-col gap-4 relative overflow-hidden"
+			>
+				<Motion
+					initial={{ x: "-100%" }}
+					animate={{ x: "0%" }}
+					transition={{
+						duration: 0.4,
+						easing: "ease-out",
+						delay: 0.4,
+					}}
+					style={{
+						position: "absolute",
+						left: "0",
+						top: "0",
+						width: "3px",
+						height: "100%",
+						"background-color": "var(--lapis-200)",
+					}}
+				></Motion>
+				<header class="flex justify-between items-center border-b-2 border-forest-900 pb-2">
+					<Motion.div
+						initial={{ x: -5, opacity: 0 }}
+						animate={{ x: 0, opacity: 1 }}
+						transition={{ duration: 0.3, delay: 0.3 }}
+						class="flex flex-row gap-4"
+					>
+						<AccountIcon class="min-w-fit fill-forest-900" />
+						<h2 class="uppercase">My profile</h2>
+					</Motion.div>
+					<Show
+						when={editing_profile()}
+						fallback={
+							<Motion.button
+								hover={{ scale: 1.1 }}
+								press={{ scale: 0.95 }}
+								transition={{ duration: 0.1 }}
+								disabled={editing_profile()}
+								onclick={() => edit_profile(true)}
+							>
+								<EditIcon class="min-w-fit fill-forest-500" />
+							</Motion.button>
+						}
+					>
+						<Motion.button
+							hover={{ scale: 1.1 }}
+							press={{ scale: 0.95 }}
+							transition={{ duration: 0.1 }}
+							type="button"
+							class="text-gray-500 hover:text-gray-600 text-sm font-medium"
+							onclick={() => {
+								edit_profile(false);
+								// Reset form data
+								update_profile_form_data({
+									linkedin: profile()?.linkedin,
+									website: profile()?.website,
+									description: profile()?.description,
+								});
+							}}
+						>
+							<CancelIcon class="min-w-fit fill-forest-900" />
+						</Motion.button>
+					</Show>
+				</header>
+				<Presence>
+					<Show
+						when={editing_profile()}
+						fallback={
+							<Motion.div
+								initial={{ opacity: 0 }}
+								animate={{ opacity: 1 }}
+								transition={{ duration: 0.3 }}
+								class="flex flex-col gap-4"
+							>
+								<Motion.article
+									initial={{ opacity: 0, y: 5 }}
+									animate={{ opacity: 1, y: 0 }}
+									transition={{
+										duration: 0.2,
+										delay: 0.1,
+									}}
+									class="flex flex-col gap-1"
+								>
+									<h3 class="text-lg text-forest-700 font-medium">
+										Self description
+									</h3>
+									<ItemText>
+										<Show
+											when={profile()?.description}
+											fallback="Not specified"
+										>
+											{profile()?.description}
+										</Show>
+									</ItemText>
+								</Motion.article>
+
+								<Motion.article
+									initial={{ opacity: 0, y: 5 }}
+									animate={{ opacity: 1, y: 0 }}
+									transition={{
+										duration: 0.2,
+										delay: 0.2,
+									}}
+									class="flex flex-col gap-1"
+								>
+									<h3 class="text-lg text-forest-700 font-medium">
+										Linkedin
+									</h3>
+									<a
+										class="text-forest-900"
+										href={profile()?.linkedin ?? ""}
+									>
+										{profile()?.linkedin || "Not specified"}
+									</a>
+								</Motion.article>
+
+								<Motion.article
+									initial={{ opacity: 0, y: 5 }}
+									animate={{ opacity: 1, y: 0 }}
+									transition={{
+										duration: 0.2,
+										delay: 0.3,
+									}}
+									class="flex flex-col gap-1"
+								>
+									<h3 class="text-lg text-forest-700 font-medium">
+										Website
+									</h3>
+									<a
+										class="text-forest-900"
+										href={profile()?.website ?? ""}
+									>
+										{profile()?.website || "Not specified"}
+									</a>
+								</Motion.article>
+							</Motion.div>
+						}
+					>
+						<Motion.form
+							initial={{ opacity: 0, y: 5 }}
+							animate={{ opacity: 1, y: 0 }}
+							exit={{ opacity: 0, y: -5 }}
+							transition={{ duration: 0.3 }}
+							class="flex flex-col gap-2"
+							onSubmit={async (e) => {
+								e.preventDefault();
+								try {
+									await api.post(
+										"/account/profile/update",
+										profile_form_data
+									);
+									edit_profile(false);
+									refetch_profile();
+								} catch (error) {}
+							}}
+						>
+							<FormLabeledInput label="Description">
+								<FormTextArea
+									value={profile_form_data.description ?? ""}
+									on_input={(value) => {
+										update_profile_form_data(
+											"description",
+											value
+										);
+									}}
+									placeholder="Write your description"
+								/>
+							</FormLabeledInput>
+							<FormLabeledInput label="Linkedin">
+								<FormInputText
+									value={profile_form_data.linkedin ?? ""}
+									on_input={(value) =>
+										update_profile_form_data(
+											"linkedin",
+											value
+										)
+									}
+									placeholder="Write your linkedin link"
+								/>
+							</FormLabeledInput>
+
+							<FormLabeledInput label="Website">
+								<FormInputText
+									value={profile_form_data.website ?? ""}
+									on_input={(value) =>
+										update_profile_form_data(
+											"website",
+											value
+										)
+									}
+									placeholder="Write your website link"
+								/>
+							</FormLabeledInput>
+
+							<div class="self-end">
+								<FormSubmitButton />
+							</div>
+						</Motion.form>
+					</Show>
+				</Presence>
+			</Motion.section>
+
 			<Show when={!props.offline}>
 				<Motion.article
 					initial={{ opacity: 0, y: 5 }}
@@ -540,211 +745,6 @@ function ResumeSettings(props: ResumeSettingsProps) {
 					</section>
 				</Motion.article>
 			</Show>
-
-			<Motion.section
-				initial={{ opacity: 0, y: 5 }}
-				animate={{ opacity: 1, y: 0 }}
-				transition={{ duration: 0.3, delay: 0.2 }}
-				class="p-4 border bg-white border-lapis-50 rounded-lg flex flex-col gap-4 relative overflow-hidden"
-			>
-				<Motion
-					initial={{ x: "-100%" }}
-					animate={{ x: "0%" }}
-					transition={{
-						duration: 0.4,
-						easing: "ease-out",
-						delay: 0.4,
-					}}
-					style={{
-						position: "absolute",
-						left: "0",
-						top: "0",
-						width: "3px",
-						height: "100%",
-						"background-color": "var(--lapis-200)",
-					}}
-				></Motion>
-				<header class="flex justify-between items-center border-b-2 border-forest-900 pb-2">
-					<Motion.div
-						initial={{ x: -5, opacity: 0 }}
-						animate={{ x: 0, opacity: 1 }}
-						transition={{ duration: 0.3, delay: 0.3 }}
-						class="flex flex-row gap-4"
-					>
-						<AccountIcon class="min-w-fit fill-forest-900" />
-						<h2 class="uppercase">My profile</h2>
-					</Motion.div>
-					<Show
-						when={editing_profile()}
-						fallback={
-							<Motion.button
-								hover={{ scale: 1.1 }}
-								press={{ scale: 0.95 }}
-								transition={{ duration: 0.1 }}
-								disabled={editing_profile()}
-								onclick={() => edit_profile(true)}
-							>
-								<EditIcon class="min-w-fit fill-forest-500" />
-							</Motion.button>
-						}
-					>
-						<Motion.button
-							hover={{ scale: 1.1 }}
-							press={{ scale: 0.95 }}
-							transition={{ duration: 0.1 }}
-							type="button"
-							class="text-gray-500 hover:text-gray-600 text-sm font-medium"
-							onclick={() => {
-								edit_profile(false);
-								// Reset form data
-								update_profile_form_data({
-									linkedin: profile()?.linkedin,
-									website: profile()?.website,
-									description: profile()?.description,
-								});
-							}}
-						>
-							<CancelIcon class="min-w-fit fill-forest-900" />
-						</Motion.button>
-					</Show>
-				</header>
-				<Presence>
-					<Show
-						when={editing_profile()}
-						fallback={
-							<Motion.div
-								initial={{ opacity: 0 }}
-								animate={{ opacity: 1 }}
-								transition={{ duration: 0.3 }}
-								class="flex flex-col gap-4"
-							>
-								<Motion.article
-									initial={{ opacity: 0, y: 5 }}
-									animate={{ opacity: 1, y: 0 }}
-									transition={{
-										duration: 0.2,
-										delay: 0.1,
-									}}
-									class="flex flex-col gap-1"
-								>
-									<h3 class="text-lg text-forest-700 font-medium">
-										Self description
-									</h3>
-									<ItemText>
-										<Show
-											when={profile()?.description}
-											fallback="Not specified"
-										>
-											{profile()?.description}
-										</Show>
-									</ItemText>
-								</Motion.article>
-
-								<Motion.article
-									initial={{ opacity: 0, y: 5 }}
-									animate={{ opacity: 1, y: 0 }}
-									transition={{
-										duration: 0.2,
-										delay: 0.2,
-									}}
-									class="flex flex-col gap-1"
-								>
-									<h3 class="text-lg text-forest-700 font-medium">
-										Linkedin
-									</h3>
-									<a
-										class="text-forest-900"
-										href={profile()?.linkedin ?? ""}
-									>
-										{profile()?.linkedin || "Not specified"}
-									</a>
-								</Motion.article>
-
-								<Motion.article
-									initial={{ opacity: 0, y: 5 }}
-									animate={{ opacity: 1, y: 0 }}
-									transition={{
-										duration: 0.2,
-										delay: 0.3,
-									}}
-									class="flex flex-col gap-1"
-								>
-									<h3 class="text-lg text-forest-700 font-medium">
-										Website
-									</h3>
-									<a
-										class="text-forest-900"
-										href={profile()?.website ?? ""}
-									>
-										{profile()?.website || "Not specified"}
-									</a>
-								</Motion.article>
-							</Motion.div>
-						}
-					>
-						<Motion.form
-							initial={{ opacity: 0, y: 5 }}
-							animate={{ opacity: 1, y: 0 }}
-							exit={{ opacity: 0, y: -5 }}
-							transition={{ duration: 0.3 }}
-							class="flex flex-col gap-2"
-							onSubmit={async (e) => {
-								e.preventDefault();
-								try {
-									await api.post(
-										"/account/profile/update",
-										profile_form_data
-									);
-									edit_profile(false);
-									refetch_profile();
-								} catch (error) {}
-							}}
-						>
-							<FormLabeledInput label="Description">
-								<FormTextArea
-									value={profile_form_data.description ?? ""}
-									on_input={(value) => {
-										update_profile_form_data(
-											"description",
-											value
-										);
-									}}
-									placeholder="Write your description"
-								/>
-							</FormLabeledInput>
-							<FormLabeledInput label="Linkedin">
-								<FormInputText
-									value={profile_form_data.linkedin ?? ""}
-									on_input={(value) =>
-										update_profile_form_data(
-											"linkedin",
-											value
-										)
-									}
-									placeholder="Write your linkedin link"
-								/>
-							</FormLabeledInput>
-
-							<FormLabeledInput label="Website">
-								<FormInputText
-									value={profile_form_data.website ?? ""}
-									on_input={(value) =>
-										update_profile_form_data(
-											"website",
-											value
-										)
-									}
-									placeholder="Write your website link"
-								/>
-							</FormLabeledInput>
-
-							<div class="self-end">
-								<FormSubmitButton />
-							</div>
-						</Motion.form>
-					</Show>
-				</Presence>
-			</Motion.section>
 		</Motion.section>
 	);
 }

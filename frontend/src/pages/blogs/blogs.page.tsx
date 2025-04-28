@@ -55,10 +55,10 @@ function BlogPage(props: BlogPageProps) {
 	});
 
 	return (
-		<main class="md:px-48 px-6 mx-auto justify-items-center py-4 flex flex-col min-h-screen gap-4">
+		<main class="lg:px-48 px-6 mx-auto justify-items-center py-4 flex flex-col min-h-screen gap-4">
 			<Header />
 
-			<section class="w-full flex flex-col gap-16 py-8 md:max-w-5xl mx-auto grow">
+			<section class="w-full flex flex-col gap-16 py-8 lg:max-w-5xl mx-auto grow">
 				<article class="flex flex-col gap-16">
 					{/* Blog Header */}
 					<header class="text-center">
@@ -76,8 +76,8 @@ function BlogPage(props: BlogPageProps) {
 					</header>
 
 					{/* Search and Filter Bar */}
-					<section class="w-full flex flex-col md:flex-row gap-6 justify-center items-center">
-						<div class="flex flex-wrap gap-2 pb-2 w-full md:w-auto">
+					<section class="w-full flex flex-col lg:flex-row gap-6 justify-center items-center">
+						<div class="flex flex-wrap gap-2 pb-2 w-full lg:w-auto">
 							<For each={blog_categories}>
 								{(category) => (
 									<button
@@ -126,7 +126,7 @@ function BlogPage(props: BlogPageProps) {
 								</div>
 							}
 						>
-							<ul class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+							<ul class="grid grid-cols-1 lg:grid-cols-2 lg:grid-cols-3 gap-8">
 								<For each={filtered_posts()}>
 									{(post) => (
 										<Motion.li

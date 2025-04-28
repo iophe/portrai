@@ -2,6 +2,7 @@ import { createSignal, Show, onMount, Accessor, createEffect } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 import { useFault } from "@components/fault";
 import BackIcon from "@assets/icons/back.svg?component-solid";
+import TutorialIcon from "@assets/icons/tutorial.svg?component-solid";
 import api from "@utils/api";
 import AIConversation from "./ai.view";
 import { GenerateResumeFromProfile } from "./from_profile.view";
@@ -11,6 +12,7 @@ import { CoverLetter } from "./letter.view";
 import { ResumeLoader } from "./resume_loading.view";
 import { DB_JOB_SPECIFIC_RESUMES } from "@utils/db/resume.db";
 import { db } from "@utils/db/db";
+import { useTutorial } from "@components/onboarding";
 
 interface ResumeAIPreviewProps {
 	refresh_signal: Accessor<number>;
@@ -18,6 +20,7 @@ interface ResumeAIPreviewProps {
 
 function ResumeAIPreview(props: ResumeAIPreviewProps) {
 	const navigate = useNavigate();
+	const tutorial = useTutorial();
 	const fault = useFault();
 
 	const template =
@@ -252,20 +255,6 @@ function ResumeAIPreview(props: ResumeAIPreviewProps) {
 	return (
 		<section class="overflow-y-auto overflow-x-clip w-full h-full flex flex-col gap-4 pb-4">
 			<Show when={!pdf_blob()}>
-				<GenerateResumeFromProfile
-					template_name={template}
-					start_loading={() => set_is_loading(true)}
-					end_loading={() => set_is_loading(false)}
-					on_generated={handleProfileGenerated}
-					activate={() => set_view("profile")}
-				/>
-
-				<aside class="flex justify-center items-center w-full">
-					<div class="border-t border-lapis-100 w-1/3"></div>
-					<span class="px-4 text-lapis-400">or</span>
-					<div class="border-t border-lapis-100 w-1/3"></div>
-				</aside>
-
 				<AIConversation
 					template_name={template}
 					start_loading={() => set_is_loading(true)}
@@ -274,6 +263,26 @@ function ResumeAIPreview(props: ResumeAIPreviewProps) {
 					initial_job_description={job_description()}
 					activate={() => set_view("ai")}
 				/>
+
+				<aside class="flex justify-center items-center w-full">
+					<div class="border-t border-lapis-100 w-1/3"></div>
+					<span class="px-4 text-lapis-400">or</span>
+					<div class="border-t border-lapis-100 w-1/3"></div>
+				</aside>
+
+				<GenerateResumeFromProfile
+					template_name={template}
+					start_loading={() => set_is_loading(true)}
+					end_loading={() => set_is_loading(false)}
+					on_generated={handleProfileGenerated}
+					activate={() => set_view("profile")}
+				/>
+
+				<button class="self-end mr-8 flex flex-row items-center gap-2 text-nowrap"
+					onclick={() => {
+						tutorial.show("add-resume-item");
+					}}	
+				>Need some help <TutorialIcon class="fill-lapis-600"/></button>
 			</Show>
 
 			<Show when={pdf_blob()}>

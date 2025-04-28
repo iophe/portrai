@@ -135,7 +135,7 @@ function AboutUs(props: AboutUsPageProps) {
 	];
 
 	return (
-		<main class="md:px-48 px-6 mx-auto justify-items-center py-4 flex flex-col gap-4 min-h-screen">
+		<main class="lg:px-48 px-6 mx-auto justify-items-center py-4 flex flex-col gap-4 min-h-screen">
 			<Header />
 
 			<section class="w-full flex flex-col gap-8 py-8 grow">
@@ -157,13 +157,13 @@ function AboutUs(props: AboutUsPageProps) {
 				</header>
 
 				{/* Tabs Navigation */}
-				<nav class="border-b border-gray-200 flex flex-wrap gap-2 md:gap-0">
+				<nav class="border-b border-gray-200 flex flex-wrap gap-2 lg:gap-0">
 					<For each={tabs}>
 						{(tab) => (
 							<button
 								onClick={() => set_active_tab(tab.id)}
 								classList={{
-									"px-6 py-3 font-medium text-sm md:text-base":
+									"px-6 py-3 font-medium text-sm lg:text-base":
 										true,
 									"border-b-2 border-forest-600 text-forest-600":
 										active_tab() === tab.id,
@@ -182,7 +182,7 @@ function AboutUs(props: AboutUsPageProps) {
 				<article class="py-6" aria-live="polite">
 					{/* Mission Tab */}
 					<Show when={active_tab() === "mission"}>
-						<section class="grid md:grid-cols-2 gap-12">
+						<section class="grid lg:grid-cols-2 gap-12">
 							<div class="flex flex-col gap-4">
 								<h2 class="text-2xl font-bold text-forest-800">
 									Our Mission
@@ -324,7 +324,7 @@ function AboutUs(props: AboutUsPageProps) {
 
 					{/* Story Tab */}
 					<Show when={active_tab() === "story"}>
-						<section class="grid md:grid-cols-2 gap-12">
+						<section class="grid lg:grid-cols-2 gap-12">
 							<div class="flex flex-col gap-4">
 								<h2 class="text-2xl font-bold text-forest-800">
 									Our Story
@@ -371,7 +371,7 @@ function AboutUs(props: AboutUsPageProps) {
 								Our Values
 							</h2>
 
-							<div class="grid md:grid-cols-2 gap-x-12 gap-y-8">
+							<div class="grid lg:grid-cols-2 gap-x-12 gap-y-8">
 								<For each={values}>
 									{(value) => (
 										<article class="flex flex-col gap-3">

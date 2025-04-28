@@ -159,9 +159,9 @@ export function PricingCard(plan: PricingPlan) {
 
 function Pricing(props: PricingProps) {
 	return (
-		<main class="md:px-48 px-8 mx-auto justify-items-center  p-4 flex flex-col gap-4 md:h-screen min-h-screen">
+		<main class="lg:px-48 px-8 mx-auto justify-items-center  p-4 flex flex-col gap-4 lg:h-screen min-h-screen">
 			<Header />
-			<section class="md:py-16 py-8 h-full flex flex-col gap-16 items-center">
+			<section class="lg:py-16 py-8 h-full flex flex-col gap-16 items-center">
 				<div class="flex flex-col gap-16 items-center">
 					{/* Header */}
 					<header class="text-center max-w-3xl mx-auto">
@@ -175,7 +175,7 @@ function Pricing(props: PricingProps) {
 
 					{/* Pricing Cards */}
 					<section
-						class="flex flex-col md:flex-row justify-center items-center gap-8 w-full max-w-6xl"
+						class="flex flex-col lg:flex-row justify-center items-center gap-8 w-full max-w-6xl"
 						aria-label="Pricing plans"
 					>
 						<For each={PRICING_PLANS}>

@@ -4,7 +4,7 @@ import { api } from "@utils/api";
 
 function Footer() {
 	return (
-		<footer class="w-full flex flex-row gap-4 md:px-16 px-4 justify-between items-center bg-lapis-10">
+		<footer class="w-full flex flex-row gap-4 lg:px-16 px-4 justify-between items-center bg-lapis-10">
 			<A href="/about-us" class="tracking-widest text-forest-900 ">
 				<h2>About us</h2>
 			</A>

@@ -102,7 +102,9 @@ export default function AIConversation(props: AIConversationProps) {
 					}}
 				></Motion>
 				<header class="flex flex-col gap-2 items-center justify-center">
-					<h2 class="text-center">Create a job-tailored resume</h2>
+					<h1 class="text-center text-xl">
+						Create a job-tailored resume
+					</h1>
 					<label class="flex flex-row gap-2 opacity-40 cursor-help">
 						<HelpIcon class="fill-lapis-400 min-w-fit" />
 						<p class="text-lapis-300">
