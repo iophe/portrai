@@ -6,6 +6,7 @@ import { lazy } from "solid-js";
 import { Route, Router } from "@solidjs/router";
 import { FaultProvider } from "@components/fault";
 import Protected from "@components/protected";
+import { LangProvider } from "@components/language";
 
 const root = document.getElementById("root");
 
@@ -49,6 +50,7 @@ const Templates = Protected({ redirect: "/" })(
 render(
 	() => (
 		<FaultProvider>
+			<LangProvider>
 			<Router>
 				<Route path={["/", "/home"]} component={Home} />
 				<Route path={"/welcolm"} component={Landing} />
@@ -79,6 +81,7 @@ render(
 					component={Blog1}
 				/>
 			</Router>
+			</LangProvider>
 		</FaultProvider>
 	),
 	root!

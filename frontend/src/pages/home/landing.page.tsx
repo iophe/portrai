@@ -6,6 +6,7 @@ import EXECUTING_RESUME from "@assets/templates/standard_executive.jpg";
 import COLUMNS_EXECUTING_RESUME from "@assets/templates/columns_executive.jpg";
 import { A } from "@solidjs/router";
 import { PRICING_PLANS, PricingCard } from "@pages/pricing/pricing.page";
+import { En, Fr, Lang, LangProvider, Test, useLang } from "@components/language";
 
 interface LandingPageProps {}
 
@@ -140,13 +141,14 @@ function LandingPage(props: LandingPageProps) {
 			answer: "Your plan is a one-time payment for 3 months of service, designed to cover a typical job search period. There's no need to cancel as it won't automatically renew.",
 		},
 	];
-
+	const lang = useLang();
 	return (
 		<main class="lg:px-48 px-6 mx-auto justify-items-center py-4 flex flex-col gap-4">
 			<Header />
 
 			<section class="w-full flex flex-col gap-16 py-8 items-start text-forest-900">
 				{/* Hero Section */}
+
 				<Motion.section
 					initial={{ opacity: 0, y: 20 }}
 					animate={{ opacity: 1, y: 0 }}
@@ -155,7 +157,10 @@ function LandingPage(props: LandingPageProps) {
 				>
 					<article class="lg:w-1/2 flex flex-col gap-6">
 						<h1 class="text-4xl lg:text-5xl font-bold text-forest-900 leading-tight">
-							Your perfect resume for
+						<Lang>
+							<En>Your perfect resume for</En>
+							<Fr>Ton resume parfait pour</Fr>
+						</Lang>
 							<span class="block alice-regular text-forest-100">
 								every job application
 							</span>
