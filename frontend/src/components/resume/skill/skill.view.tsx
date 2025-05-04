@@ -21,6 +21,7 @@ import {
 } from "../utils/form.input";
 import { useNavigate } from "@solidjs/router";
 import { ProcessMajorError } from "@utils/api";
+import { En, Fr, Lang } from "@components/language";
 
 interface SkillViewProps {
 	skill: Skill;
@@ -64,7 +65,12 @@ export function SkillView(props: SkillViewProps) {
 				<ItemInfo>Type: {props.skill.optional_skill_type}</ItemInfo>
 			</Show>
 			<Show when={props.skill.optional_skill_level}>
-				<ItemInfo>Level: {props.skill.optional_skill_level}</ItemInfo>
+				<ItemInfo>
+				<Lang>{[
+						<En>Level:</En>,
+						<Fr>Niveau:</Fr>
+					]}
+					</Lang> {props.skill.optional_skill_level}</ItemInfo>
 			</Show>
 			<ItemText>{props.skill.description}</ItemText>
 			<Tags values={props.skill.tags} />

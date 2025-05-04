@@ -3,6 +3,7 @@ import { Motion, Presence } from "solid-motionone";
 import { useFault } from "@components/fault";
 import EditIcon from "@assets/icons/edit.svg?component-solid";
 import api from "@utils/api";
+import { En, Fr, Lang } from "./language";
 
 interface RecoverAccountProps {}
 
@@ -128,7 +129,14 @@ function RecoverAccount(props: RecoverAccountProps) {
 						transition={{ duration: 0.15 }}
 						class="text-forest-700"
 					>
-						Account Management
+							<Lang>
+			  {[
+				<En>Account Management</En>,
+				<Fr>Gestion du compte</Fr>
+			  ]}
+			</Lang>
+						
+						
 					</Motion.p>
 
 					<Presence>
@@ -148,7 +156,12 @@ function RecoverAccount(props: RecoverAccountProps) {
 									class="flex flex-row gap-4 items-center border w-fit px-4 py-2 rounded border-lapis-400 text-lapis-600"
 									onClick={() => set_show_form(true)}
 								>
-									<span>Change Password</span>
+									<span><Lang>
+			  {[
+				<En>Change Password</En>,
+				<Fr>Changer le mot de passe</Fr>
+			  ]}
+			</Lang></span>
 									<EditIcon class="min-w-fit fill-lapis-600" />
 								</Motion.button>
 							</Motion.div>
@@ -185,7 +198,12 @@ function RecoverAccount(props: RecoverAccountProps) {
 										for="current-password"
 										class="block text-forest-800 mb-2"
 									>
-										Current Password
+										<Lang>
+			  {[
+				<En>Current Password</En>,
+				<Fr>Mot de passe actuel</Fr>
+			  ]}
+			</Lang>
 									</label>
 									<input
 										type="password"
@@ -216,7 +234,12 @@ function RecoverAccount(props: RecoverAccountProps) {
 										for="new-password"
 										class="block text-forest-800 mb-2"
 									>
-										New Password
+										<Lang>
+			  {[
+				<En>New Password</En>,
+				<Fr>Nouveau mot de passe</Fr>
+			  ]}
+			</Lang>
 									</label>
 									<input
 										type="password"
@@ -247,7 +270,12 @@ function RecoverAccount(props: RecoverAccountProps) {
 										for="confirm-new-password"
 										class="block text-forest-800 mb-2"
 									>
-										Confirm New Password
+																				<Lang>
+			  {[
+				<En>Confirm Password</En>,
+				<Fr>Confirmer le mot de passe</Fr>
+			  ]}
+			</Lang>
 									</label>
 									<input
 										type="password"
@@ -284,7 +312,12 @@ function RecoverAccount(props: RecoverAccountProps) {
 											password_status() === "processing"
 										}
 									>
-										Cancel
+										<Lang>
+			  {[
+				<En>Cancel</En>,
+				<Fr>Annuler</Fr>
+			  ]}
+			</Lang>
 									</Motion.button>
 									<Motion.button
 										hover={{ scale: 1.02 }}
@@ -302,7 +335,12 @@ function RecoverAccount(props: RecoverAccountProps) {
 											}
 											fallback="Updating..."
 										>
-											Update Password
+											<Lang>
+			  {[
+				<En>Update Password</En>,
+				<Fr>Actualiser le mot de passe</Fr>
+			  ]}
+			</Lang>
 										</Show>
 									</Motion.button>
 								</Motion.div>
@@ -318,7 +356,13 @@ function RecoverAccount(props: RecoverAccountProps) {
 									class="mt-4 pt-4 border-t border-lapis-200"
 								>
 									<p class="text-sm text-forest-700 mb-2">
-										Forgot your current password?
+									<Lang>
+			  {[
+				<En>Forgot your current password?</En>,
+				<Fr>Mot de passe oublié ? </Fr>
+			  ]}
+			</Lang>
+										
 									</p>
 									<Motion.button
 										hover={{ scale: 1.01 }}
@@ -338,7 +382,13 @@ function RecoverAccount(props: RecoverAccountProps) {
 											}
 											fallback="Sending reset email..."
 										>
-											Send password reset email instead
+											<Lang>
+			  {[
+				<En>Send password reset email instead</En>,
+				<Fr>Envoyer l'email de récuperation du mot de passe </Fr>
+			  ]}
+			</Lang>
+											
 										</Show>
 									</Motion.button>
 								</Motion.div>
@@ -372,7 +422,12 @@ function RecoverAccount(props: RecoverAccountProps) {
 										/>
 									</svg>
 									<p class="text-forest-800">
-										Password changed successfully!
+									<Lang>{[
+				<En>Password changed successfully!</En>,
+				<Fr>Mot de passe  modifié avec succès</Fr>
+			  ]}
+			</Lang>
+										
 									</p>
 								</div>
 							</Motion.div>
@@ -405,8 +460,13 @@ function RecoverAccount(props: RecoverAccountProps) {
 										/>
 									</svg>
 									<p class="text-forest-800">
-										Password reset email sent! Check your
-										inbox.
+									<Lang>{[
+				<En>Password reset email sent! Check your
+				inbox.</En>,
+				<Fr>Mail de modification du mot de passe envoyé! Vérifiez vos emails.</Fr>
+			  ]}
+			</Lang>
+										
 									</p>
 								</div>
 							</Motion.div>
@@ -439,8 +499,13 @@ function RecoverAccount(props: RecoverAccountProps) {
 										/>
 									</svg>
 									<p class="text-red-800">
-										Error changing password. Please try
-										again.
+									<Lang>{[
+				<En>Error changing password. Please try
+				again.</En>,
+				<Fr>Erreur lors du changement de mot de passe. Veuillez réessayer.</Fr>
+			  ]}
+			</Lang>
+										
 									</p>
 								</div>
 							</Motion.div>

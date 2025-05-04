@@ -4,6 +4,7 @@ import LogoIcon from "@assets/icons/logo.svg?component-solid";
 import HomeIcon from "@assets/icons/home.svg?component-solid";
 import { api } from "@utils/api";
 import DefaultHeader from "@components/header.default";
+import { En, Fr, Lang } from "./language";
 
 interface HeaderProps {}
 
@@ -35,28 +36,48 @@ function Header(props: HeaderProps) {
 					class="tracking-widest"
 					activeClass="text-forest-600"
 				>
-					<h1>History</h1>
+					<Lang>
+						{[
+							<En><h1>History</h1></En>,
+							<Fr><h1>Historique</h1></Fr>
+						]}
+					</Lang>
 				</A>
 				<A
 					href="/my-templates"
 					class="tracking-widest"
 					activeClass="text-forest-600"
 				>
-					<h1>Templates</h1>
+					<Lang>
+						{[
+							<En><h1>Templates</h1></En>,
+							<Fr><h1>Modèles</h1></Fr>
+						]}
+					</Lang>
 				</A>
 				<A
 					href="/blogs"
 					class="tracking-widest"
 					activeClass="text-forest-600"
 				>
-					<h1>Blog</h1>
+					<Lang>
+						{[
+							<En><h1>Blog</h1></En>,
+							<Fr><h1>Blog</h1></Fr>
+						]}
+					</Lang>
 				</A>
 				<A
 					href="/account"
 					class="tracking-widest bg-forest-800 text-snow-100 py-2 px-4 rounded"
 					activeClass="text-forest-600"
 				>
-					<h1 class="text-nowrap">My Account</h1>
+					<Lang>
+						{[
+							<En><h1 class="text-nowrap">My Account</h1></En>,
+							<Fr><h1 class="text-nowrap">Mon Compte</h1></Fr>
+						]}
+					</Lang>
 				</A>
 			</div>
 		</header>
@@ -77,7 +98,12 @@ export function AccountHeader(props: HeaderProps) {
 					class="tracking-widest"
 					activeClass="text-forest-600"
 				>
-					<h2>Blog</h2>
+					<Lang>
+						{[
+							<En><h2>Blog</h2></En>,
+							<Fr><h2>Blog</h2></Fr>
+						]}
+					</Lang>
 				</A>
 				<button
 					onclick={async (e) => {
@@ -91,7 +117,12 @@ export function AccountHeader(props: HeaderProps) {
 					}}
 					class="tracking-widest bg-forest-800 text-snow-100 py-2 px-4 rounded"
 				>
-					<h2 class="text-nowrap">Log out</h2>
+					<Lang>
+						{[
+							<En><h2 class="text-nowrap">Log out</h2></En>,
+							<Fr><h2 class="text-nowrap">Déconnexion</h2></Fr>
+						]}
+					</Lang>
 				</button>
 			</div>
 		</header>

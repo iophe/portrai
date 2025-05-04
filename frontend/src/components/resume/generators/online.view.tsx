@@ -13,6 +13,7 @@ import { ResumeLoader } from "./resume_loading.view";
 import { DB_JOB_SPECIFIC_RESUMES } from "@utils/db/resume.db";
 import { db } from "@utils/db/db";
 import { useTutorial } from "@components/onboarding";
+import { En, Fr, Lang } from "@components/language";
 
 interface ResumeAIPreviewProps {
 	refresh_signal: Accessor<number>;
@@ -282,7 +283,13 @@ function ResumeAIPreview(props: ResumeAIPreviewProps) {
 					onclick={() => {
 						tutorial.show("add-resume-item");
 					}}	
-				>Need some help <TutorialIcon class="fill-lapis-600"/></button>
+				>
+					<Lang>{[
+														<En>Need some help</En>,
+														<Fr>Besoin d'aide</Fr>
+													]}
+													</Lang>
+													 <TutorialIcon class="fill-lapis-600"/></button>
 			</Show>
 
 			<Show when={pdf_blob()}>
@@ -292,7 +299,12 @@ function ResumeAIPreview(props: ResumeAIPreviewProps) {
 						onClick={startNewResume}
 					>
 						<BackIcon class="fill-lapis-600" />
-						Start New Resume
+						<Lang>{[
+														<En>Start New Resume</En>,
+														<Fr>Commencer un nouveau CV</Fr>
+													]}
+													</Lang>
+						
 					</button>
 				</nav>
 

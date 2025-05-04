@@ -3,6 +3,7 @@ import { Motion, Presence } from "solid-motionone";
 import { useFault } from "@components/fault";
 import api from "@utils/api";
 import LoadingSpinner from "@components/loading.spinner";
+import { En, Fr, Lang } from "@components/language";
 
 interface GenerateResumeFromProfileProps {
 	template_name: string;
@@ -50,7 +51,12 @@ export function GenerateResumeFromProfile(
 					}}
 					disabled={is_generating()}
 				>
-					Generate Resume From Profile
+					<Lang>{[
+				<En>Generate Resume From Profile</En>,
+				<Fr>Générer un CV à partir du profile</Fr>
+			  ]}
+			</Lang>
+					
 					<Show when={is_generating()}>
 						<LoadingSpinner white />
 					</Show>

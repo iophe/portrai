@@ -5,6 +5,7 @@ import HelpIcon from "@assets/icons/help.svg?component-solid";
 import RefreshIcon from "@assets/icons/refresh.svg?component-solid";
 import api from "@utils/api";
 import LoadingSpinner from "@components/loading.spinner";
+import { En, Fr, Lang } from "@components/language";
 
 interface ResumeActionsProps {
 	conversation_id: string;
@@ -46,12 +47,22 @@ export function ResumeActions(props: ResumeActionsProps) {
 				class="shadow rounded w-full p-4 bg-lapis-10 h-fit flex flex-col gap-4"
 			>
 				<header class="flex flex-col gap-2 items-center">
-					<h3>Revise Resume</h3>
+					<h3>
+					<Lang>{[
+				<En>Revise Resume</En>,
+				<Fr>Mettre à jour le CV</Fr>
+			  ]}
+			</Lang></h3>
 					<span class="flex flex-row gap-2 opacity-40 cursor-help">
 						<HelpIcon class="fill-lapis-400 min-w-fit" />
 						<p class="text-lapis-300">
-							Provide feedback to update your resume. Be specific
-							about what you'd like to change.
+						<Lang>{[
+				<En>Provide feedback to update your resume. Be specific
+				about what you'd like to change.</En>,
+				<Fr>Donnez votre retour pour mettre à jour votre CV. Soyez précis sur ce que vous aimeriez modifier.</Fr>
+			  ]}
+			</Lang>
+							
 						</p>
 					</span>
 				</header>
@@ -83,7 +94,12 @@ export function ResumeActions(props: ResumeActionsProps) {
 									disabled={is_updating() || !comment()}
 								>
 									<RefreshIcon class="fill-snow-100" />
-									Update Resume
+									<Lang>{[
+				<En>Update Resume</En>,
+				<Fr>Mettre à jour le CV</Fr>
+			  ]}
+			</Lang>
+									
 									<Show when={is_updating()}>
 										<LoadingSpinner white />
 									</Show>
