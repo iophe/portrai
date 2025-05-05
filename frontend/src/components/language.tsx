@@ -20,6 +20,8 @@ class LangManager {
 
     update(lang:string) {
         localStorage.setItem("lang", lang);
+        console.log({lang})
+
         this._update(lang)
     }
 }
@@ -67,9 +69,12 @@ interface LangProps {
 }
 
 export function Lang(props:LangProps) {
+
     const lang = useLang();
     const children = createMemo(() => {
         const chs = (props.children as JSX.ArrayElement);
+        console.log(lang.current)
+
         for (let index = 0; index < chs.length; index++) {
             const element = chs[index];
             if ( typeof element === "function") {
