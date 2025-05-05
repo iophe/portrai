@@ -34,6 +34,7 @@ function Protected(props: ProtectedProps) {
 				navigate(props.redirect ?? "/", { replace: true });
 			}
 			localStorage.clear();
+			console.log("localStorage clean")
 			await DB_JOB_SPECIFIC_RESUMES.clear(db);
 		}
 		return false;

@@ -5,11 +5,13 @@ class LangManager {
     private _update: Setter<string>
     constructor() {
         let default_lang = localStorage.getItem("lang");
+        console.log({default_lang})
         if (!default_lang) {
             default_lang = navigator.language.includes('-') ? navigator.language.split('-')[0] : navigator.language;
             localStorage.setItem("lang", default_lang);
         }
-        
+        console.log({langue: navigator.language})
+
         const [current, update] = createSignal(default_lang);
         this.current = current
         this._update = update
@@ -76,7 +78,7 @@ export function Lang(props:LangProps) {
                 }
             }   
         }
-        return props.fallback
+        return "hello world"
     })
 
     return <>{children()}</>;
