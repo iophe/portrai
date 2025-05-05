@@ -5,13 +5,10 @@ class LangManager {
     private _update: Setter<string>
     constructor() {
         let default_lang = localStorage.getItem("lang");
-        console.log({default_lang})
         if (!default_lang) {
             default_lang = navigator.language.includes('-') ? navigator.language.split('-')[0] : navigator.language;
             localStorage.setItem("lang", default_lang);
         }
-        console.log({langue: navigator.language})
-        console.log({default_lang})
 
         const [current, update] = createSignal(default_lang);
         this.current = current
@@ -20,7 +17,6 @@ class LangManager {
 
     update(lang:string) {
         localStorage.setItem("lang", lang);
-        console.log({lang})
 
         this._update(lang)
     }
@@ -73,7 +69,6 @@ export function Lang(props:LangProps) {
     const lang = useLang();
     const children = createMemo(() => {
         const chs = (props.children as JSX.ArrayElement);
-        console.log(lang.current)
 
         for (let index = 0; index < chs.length; index++) {
             const element = chs[index];
@@ -82,9 +77,16 @@ export function Lang(props:LangProps) {
                 if (inner_props.lang === lang.current()) {
                     return inner_props.children;
                 }
-            }   
+            }  
+            else if (typeof element === "object") {
+                if ((element as InnerLangProps).lang === lang.current()) {
+                    return (element as InnerLangProps).children;
+                }
+
+            }
         }
-        return "hello world"
+
+        return props.fallback
     })
 
     return <>{children()}</>;
