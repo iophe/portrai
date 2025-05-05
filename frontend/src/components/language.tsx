@@ -11,6 +11,7 @@ class LangManager {
             localStorage.setItem("lang", default_lang);
         }
         console.log({langue: navigator.language})
+        console.log({default_lang})
 
         const [current, update] = createSignal(default_lang);
         this.current = current
