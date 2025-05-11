@@ -8,6 +8,7 @@ import SENIOR_EXECUTING_RESUME from "@assets/templates/senior_executive.jpg";
 import RESEARCHER_RESUME from "@assets/templates/researcher.jpg";
 import { Motion, Presence } from "solid-motionone";
 import { useFault } from "@components/fault";
+import { En, Fr, Lang } from "@components/language";
 
 interface TemplatesPage {}
 
@@ -20,7 +21,7 @@ function TemplatesPage(props: TemplatesPage) {
 		localStorage.getItem("template_name") || "standard-executive"
 	);
 	const [selected_template_name, set_selected_template_name] =
-		createSignal("Executive");
+		createSignal({ eng: "Executive", fr: "Cadre" });
 	const [filter_category, set_filter_category] = createSignal("all");
 
 	const [templates_store, set_templates_store] = createStore([
@@ -48,32 +49,42 @@ function TemplatesPage(props: TemplatesPage) {
 		},*/
 		{
 			id: "columns-executive",
-			name: "Modern",
+			name: { eng: "Modern", fr: "Moderne" },
 			category: "simple",
-			description: "Clean, minimalist and modern design.",
+			description: { 
+				eng: "Clean, minimalist and modern design.", 
+				fr: "Design propre, minimaliste et moderne." 
+			},
 			image_url: COLUMNS_EXECUTING_RESUME,
 		},
 		{
 			id: "standard-executive",
-			name: "Executive",
+			name: { eng: "Executive", fr: "Cadre" },
 			category: "professional",
-			description: "Sophisticated layout for professionals.",
+			description: { 
+				eng: "Sophisticated layout for professionals.", 
+				fr: "Mise en page sophistiquée pour les professionnels." 
+			},
 			image_url: STANDARD_EXECUTING_RESUME,
 		},
 		{
 			id: "senior-executive",
-			name: "Senior",
+			name: { eng: "Senior", fr: "Sénior" },
 			category: "professional",
-			description:
-				"Professional design for C-suite and senior leadership.",
+			description: {
+				eng: "Professional design for C-suite and senior leadership.",
+				fr: "Design professionnel pour cadres dirigeants et direction générale."
+			},
 			image_url: SENIOR_EXECUTING_RESUME,
 		},
 		{
 			id: "researcher",
-			name: "Researcher",
+			name: { eng: "Researcher", fr: "Chercheur" },
 			category: "education",
-			description:
-				"Academic-focused layout for researchers and students.",
+			description: {
+				eng: "Academic-focused layout for researchers and students.",
+				fr: "Mise en page académique pour chercheurs et étudiants."
+			},
 			image_url: RESEARCHER_RESUME,
 		},
 		// {
@@ -108,12 +119,12 @@ function TemplatesPage(props: TemplatesPage) {
 	]);
 
 	const categories = [
-		{ id: "all", name: "All Templates" },
-		{ id: "professional", name: "Professional" },
+		{ id: "all", name: { eng: "All Templates", fr: "Tous les modèles" } },
+		{ id: "professional", name: { eng: "Professional", fr: "Professionnel" } },
 		//{ id: "creative", name: "Creative" },
-		{ id: "simple", name: "Simple" },
+		{ id: "simple", name: { eng: "Simple", fr: "Simple" } },
 		// { id: "technical", name: "Technical" },
-		{ id: "education", name: "Education" },
+		{ id: "education", name: { eng: "Education", fr: "Éducation" } },
 	];
 
 	const filtered_templates = () => {
@@ -137,7 +148,7 @@ function TemplatesPage(props: TemplatesPage) {
 		localStorage.setItem("template_name", selected_template_id());
 		set_current_template_id(selected_template_id());
 		fault.info({
-			message: `Selected the ${selected_template_name()} template. Good Choice!`,
+			message: `Selected the ${selected_template_name().eng} template. Good Choice!`,
 		});
 	};
 
@@ -153,12 +164,16 @@ function TemplatesPage(props: TemplatesPage) {
 						transition={{ duration: 0.5 }}
 					>
 						<h1 class="text-3xl font-bold mb-3">
-							Resume Templates
+							<Lang>
+								<En>Resume Templates</En>
+								<Fr>Modèles de CV</Fr>
+							</Lang>
 						</h1>
 						<p class="text-gray-600 max-w-3xl mx-auto">
-							Choose from our professionally designed templates to
-							create your perfect resume. Click on a template to
-							select it for your next application.
+							<Lang>
+								<En>Choose from our professionally designed templates to create your perfect resume. Click on a template to select it for your next application.</En>
+								<Fr>Choisissez parmi nos modèles conçus professionnellement pour créer votre CV parfait. Cliquez sur un modèle pour le sélectionner pour votre prochaine candidature.</Fr>
+							</Lang>
 						</p>
 					</Motion>
 				</header>
@@ -187,7 +202,10 @@ function TemplatesPage(props: TemplatesPage) {
 									filter_category() === category.id
 								}
 							>
-								{category.name}
+								<Lang>
+									<En>{category.name.eng}</En>
+									<Fr>{category.name.fr}</Fr>
+								</Lang>
 							</button>
 						)}
 					</For>
@@ -224,10 +242,16 @@ function TemplatesPage(props: TemplatesPage) {
 								>
 									<div class="flex flex-col gap-2">
 										<h3 class="font-medium text-lg">
-											{template.name}
+											<Lang>
+												<En>{template.name.eng}</En>
+												<Fr>{template.name.fr}</Fr>
+											</Lang>
 										</h3>
 										<p class="text-sm text-gray-600">
-											{template.description}
+											<Lang>
+												<En>{template.description.eng}</En>
+												<Fr>{template.description.fr}</Fr>
+											</Lang>
 										</p>
 
 										<Presence>
@@ -264,7 +288,10 @@ function TemplatesPage(props: TemplatesPage) {
 															}}
 															class="px-4 py-2 bg-forest-700 text-white rounded hover:bg-forest-800 transition-colors"
 														>
-															Use Template
+															<Lang>
+																<En>Use Template</En>
+																<Fr>Utiliser ce modèle</Fr>
+															</Lang>
 														</button>
 													</div>
 												</Motion>
@@ -279,7 +306,7 @@ function TemplatesPage(props: TemplatesPage) {
 										<figure class="flex-1">
 											<img
 												src={template.image_url}
-												alt={`${template.name} template preview`}
+												alt={`${template.name.eng}`}
 												class="object-cover w-full h-full"
 												onError={(e) => {
 													// Fallback for missing images
@@ -307,7 +334,10 @@ function TemplatesPage(props: TemplatesPage) {
 						>
 							<div class="w-full py-12 text-center">
 								<p class="text-gray-500 text-lg">
-									No templates found in this category.
+									<Lang>
+										<En>No templates found in this category.</En>
+										<Fr>Aucun modèle trouvé dans cette catégorie.</Fr>
+									</Lang>
 								</p>
 								<Motion.button
 									hover={{ scale: 1.05 }}
@@ -315,7 +345,10 @@ function TemplatesPage(props: TemplatesPage) {
 									onClick={() => set_filter_category("all")}
 									class="mt-4 px-4 py-2 border border-forest-700 text-forest-700 rounded-lg hover:bg-forest-50"
 								>
-									View All Templates
+									<Lang>
+										<En>View All Templates</En>
+										<Fr>Voir tous les modèles</Fr>
+									</Lang>
 								</Motion.button>
 							</div>
 						</Motion>

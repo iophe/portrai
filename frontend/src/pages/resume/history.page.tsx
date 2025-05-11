@@ -18,6 +18,7 @@ import {
 } from "solid-js";
 import EditIcon from "@assets/icons/edit.svg?component-solid";
 import Footer from "@components/footer.default";
+import { En, Fr, Lang } from "@components/language";
 
 interface HistoryPageProps {}
 
@@ -30,7 +31,7 @@ function HistoryPage(props: HistoryPageProps) {
 			return res;
 		} catch (err) {
 			fault.major({
-				message: (err as JobSpecificResumeNotFoundError).message,
+				message: `${(err as JobSpecificResumeNotFoundError).message}`,
 			});
 			return [];
 		}
@@ -47,7 +48,7 @@ function HistoryPage(props: HistoryPageProps) {
 			return res;
 		} catch (err) {
 			fault.major({
-				message: (err as JobSpecificResumeNotFoundError).message,
+				message: `${(err as JobSpecificResumeNotFoundError).message}`,
 			});
 		}
 	});
@@ -62,14 +63,20 @@ function HistoryPage(props: HistoryPageProps) {
 				<section class="overflow-y-hidden pr-4 lg:h-full  lg:max-h-full max-h-96 w-full">
 					<div class="overflow-y-hidden lg:h-full  lg:max-h-full max-h-96 flex flex-col gap-4">
 						<h2 class="w-full border-b-2 border-forest-900 pb-2">
-							Recently created resumes :
+							<Lang>
+								<En>Recently created resumes:</En>
+								<Fr>CV récemment créés :</Fr>
+							</Lang>
 						</h2>
 						<Suspense fallback={<LoadingSpinner />}>
 							<ol class="overflow-y-auto w-full flex flex-col gap-4">
 								<For
 									each={resumes()}
 									fallback={
-										"Start creating resumes for your next dream job"
+										<Lang>
+											<En>Start creating resumes for your next dream job</En>
+											<Fr>Commencez à créer des CV pour votre prochain emploi de rêve</Fr>
+										</Lang>
 									}
 								>
 									{(resume) => {
@@ -122,14 +129,19 @@ function HistoryPage(props: HistoryPageProps) {
 							<div class="w-full h-full flex flex-col items-center justify-center">
 								<div class="items-center flex flex-col gap-4">
 									<h2>
-										No resume to display, Start creating
-										resumes for your next dream job
+										<Lang>
+											<En>No resume to display, Start creating resumes for your next dream job</En>
+											<Fr>Aucun CV à afficher, commencez à créer des CV pour votre prochain emploi de rêve</Fr>
+										</Lang>
 									</h2>
 									<A
 										href="/"
 										class="w-fit text-center px-4 py-2 bg-lapis-200 hover:bg-lapis-100 text-snow-100 rounded"
 									>
-										Return to home page
+										<Lang>
+											<En>Return to home page</En>
+											<Fr>Retour à la page d'accueil</Fr>
+										</Lang>
 									</A>
 								</div>
 							</div>

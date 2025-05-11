@@ -21,6 +21,8 @@ import {
 	FormSubmitButton,
 } from "@components/resume/utils/form.input";
 import { createCachedResource } from "@utils/cache";
+import { En, Fr, Lang, LangProvider, Test, useLang } from "@components/language";
+
 
 interface AccountSectionProps {}
 
@@ -108,7 +110,13 @@ export function AccountSection(props: AccountSectionProps) {
 					class="flex flex-row gap-4"
 				>
 					<AccountIcon class="min-w-fit fill-forest-900" />
-					<h2 class="uppercase">My Account</h2>
+					<h2 class="uppercase">			
+					<Lang>
+			  {[
+				<En>My Account</En>,
+				<Fr>Mon compte</Fr>
+			  ]}
+			</Lang></h2>
 				</Motion.div>
 
 				<Switch>

@@ -11,6 +11,7 @@ import HelpIcon from "@assets/icons/help.svg?component-solid";
 import { createCachedResource } from "@utils/cache";
 import { useNavigate } from "@solidjs/router";
 import { ProcessMajorError } from "@utils/api";
+import { En, Fr, Lang } from "@components/language";
 
 interface SkillListProps {
 	on_refetch: () => void;
@@ -81,7 +82,13 @@ export function SkillList(props: SkillListProps) {
 				fallback={
 					<span class="flex flex-wrap gap-2 text-lapis-500">
 						<HelpIcon class="min-w-fit fill-lapis-400" />{" "}
-						<p>Add some of your skills in your resume</p>{" "}
+						<p>
+						<Lang>{[
+						<En>Add your skills in your resume</En>,
+						<Fr>Ajoutez vos compétences personnels dans votre CV</Fr>
+					]}
+					</Lang>
+							</p>{" "}
 					</span>
 				}
 			/>
@@ -216,7 +223,11 @@ export function OfflineSkillList(props: OfflineSkillListProps) {
 				fallback={
 					<span class="flex flex-wrap gap-2 text-lapis-500">
 						<HelpIcon class="min-w-fit fill-lapis-400" />{" "}
-						<p>Add some of your skills in this resume</p>{" "}
+						<p><Lang>{[
+						<En>Add your skills in your resume</En>,
+						<Fr>Ajoutez vos compétences personnels dans votre CV</Fr>
+					]}
+					</Lang> </p>{" "}
 					</span>
 				}
 			/>

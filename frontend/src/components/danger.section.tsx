@@ -4,6 +4,7 @@ import api from "@utils/api";
 import { db } from "@utils/db/db";
 import { DB_JOB_SPECIFIC_RESUMES } from "@utils/db/resume.db";
 import RecoverAccount from "./recover.section";
+import { En, Fr, Lang, useLang } from "./language";
 
 interface DangerZoneProps {}
 
@@ -22,7 +23,13 @@ export function DangerZone(props: DangerZoneProps) {
 				class="flex flex-row gap-4 border-b-2 border-forest-900 pb-2"
 			>
 				<DangerIcon class="min-w-fit fill-forest-900" />
-				<h2 class="text-sm text-gray-500 uppercase">Danger Zone</h2>
+				<h2 class="text-sm text-gray-500 uppercase">
+				<Lang>
+			  {[
+				<En>Danger Zone</En>,
+				<Fr>Zone de Danger</Fr>
+			  ]}
+			</Lang></h2>
 			</Motion.header>
 
 			<article class="w-full mt-4 flex flex-col-reverse lg:flex-row gap-4">
@@ -38,8 +45,14 @@ export function DangerZone(props: DangerZoneProps) {
 						transition={{ duration: 0.2, delay: 0.1 }}
 						class="text-sm text-forest-700 items-start"
 					>
-						Once you log out all recent resumes in history will be
-						lost
+						
+						<Lang>
+			  {[
+				<En>						Once you log out all recent resumes in history will be
+				lost</En>,
+				<Fr>Une fois déconnecté, tous les résumés récents seront perdus</Fr>
+			  ]}
+			</Lang>
 					</Motion.p>
 
 					<Motion.button
@@ -62,7 +75,12 @@ export function DangerZone(props: DangerZoneProps) {
 							}
 						}}
 					>
-						Log out
+						<Lang>
+			  {[
+				<En>						Log Out</En>,
+				<Fr>Se déconnecter</Fr>
+			  ]}
+			</Lang>
 					</Motion.button>
 
 					<Motion.p
@@ -71,8 +89,15 @@ export function DangerZone(props: DangerZoneProps) {
 						transition={{ duration: 0.2, delay: 0.2 }}
 						class="text-sm text-forest-700"
 					>
-						Once you delete your account, it cannot be undone. This
-						is permanent.
+						<Lang>
+			  {[
+				<En>						Once you delete your account, it cannot be undone. This
+				is permanent.</En>,
+				<Fr>Une fois votre compte supprimé , cette action est irréversible</Fr>
+			  ]}
+			</Lang>
+
+						
 					</Motion.p>
 
 					<button
@@ -95,7 +120,12 @@ export function DangerZone(props: DangerZoneProps) {
 							}
 						}}
 					>
-						Delete Account
+						<Lang>
+			  {[
+				<En>						Delete account</En>,
+				<Fr>Supprimer votre compte</Fr>
+			  ]}
+			</Lang>
 					</button>
 				</Motion.div>
 

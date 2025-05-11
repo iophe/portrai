@@ -27,6 +27,7 @@ import {
 } from "@components/avatar.section";
 import { useNavigate } from "@solidjs/router";
 import { PDFView } from "./pdf.view";
+import { En, Fr, Lang } from "@components/language";
 
 export function formatText(text: string) {
 	if (!text) return null;
@@ -259,7 +260,12 @@ function ResumePreview(props: ResumePreviewProps) {
 						<div class="flex flex-col items-start gap-4">
 							<article class="p-4 border-l-4 border-l-lapis-50 bg-gradient-to-br from-lapis-10 to-white flex flex-col gap-2 w-full">
 								<h2 class="text-lapis-700 font-medium">
-									Job description:
+								<Lang>{[
+														<En>Job description:</En>,
+														<Fr>Offre d'emploi ...</Fr>
+													]}
+													</Lang>
+									
 								</h2>
 								<div
 									class="line-clamp-6 transition-all duration-300"
@@ -293,7 +299,12 @@ function ResumePreview(props: ResumePreviewProps) {
 														}
 														class="text-lapis-600 hover:text-lapis-800 font-medium text-sm smooth-transition"
 													>
-														show more ...
+														<Lang>{[
+														<En>show more ...</En>,
+														<Fr>afficher plus ...</Fr>
+													]}
+													</Lang>
+														
 													</button>
 												</Motion>
 											}
@@ -313,7 +324,11 @@ function ResumePreview(props: ResumePreviewProps) {
 													}
 													class="text-lapis-600 hover:text-lapis-800 font-medium text-sm smooth-transition"
 												>
-													show less ...
+																											<Lang>{[
+														<En>show less ...</En>,
+														<Fr>afficher moins ...</Fr>
+													]}
+													</Lang>
 												</button>
 											</Motion>
 										</Show>
@@ -364,7 +379,11 @@ function ResumePreview(props: ResumePreviewProps) {
 							}}
 						></Motion>
 						<h2 class="text-lapis-700 font-medium">
-							Cover letter:
+						<Lang>{[
+														<En>Cover letter:</En>,
+														<Fr>Lettre de motivation</Fr>
+													]}
+													</Lang>
 						</h2>
 						<Motion
 							initial={{ opacity: 0, scale: 0.98 }}

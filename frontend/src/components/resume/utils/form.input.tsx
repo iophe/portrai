@@ -4,6 +4,7 @@ import { Motion, Presence } from "solid-motionone";
 import DeleteIcon from "@assets/icons/delete.svg?component-solid";
 import EyeOpenIcon from "@assets/icons/eye.svg?component-solid";
 import EyeCloseIcon from "@assets/icons/eye-closed.svg?component-solid";
+import { En, Fr, Lang } from "@components/language";
 
 interface FormLabeledInputProps {
 	label: string;
@@ -28,7 +29,12 @@ export function FormLabeledInput(props: FormLabeledInputProps) {
 							animate={{ opacity: 1, scale: 1 }}
 							transition={{ duration: 0.1, delay: 0.1 }}
 						>
-							(optional)
+							<Lang>{[
+						<En>(optional)</En>,
+						<Fr>(optionnel)</Fr>
+					]}
+					</Lang>
+							
 						</Motion.p>
 					</Show>
 				</span>
@@ -212,7 +218,11 @@ export function FormCancelButton(props: FormCancelProps) {
 			onClick={props.cancel}
 			class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded"
 		>
-			Cancel
+			<Lang>{[
+						<En>Cancel</En>,
+						<Fr>Annuler</Fr>
+					]}
+					</Lang>
 		</Motion.button>
 	);
 }
