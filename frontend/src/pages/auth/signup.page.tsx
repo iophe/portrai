@@ -6,6 +6,7 @@ import { Pay } from "@utils/payment";
 import Footer from "@components/footer.default";
 import { createEffect, Match, onMount, Switch } from "solid-js";
 import { useFault } from "@components/fault";
+import { En, Fr, Lang } from "@components/language";
 
 interface SignupPageProps {}
 
@@ -120,7 +121,10 @@ function SignupPage(props: SignupPageProps) {
 			<section class="lg:py-16 py-8 h-full flex flex-col gap-16 items-center">
 				<section class="max-w-md w-full space-y-8 grow">
 					<h2 class="text-center text-3xl text-forest-900">
-						Create your account
+						<Lang>
+							<En>Create your account</En>
+							<Fr>Créez votre compte</Fr>
+						</Lang>
 					</h2>
 
 					<div class="flex flex-col items-center w-full">
@@ -153,7 +157,10 @@ function SignupPage(props: SignupPageProps) {
 						</div>
 						<div class="relative flex justify-center text-sm">
 							<span class="px-2 bg-forest-50 text-forest-500">
-								Or continue with
+								<Lang>
+									<En>Or continue with</En>
+									<Fr>Ou continuer avec</Fr>
+								</Lang>
 							</span>
 						</div>
 					</div>
@@ -166,7 +173,7 @@ function SignupPage(props: SignupPageProps) {
 							if (!email_signup_data.terms_accepted) {
 								fault.minor({
 									message:
-										"You must accept the Terms of Service to continue.",
+										"ou must accept the Terms of Service to continue",
 								});
 								return;
 							}
@@ -191,7 +198,10 @@ function SignupPage(props: SignupPageProps) {
 						<fieldset class="rounded shadow-sm -space-y-px">
 							<div>
 								<label for="email" class="sr-only">
-									Email address
+									<Lang>
+										<En>Email address</En>
+										<Fr>Adresse e-mail</Fr>
+									</Lang>
 								</label>
 								<input
 									id="email"
@@ -206,7 +216,10 @@ function SignupPage(props: SignupPageProps) {
 							</div>
 							<div>
 								<label for="password" class="sr-only">
-									Password
+									<Lang>
+										<En>Password</En>
+										<Fr>Mot de passe</Fr>
+									</Lang>
 								</label>
 								<input
 									id="password"
@@ -221,7 +234,10 @@ function SignupPage(props: SignupPageProps) {
 							</div>
 							<div>
 								<label for="confirm_password" class="sr-only">
-									Confirm password
+									<Lang>
+										<En>Confirm password</En>
+										<Fr>Confirmer le mot de passe</Fr>
+									</Lang>
 								</label>
 								<input
 									id="confirm_password"
@@ -255,19 +271,31 @@ function SignupPage(props: SignupPageProps) {
 									class="font-medium text-lapis-600"
 									id="terms-description"
 								>
-									I agree to the{" "}
+									<Lang>
+										<En>I agree to the</En>
+										<Fr>J'accepte les</Fr>
+									</Lang>{" "}
 									<A
 										href="/policies/term-of-services"
 										class="text-forest-700 hover:text-forest-600 smooth-transition"
 									>
-										Terms of Service
+										<Lang>
+											<En>Terms of Service</En>
+											<Fr>Conditions d'Utilisation</Fr>
+										</Lang>
 									</A>{" "}
-									and{" "}
+									<Lang>
+										<En>and</En>
+										<Fr>et la</Fr>
+									</Lang>{" "}
 									<A
 										href="/policies/privacy"
 										class="text-forest-700 hover:text-forest-600 smooth-transition"
 									>
-										Privacy Policy
+										<Lang>
+											<En>Privacy Policy</En>
+											<Fr>Politique de Confidentialité</Fr>
+										</Lang>
 									</A>
 								</label>
 							</div>
@@ -277,7 +305,10 @@ function SignupPage(props: SignupPageProps) {
 							type="submit"
 							class="w-full flex justify-center py-2 px-4 border border-transparent rounded shadow-sm text-sm font-medium text-white bg-forest-600 hover:bg-forest-400 smooth-transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-forest-500"
 						>
-							Create account
+							<Lang>
+								<En>Create account</En>
+								<Fr>Créer un compte</Fr>
+							</Lang>
 						</button>
 					</form>
 
@@ -288,7 +319,10 @@ function SignupPage(props: SignupPageProps) {
 									href={`/signin?payment=${location.query.payment}`}
 									class="text-sm font-medium text-lapis-600 hover:text-lapis-500 smooth-transition"
 								>
-									Already have an account? Sign in
+									<Lang>
+										<En>Already have an account? Sign in</En>
+										<Fr>Vous avez déjà un compte ? Connectez-vous</Fr>
+									</Lang>
 								</A>
 							</Match>
 							<Match when={!location.query.payment}>
@@ -296,7 +330,10 @@ function SignupPage(props: SignupPageProps) {
 									href="/signin"
 									class="text-sm font-medium text-lapis-600 hover:text-lapis-500 smooth-transition"
 								>
-									Already have an account? Sign in
+									<Lang>
+										<En>Already have an account? Sign in</En>
+										<Fr>Vous avez déjà un compte ? Connectez-vous</Fr>
+									</Lang>
 								</A>
 							</Match>
 						</Switch>

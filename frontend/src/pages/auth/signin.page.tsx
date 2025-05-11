@@ -7,6 +7,7 @@ import { Match, onMount, Switch } from "solid-js";
 import Footer from "@components/footer.default";
 import { useFault } from "@components/fault";
 import { AxiosError } from "axios";
+import { En, Fr, Lang } from "@components/language";
 
 interface SigninPageProps {}
 
@@ -86,7 +87,10 @@ function SigninPage(props: SigninPageProps) {
 			<section class="lg:py-16 py-8 h-full flex flex-col gap-16 items-center">
 				<section class="max-w-md w-full space-y-8 grow">
 					<h2 class="text-center text-3xl text-forest-900">
-						Sign in to your account
+						<Lang>
+							<En>Sign in to your account</En>
+							<Fr>Connectez-vous à votre compte</Fr>
+						</Lang>
 					</h2>
 
 					<div class="flex flex-col items-center w-full">
@@ -122,7 +126,10 @@ function SigninPage(props: SigninPageProps) {
 						</div>
 						<div class="relative flex justify-center text-sm">
 							<span class="px-2 bg-forest-50 text-forest-500">
-								Or continue with
+								<Lang>
+									<En>Or continue with</En>
+									<Fr>Ou continuer avec</Fr>
+								</Lang>
 							</span>
 						</div>
 					</div>
@@ -178,7 +185,10 @@ function SigninPage(props: SigninPageProps) {
 						<div class="rounded shadow-sm -space-y-px">
 							<div>
 								<label for="email" class="sr-only">
-									Email address
+									<Lang>
+										<En>Email address</En>
+										<Fr>Adresse e-mail</Fr>
+									</Lang>
 								</label>
 								<input
 									id="email"
@@ -193,7 +203,10 @@ function SigninPage(props: SigninPageProps) {
 							</div>
 							<div>
 								<label for="password" class="sr-only">
-									Password
+									<Lang>
+										<En>Password</En>
+										<Fr>Mot de passe</Fr>
+									</Lang>
 								</label>
 								<input
 									id="password"
@@ -212,7 +225,10 @@ function SigninPage(props: SigninPageProps) {
 							type="submit"
 							class="w-full flex justify-center py-2 px-4 border border-transparent rounded shadow-sm text-sm font-medium text-white bg-forest-600 hover:bg-forest-400 smooth-transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-forest-500"
 						>
-							Sign in
+							<Lang>
+								<En>Sign in</En>
+								<Fr>Se connecter</Fr>
+							</Lang>
 						</button>
 					</form>
 
@@ -221,7 +237,10 @@ function SigninPage(props: SigninPageProps) {
 							href="/forgot-password"
 							class="text-sm font-medium text-lapis-600 hover:text-lapis-500 smooth-transition"
 						>
-							Forgot your password?
+							<Lang>
+								<En>Forgot your password?</En>
+								<Fr>Mot de passe oublié ?</Fr>
+							</Lang>
 						</A>
 						<Switch>
 							<Match when={location.query.payment}>
@@ -229,7 +248,10 @@ function SigninPage(props: SigninPageProps) {
 									href={`/signup?payment=${location.query.payment}`}
 									class="text-sm font-medium text-lapis-600 hover:text-lapis-500 smooth-transition"
 								>
-									No account? Sign up
+									<Lang>
+										<En>No account? Sign up</En>
+										<Fr>Pas de compte ? Inscrivez-vous</Fr>
+									</Lang>
 								</A>
 							</Match>
 							<Match when={!location.query.payment}>
@@ -237,7 +259,10 @@ function SigninPage(props: SigninPageProps) {
 									href="/signup"
 									class="text-sm font-medium text-lapis-600 hover:text-lapis-500 smooth-transition"
 								>
-									No account? Sign up
+									<Lang>
+										<En>No account? Sign up</En>
+										<Fr>Pas de compte ? Inscrivez-vous</Fr>
+									</Lang>
 								</A>
 							</Match>
 						</Switch>

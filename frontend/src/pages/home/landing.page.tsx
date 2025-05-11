@@ -57,7 +57,14 @@ function LandingPage(props: LandingPageProps) {
 		  ),
 		},
 		{
-		  title: "Paste the job description",
+		  title: () => (
+			<Lang>
+			  {[
+				<En>Paste the job description</En>,
+				<Fr>Collez la description du poste</Fr>
+			  ]}
+			</Lang>
+		  ),
 		  description: () => (
 			<Lang>
 			  {[
@@ -614,17 +621,17 @@ function LandingPage(props: LandingPageProps) {
 			<header class="text-center mb-12">
 				<h2 class="text-3xl font-bold text-forest-900 mb-4">
 				<Lang>
-					{[
+
 					<En>Maximize Your</En>,
 					<Fr>Maximisez votre</Fr>
-					]}
+
 				</Lang>{" "}
 				<span class="alice-regular">
 					<Lang>
-					{[
+
 						<En>Success Rate</En>,
 						<Fr>Taux de réussite</Fr>
-					]}
+
 					</Lang>
 				</span>
 				</h2>
