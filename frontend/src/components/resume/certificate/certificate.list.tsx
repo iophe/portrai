@@ -11,6 +11,7 @@ import LoadingSpinner from "@components/loading.spinner";
 import { createCachedResource } from "@utils/cache";
 import { useNavigate } from "@solidjs/router";
 import { ProcessMajorError } from "@utils/api";
+import { En, Fr, Lang } from "@components/language";
 
 interface CertificateListProps {
 	on_refetch: () => void;
@@ -67,7 +68,8 @@ export function CertificateList(props: CertificateListProps) {
 		<section class="w-full flex flex-col gap-4 justify-items-center">
 			<SectionHeader
 				add={() => {}}
-				section_title="Certifications and Licenses"
+				en_section_title="Certifications and Licenses"
+				fr_section_title="Certificats et Licenses"
 				section_name="certification"
 				form={(props) => (
 					<CertificateForm
@@ -87,7 +89,16 @@ export function CertificateList(props: CertificateListProps) {
 					<span class="flex flex-wrap gap-2 text-lapis-500">
 						<HelpIcon class="min-w-fit fill-lapis-400" />{" "}
 						<p>
-							Add some certifications or licenses in your resume
+							<Lang>
+								<En>
+									Add some certifications or licenses in your
+									resume
+								</En>
+								<Fr>
+									Ajoutez des certifications ou des licences
+									dans votre CV
+								</Fr>
+							</Lang>
 						</p>{" "}
 					</span>
 				}
@@ -227,7 +238,8 @@ export function OfflineCertificateList(props: OfflineCertificateListProps) {
 		<section class="w-full flex flex-col gap-4 justify-items-center">
 			<SectionHeader
 				add={() => {}}
-				section_title="Certifications and Licenses"
+				en_section_title="Certifications and Licenses"
+				fr_section_title="Certificats et Licenses"
 				section_name="certification"
 				form={(p) => (
 					<CertificateForm
@@ -248,7 +260,16 @@ export function OfflineCertificateList(props: OfflineCertificateListProps) {
 					<span class="flex flex-wrap gap-2 text-lapis-500">
 						<HelpIcon class="min-w-fit fill-lapis-400" />{" "}
 						<p>
-							Add some certifications or licenses in this resume
+							<Lang>
+								<En>
+									Add some certifications or licenses in this
+									resume
+								</En>
+								<Fr>
+									Ajoutez des certifications ou des licences
+									dans ce CV
+								</Fr>
+							</Lang>
 						</p>{" "}
 					</span>
 				}

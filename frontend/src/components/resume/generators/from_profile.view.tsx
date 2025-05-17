@@ -3,6 +3,7 @@ import { Motion, Presence } from "solid-motionone";
 import { useFault } from "@components/fault";
 import api from "@utils/api";
 import LoadingSpinner from "@components/loading.spinner";
+import { En, Fr, Lang, useLang } from "@components/language";
 
 interface GenerateResumeFromProfileProps {
 	template_name: string;
@@ -17,6 +18,7 @@ export function GenerateResumeFromProfile(
 ) {
 	const [is_generating, set_is_generating] = createSignal(false);
 	const fault = useFault();
+	const lang = useLang();
 
 	return (
 		<section class="w-full flex justify-center p-4">
@@ -33,7 +35,10 @@ export function GenerateResumeFromProfile(
 						props.activate();
 						try {
 							const response = await api.post(
-								"/generate/from-profile/" + props.template_name
+								"/generate/from-profile/" +
+									props.template_name +
+									"/" +
+									lang.current()
 							);
 							const result =
 								response.data as GenerateResumeFromProfileData;
@@ -50,7 +55,11 @@ export function GenerateResumeFromProfile(
 					}}
 					disabled={is_generating()}
 				>
-					Generate Resume From Profile
+					<Lang>
+						<En>Generate Resume From Profile</En>
+						<Fr>Générer un CV à partir du profile</Fr>
+					</Lang>
+
 					<Show when={is_generating()}>
 						<LoadingSpinner white />
 					</Show>

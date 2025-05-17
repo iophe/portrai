@@ -12,6 +12,7 @@ import { A, useSearchParams } from "@solidjs/router";
 import { useFault } from "@components/fault";
 import api from "@utils/api";
 import VerifiedIcon from "@assets/icons/verified.svg?component-solid";
+import { En, Fr, Lang } from "@components/language";
 
 interface VerifyPageProps {}
 
@@ -115,13 +116,16 @@ function VerifyPage(props: VerifyPageProps) {
 	});
 
 	return (
-		<main class="md:px-48 px-6 mx-auto justify-items-center py-4 flex flex-col gap-4 h-screen md:max-h-screen">
+		<main class="lg:px-48 px-6 mx-auto justify-items-center py-4 flex flex-col gap-4 h-screen lg:max-h-screen">
 			<Header />
 
 			<section class="w-full flex flex-col gap-4 justify-start h-full overflow-y-auto items-center text-forest-900">
 				<div class="max-w-md w-full bg-white p-8 rounded-lg shadow-md">
 					<h1 class="text-2xl mb-6 text-forest-900 text-center">
-						Email Verification
+						<Lang>
+							<En>Email Verification</En>
+							<Fr>Vérification de l'e-mail</Fr>
+						</Lang>
 					</h1>
 
 					<Switch>
@@ -129,7 +133,13 @@ function VerifyPage(props: VerifyPageProps) {
 							<div class="flex flex-col items-center justify-center py-8">
 								<div class="animate-spin rounded-full h-12 w-12 border-b-2 border-lapis-500 mb-4"></div>
 								<p class="text-center">
-									Verifying your email address...
+									<Lang>
+										<En>Verifying your email address...</En>
+										<Fr>
+											Vérification de votre adresse
+											e-mail...
+										</Fr>
+									</Lang>
 								</p>
 							</div>
 						</Match>
@@ -140,16 +150,31 @@ function VerifyPage(props: VerifyPageProps) {
 									<VerifiedIcon class="min-w-fit fill-lapis-500" />
 								</div>
 								<h2 class="text-xl font-semibold mb-2 text-forest-800">
-									Email Verified!
+									<Lang>
+										<En>Email Verified!</En>
+										<Fr>E-mail vérifié !</Fr>
+									</Lang>
 								</h2>
 								<p class="text-center mb-6">
-									Your email has been successfully verified.
+									<Lang>
+										<En>
+											Your email has been successfully
+											verified.
+										</En>
+										<Fr>
+											Votre e-mail a été vérifié avec
+											succès.
+										</Fr>
+									</Lang>
 								</p>
 								<A
 									href="/signin"
 									class="px-6 py-2 bg-forest-800 text-white rounded hover:bg-forest-700 smooth-transition"
 								>
-									Go to Login
+									<Lang>
+										<En>Go to Login</En>
+										<Fr>Aller à la connexion</Fr>
+									</Lang>
 								</A>
 							</div>
 						</Match>
@@ -173,11 +198,22 @@ function VerifyPage(props: VerifyPageProps) {
 									</svg>
 								</div>
 								<h2 class="text-xl font-semibold mb-2 text-forest-800">
-									Verification Failed
+									<Lang>
+										<En>Verification Failed</En>
+										<Fr>Échec de la vérification</Fr>
+									</Lang>
 								</h2>
 								<p class="text-center mb-6">
-									The verification link is invalid or has
-									expired.
+									<Lang>
+										<En>
+											The verification link is invalid or
+											has expired.
+										</En>
+										<Fr>
+											Le lien de vérification est invalide
+											ou a expiré.
+										</Fr>
+									</Lang>
 								</p>
 
 								<Show when={resend_status() !== "success"}>
@@ -190,7 +226,12 @@ function VerifyPage(props: VerifyPageProps) {
 												for="email"
 												class="block text-forest-800 mb-2"
 											>
-												Your Email Address
+												<Lang>
+													<En>Your Email Address</En>
+													<Fr>
+														Votre adresse e-mail
+													</Fr>
+												</Lang>
 											</label>
 											<input
 												type="email"
@@ -222,7 +263,16 @@ function VerifyPage(props: VerifyPageProps) {
 												}
 												fallback="Sending..."
 											>
-												Resend Verification Email
+												<Lang>
+													<En>
+														Resend Verification
+														Email
+													</En>
+													<Fr>
+														Renvoyer l'e-mail de
+														vérification
+													</Fr>
+												</Lang>
 											</Show>
 										</button>
 									</form>
@@ -231,11 +281,31 @@ function VerifyPage(props: VerifyPageProps) {
 								<Show when={resend_status() === "success"}>
 									<div class="text-center bg-lapis-50 p-4 rounded">
 										<p class="mb-2">
-											Verification email has been sent!
+											<Lang>
+												<En>
+													Verification email has been
+													sent!
+												</En>
+												<Fr>
+													L'e-mail de vérification a
+													été envoyé !
+												</Fr>
+											</Lang>
 										</p>
 										<p>
-											Please check your inbox (and spam
-											folder) for the verification link.
+											<Lang>
+												<En>
+													Please check your inbox (and
+													spam folder) for the
+													verification link.
+												</En>
+												<Fr>
+													Veuillez vérifier votre
+													boîte de réception (et
+													dossier spam) pour le lien
+													de vérification.
+												</Fr>
+											</Lang>
 										</p>
 									</div>
 								</Show>
@@ -245,7 +315,10 @@ function VerifyPage(props: VerifyPageProps) {
 						<Match when={verification_status() === "no_token"}>
 							<div class="flex flex-col items-center justify-center py-6">
 								<h2 class="text-xl font-semibold mb-4 text-forest-800">
-									Email Verification
+									<Lang>
+										<En>Email Verification</En>
+										<Fr>Vérification de l'e-mail</Fr>
+									</Lang>
 								</h2>
 
 								<div class="mb-6 w-full">
@@ -256,7 +329,10 @@ function VerifyPage(props: VerifyPageProps) {
 												set_verification_method("link")
 											}
 										>
-											Resend Link
+											<Lang>
+												<En>Resend Link</En>
+												<Fr>Renvoyer le lien</Fr>
+											</Lang>
 										</button>
 										<button
 											class={`py-2 px-4 ${verification_method() === "code" ? "border-b-2 border-lapis-500 text-forest-900" : "text-forest-700"}`}
@@ -264,7 +340,10 @@ function VerifyPage(props: VerifyPageProps) {
 												set_verification_method("code")
 											}
 										>
-											Use Code
+											<Lang>
+												<En>Use Code</En>
+												<Fr>Utiliser le code</Fr>
+											</Lang>
 										</button>
 									</div>
 								</div>
@@ -284,7 +363,12 @@ function VerifyPage(props: VerifyPageProps) {
 												for="email"
 												class="block text-forest-800 mb-2"
 											>
-												Your Email Address
+												<Lang>
+													<En>Your Email Address</En>
+													<Fr>
+														Votre adresse e-mail
+													</Fr>
+												</Lang>
 											</label>
 											<input
 												type="email"
@@ -316,7 +400,15 @@ function VerifyPage(props: VerifyPageProps) {
 												}
 												fallback="Sending..."
 											>
-												Send Verification Email
+												<Lang>
+													<En>
+														Send Verification Email
+													</En>
+													<Fr>
+														Envoyer l'e-mail de
+														vérification
+													</Fr>
+												</Lang>
 											</Show>
 										</button>
 									</form>
@@ -332,7 +424,12 @@ function VerifyPage(props: VerifyPageProps) {
 												for="email-code"
 												class="block text-forest-800 mb-2"
 											>
-												Your Email Address
+												<Lang>
+													<En>Your Email Address</En>
+													<Fr>
+														Votre adresse e-mail
+													</Fr>
+												</Lang>
 											</label>
 											<input
 												type="email"
@@ -355,7 +452,12 @@ function VerifyPage(props: VerifyPageProps) {
 												for="verification-code"
 												class="block text-forest-800 mb-2"
 											>
-												Verification Code
+												<Lang>
+													<En>Verification Code</En>
+													<Fr>
+														Code de vérification
+													</Fr>
+												</Lang>
 											</label>
 											<input
 												type="text"
@@ -391,7 +493,15 @@ function VerifyPage(props: VerifyPageProps) {
 												}
 												fallback="Verifying..."
 											>
-												Verify Email with Code
+												<Lang>
+													<En>
+														Verify Email with Code
+													</En>
+													<Fr>
+														Vérifier l'e-mail avec
+														le code
+													</Fr>
+												</Lang>
 											</Show>
 										</button>
 									</form>
@@ -400,12 +510,31 @@ function VerifyPage(props: VerifyPageProps) {
 								<Show when={resend_status() === "success"}>
 									<div class="text-center bg-lapis-50 p-4 rounded">
 										<p class="mb-2">
-											Verification email has been sent!
+											<Lang>
+												<En>
+													Verification email has been
+													sent!
+												</En>
+												<Fr>
+													L'e-mail de vérification a
+													été envoyé !
+												</Fr>
+											</Lang>
 										</p>
 										<p>
-											Please check your inbox (and spam
-											folder) for the verification link or
-											code.
+											<Lang>
+												<En>
+													Please check your inbox (and
+													spam folder) for the
+													verification link or code.
+												</En>
+												<Fr>
+													Veuillez vérifier votre
+													boîte de réception (et
+													dossier spam) pour le lien
+													ou le code de vérification.
+												</Fr>
+											</Lang>
 										</p>
 									</div>
 								</Show>

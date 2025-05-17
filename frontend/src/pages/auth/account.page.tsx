@@ -19,11 +19,11 @@ function Account(props: AccountPageProps) {
 	const [active_section, set_active_section] = createSignal("account");
 
 	return (
-		<main class="md:px-48 px-6 mx-auto justify-items-center py-4 flex flex-col gap-4 md:h-screen md:max-h-screen">
+		<main class="lg:px-48 px-6 mx-auto justify-items-center py-4 flex flex-col gap-4 lg:h-screen lg:max-h-screen">
 			<Header />
 
 			<section class="w-full flex flex-col gap-4 justify-start h-full overflow-y-auto items-start text-forest-900">
-				<section class="w-full md:grid md:grid-cols-2 flex flex-col gap-4">
+				<section class="w-full lg:grid lg:grid-cols-2 flex flex-col gap-4">
 					<AccountSection />
 					<section class="flex flex-col gap-4">
 						<AvatarSection />

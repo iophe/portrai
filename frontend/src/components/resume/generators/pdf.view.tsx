@@ -2,6 +2,7 @@ import { Show, createMemo, onCleanup } from "solid-js";
 import { Motion, Presence } from "solid-motionone";
 import DocumentIcon from "@assets/icons/document.svg?component-solid";
 import DownloadIcon from "@assets/icons/download.svg?component-solid";
+import { En, Fr, Lang } from "@components/language";
 
 interface PDFViewProps {
 	pdf_data: Blob;
@@ -65,7 +66,12 @@ export function PDFView(props: PDFViewProps) {
 							}}
 						>
 							<DownloadIcon class="fill-snow-100" />
-							<span>Download PDF</span>
+							<span>
+								<Lang>
+									<En>Download PDF</En>
+									<Fr>Télécharger le PDF</Fr>
+								</Lang>
+							</span>
 						</button>
 					</Motion>
 				</nav>

@@ -8,7 +8,7 @@ import (
 
 // ConvertResumeToLatex_RESEARCHER converts resume data, user info, and profile info to a LaTeX document
 // using an academic research-focused layout appropriate for researchers and academics
-func ConvertResumeToLatex_RESEARCHER(resume_data utils.InputResumeData, user sqlc_gen.GetUserByIdRow, profile sqlc_gen.GetProfileByUserIdRow) (string, error) {
+func ConvertResumeToLatex_RESEARCHER(language string, resume_data utils.InputResumeData, user sqlc_gen.GetUserByIdRow, profile sqlc_gen.GetProfileByUserIdRow) (string, error) {
 	// Create a map to hold all the data for the template
 	template_data := make(map[string]any)
 
@@ -31,11 +31,15 @@ func ConvertResumeToLatex_RESEARCHER(resume_data utils.InputResumeData, user sql
 	template_data["current_date"] = current_time.Format("January 2, 2006")
 
 	// Execute the template
-	return render_latex_document(template_data, "researcher", researcher_template)
+	if language == "fr" {
+		return render_latex_document(template_data, "columns-executive", FR_RESEARCHER_TEMPLATE)
+	} else {
+		return render_latex_document(template_data, "columns-executive", EN_RESEARCHER_TEMPLATE)
+	}
 }
 
 // LaTeX researcher template
-const researcher_template = `\documentclass[12pt]{article}
+const EN_RESEARCHER_TEMPLATE = `\documentclass[12pt]{article}
 \usepackage{listings}
 \usepackage{fixltx2e}
 \MakeRobust{\overrightarrow}
@@ -77,7 +81,7 @@ const researcher_template = `\documentclass[12pt]{article}
 % Education section
 <<if .education>>
 \vspace{2pt}
-\begin{center}\textrm{\textbf{\large{\underline{Education}}}}\end{center}
+\begin{center}\textrm{\textbf{\large{\underline{Educations}}}}\end{center}
 \flushleft{
     <<range .education>>
 		\textsf{\textbf{<<escape_latex .degree>>} <<escape_latex .start_date>><<if .end_date>> - <<escape_latex .end_date>><<end>>\\ <<if .location>>\textsf{<<escape_latex .location>>}<<end>> \textit{<<escape_latex .school>>}\\<<if .description>><<if .is_raw_latex>><<.description>><<else>><<range $index, $bullet := (split .description "\n")>><<escape_latex $bullet>><<end>><<end>><<end>>}%
@@ -89,7 +93,7 @@ const researcher_template = `\documentclass[12pt]{article}
 % Experience section
 <<if .experience>>
 \vspace{2pt}
-\begin{center}\textrm{\textbf{\large{\underline{Experience}}}}\end{center}
+\begin{center}\textrm{\textbf{\large{\underline{Experiences}}}}\end{center}
 \flushleft{
     <<range .experience>>
 		\textsf{\textbf{<<escape_latex .title>>} <<escape_latex .start_date>><<if .end_date>> - <<escape_latex .end_date>><<end>>\\ <<if .location>>\textsf{<<escape_latex .location>>}<<end>> \textit{<<escape_latex .company>>}\\<<if .description>><<if .is_raw_latex>><<.description>><<else>><<range $index, $bullet := (split .description "\n")>><<escape_latex $bullet>><<end>><<end>><<end>>}%
@@ -136,6 +140,117 @@ const researcher_template = `\documentclass[12pt]{article}
 <<if .languages>>
 \vspace{2pt}
 \begin{center}\textrm{\textbf{\large{\underline{Languages}}}}\end{center}
+\flushleft{
+    \textsf\bfseries{
+<<range $index, $language := .languages>>
+\textit{\textbf{<<escape_latex $language.name>>}} <<if $language.level>>: <<escape_latex $language.level>>\\<<end>>
+<<end>>}}
+\vspace{2pt}
+<<end>>
+
+\end{document}`
+
+const FR_RESEARCHER_TEMPLATE = `\documentclass[12pt]{article}
+\usepackage{listings}
+\usepackage{fixltx2e}
+\MakeRobust{\overrightarrow}
+\usepackage{multicol}
+\usepackage[T1]{fontenc} 
+\usepackage[letterpaper, total={7in, 8.5in}]{geometry}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\pagestyle{fancy}
+
+\rhead{<<escape_latex .user.FullName>>}
+
+% Hyperlink setup
+\hypersetup{
+    pdftitle={<<escape_latex .user.FullName>> - Academic CV},
+    pdfauthor={<<escape_latex .user.FullName>>}
+}
+
+\begin{document}
+\thispagestyle{empty}
+
+% Header with name
+\begin{center}
+    \textsc{\textbf{\LARGE{<<escape_latex .user.FullName>>}}}
+\end{center}
+\rule{\textwidth}{1pt}
+
+% Contact information
+\begin{multicols}{2}
+    \flushleft{
+        \textsf{<<if .profile.Description>><<escape_latex .profile.Description>><<end>>}
+    } 
+    \columnbreak
+    \flushright{
+        \textsf{
+            <<if .user.Phone>>Phone: <<escape_latex .user.Phone>><<end>><<if .user.Email>>\\E-mail: {<<escape_latex .user.Email>>}<<end>><<if .user.Location>>\\Location: <<escape_latex .user.Location>><<end>><<if .profile.Website>>\\\href{<<.profile.Website>>}{<<escape_latex .profile.Website>>}<<end>><<if .profile.Linkedin>>\\\href{<<.profile.Linkedin>>}{<<escape_latex .profile.Linkedin>>}<<end>>}}
+\end{multicols}
+
+% Education section
+<<if .education>>
+\vspace{2pt}
+\begin{center}\textrm{\textbf{\large{\underline{Éducations}}}}\end{center}
+\flushleft{
+    <<range .education>>
+		\textsf{\textbf{<<escape_latex .degree>>} <<escape_latex .start_date>><<if .end_date>> - <<escape_latex .end_date>><<end>>\\ <<if .location>>\textsf{<<escape_latex .location>>}<<end>> \textit{<<escape_latex .school>>}\\<<if .description>><<if .is_raw_latex>><<.description>><<else>><<range $index, $bullet := (split .description "\n")>><<escape_latex $bullet>><<end>><<end>><<end>>}%
+	<<end>>
+\vspace{2pt}}
+<<end>>
+
+
+% Experience section
+<<if .experience>>
+\vspace{2pt}
+\begin{center}\textrm{\textbf{\large{\underline{Experiences}}}}\end{center}
+\flushleft{
+    <<range .experience>>
+		\textsf{\textbf{<<escape_latex .title>>} <<escape_latex .start_date>><<if .end_date>> - <<escape_latex .end_date>><<end>>\\ <<if .location>>\textsf{<<escape_latex .location>>}<<end>> \textit{<<escape_latex .company>>}\\<<if .description>><<if .is_raw_latex>><<.description>><<else>><<range $index, $bullet := (split .description "\n")>><<escape_latex $bullet>><<end>><<end>><<end>>}%
+	<<end>>
+\vspace{2pt}}
+<<end>>
+
+
+% Projects section
+<<if .projects>>
+\vspace{2pt}
+\begin{center}\textrm{\textbf{\large{\underline{Projets}}}}\end{center}
+\flushleft{
+    <<range .projects>>
+		\textsf{\textbf{<<escape_latex .title>>} <<escape_latex .start_date>><<if .end_date>> - <<escape_latex .end_date>><<end>>\\ <<if .location>>\textsf{<<escape_latex .location>>}<<end>> \textit{<<escape_latex .subtitle>>}\\<<if .description>><<if .is_raw_latex>><<.description>><<else>><<range $index, $bullet := (split .description "\n")>><<escape_latex $bullet>><<end>><<end>><<end>>}%
+	<<end>>
+\vspace{2pt}}
+<<end>>
+
+% Certifications section
+<<if .certificates>>
+\vspace{2pt}
+\begin{center}\textrm{\textbf{\large{\underline{Certificats}}}}\end{center}
+\flushleft{
+    <<range .certificates>>
+		\textsf{\textbf{<<escape_latex .name>>} <<escape_latex .granted_date>><<if .location>>\\\textsf{<<escape_latex .location>>}<<end>><<if .issuer>> \textit{<<escape_latex .issuer>>}<<end>><<if .description>>\\<<if .is_raw_latex>><<.description>><<else>><<range $index, $bullet := (split .description "\n")>><<escape_latex $bullet>><<end>><<end>><<end>>}%
+	<<end>>
+	\vspace{2pt}}
+<<end>>
+
+% Skills section
+<<if .skills>>
+\vspace{2pt}
+\begin{center}\textrm{\textbf{\large{\underline{Compétences}}}}\end{center}
+\flushleft{
+    \textsf\bfseries{
+<<range $index, $skill := .skills>>
+\textit{\textbf{<<escape_latex $skill.name>>}} <<if $skill.description>>: <<escape_latex $skill.description>>\\<<end>>
+<<end>>}}
+\vspace{2pt}
+<<end>>
+
+% Languages section
+<<if .languages>>
+\vspace{2pt}
+\begin{center}\textrm{\textbf{\large{\underline{Langages}}}}\end{center}
 \flushleft{
     \textsf\bfseries{
 <<range $index, $language := .languages>>

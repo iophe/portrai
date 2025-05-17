@@ -15,7 +15,7 @@ function SectionTitle(props: SectionTitleProps) {
 			transition={{ duration: 0.1, easing: "ease-out" }}
 			class="flex flex-row gap-4 items-center"
 		>
-			<h2 class="md:text-2xl text-xl font-semibold text-forest-900">
+			<h2 class="lg:text-2xl text-xl font-semibold text-forest-900">
 				{props.children}
 			</h2>
 			<Motion.button

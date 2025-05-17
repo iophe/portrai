@@ -6,6 +6,7 @@ import VerifiedIcon from "@assets/icons/verified.svg?component-solid";
 import UnverifiedIcon from "@assets/icons/unverified.svg?component-solid";
 import api from "@utils/api";
 import { createCachedResource } from "@utils/cache";
+import { En, Fr, Lang } from "./language";
 
 interface PlanSectionProps {}
 
@@ -46,7 +47,12 @@ export function PlanSection(props: PlanSectionProps) {
 				class="flex flex-row gap-4 border-b-2 border-forest-900 pb-2"
 			>
 				<PlanIcon class="min-w-fit fill-forest-900" />
-				<h2 class="text-sm text-gray-500 uppercase">Your Plan</h2>
+				<h2 class="text-sm text-gray-500 uppercase">
+					<Lang>
+						<En>Your Plan</En>
+						<Fr>Votre Abonnement</Fr>
+					</Lang>
+				</h2>
 			</Motion.header>
 
 			<Presence>
@@ -70,8 +76,18 @@ export function PlanSection(props: PlanSectionProps) {
 							>
 								<VerifiedIcon class="min-w-fit fill-forest-500" />
 								<p>
-									Your account is active, your current plan is{" "}
-									{status()?.price_description}
+									<Lang>
+										<En>
+											Your account is active, your current
+											plan is{" "}
+											{status()?.price_description}
+										</En>
+										<Fr>
+											Votre compte est actif, votre
+											abonnement actuel est{" "}
+											{status()?.price_description}
+										</Fr>
+									</Lang>
 								</p>
 							</Motion.span>
 							<Motion.div
@@ -84,16 +100,36 @@ export function PlanSection(props: PlanSectionProps) {
 								class="self-center"
 							>
 								<p>
-									since :{" "}
-									{new Date(
-										status()?.created_at!
-									).toDateString()}
+									<Lang>
+										<En>
+											since:{" "}
+											{new Date(
+												status()?.created_at!
+											).toDateString()}
+										</En>
+										<Fr>
+											depuis:{" "}
+											{new Date(
+												status()?.created_at!
+											).toDateString()}
+										</Fr>
+									</Lang>
 								</p>
 								<p>
-									expire on :{" "}
-									{new Date(
-										status()?.expired_at!
-									).toDateString()}
+									<Lang>
+										<En>
+											expire on:{" "}
+											{new Date(
+												status()?.expired_at!
+											).toDateString()}
+										</En>
+										<Fr>
+											expire le:{" "}
+											{new Date(
+												status()?.expired_at!
+											).toDateString()}
+										</Fr>
+									</Lang>
 								</p>
 							</Motion.div>
 						</Motion.div>
@@ -112,7 +148,12 @@ export function PlanSection(props: PlanSectionProps) {
 							class="flex flex-row items-center gap-4"
 						>
 							<UnverifiedIcon class="min-w-fit fill-forest-900" />
-							<p>Your account is deactivated</p>
+							<p>
+								<Lang>
+									<En>Your account is deactivated</En>
+									<Fr>Votre compte est désactivé</Fr>
+								</Lang>
+							</p>
 						</Motion.span>
 						<Motion.span
 							initial={{ opacity: 0 }}
@@ -120,7 +161,10 @@ export function PlanSection(props: PlanSectionProps) {
 							transition={{ duration: 0.2, delay: 0.1 }}
 							class="self-center"
 						>
-							to activate your account :{" "}
+							<Lang>
+								<En>to activate your account:</En>
+								<Fr>pour activer votre compte:</Fr>
+							</Lang>
 						</Motion.span>
 						<Motion
 							initial={{ opacity: 0, y: 5 }}
@@ -133,7 +177,10 @@ export function PlanSection(props: PlanSectionProps) {
 								href="/pricing"
 								class="self-center w-fit px-4 py-2 bg-forest-300 hover:bg-forest-100 text-snow-100 rounded smooth-transition"
 							>
-								buy here
+								<Lang>
+									<En>buy here</En>
+									<Fr>acheter ici</Fr>
+								</Lang>
 							</A>
 						</Motion>
 					</Motion.div>
@@ -148,7 +195,12 @@ export function PlanSection(props: PlanSectionProps) {
 				<section class="overflow-hidden h-fit max-h-32">
 					<Show when={history() && (history()?.length ?? 0 > 0)}>
 						<fieldset class="overflow-hidden h-full flex flex-col gap-4">
-							<label>Payment history :</label>
+							<label>
+								<Lang>
+									<En>Payment history:</En>
+									<Fr>Historique des paiements:</Fr>
+								</Lang>
+							</label>
 							<ol class="overflow-y-auto h-full flex flex-col gap-2 items-center">
 								<For each={history()}>
 									{(payment, index) => (
@@ -165,7 +217,7 @@ export function PlanSection(props: PlanSectionProps) {
 												duration: 0.15,
 												delay: 0.05 * (index() + 1), // Staggered animation
 											}}
-											class="w-full md:w-1/2 flex flex-row justify-between"
+											class="w-full lg:w-1/2 flex flex-row justify-between"
 										>
 											<span>
 												{new Date(

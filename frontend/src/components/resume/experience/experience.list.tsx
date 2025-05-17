@@ -11,6 +11,7 @@ import HelpIcon from "@assets/icons/help.svg?component-solid";
 import { createCachedResource } from "@utils/cache";
 import { useNavigate } from "@solidjs/router";
 import { ProcessMajorError } from "@utils/api";
+import { En, Fr, Lang } from "@components/language";
 
 interface ExperienceListProps {
 	onOrder?: (experienceIds: number[]) => void;
@@ -74,7 +75,8 @@ export function ExperienceList(props: ExperienceListProps) {
 		<section class="w-full flex flex-col gap-4 justify-items-center">
 			<SectionHeader
 				add={() => {}}
-				section_title="Professional Experiences"
+				en_section_title="Professional Experiences"
+				fr_section_title="Experiences professionnels"
 				section_name="experience"
 				form={(props) => (
 					<ExperienceForm
@@ -95,7 +97,18 @@ export function ExperienceList(props: ExperienceListProps) {
 				fallback={
 					<span class="flex flex-wrap gap-2 text-lapis-500">
 						<HelpIcon class="min-w-fit fill-lapis-400" />{" "}
-						<p>Add your professional experiences in your resume</p>{" "}
+						<p>
+							<Lang>
+								<En>
+									Add your professional experiences in your
+									resume
+								</En>
+								<Fr>
+									Ajoutez vos expériences professionnelles
+									dans votre CV
+								</Fr>
+							</Lang>
+						</p>{" "}
 					</span>
 				}
 			/>
@@ -229,7 +242,8 @@ export function OfflineExperienceList(props: OfflineExperienceListProps) {
 		<section class="w-full flex flex-col gap-4 justify-items-center">
 			<SectionHeader
 				add={() => {}}
-				section_title="Professional Experiences"
+				en_section_title="Professional Experiences"
+				fr_section_title="Experiences professionnels"
 				section_name="experience"
 				form={(p) => (
 					<ExperienceForm
@@ -249,7 +263,18 @@ export function OfflineExperienceList(props: OfflineExperienceListProps) {
 				fallback={
 					<span class="flex flex-wrap gap-2 text-lapis-500">
 						<HelpIcon class="min-w-fit fill-lapis-400" />{" "}
-						<p>Add some professional experiences in this resume</p>{" "}
+						<p>
+							<Lang>
+								<En>
+									Add some professional experiences in your
+									resume
+								</En>
+								<Fr>
+									Ajoutez des expériences professionnelles
+									dans votre CV
+								</Fr>
+							</Lang>
+						</p>{" "}
 					</span>
 				}
 			/>
