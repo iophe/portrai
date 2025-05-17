@@ -119,14 +119,19 @@ export function CoverLetter(props: CoverLetterProps) {
 								<span class="flex flex-row gap-2 opacity-40 cursor-help">
 									<HelpIcon class="fill-lapis-400 min-w-fit" />
 									<span class="text-lapis-300">
-									<Lang>{[
-				<En>Provide feedback to update your cover
-				letter. Be specific about what you'd
-				like to change.</En>,
-				<Fr>Donnez votre retour pour mettre à jour votre lettre de motivation. Soyez précis sur ce que vous souhaitez modifier.</Fr>
-			  ]}
-			</Lang>
-										
+										<Lang>
+											<En>
+												Provide feedback to update your
+												cover letter. Be specific about
+												what you'd like to change.
+											</En>
+											<Fr>
+												Donnez votre retour pour mettre
+												à jour votre lettre de
+												motivation. Soyez précis sur ce
+												que vous souhaitez modifier.
+											</Fr>
+										</Lang>
 									</span>
 								</span>
 							</legend>
@@ -151,12 +156,14 @@ export function CoverLetter(props: CoverLetterProps) {
 										disabled={is_updating() || !comment()}
 									>
 										<RefreshIcon class="fill-snow-100" />
-										<Lang>{[
-				<En>Update Cover Letter</En>,
-				<Fr>Mettre à jour la lettre de motivation</Fr>
-			  ]}
-			</Lang>
-										
+										<Lang>
+											<En>Update Cover Letter</En>
+											<Fr>
+												Mettre à jour la lettre de
+												motivation
+											</Fr>
+										</Lang>
+
 										<Show when={is_updating()}>
 											<LoadingSpinner white />
 										</Show>
@@ -178,22 +185,29 @@ export function CoverLetter(props: CoverLetterProps) {
 						<fieldset>
 							<legend class="flex flex-col gap-2 items-center">
 								<span>
-								<Lang>{[
-				<En>Create a Cover Letter:</En>,
-				<Fr>Créer une lettre de motivation :</Fr>
-			  ]}
-			</Lang></span>
+									<Lang>
+										<En>Create a Cover Letter:</En>
+										<Fr>
+											Créer une lettre de motivation :
+										</Fr>
+									</Lang>
+								</span>
 								<span class="flex flex-row gap-2 opacity-40 cursor-help">
 									<HelpIcon class="fill-lapis-400 min-w-fit" />
 									<span class="text-lapis-300">
-									<Lang>{[
-				<En>We'll create a cover letter based on
-				your resume and the job description you
-				provided.</En>,
-				<Fr>Nous créerons une lettre de motivation basée sur votre CV et la description de poste que vous avez fournie.</Fr>
-			  ]}
-			</Lang>
-										
+										<Lang>
+											<En>
+												We'll create a cover letter
+												based on your resume and the job
+												description you provided.
+											</En>
+											<Fr>
+												Nous créerons une lettre de
+												motivation basée sur votre CV et
+												la description de poste que vous
+												avez fournie.
+											</Fr>
+										</Lang>
 									</span>
 								</span>
 							</legend>
@@ -220,12 +234,12 @@ export function CoverLetter(props: CoverLetterProps) {
 										disabled={is_creating()}
 									>
 										<LetterIcon class="fill-snow-100" />
-										<Lang>{[
-				<En>Generate Cover Letter
-				</En>,
-				<Fr>Générer une lettre de motivation</Fr>
-			  ]}
-			</Lang>
+										<Lang>
+											<En>Generate Cover Letter</En>
+											<Fr>
+												Générer une lettre de motivation
+											</Fr>
+										</Lang>
 										<Show when={is_creating()}>
 											<LoadingSpinner white />
 										</Show>

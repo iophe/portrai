@@ -72,7 +72,8 @@ export function EducationList(props: EducationListProps) {
 		<section class="w-full flex flex-col gap-4 justify-items-center">
 			<SectionHeader
 				add={() => {}}
-				section_title="Educations"
+				en_section_title="Educations"
+				fr_section_title="Éducations"
 				section_name="education"
 				form={(props) => (
 					<EducationForm
@@ -92,13 +93,16 @@ export function EducationList(props: EducationListProps) {
 					<span class="flex flex-wrap gap-2 text-lapis-500">
 						<HelpIcon class="min-w-fit fill-lapis-400" />{" "}
 						<p>
-
-						<Lang>{[
-				<En>Add your educational background and qualifications
-				in your resume</En>,
-				<Fr>Ajoutez votre formation et vos qualifications à votre CV</Fr>
-			  ]}
-			</Lang>
+							<Lang>
+								<En>
+									Add your educational background and
+									qualifications in your resume
+								</En>
+								<Fr>
+									Ajoutez votre formation et vos
+									qualifications à votre CV
+								</Fr>
+							</Lang>
 							A
 						</p>{" "}
 					</span>
@@ -236,7 +240,8 @@ export function OfflineEducationList(props: OfflineEducationListProps) {
 		<section class="w-full flex flex-col gap-4 justify-items-center">
 			<SectionHeader
 				add={() => {}}
-				section_title="Educations"
+				en_section_title="Educations"
+				fr_section_title="Éducations"
 				section_name="education"
 				form={(p) => (
 					<EducationForm
@@ -257,13 +262,16 @@ export function OfflineEducationList(props: OfflineEducationListProps) {
 					<span class="flex flex-wrap gap-2 text-lapis-500">
 						<HelpIcon class="min-w-fit fill-lapis-400" />{" "}
 						<p>
-						<Lang>{[
-				<En>Add some educational background and qualifications
-				in this resume</En>,
-				<Fr>Ajoutez des formation et des qualifications à votre CV</Fr>
-			  ]}
-			</Lang>
-							
+							<Lang>
+								<En>
+									Add some educational background and
+									qualifications in this resume
+								</En>
+								<Fr>
+									Ajoutez des formation et des qualifications
+									à votre CV
+								</Fr>
+							</Lang>
 						</p>{" "}
 					</span>
 				}

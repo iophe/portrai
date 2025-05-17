@@ -67,12 +67,11 @@ export function PDFView(props: PDFViewProps) {
 						>
 							<DownloadIcon class="fill-snow-100" />
 							<span>
-							<Lang>{[
-														<En>Download PDF</En>,
-														<Fr>Télécharger le PDF</Fr>
-													]}
-													</Lang>
-													</span>
+								<Lang>
+									<En>Download PDF</En>
+									<Fr>Télécharger le PDF</Fr>
+								</Lang>
+							</span>
 						</button>
 					</Motion>
 				</nav>

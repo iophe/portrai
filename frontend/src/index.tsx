@@ -51,36 +51,39 @@ render(
 	() => (
 		<FaultProvider>
 			<LangProvider>
-			<Router>
-				<Route path={["/", "/home"]} component={Home} />
-				<Route path={"/welcolm"} component={Landing} />
-				<Route path={"/product"} component={Product} />
-				<Route path={"/support"} component={Support} />
-				<Route path={"/blogs"} component={Blogs} />
-				<Route path={"/policies/privacy"} component={Privacy} />
-				<Route
-					path={"/policies/term-of-services"}
-					component={TermService}
-				/>
-				<Route path={"/about-us"} component={AboutUs} />
-				<Route path={"/signin"} component={Signin} />
-				<Route path={"/signup"} component={Signup} />
-				<Route path={"/verify-account"} component={Verify} />
-				<Route path={"/forgot-password"} component={RecoverPassword} />
-				<Route path={"/my-templates"} component={Templates} />
-				<Route path={"/pricing"} component={Pricing} />
-				<Route path={"/fail"} component={ErrorPayment} />
-				<Route path={"/account"} component={Account} />
-				<Route path={"/history"} component={History} />
-				<Route path={"/resume/:id"} component={Resume} />
-				<Route path={"*"} component={Error404} />
+				<Router>
+					<Route path={["/", "/home"]} component={Home} />
+					<Route path={"/welcolm"} component={Landing} />
+					<Route path={"/product"} component={Product} />
+					<Route path={"/support"} component={Support} />
+					<Route path={"/blogs"} component={Blogs} />
+					<Route path={"/policies/privacy"} component={Privacy} />
+					<Route
+						path={"/policies/term-of-services"}
+						component={TermService}
+					/>
+					<Route path={"/about-us"} component={AboutUs} />
+					<Route path={"/signin"} component={Signin} />
+					<Route path={"/signup"} component={Signup} />
+					<Route path={"/verify-account"} component={Verify} />
+					<Route
+						path={"/forgot-password"}
+						component={RecoverPassword}
+					/>
+					<Route path={"/my-templates"} component={Templates} />
+					<Route path={"/pricing"} component={Pricing} />
+					<Route path={"/fail"} component={ErrorPayment} />
+					<Route path={"/account"} component={Account} />
+					<Route path={"/history"} component={History} />
+					<Route path={"/resume/:id"} component={Resume} />
+					<Route path={"*"} component={Error404} />
 
-				{/* Blogs */}
-				<Route
-					path={"/blogs/from-rejections-to-offers"}
-					component={Blog1}
-				/>
-			</Router>
+					{/* Blogs */}
+					<Route
+						path={"/blogs/from-rejections-to-offers"}
+						component={Blog1}
+					/>
+				</Router>
 			</LangProvider>
 		</FaultProvider>
 	),

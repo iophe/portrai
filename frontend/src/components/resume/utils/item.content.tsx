@@ -41,12 +41,14 @@ export function ItemDateRange(props: ItemDateRangeProps) {
 			<p> - </p>
 			<Show
 				when={props.end}
-				fallback={<p class="text-gray-600 text-sm">
-					<Lang>{[
-						<En>present</En>,
-						<Fr>présent</Fr>
-					]}
-					</Lang></p>}
+				fallback={
+					<p class="text-gray-600 text-sm">
+						<Lang>
+							<En>present</En>
+							<Fr>présent</Fr>
+						</Lang>
+					</p>
+				}
 			>
 				<ItemDate date={props.end!} />
 			</Show>

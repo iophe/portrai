@@ -135,7 +135,10 @@ function VerifyPage(props: VerifyPageProps) {
 								<p class="text-center">
 									<Lang>
 										<En>Verifying your email address...</En>
-										<Fr>Vérification de votre adresse e-mail...</Fr>
+										<Fr>
+											Vérification de votre adresse
+											e-mail...
+										</Fr>
 									</Lang>
 								</p>
 							</div>
@@ -154,8 +157,14 @@ function VerifyPage(props: VerifyPageProps) {
 								</h2>
 								<p class="text-center mb-6">
 									<Lang>
-										<En>Your email has been successfully verified.</En>
-										<Fr>Votre e-mail a été vérifié avec succès.</Fr>
+										<En>
+											Your email has been successfully
+											verified.
+										</En>
+										<Fr>
+											Votre e-mail a été vérifié avec
+											succès.
+										</Fr>
 									</Lang>
 								</p>
 								<A
@@ -196,8 +205,14 @@ function VerifyPage(props: VerifyPageProps) {
 								</h2>
 								<p class="text-center mb-6">
 									<Lang>
-										<En>The verification link is invalid or has expired.</En>
-										<Fr>Le lien de vérification est invalide ou a expiré.</Fr>
+										<En>
+											The verification link is invalid or
+											has expired.
+										</En>
+										<Fr>
+											Le lien de vérification est invalide
+											ou a expiré.
+										</Fr>
 									</Lang>
 								</p>
 
@@ -213,7 +228,9 @@ function VerifyPage(props: VerifyPageProps) {
 											>
 												<Lang>
 													<En>Your Email Address</En>
-													<Fr>Votre adresse e-mail</Fr>
+													<Fr>
+														Votre adresse e-mail
+													</Fr>
 												</Lang>
 											</label>
 											<input
@@ -247,8 +264,14 @@ function VerifyPage(props: VerifyPageProps) {
 												fallback="Sending..."
 											>
 												<Lang>
-													<En>Resend Verification Email</En>
-													<Fr>Renvoyer l'e-mail de vérification</Fr>
+													<En>
+														Resend Verification
+														Email
+													</En>
+													<Fr>
+														Renvoyer l'e-mail de
+														vérification
+													</Fr>
 												</Lang>
 											</Show>
 										</button>
@@ -259,14 +282,29 @@ function VerifyPage(props: VerifyPageProps) {
 									<div class="text-center bg-lapis-50 p-4 rounded">
 										<p class="mb-2">
 											<Lang>
-												<En>Verification email has been sent!</En>
-												<Fr>L'e-mail de vérification a été envoyé !</Fr>
+												<En>
+													Verification email has been
+													sent!
+												</En>
+												<Fr>
+													L'e-mail de vérification a
+													été envoyé !
+												</Fr>
 											</Lang>
 										</p>
 										<p>
 											<Lang>
-												<En>Please check your inbox (and spam folder) for the verification link.</En>
-												<Fr>Veuillez vérifier votre boîte de réception (et dossier spam) pour le lien de vérification.</Fr>
+												<En>
+													Please check your inbox (and
+													spam folder) for the
+													verification link.
+												</En>
+												<Fr>
+													Veuillez vérifier votre
+													boîte de réception (et
+													dossier spam) pour le lien
+													de vérification.
+												</Fr>
 											</Lang>
 										</p>
 									</div>
@@ -327,7 +365,9 @@ function VerifyPage(props: VerifyPageProps) {
 											>
 												<Lang>
 													<En>Your Email Address</En>
-													<Fr>Votre adresse e-mail</Fr>
+													<Fr>
+														Votre adresse e-mail
+													</Fr>
 												</Lang>
 											</label>
 											<input
@@ -361,8 +401,13 @@ function VerifyPage(props: VerifyPageProps) {
 												fallback="Sending..."
 											>
 												<Lang>
-													<En>Send Verification Email</En>
-													<Fr>Envoyer l'e-mail de vérification</Fr>
+													<En>
+														Send Verification Email
+													</En>
+													<Fr>
+														Envoyer l'e-mail de
+														vérification
+													</Fr>
 												</Lang>
 											</Show>
 										</button>
@@ -381,7 +426,9 @@ function VerifyPage(props: VerifyPageProps) {
 											>
 												<Lang>
 													<En>Your Email Address</En>
-													<Fr>Votre adresse e-mail</Fr>
+													<Fr>
+														Votre adresse e-mail
+													</Fr>
 												</Lang>
 											</label>
 											<input
@@ -407,7 +454,9 @@ function VerifyPage(props: VerifyPageProps) {
 											>
 												<Lang>
 													<En>Verification Code</En>
-													<Fr>Code de vérification</Fr>
+													<Fr>
+														Code de vérification
+													</Fr>
 												</Lang>
 											</label>
 											<input
@@ -445,8 +494,13 @@ function VerifyPage(props: VerifyPageProps) {
 												fallback="Verifying..."
 											>
 												<Lang>
-													<En>Verify Email with Code</En>
-													<Fr>Vérifier l'e-mail avec le code</Fr>
+													<En>
+														Verify Email with Code
+													</En>
+													<Fr>
+														Vérifier l'e-mail avec
+														le code
+													</Fr>
 												</Lang>
 											</Show>
 										</button>
@@ -457,14 +511,29 @@ function VerifyPage(props: VerifyPageProps) {
 									<div class="text-center bg-lapis-50 p-4 rounded">
 										<p class="mb-2">
 											<Lang>
-												<En>Verification email has been sent!</En>
-												<Fr>L'e-mail de vérification a été envoyé !</Fr>
+												<En>
+													Verification email has been
+													sent!
+												</En>
+												<Fr>
+													L'e-mail de vérification a
+													été envoyé !
+												</Fr>
 											</Lang>
 										</p>
 										<p>
 											<Lang>
-												<En>Please check your inbox (and spam folder) for the verification link or code.</En>
-												<Fr>Veuillez vérifier votre boîte de réception (et dossier spam) pour le lien ou le code de vérification.</Fr>
+												<En>
+													Please check your inbox (and
+													spam folder) for the
+													verification link or code.
+												</En>
+												<Fr>
+													Veuillez vérifier votre
+													boîte de réception (et
+													dossier spam) pour le lien
+													ou le code de vérification.
+												</Fr>
 											</Lang>
 										</p>
 									</div>

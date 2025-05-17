@@ -27,7 +27,7 @@ import {
 } from "@components/avatar.section";
 import { useNavigate } from "@solidjs/router";
 import { PDFView } from "./pdf.view";
-import { En, Fr, Lang } from "@components/language";
+import { En, Fr, Lang, useLang } from "@components/language";
 
 export function formatText(text: string) {
 	if (!text) return null;
@@ -66,7 +66,7 @@ interface ResumePreviewProps {
 function ResumePreview(props: ResumePreviewProps) {
 	const fault = useFault();
 	const navigate = useNavigate();
-
+	const lang = useLang();
 	const [showing_more, show_more] = createSignal(false);
 	const [editing_title, edit_title] = createSignal(false);
 	const [new_title, set_new_title] = createSignal(
@@ -87,7 +87,9 @@ function ResumePreview(props: ResumePreviewProps) {
 			// Generate the PDF
 			const response = await api.post(
 				"/generate/live/from-data/" +
-					props.job_specific_resume.template,
+					props.job_specific_resume.template +
+					"/" +
+					lang.current(),
 				{
 					resume_data: props.job_specific_resume.resume_data,
 				},
@@ -110,7 +112,9 @@ function ResumePreview(props: ResumePreviewProps) {
 			update_old_refresh_signal(props.refresh_signal());
 			const response = await api.post(
 				"/generate/live/from-data/" +
-					props.job_specific_resume.template,
+					props.job_specific_resume.template +
+					"/" +
+					lang.current(),
 				{
 					resume_data: props.job_specific_resume.resume_data,
 				},
@@ -177,7 +181,8 @@ function ResumePreview(props: ResumePreviewProps) {
 												on_input={(value) =>
 													set_new_title(value)
 												}
-												placeholder="Rename this resume"
+												en_placeholder="Rename this resume"
+												fr_placeholder="Renommé ce CV"
 											/>
 										</form>
 										<Motion
@@ -260,12 +265,10 @@ function ResumePreview(props: ResumePreviewProps) {
 						<div class="flex flex-col items-start gap-4">
 							<article class="p-4 border-l-4 border-l-lapis-50 bg-gradient-to-br from-lapis-10 to-white flex flex-col gap-2 w-full">
 								<h2 class="text-lapis-700 font-medium">
-								<Lang>{[
-														<En>Job description:</En>,
-														<Fr>Offre d'emploi ...</Fr>
-													]}
-													</Lang>
-									
+									<Lang>
+										<En>Job description:</En>
+										<Fr>Offre d'emploi ...</Fr>
+									</Lang>
 								</h2>
 								<div
 									class="line-clamp-6 transition-all duration-300"
@@ -299,12 +302,15 @@ function ResumePreview(props: ResumePreviewProps) {
 														}
 														class="text-lapis-600 hover:text-lapis-800 font-medium text-sm smooth-transition"
 													>
-														<Lang>{[
-														<En>show more ...</En>,
-														<Fr>afficher plus ...</Fr>
-													]}
-													</Lang>
-														
+														<Lang>
+															<En>
+																show more ...
+															</En>
+															<Fr>
+																afficher plus
+																...
+															</Fr>
+														</Lang>
 													</button>
 												</Motion>
 											}
@@ -324,10 +330,11 @@ function ResumePreview(props: ResumePreviewProps) {
 													}
 													class="text-lapis-600 hover:text-lapis-800 font-medium text-sm smooth-transition"
 												>
-																											<Lang>{[
-														<En>show less ...</En>,
-														<Fr>afficher moins ...</Fr>
-													]}
+													<Lang>
+														<En>show less ...</En>
+														<Fr>
+															afficher moins ...
+														</Fr>
 													</Lang>
 												</button>
 											</Motion>
@@ -379,11 +386,10 @@ function ResumePreview(props: ResumePreviewProps) {
 							}}
 						></Motion>
 						<h2 class="text-lapis-700 font-medium">
-						<Lang>{[
-														<En>Cover letter:</En>,
-														<Fr>Lettre de motivation</Fr>
-													]}
-													</Lang>
+							<Lang>
+								<En>Cover letter:</En>
+								<Fr>Lettre de motivation</Fr>
+							</Lang>
 						</h2>
 						<Motion
 							initial={{ opacity: 0, scale: 0.98 }}

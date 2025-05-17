@@ -50,10 +50,19 @@ interface BlogCategory {
 const blog_categories: BlogCategory[] = [
 	{ id: "all", name: { eng: "All Posts", fr: "Tous les articles" } },
 	{ id: "resume-tips", name: { eng: "Resume Tips", fr: "Conseils pour CV" } },
-	{ id: "cover-letters", name: { eng: "Cover Letters", fr: "Lettres de motivation" } },
+	{
+		id: "cover-letters",
+		name: { eng: "Cover Letters", fr: "Lettres de motivation" },
+	},
 	{ id: "job-search", name: { eng: "Job Search", fr: "Recherche d'emploi" } },
-	{ id: "success-stories", name: { eng: "Success Stories", fr: "Histoires de réussite" } },
-	{ id: "career-advice", name: { eng: "Career Advice", fr: "Conseils de carrière" } },
+	{
+		id: "success-stories",
+		name: { eng: "Success Stories", fr: "Histoires de réussite" },
+	},
+	{
+		id: "career-advice",
+		name: { eng: "Career Advice", fr: "Conseils de carrière" },
+	},
 ];
 
 const all_blog_metadata: BlogMetadata[] = [rejections_to_offers_metadata];
@@ -71,7 +80,10 @@ function BlogPage(props: BlogPageProps) {
 			if (category.id === "all") {
 				return true;
 			}
-			return post.category.eng.toLowerCase() === category.name.eng.toLowerCase();
+			return (
+				post.category.eng.toLowerCase() ===
+				category.name.eng.toLowerCase()
+			);
 		});
 		return result;
 	});
@@ -96,8 +108,15 @@ function BlogPage(props: BlogPageProps) {
 						</h1>
 						<p class="text-xl text-gray-600 max-w-3xl mx-auto">
 							<Lang>
-								<En>Expert advice on resume writing, job searching, and career development</En>
-								<Fr>Conseils d'experts sur la rédaction de CV, la recherche d'emploi et le développement de carrière</Fr>
+								<En>
+									Expert advice on resume writing, job
+									searching, and career development
+								</En>
+								<Fr>
+									Conseils d'experts sur la rédaction de CV,
+									la recherche d'emploi et le développement de
+									carrière
+								</Fr>
 							</Lang>
 						</p>
 					</header>
@@ -140,15 +159,24 @@ function BlogPage(props: BlogPageProps) {
 								<div class="text-center py-16">
 									<p class="text-xl text-gray-600">
 										<Lang>
-											<En>No articles found matching your criteria.</En>
-											<Fr>Aucun article trouvé correspondant à vos critères.</Fr>
+											<En>
+												No articles found matching your
+												criteria.
+											</En>
+											<Fr>
+												Aucun article trouvé
+												correspondant à vos critères.
+											</Fr>
 										</Lang>
 									</p>
 									<button
 										onClick={() => {
 											set_filter_category({
 												id: "all",
-												name: { eng: "All Posts", fr: "Tous les articles" },
+												name: {
+													eng: "All Posts",
+													fr: "Tous les articles",
+												},
 											});
 										}}
 										class="mt-4 px-4 py-2 bg-lapis-50 text-forest-900 hover:text-white rounded-lg hover:bg-lapis-100 transition-colors"
@@ -201,8 +229,20 @@ function BlogPage(props: BlogPageProps) {
 													>
 														<span class="px-3 py-1 bg-white text-forest-900 rounded text-xs font-medium">
 															<Lang>
-																<En>{post.category.eng}</En>
-																<Fr>{post.category.fr}</Fr>
+																<En>
+																	{
+																		post
+																			.category
+																			.eng
+																	}
+																</En>
+																<Fr>
+																	{
+																		post
+																			.category
+																			.fr
+																	}
+																</Fr>
 															</Lang>
 														</span>
 													</div>
@@ -219,28 +259,74 @@ function BlogPage(props: BlogPageProps) {
 															}}
 														>
 															<Lang>
-																<En>{post.title.eng}</En>
-																<Fr>{post.title.fr}</Fr>
+																<En>
+																	{
+																		post
+																			.title
+																			.eng
+																	}
+																</En>
+																<Fr>
+																	{
+																		post
+																			.title
+																			.fr
+																	}
+																</Fr>
 															</Lang>
 														</h2>
 													</header>
 													<p class="text-gray-600 line-clamp-3">
 														<Lang>
-															<En>{post.excerpt.eng}</En>
-															<Fr>{post.excerpt.fr}</Fr>
+															<En>
+																{
+																	post.excerpt
+																		.eng
+																}
+															</En>
+															<Fr>
+																{
+																	post.excerpt
+																		.fr
+																}
+															</Fr>
 														</Lang>
 													</p>
 													<footer class="mt-auto pt-4 flex justify-between items-center text-sm text-gray-500">
 														<span>
 															<Lang>
-																<En>{post.date.eng}</En>
-																<Fr>{post.date.fr}</Fr>
+																<En>
+																	{
+																		post
+																			.date
+																			.eng
+																	}
+																</En>
+																<Fr>
+																	{
+																		post
+																			.date
+																			.fr
+																	}
+																</Fr>
 															</Lang>
 														</span>
 														<span>
 															<Lang>
-																<En>{post.read_time.eng}</En>
-																<Fr>{post.read_time.fr}</Fr>
+																<En>
+																	{
+																		post
+																			.read_time
+																			.eng
+																	}
+																</En>
+																<Fr>
+																	{
+																		post
+																			.read_time
+																			.fr
+																	}
+																</Fr>
 															</Lang>
 														</span>
 													</footer>

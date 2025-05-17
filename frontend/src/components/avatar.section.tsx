@@ -91,12 +91,11 @@ export function AvatarSection(props: AvatarSectionProps) {
 			>
 				<AvatarIcon class="min-w-fit fill-forest-900 w-6 h-6" />
 				<h2 class="text-sm text-gray-500 uppercase">
-				<Lang>
-			  {[
-				<En>Profile Picture</En>,
-				<Fr>Photo de Profile</Fr>
-			  ]}
-			</Lang></h2>
+					<Lang>
+						<En>Profile Picture</En>
+						<Fr>Photo de Profile</Fr>
+					</Lang>
+				</h2>
 			</Motion.header>
 
 			<article class="flex flex-row items-center gap-4 pt-4">
@@ -155,22 +154,21 @@ export function AvatarSection(props: AvatarSectionProps) {
 					class="flex-1 flex flex-col gap-2"
 				>
 					<p class="text-sm text-forest-700">
-					<Lang>
-			  {[
-				<En>Upload a profile picture. Max file size 5MB.</En>,
-				<Fr>Télécharger une photo de profile. Taille maximale 5MB.</Fr>
-			  ]}
-			</Lang>
-						
+						<Lang>
+							<En>
+								Upload a profile picture. Max file size 5MB.
+							</En>
+							<Fr>
+								Télécharger une photo de profile. Taille
+								maximale 5MB.
+							</Fr>
+						</Lang>
 					</p>
 					<p class="text-xs text-gray-500">
-					<Lang>
-			  {[
-				<En>Supported formats: JPG, PNG, WEBP.</En>,
-				<Fr>Formats supportés: JPG, PNG, WEBP.</Fr>
-			  ]}
-			</Lang>
-						
+						<Lang>
+							<En>Supported formats: JPG, PNG, WEBP.</En>
+							<Fr>Formats supportés: JPG, PNG, WEBP.</Fr>
+						</Lang>
 					</p>
 					<Motion.div
 						initial={{ opacity: 0, y: 5 }}
@@ -243,12 +241,10 @@ export function AvatarSection(props: AvatarSectionProps) {
 							for="avatar-upload"
 							class="text-sm flex flex-row gap-4 items-center text-lapis-500 hover:text-lapis-300 cursor-pointer smooth-transition"
 						>
-					<Lang>
-			  {[
-				<En>Change</En>,
-				<Fr>Changer</Fr>
-			  ]}
-			</Lang>
+							<Lang>
+								<En>Change</En>
+								<Fr>Changer</Fr>
+							</Lang>
 							<EditIcon class="min-w-fit fill-forest-900" />
 							<Presence>
 								<Show when={is_uploading()}>

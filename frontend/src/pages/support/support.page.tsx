@@ -66,8 +66,16 @@ function Support(props: SupportPageProps) {
 					</h1>
 					<p class="text-lg text-gray-600 max-w-2xl mx-auto">
 						<Lang>
-							<En>We're here to help with any questions or issues you may have. Browse through our FAQs or contact us directly.</En>
-							<Fr>Nous sommes là pour vous aider avec toutes vos questions ou problèmes. Parcourez nos FAQ ou contactez-nous directement.</Fr>
+							<En>
+								We're here to help with any questions or issues
+								you may have. Browse through our FAQs or contact
+								us directly.
+							</En>
+							<Fr>
+								Nous sommes là pour vous aider avec toutes vos
+								questions ou problèmes. Parcourez nos FAQ ou
+								contactez-nous directement.
+							</Fr>
 						</Lang>
 					</p>
 				</header>
@@ -87,13 +95,29 @@ function Support(props: SupportPageProps) {
 								<dt class="text-lg font-medium text-forest-700 mb-2">
 									<Lang>
 										<En>How do I reset my password?</En>
-										<Fr>Comment réinitialiser mon mot de passe ?</Fr>
+										<Fr>
+											Comment réinitialiser mon mot de
+											passe ?
+										</Fr>
 									</Lang>
 								</dt>
 								<dd class="text-gray-600">
 									<Lang>
-										<En>You can reset your password by clicking on the "Forgot Password" link on the login page. We'll send a password reset link to your registered email address.</En>
-										<Fr>Vous pouvez réinitialiser votre mot de passe en cliquant sur le lien "Mot de passe oublié" sur la page de connexion. Nous vous enverrons un lien de réinitialisation à votre adresse e-mail enregistrée.</Fr>
+										<En>
+											You can reset your password by
+											clicking on the "Forgot Password"
+											link on the login page. We'll send a
+											password reset link to your
+											registered email address.
+										</En>
+										<Fr>
+											Vous pouvez réinitialiser votre mot
+											de passe en cliquant sur le lien
+											"Mot de passe oublié" sur la page de
+											connexion. Nous vous enverrons un
+											lien de réinitialisation à votre
+											adresse e-mail enregistrée.
+										</Fr>
 									</Lang>
 								</dd>
 							</div>
@@ -101,14 +125,32 @@ function Support(props: SupportPageProps) {
 							<div class="border-b border-gray-200 pb-4">
 								<dt class="text-lg font-medium text-forest-700 mb-2">
 									<Lang>
-										<En>What payment methods do you accept?</En>
-										<Fr>Quels moyens de paiement acceptez-vous ?</Fr>
+										<En>
+											What payment methods do you accept?
+										</En>
+										<Fr>
+											Quels moyens de paiement
+											acceptez-vous ?
+										</Fr>
 									</Lang>
 								</dt>
 								<dd class="text-gray-600">
 									<Lang>
-										<En>We accept all major credit cards (Visa, MasterCard, American Express), PayPal, and bank transfers. All payments are securely processed through Stripe.</En>
-										<Fr>Nous acceptons toutes les principales cartes de crédit (Visa, MasterCard, American Express), PayPal et les virements bancaires. Tous les paiements sont traités en toute sécurité via Stripe.</Fr>
+										<En>
+											We accept all major credit cards
+											(Visa, MasterCard, American
+											Express), PayPal, and bank
+											transfers. All payments are securely
+											processed through Stripe.
+										</En>
+										<Fr>
+											Nous acceptons toutes les
+											principales cartes de crédit (Visa,
+											MasterCard, American Express),
+											PayPal et les virements bancaires.
+											Tous les paiements sont traités en
+											toute sécurité via Stripe.
+										</Fr>
 									</Lang>
 								</dd>
 							</div>
@@ -117,13 +159,29 @@ function Support(props: SupportPageProps) {
 								<dt class="text-lg font-medium text-forest-700 mb-2">
 									<Lang>
 										<En>How do I get technical support?</En>
-										<Fr>Comment obtenir une assistance technique ?</Fr>
+										<Fr>
+											Comment obtenir une assistance
+											technique ?
+										</Fr>
 									</Lang>
 								</dt>
 								<dd class="text-gray-600">
 									<Lang>
-										<En>For technical issues, please fill out the contact form with details about your problem, or email us directly at portrai.contact@gmail.com.</En>
-										<Fr>Pour les problèmes techniques, veuillez remplir le formulaire de contact avec les détails de votre problème, ou envoyez-nous un e-mail directement à portrai.contact@gmail.com.</Fr>
+										<En>
+											For technical issues, please fill
+											out the contact form with details
+											about your problem, or email us
+											directly at
+											portrai.contact@gmail.com.
+										</En>
+										<Fr>
+											Pour les problèmes techniques,
+											veuillez remplir le formulaire de
+											contact avec les détails de votre
+											problème, ou envoyez-nous un e-mail
+											directement à
+											portrai.contact@gmail.com.
+										</Fr>
 									</Lang>
 								</dd>
 							</div>
@@ -192,8 +250,18 @@ function Support(props: SupportPageProps) {
 									</h3>
 									<p class="text-green-600 mb-4">
 										<Lang>
-											<En>Thank you for reaching out! We've received your message and will get back to you as soon as possible.</En>
-											<Fr>Merci de nous avoir contactés ! Nous avons bien reçu votre message et vous répondrons dès que possible.</Fr>
+											<En>
+												Thank you for reaching out!
+												We've received your message and
+												will get back to you as soon as
+												possible.
+											</En>
+											<Fr>
+												Merci de nous avoir contactés !
+												Nous avons bien reçu votre
+												message et vous répondrons dès
+												que possible.
+											</Fr>
 										</Lang>
 									</p>
 									<button
@@ -320,8 +388,16 @@ function Support(props: SupportPageProps) {
 									class="px-6 py-3 bg-forest-700 text-white rounded-lg hover:bg-forest-800 smooth-transition disabled:bg-gray-400"
 								>
 									<Lang>
-										<En>{is_submitting() ? "Sending..." : "Send Message"}</En>
-										<Fr>{is_submitting() ? "Envoi en cours..." : "Envoyer le message"}</Fr>
+										<En>
+											{is_submitting()
+												? "Sending..."
+												: "Send Message"}
+										</En>
+										<Fr>
+											{is_submitting()
+												? "Envoi en cours..."
+												: "Envoyer le message"}
+										</Fr>
 									</Lang>
 								</button>
 							</form>

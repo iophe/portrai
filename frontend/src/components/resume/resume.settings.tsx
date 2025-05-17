@@ -146,12 +146,13 @@ function ResumeSettings(props: ResumeSettingsProps) {
 						class="flex flex-row gap-4"
 					>
 						<AccountIcon class="min-w-fit fill-forest-900" />
-						<h2 class="uppercase">						<Lang>
-						{[
-							<En>My profile</En>,
-							<Fr>Mon profil</Fr>
-						]}
-					</Lang> </h2>
+						<h2 class="uppercase">
+							{" "}
+							<Lang>
+								<En>My profile</En>
+								<Fr>Mon profil</Fr>
+							</Lang>{" "}
+						</h2>
 					</Motion.div>
 					<Show
 						when={editing_profile()}
@@ -207,12 +208,10 @@ function ResumeSettings(props: ResumeSettingsProps) {
 									class="flex flex-col gap-1"
 								>
 									<h3 class="text-lg text-forest-700 font-medium">
-									<Lang>
-									{[
-										<En>Self description</En>,
-										<Fr>Auto description</Fr>
-									]}
-								</Lang> 
+										<Lang>
+											<En>Self description</En>
+											<Fr>Auto description</Fr>
+										</Lang>
 									</h3>
 									<ItemText>
 										<Show
@@ -254,12 +253,10 @@ function ResumeSettings(props: ResumeSettingsProps) {
 									class="flex flex-col gap-1"
 								>
 									<h3 class="text-lg text-forest-700 font-medium">
-									<Lang>
-									{[
-										<En>Website</En>,
-										<Fr>Site internet</Fr>
-									]}
-								</Lang> 
+										<Lang>
+											<En>Website</En>
+											<Fr>Site internet</Fr>
+										</Lang>
 									</h3>
 									<a
 										class="text-forest-900"
@@ -298,7 +295,8 @@ function ResumeSettings(props: ResumeSettingsProps) {
 											value
 										);
 									}}
-									placeholder="Write your description"
+									en_placeholder="Write your description"
+									fr_placeholder="Écrivez une description"
 								/>
 							</FormLabeledInput>
 							<FormLabeledInput label="Linkedin">
@@ -310,7 +308,8 @@ function ResumeSettings(props: ResumeSettingsProps) {
 											value
 										)
 									}
-									placeholder="Write your linkedin link"
+									en_placeholder="Write your linkedin link"
+									fr_placeholder="Écrivez le lien vers votre linkedin"
 								/>
 							</FormLabeledInput>
 
@@ -323,7 +322,8 @@ function ResumeSettings(props: ResumeSettingsProps) {
 											value
 										)
 									}
-									placeholder="Write your website link"
+									en_placeholder="Write your website link"
+									fr_placeholder="Écrivez le lien vers votre website"
 								/>
 							</FormLabeledInput>
 
@@ -372,20 +372,22 @@ function ResumeSettings(props: ResumeSettingsProps) {
 							<ArticleIcon class="min-w-fit fill-forest-600" />
 							<div class="flex flex-col">
 								<h2 class="font-semibold text-forest-900 text-lg">
-								<Lang>
-									{[
-										<En>Resume Versions</En>,
+									<Lang>
+										<En>Resume Versions</En>
 										<Fr>Versions du CV</Fr>
-									]}
-								</Lang> 
+									</Lang>
 								</h2>
 								<p class="text-sm text-forest-600">
-								<Lang>
-									{[
-										<En>Create targeted resumes for different opportunities</En>,
-										<Fr>Créez des CV ciblés pour différentes opportunités</Fr>
-									]}
-								</Lang> 
+									<Lang>
+										<En>
+											Create targeted resumes for
+											different opportunities
+										</En>
+										<Fr>
+											Créez des CV ciblés pour différentes
+											opportunités
+										</Fr>
+									</Lang>
 								</p>
 							</div>
 						</Motion.hgroup>
@@ -395,12 +397,18 @@ function ResumeSettings(props: ResumeSettingsProps) {
 					<aside class="text-sm text-lapis-500 flex items-center gap-2">
 						<HelpIcon class="min-w-fit fill-lapis-400" />
 						<p>
-						<Lang>
-									{[
-										<En>Customize different versions of your resume for specific industries, positions, or languages</En>,
-										<Fr>Personnalisez différentes versions de votre CV pour des secteurs, des postes ou des langues spécifiques.</Fr>
-									]}
-								</Lang> 
+							<Lang>
+								<En>
+									Customize different versions of your resume
+									for specific industries, positions, or
+									languages
+								</En>
+								<Fr>
+									Personnalisez différentes versions de votre
+									CV pour des secteurs, des postes ou des
+									langues spécifiques.
+								</Fr>
+							</Lang>
 						</p>
 					</aside>
 
@@ -419,12 +427,10 @@ function ResumeSettings(props: ResumeSettingsProps) {
 									>
 										<hgroup class="flex flex-col">
 											<h3 class="text-sm text-forest-600">
-											<Lang>
-												{[
-													<En>Active Resume</En>,
+												<Lang>
+													<En>Active Resume</En>
 													<Fr>CV actif</Fr>
-												]}
-											</Lang> 
+												</Lang>
 											</h3>
 											<strong class="text-forest-900 text-lg">
 												{versions()?.current_version ||
@@ -515,11 +521,9 @@ function ResumeSettings(props: ResumeSettingsProps) {
 									<label class="flex flex-col grow gap-2 justify-start">
 										<span class="text-forest-700 font-medium">
 											<Lang>
-												{[
-													<En>Rename to:</En>,
-													<Fr>Renommer en:</Fr>
-												]}
-											</Lang> 
+												<En>Rename to:</En>
+												<Fr>Renommer en:</Fr>
+											</Lang>
 										</span>
 										<div class="flex flex-row items-center gap-4">
 											<form
@@ -559,7 +563,8 @@ function ResumeSettings(props: ResumeSettingsProps) {
 															value
 														)
 													}
-													placeholder="Enter new version name"
+													en_placeholder="Enter new version name"
+													fr_placeholder="Écrivez le nom de la nouvelle version"
 												/>
 											</form>
 
@@ -588,13 +593,10 @@ function ResumeSettings(props: ResumeSettingsProps) {
 							{/* Version switcher with improved UI */}
 							<fieldset class="flex flex-col gap-2 mt-1 border-0">
 								<legend class="text-sm text-forest-600 mb-1">
-								<Lang>
-												{[
-													<En>Switch between versions</En>,
-													<Fr>Basculer entre les versions</Fr>
-												]}
-											</Lang> 
-									
+									<Lang>
+										<En>Switch between versions</En>
+										<Fr>Basculer entre les versions</Fr>
+									</Lang>
 								</legend>
 								<menu class="flex gap-2 flex-wrap mt-1 p-0 items-center">
 									<For each={versions()?.all_versions}>
@@ -666,31 +668,48 @@ function ResumeSettings(props: ResumeSettingsProps) {
 									>
 										<header class="flex items-center gap-2">
 											<h3 class="font-medium text-forest-700">
-											<Lang>
-												{[
-													<En>Create New Resume Version</En>,
-													<Fr>Créer une nouvelle version de CV</Fr>
-												]}
-											</Lang> 
-												
+												<Lang>
+													<En>
+														Create New Resume
+														Version
+													</En>
+													<Fr>
+														Créer une nouvelle
+														version de CV
+													</Fr>
+												</Lang>
 											</h3>
 											<HelpIcon class="min-w-fit fill-lapis-400" />
 											<p class="text-xs text-lapis-500">
-											<Lang>
-												{[
-													<En>Each version keeps its own content and settings</En>,
-													<Fr>Chaque version conserve son propre contenu et ses propres paramètres</Fr>
-												]}
-											</Lang> 
+												<Lang>
+													<En>
+														Each version keeps its
+														own content and settings
+													</En>
+													<Fr>
+														Chaque version conserve
+														son propre contenu et
+														ses propres paramètres
+													</Fr>
+												</Lang>
 											</p>
 										</header>
 										<p class="text-sm text-forest-600">
-										<Lang>
-												{[
-													<En>Create targeted versions fordifferent opportunities (e.g.,"Teaching Position", "French Resume")</En>,
-													<Fr>Créez des versions ciblées pour différentes opportunités (par exemple, « Poste d'enseignant », « CV français »)</Fr>
-												]}
-											</Lang> 
+											<Lang>
+												<En>
+													Create targeted versions
+													fordifferent opportunities
+													(e.g.,"Teaching Position",
+													"French Resume")
+												</En>
+												<Fr>
+													Créez des versions ciblées
+													pour différentes
+													opportunités (par exemple, «
+													Poste d'enseignant », « CV
+													français »)
+												</Fr>
+											</Lang>
 										</p>
 										<footer class="flex flex-row items-center justify-between gap-4">
 											<FormInputText
@@ -703,7 +722,8 @@ function ResumeSettings(props: ResumeSettingsProps) {
 														value
 													)
 												}
-												placeholder="Enter version name"
+												en_placeholder="Enter version name"
+												fr_placeholder="Écrivez le nom de la version"
 											/>
 											<nav class="flex flex-row gap-2">
 												<Show
@@ -747,12 +767,15 @@ function ResumeSettings(props: ResumeSettingsProps) {
 															}
 														}}
 													>
-																									<Lang>
-												{[
-													<En>Create Version</En>,
-													<Fr>Créer une nouvelle version</Fr>
-												]}
-											</Lang> 
+														<Lang>
+															<En>
+																Create Version
+															</En>
+															<Fr>
+																Créer une
+																nouvelle version
+															</Fr>
+														</Lang>
 													</Motion.button>
 												</Show>
 												<Motion.button
@@ -772,12 +795,9 @@ function ResumeSettings(props: ResumeSettingsProps) {
 													}}
 												>
 													<Lang>
-												{[
-													<En>Cancel</En>,
-													<Fr>Annuler</Fr>
-												]}
-											</Lang> 
-													
+														<En>Cancel</En>
+														<Fr>Annuler</Fr>
+													</Lang>
 												</Motion.button>
 											</nav>
 										</footer>
@@ -791,45 +811,45 @@ function ResumeSettings(props: ResumeSettingsProps) {
 							>
 								<footer class="mt-2 border-t border-forest-100 pt-3">
 									<h4 class="text-sm font-medium text-forest-700 mb-2">
-									<Lang>
-												{[
-													<En>Resume Version Ideas:</En>,
-													<Fr>Idées de versions de CV:</Fr>
-												]}
-											</Lang> 
-										
+										<Lang>
+											<En>Resume Version Ideas:</En>
+											<Fr>Idées de versions de CV:</Fr>
+										</Lang>
 									</h4>
 									<ul class="flex gap-2 flex-wrap">
 										<li class="bg-lapis-50 text-lapis-800 px-3 py-1 rounded-md text-xs">
-										<Lang>
-												{[
-													<En>Industry-specific</En>,
-													<Fr>Spécialisé pour une industrie</Fr>
-												]}
+											<Lang>
+												<En>Industry-specific</En>
+												<Fr>
+													Spécialisé pour une
+													industrie
+												</Fr>
 											</Lang>
 										</li>
 										<li class="bg-lapis-50 text-lapis-800 px-3 py-1 rounded-md text-xs">
-										<Lang>
-												{[
-													<En>Industry-specific</En>,
-													<Fr>Spécialisé pour une industrie</Fr>
-												]}
+											<Lang>
+												<En>Industry-specific</En>
+												<Fr>
+													Spécialisé pour une
+													industrie
+												</Fr>
 											</Lang>
 										</li>
 										<li class="bg-lapis-50 text-lapis-800 px-3 py-1 rounded-md text-xs">
-										<Lang>
-												{[
-													<En>Role-focused</En>,
-													<Fr>Spécialisé pour une emploi</Fr>
-												]}
+											<Lang>
+												<En>Role-focused</En>
+												<Fr>
+													Spécialisé pour une emploi
+												</Fr>
 											</Lang>
 										</li>
 										<li class="bg-lapis-50 text-lapis-800 px-3 py-1 rounded-md text-xs">
-										<Lang>
-												{[
-													<En>Skill-focused</En>,
-													<Fr>Spécialisé pour des compétences</Fr>
-												]}
+											<Lang>
+												<En>Skill-focused</En>
+												<Fr>
+													Spécialisé pour des
+													compétences
+												</Fr>
 											</Lang>
 										</li>
 									</ul>

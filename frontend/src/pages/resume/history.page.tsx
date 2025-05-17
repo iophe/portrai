@@ -74,8 +74,14 @@ function HistoryPage(props: HistoryPageProps) {
 									each={resumes()}
 									fallback={
 										<Lang>
-											<En>Start creating resumes for your next dream job</En>
-											<Fr>Commencez à créer des CV pour votre prochain emploi de rêve</Fr>
+											<En>
+												Start creating resumes for your
+												next dream job
+											</En>
+											<Fr>
+												Commencez à créer des CV pour
+												votre prochain emploi de rêve
+											</Fr>
 										</Lang>
 									}
 								>
@@ -130,8 +136,16 @@ function HistoryPage(props: HistoryPageProps) {
 								<div class="items-center flex flex-col gap-4">
 									<h2>
 										<Lang>
-											<En>No resume to display, Start creating resumes for your next dream job</En>
-											<Fr>Aucun CV à afficher, commencez à créer des CV pour votre prochain emploi de rêve</Fr>
+											<En>
+												No resume to display, Start
+												creating resumes for your next
+												dream job
+											</En>
+											<Fr>
+												Aucun CV à afficher, commencez à
+												créer des CV pour votre prochain
+												emploi de rêve
+											</Fr>
 										</Lang>
 									</h2>
 									<A

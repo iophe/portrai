@@ -21,8 +21,14 @@ import {
 	FormSubmitButton,
 } from "@components/resume/utils/form.input";
 import { createCachedResource } from "@utils/cache";
-import { En, Fr, Lang, LangProvider, Test, useLang } from "@components/language";
-
+import {
+	En,
+	Fr,
+	Lang,
+	LangProvider,
+	Test,
+	useLang,
+} from "@components/language";
 
 interface AccountSectionProps {}
 
@@ -63,7 +69,8 @@ export function AccountSection(props: AccountSectionProps) {
 			getValue: () => account()?.full_name,
 			formValue: () => form_data.full_name ?? "",
 			setter: (value: string) => set_form_data("full_name", value),
-			placeholder: "Write your full name",
+			en_placeholder: "Write your full name",
+			fr_placeholder: "Écrivez votre nom complet",
 			component: FormInputText,
 		},
 		{
@@ -72,7 +79,8 @@ export function AccountSection(props: AccountSectionProps) {
 			getValue: () => account()?.email,
 			formValue: () => form_data.email ?? "",
 			setter: (value: string) => set_form_data("email", value),
-			placeholder: "Write your email",
+			en_placeholder: "Write your email",
+			fr_placeholder: "Écrivez votre adresse email",
 			component: FormInputText,
 		},
 		{
@@ -81,7 +89,8 @@ export function AccountSection(props: AccountSectionProps) {
 			getValue: () => account()?.phone,
 			formValue: () => form_data.phone ?? "",
 			setter: (value: string) => set_form_data("phone", value),
-			placeholder: "Write your phone number",
+			en_placeholder: "Write your phone number",
+			fr_placeholder: "Écrivez votre numéro de téléphone",
 			component: FormInputTelephone,
 		},
 		{
@@ -90,7 +99,9 @@ export function AccountSection(props: AccountSectionProps) {
 			getValue: () => account()?.location,
 			formValue: () => form_data.location ?? "",
 			setter: (value: string) => set_form_data("location", value),
-			placeholder: "Write your location",
+			en_placeholder: "Write your location",
+			fr_placeholder:
+				"Écrivez votre lieu de résidence (exemple : Ville, Pays)",
 			component: FormInputText,
 		},
 	];
@@ -110,13 +121,12 @@ export function AccountSection(props: AccountSectionProps) {
 					class="flex flex-row gap-4"
 				>
 					<AccountIcon class="min-w-fit fill-forest-900" />
-					<h2 class="uppercase">			
-					<Lang>
-			  {[
-				<En>My Account</En>,
-				<Fr>Mon compte</Fr>
-			  ]}
-			</Lang></h2>
+					<h2 class="uppercase">
+						<Lang>
+							<En>My Account</En>
+							<Fr>Mon compte</Fr>
+						</Lang>
+					</h2>
 				</Motion.div>
 
 				<Switch>
@@ -225,7 +235,12 @@ export function AccountSection(props: AccountSectionProps) {
 											<field.component
 												value={field.formValue()}
 												on_input={field.setter}
-												placeholder={field.placeholder}
+												en_placeholder={
+													field.en_placeholder
+												}
+												fr_placeholder={
+													field.fr_placeholder
+												}
 											/>
 										</FormLabeledInput>
 									</Motion>
