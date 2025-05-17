@@ -8,6 +8,7 @@ import MinusIcon from "@assets/icons/minus.svg?component-solid";
 import api from "@utils/api";
 import LoadingSpinner from "@components/loading.spinner";
 import { ProcessMajorError } from "@utils/api";
+import { En, Fr, Lang } from "@components/language";
 
 interface AIConversationProps {
 	template_name: string;
@@ -140,10 +141,20 @@ export default function AIConversation(props: AIConversationProps) {
 					</Show>
 					<Switch>
 						<Match when={show_instructions()}>
-							Hide additional instructions
+							<Lang>
+								<En>Hide additional instructions</En>
+								<Fr>
+									Masquer les instructions supplémentaires
+								</Fr>
+							</Lang>
 						</Match>
 						<Match when={!show_instructions()}>
-							Add additional instructions
+							<Lang>
+								<En>Add additional instructions</En>
+								<Fr>
+									Ajouter des instructions supplémentaires
+								</Fr>
+							</Lang>
 						</Match>
 					</Switch>
 				</button>
@@ -160,14 +171,27 @@ export default function AIConversation(props: AIConversationProps) {
 								for="instructions"
 								class="text-sm font-medium"
 							>
-								Additional Instructions:
+								<Lang>
+									<En>Additional Instructions:</En>
+									<Fr>Instructions supplémentaires:</Fr>
+								</Lang>
 							</label>
 							<div class="flex flex-row gap-2 items-center cursor-help opacity-40">
 								<HelpIcon class="fill-lapis-400 min-w-fit" />
 								<p class="text-lapis-300">
-									Add specific instructions for your resume,
-									such as highlighting certain skills or
-									experiences.
+									<Lang>
+										<En>
+											Add specific instructions for your
+											resume, such as highlighting certain
+											skills or experiences.
+										</En>
+										<Fr>
+											Ajoutez des instructions spécifiques
+											à votre CV, comme mettre en évidence
+											certaines compétences ou
+											expériences.
+										</Fr>
+									</Lang>
 								</p>
 							</div>
 						</div>
@@ -200,7 +224,11 @@ export default function AIConversation(props: AIConversationProps) {
 								onClick={handleGenerateResume}
 								disabled={is_generating()}
 							>
-								Generate Resume
+								<Lang>
+									<En>Generate Resume</En>
+									<Fr>Générer un CV</Fr>
+								</Lang>
+
 								<Show when={is_generating()}>
 									<LoadingSpinner white />
 								</Show>

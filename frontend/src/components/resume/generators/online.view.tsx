@@ -13,6 +13,7 @@ import { ResumeLoader } from "./resume_loading.view";
 import { DB_JOB_SPECIFIC_RESUMES } from "@utils/db/resume.db";
 import { db } from "@utils/db/db";
 import { useTutorial } from "@components/onboarding";
+import { En, Fr, Lang, useLang } from "@components/language";
 
 interface ResumeAIPreviewProps {
 	refresh_signal: Accessor<number>;
@@ -22,7 +23,7 @@ function ResumeAIPreview(props: ResumeAIPreviewProps) {
 	const navigate = useNavigate();
 	const tutorial = useTutorial();
 	const fault = useFault();
-
+	const lang = useLang();
 	const template =
 		localStorage.getItem("template_name") || "standard-executive";
 
@@ -68,7 +69,10 @@ function ResumeAIPreview(props: ResumeAIPreviewProps) {
 			if (view() === "profile") {
 				try {
 					const response = await api.post(
-						"/generate/from-profile/" + template
+						"/generate/from-profile/" +
+							template +
+							"/" +
+							lang.current()
 					);
 					const result =
 						response.data as GenerateResumeFromProfileData;
@@ -96,7 +100,7 @@ function ResumeAIPreview(props: ResumeAIPreviewProps) {
 
 			// Generate the PDF
 			const response = await api.post(
-				"/generate/live/from-cache/" + template,
+				"/generate/live/from-cache/" + template + "/" + lang.current(),
 				{
 					conversation_id: conv_id,
 				},
@@ -160,7 +164,7 @@ function ResumeAIPreview(props: ResumeAIPreviewProps) {
 
 			// Generate the PDF
 			const response = await api.post(
-				"/generate/live/from-cache/" + template,
+				"/generate/live/from-cache/" + template + "/" + lang.current(),
 				{
 					conversation_id: data.conversation_id,
 				},
@@ -195,7 +199,7 @@ function ResumeAIPreview(props: ResumeAIPreviewProps) {
 		set_is_loading(true);
 		try {
 			const response = await api.post(
-				"/generate/live/from-cache/" + template,
+				"/generate/live/from-cache/" + template + "/" + lang.current(),
 				{
 					conversation_id: conversation_id(),
 				},
@@ -266,7 +270,12 @@ function ResumeAIPreview(props: ResumeAIPreviewProps) {
 
 				<aside class="flex justify-center items-center w-full">
 					<div class="border-t border-lapis-100 w-1/3"></div>
-					<span class="px-4 text-lapis-400">or</span>
+					<span class="px-4 text-lapis-400">
+						<Lang>
+							<En>or</En>
+							<Fr>ou</Fr>
+						</Lang>
+					</span>
 					<div class="border-t border-lapis-100 w-1/3"></div>
 				</aside>
 
@@ -278,11 +287,18 @@ function ResumeAIPreview(props: ResumeAIPreviewProps) {
 					activate={() => set_view("profile")}
 				/>
 
-				<button class="self-end mr-8 flex flex-row items-center gap-2 text-nowrap"
+				<button
+					class="self-end mr-8 flex flex-row items-center gap-2 text-nowrap"
 					onclick={() => {
 						tutorial.show("add-resume-item");
-					}}	
-				>Need some help <TutorialIcon class="fill-lapis-600"/></button>
+					}}
+				>
+					<Lang>
+						<En>Need some help</En>
+						<Fr>Besoin d'aide</Fr>
+					</Lang>
+					<TutorialIcon class="fill-lapis-600" />
+				</button>
 			</Show>
 
 			<Show when={pdf_blob()}>
@@ -292,7 +308,10 @@ function ResumeAIPreview(props: ResumeAIPreviewProps) {
 						onClick={startNewResume}
 					>
 						<BackIcon class="fill-lapis-600" />
-						Start New Resume
+						<Lang>
+							<En>Start New Resume</En>
+							<Fr>Commencer un nouveau CV</Fr>
+						</Lang>
 					</button>
 				</nav>
 

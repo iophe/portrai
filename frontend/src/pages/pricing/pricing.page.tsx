@@ -5,59 +5,125 @@ import { AxiosError } from "axios";
 import Header from "@components/header.autherized";
 import Footer from "@components/footer.default";
 import LoadingSpinner from "@components/loading.spinner";
+import { En, Fr, Lang } from "@components/language";
 
 // Types
 interface PricingProps {}
 
 interface PricingPlan {
 	id: string;
-	title: string;
+	title: {
+		eng: string;
+		fr: string;
+	};
 	price: number;
-	duration: string;
-	features: string[];
+	duration: {
+		eng: string;
+		fr: string;
+	};
+	features: {
+		eng: string;
+		fr: string;
+	}[];
 	envKey: string;
-	action: string;
+	action: {
+		eng: string;
+		fr: string;
+	};
 }
-
 export const PRICING_PLANS: PricingPlan[] = [
 	{
 		id: "free-trial",
-		title: "Starter Plan",
+		title: {
+			eng: "Starter Plan",
+			fr: "Forfait Débutant",
+		},
 		price: 0,
-		duration: "7-day free trial, no credit card required",
+		duration: {
+			eng: "7-day free trial, no credit card required",
+			fr: "Essai gratuit de 7 jours, aucune carte de crédit requise",
+		},
 		features: [
-			"Create 10 AI-optimized professional resumes",
-			"Generate 10 tailored cover letters",
-			"Customize up to 5 versions per resume",
+			{
+				eng: "Create 10 AI-optimized professional resumes",
+				fr: "Créez 10 CV professionnels optimisés par l'IA",
+			},
+			{
+				eng: "Generate 10 tailored cover letters",
+				fr: "Générez 10 lettres de motivation personnalisées",
+			},
+			{
+				eng: "Customize up to 5 versions per resume",
+				fr: "Personnalisez jusqu'à 5 versions par CV",
+			},
 		],
 		envKey: import.meta.env.VITE_DEFAULT_PLAN,
-		action: "Start Now",
+		action: {
+			eng: "Start Now",
+			fr: "Commencer maintenant",
+		},
 	},
 	{
 		id: "one-month",
-		title: "Career Accelerator",
+		title: {
+			eng: "Career Accelerator",
+			fr: "Accélérateur de Carrière",
+		},
 		price: 9.99,
-		duration: "for one month (no subcription)",
+		duration: {
+			eng: "for one month (no subcription)",
+			fr: "pour un mois (sans abonnement)",
+		},
 		features: [
-			"Create 50 AI-optimized professional resumes",
-			"Generate 50 tailored cover letters",
-			"Customize up to 10 versions per resume",
+			{
+				eng: "Create 50 AI-optimized professional resumes",
+				fr: "Créez 50 CV professionnels optimisés par l'IA",
+			},
+			{
+				eng: "Generate 50 tailored cover letters",
+				fr: "Générez 50 lettres de motivation personnalisées",
+			},
+			{
+				eng: "Customize up to 10 versions per resume",
+				fr: "Personnalisez jusqu'à 10 versions par CV",
+			},
 		],
 		envKey: import.meta.env.VITE_PLAN_1_MONTH,
-		action: "Buy Now",
+		action: {
+			eng: "Buy Now",
+			fr: "Acheter maintenant",
+		},
 	},
 	{
 		id: "three-month",
-		title: "Career Advantage",
+		title: {
+			eng: "Career Advantage",
+			fr: "Avantage Carrière",
+		},
 		price: 19.99,
-		duration: "for 3 months (best value)",
+		duration: {
+			eng: "for 3 months (best value)",
+			fr: "pour 3 mois (meilleur rapport qualité-prix)",
+		},
 		features: [
-			"Create 100 AI-optimized professional resumes",
-			"Generate 100 tailored cover letters",
-			"Unlimited resume versions and customizations",
+			{
+				eng: "Create 100 AI-optimized professional resumes",
+				fr: "Créez 100 CV professionnels optimisés par l'IA",
+			},
+			{
+				eng: "Generate 100 tailored cover letters",
+				fr: "Générez 100 lettres de motivation personnalisées",
+			},
+			{
+				eng: "Unlimited resume versions and customizations",
+				fr: "Versions et personnalisations illimitées de CV",
+			},
 		],
 		envKey: import.meta.env.VITE_PLAN_3_MONTH,
-		action: "Buy Now",
+		action: {
+			eng: "Buy Now",
+			fr: "Acheter maintenant",
+		},
 	},
 ];
 
@@ -96,12 +162,18 @@ export function PricingCard(plan: PricingPlan) {
 		<article class="rounded shadow-lg divide-y divide-gray-200 transition-transform hover:scale-105 hover:shadow-xl">
 			<section class="p-6 flex flex-col gap-8">
 				<h2 class="text-2xl text-center font-semibold text-forest-900">
-					{plan.title}
+					<Lang>
+						<En>{plan.title.eng}</En>
+						<Fr>{plan.title.fr}</Fr>
+					</Lang>
 				</h2>
 				<p class="text-center">
 					{plan.price > 0 && (
 						<span class="text-base font-medium text-gray-600 alice-regular">
-							{plan.price < 11 ? "Only " : ""}
+							<Lang>
+								<En>{plan.price < 11 ? "Only " : ""}</En>
+								<Fr>{plan.price < 11 ? "Seulement " : ""}</Fr>
+							</Lang>
 						</span>
 					)}
 					{plan.price > 0 && (
@@ -118,20 +190,34 @@ export function PricingCard(plan: PricingPlan) {
 						</strong>
 					)}
 					<span class="text-base font-medium text-gray-600">
-						{plan.price > 0 ? " " + plan.duration : plan.duration}
+						<Lang>
+							<En>
+								{plan.price > 0
+									? " " + plan.duration.eng
+									: plan.duration.eng}
+							</En>
+							<Fr>
+								{plan.price > 0
+									? " " + plan.duration.fr
+									: plan.duration.fr}
+							</Fr>
+						</Lang>
 					</span>
 				</p>
 				<ul
 					class="flex flex-col gap-4"
 					role="list"
-					aria-label={`${plan.title} features`}
+					aria-label={`{plan.title.eng} features`}
 				>
 					<For each={plan.features}>
 						{(feature) => (
 							<li class="flex items-start">
 								<span class="text-forest-500 mr-2">•</span>
 								<span class="text-base text-gray-800">
-									{feature}
+									<Lang>
+										<En>{feature.eng}</En>
+										<Fr>{feature.fr}</Fr>
+									</Lang>
 								</span>
 							</li>
 						)}
@@ -146,9 +232,17 @@ export function PricingCard(plan: PricingPlan) {
 					}}
 					disabled={isLoading()}
 					aria-busy={isLoading()}
-					aria-label={`Select ${plan.title}`}
+					aria-label={`Select ${plan.title.eng}`}
 				>
-					<Show when={isLoading()} fallback={plan.action}>
+					<Show
+						when={isLoading()}
+						fallback={
+							<Lang>
+								<En>{plan.action.eng}</En>
+								<Fr>{plan.action.fr}</Fr>
+							</Lang>
+						}
+					>
 						<LoadingSpinner white />
 					</Show>
 				</button>
@@ -159,17 +253,26 @@ export function PricingCard(plan: PricingPlan) {
 
 function Pricing(props: PricingProps) {
 	return (
-		<main class="lg:px-48 px-8 mx-auto justify-items-center  p-4 flex flex-col gap-4 lg:h-screen min-h-screen">
+		<main class="lg:px-48 px-8 mx-auto justify-items-center p-4 flex flex-col gap-4 lg:h-screen min-h-screen">
 			<Header />
 			<section class="lg:py-16 py-8 h-full flex flex-col gap-16 items-center">
 				<div class="flex flex-col gap-16 items-center">
 					{/* Header */}
 					<header class="text-center max-w-3xl mx-auto">
 						<h1 class="text-3xl font-extrabold text-forest-900 sm:text-4xl">
-							Simple, Transparent Pricing
+							<Lang>
+								<En>Simple, Transparent Pricing</En>
+								<Fr>Tarification simple et transparente</Fr>
+							</Lang>
 						</h1>
 						<p class="mt-4 text-xl text-gray-600">
-							Find your next dream job within weeks
+							<Lang>
+								<En>Find your next dream job within weeks</En>
+								<Fr>
+									Trouvez votre prochain emploi de rêve en
+									quelques semaines
+								</Fr>
+							</Lang>
 						</p>
 					</header>
 

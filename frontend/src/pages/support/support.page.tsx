@@ -1,6 +1,7 @@
 import { useFault } from "@components/fault";
 import Footer from "@components/footer.default";
 import Header from "@components/header.autherized";
+import { En, Fr, Lang } from "@components/language";
 import { A } from "@solidjs/router";
 import api from "@utils/api";
 import { AxiosError } from "axios";
@@ -58,11 +59,24 @@ function Support(props: SupportPageProps) {
 			<section class="w-full flex flex-col gap-8 py-8">
 				<header class="text-center mb-4">
 					<h1 class="text-3xl font-bold text-forest-900 mb-2">
-						Customer Support
+						<Lang>
+							<En>Customer Support</En>
+							<Fr>Support Client</Fr>
+						</Lang>
 					</h1>
 					<p class="text-lg text-gray-600 max-w-2xl mx-auto">
-						We're here to help with any questions or issues you may
-						have. Browse through our FAQs or contact us directly.
+						<Lang>
+							<En>
+								We're here to help with any questions or issues
+								you may have. Browse through our FAQs or contact
+								us directly.
+							</En>
+							<Fr>
+								Nous sommes là pour vous aider avec toutes vos
+								questions ou problèmes. Parcourez nos FAQ ou
+								contactez-nous directement.
+							</Fr>
+						</Lang>
 					</p>
 				</header>
 
@@ -70,58 +84,131 @@ function Support(props: SupportPageProps) {
 					{/* Left column - FAQs */}
 					<section class="flex flex-col gap-6">
 						<h2 class="text-2xl font-semibold text-forest-800">
-							Frequently Asked Questions
+							<Lang>
+								<En>Frequently Asked Questions</En>
+								<Fr>Questions Fréquemment Posées</Fr>
+							</Lang>
 						</h2>
 
 						<dl class="space-y-6">
 							<div class="border-b border-gray-200 pb-4">
 								<dt class="text-lg font-medium text-forest-700 mb-2">
-									How do I reset my password?
+									<Lang>
+										<En>How do I reset my password?</En>
+										<Fr>
+											Comment réinitialiser mon mot de
+											passe ?
+										</Fr>
+									</Lang>
 								</dt>
 								<dd class="text-gray-600">
-									You can reset your password by clicking on
-									the "Forgot Password" link on the login
-									page. We'll send a password reset link to
-									your registered email address.
+									<Lang>
+										<En>
+											You can reset your password by
+											clicking on the "Forgot Password"
+											link on the login page. We'll send a
+											password reset link to your
+											registered email address.
+										</En>
+										<Fr>
+											Vous pouvez réinitialiser votre mot
+											de passe en cliquant sur le lien
+											"Mot de passe oublié" sur la page de
+											connexion. Nous vous enverrons un
+											lien de réinitialisation à votre
+											adresse e-mail enregistrée.
+										</Fr>
+									</Lang>
 								</dd>
 							</div>
 
 							<div class="border-b border-gray-200 pb-4">
 								<dt class="text-lg font-medium text-forest-700 mb-2">
-									What payment methods do you accept?
+									<Lang>
+										<En>
+											What payment methods do you accept?
+										</En>
+										<Fr>
+											Quels moyens de paiement
+											acceptez-vous ?
+										</Fr>
+									</Lang>
 								</dt>
 								<dd class="text-gray-600">
-									We accept all major credit cards (Visa,
-									MasterCard, American Express), PayPal, and
-									bank transfers. All payments are securely
-									processed through Stripe.
+									<Lang>
+										<En>
+											We accept all major credit cards
+											(Visa, MasterCard, American
+											Express), PayPal, and bank
+											transfers. All payments are securely
+											processed through Stripe.
+										</En>
+										<Fr>
+											Nous acceptons toutes les
+											principales cartes de crédit (Visa,
+											MasterCard, American Express),
+											PayPal et les virements bancaires.
+											Tous les paiements sont traités en
+											toute sécurité via Stripe.
+										</Fr>
+									</Lang>
 								</dd>
 							</div>
 
 							<div class="pb-4">
 								<dt class="text-lg font-medium text-forest-700 mb-2">
-									How do I get technical support?
+									<Lang>
+										<En>How do I get technical support?</En>
+										<Fr>
+											Comment obtenir une assistance
+											technique ?
+										</Fr>
+									</Lang>
 								</dt>
 								<dd class="text-gray-600">
-									For technical issues, please fill out the
-									contact form with details about your
-									problem, or email us directly at
-									portrai.contact@gmail.com.
+									<Lang>
+										<En>
+											For technical issues, please fill
+											out the contact form with details
+											about your problem, or email us
+											directly at
+											portrai.contact@gmail.com.
+										</En>
+										<Fr>
+											Pour les problèmes techniques,
+											veuillez remplir le formulaire de
+											contact avec les détails de votre
+											problème, ou envoyez-nous un e-mail
+											directement à
+											portrai.contact@gmail.com.
+										</Fr>
+									</Lang>
 								</dd>
 							</div>
 						</dl>
 						<aside class="bg-gray-50 p-6 rounded-lg border border-gray-200">
 							<h3 class="text-lg font-medium text-forest-700 mb-3">
-								Our Policies
+								<Lang>
+									<En>Our Policies</En>
+									<Fr>Nos Politiques</Fr>
+								</Lang>
 							</h3>
 
 							<div>
 								<A href="/policies/term-of-services">
-									Term of service
+									<Lang>
+										<En>Term of service</En>
+										<Fr>Conditions d'utilisation</Fr>
+									</Lang>
 								</A>
 							</div>
 							<div>
-								<A href="/policies/privacy">Privacy</A>
+								<A href="/policies/privacy">
+									<Lang>
+										<En>Privacy</En>
+										<Fr>Confidentialité</Fr>
+									</Lang>
+								</A>
 							</div>
 						</aside>
 					</section>
@@ -129,7 +216,10 @@ function Support(props: SupportPageProps) {
 					{/* Right column - Contact form */}
 					<section class="flex flex-col gap-6">
 						<h2 class="text-2xl font-semibold text-forest-800">
-							Contact Us
+							<Lang>
+								<En>Contact Us</En>
+								<Fr>Contactez-nous</Fr>
+							</Lang>
 						</h2>
 
 						<Show
@@ -153,12 +243,26 @@ function Support(props: SupportPageProps) {
 										</svg>
 									</figure>
 									<h3 class="text-xl font-medium text-green-700 mb-2">
-										Message Sent Successfully
+										<Lang>
+											<En>Message Sent Successfully</En>
+											<Fr>Message Envoyé avec Succès</Fr>
+										</Lang>
 									</h3>
 									<p class="text-green-600 mb-4">
-										Thank you for reaching out! We've
-										received your message and will get back
-										to you as soon as possible.
+										<Lang>
+											<En>
+												Thank you for reaching out!
+												We've received your message and
+												will get back to you as soon as
+												possible.
+											</En>
+											<Fr>
+												Merci de nous avoir contactés !
+												Nous avons bien reçu votre
+												message et vous répondrons dès
+												que possible.
+											</Fr>
+										</Lang>
 									</p>
 									<button
 										onClick={() =>
@@ -166,7 +270,10 @@ function Support(props: SupportPageProps) {
 										}
 										class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 smooth-transition"
 									>
-										Send Another Message
+										<Lang>
+											<En>Send Another Message</En>
+											<Fr>Envoyer un autre message</Fr>
+										</Lang>
 									</button>
 								</article>
 							}
@@ -180,7 +287,10 @@ function Support(props: SupportPageProps) {
 										for="name"
 										class="block text-sm font-medium text-gray-700 mb-1"
 									>
-										Name
+										<Lang>
+											<En>Name</En>
+											<Fr>Nom</Fr>
+										</Lang>
 									</label>
 									<input
 										id="name"
@@ -202,7 +312,10 @@ function Support(props: SupportPageProps) {
 										for="email"
 										class="block text-sm font-medium text-gray-700 mb-1"
 									>
-										Email
+										<Lang>
+											<En>Email</En>
+											<Fr>E-mail</Fr>
+										</Lang>
 									</label>
 									<input
 										id="email"
@@ -224,7 +337,10 @@ function Support(props: SupportPageProps) {
 										for="subject"
 										class="block text-sm font-medium text-gray-700 mb-1"
 									>
-										Subject
+										<Lang>
+											<En>Subject</En>
+											<Fr>Sujet</Fr>
+										</Lang>
 									</label>
 									<input
 										id="subject"
@@ -246,7 +362,10 @@ function Support(props: SupportPageProps) {
 										for="message"
 										class="block text-sm font-medium text-gray-700 mb-1"
 									>
-										Message
+										<Lang>
+											<En>Message</En>
+											<Fr>Message</Fr>
+										</Lang>
 									</label>
 									<textarea
 										id="message"
@@ -268,16 +387,28 @@ function Support(props: SupportPageProps) {
 									disabled={is_submitting()}
 									class="px-6 py-3 bg-forest-700 text-white rounded-lg hover:bg-forest-800 smooth-transition disabled:bg-gray-400"
 								>
-									{is_submitting()
-										? "Sending..."
-										: "Send Message"}
+									<Lang>
+										<En>
+											{is_submitting()
+												? "Sending..."
+												: "Send Message"}
+										</En>
+										<Fr>
+											{is_submitting()
+												? "Envoi en cours..."
+												: "Envoyer le message"}
+										</Fr>
+									</Lang>
 								</button>
 							</form>
 						</Show>
 
 						<aside class="bg-gray-50 p-6 rounded-lg border border-gray-200">
 							<h3 class="text-lg font-medium text-forest-700 mb-3">
-								Other Ways to Reach Us
+								<Lang>
+									<En>Other Ways to Reach Us</En>
+									<Fr>Autres façons de nous contacter</Fr>
+								</Lang>
 							</h3>
 
 							<address class="space-y-4 not-italic">
@@ -299,7 +430,12 @@ function Support(props: SupportPageProps) {
 										</svg>
 									</figure>
 									<div>
-										<h4 class="font-medium">Email</h4>
+										<h4 class="font-medium">
+											<Lang>
+												<En>Email</En>
+												<Fr>E-mail</Fr>
+											</Lang>
+										</h4>
 										<p class="text-gray-600">
 											<a href="mailto:portrai.contact@gmail.com">
 												portrai.contact@gmail.com

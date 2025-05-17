@@ -7,6 +7,7 @@ import {
 	Show,
 } from "solid-js";
 import SectionTitle from "./section.title";
+import { useLang } from "@components/language";
 
 interface FormProps {
 	cancel: () => void;
@@ -15,7 +16,8 @@ interface FormProps {
 
 interface SectionHeaderProps<T> {
 	add: () => void;
-	section_title: string;
+	en_section_title: string;
+	fr_section_title: string;
 	section_name: string;
 	form: (props: FormProps) => JSXElement;
 	list?: Resource<T[]>;
@@ -24,6 +26,7 @@ interface SectionHeaderProps<T> {
 }
 
 function SectionHeader<T>(props: SectionHeaderProps<T>) {
+	const lang = useLang();
 	const [creating_new, create_new] = createSignal(props.open ?? false);
 	createEffect(() => {
 		if (props.list && props.list()?.length === 0) {
@@ -37,7 +40,12 @@ function SectionHeader<T>(props: SectionHeaderProps<T>) {
 					create_new(true);
 				}}
 			>
-				{props.section_title}
+				<Show
+					when={lang.current() === "fr"}
+					fallback={props.en_section_title}
+				>
+					{props.fr_section_title}
+				</Show>
 			</SectionTitle>
 			<Show
 				when={props.open || (props.list && props.list()?.length === 0)}

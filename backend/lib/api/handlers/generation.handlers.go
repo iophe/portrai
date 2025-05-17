@@ -71,6 +71,7 @@ func HandleGetPDFResume(params GetPDFResumeParams, c *fiber.Ctx) error {
 
 type GenerateResumeFromProfileParams struct {
 	TemplateName string `params:"template_name"`
+	Language     string `params:"language"`
 }
 
 func (params *GenerateResumeFromProfileParams) Validate() bool {
@@ -132,7 +133,7 @@ func HandleGenerateResumeFromProfile(params GenerateResumeFromProfileParams, c *
 			}
 		} else {
 			file_id = generated_resume.ResumeFileID
-			if generated_resume.TemplateName == params.TemplateName {
+			if generated_resume.TemplateName == params.TemplateName+"/"+params.Language {
 				// Return old resume, no need to rebuild one
 				build_file_flag = false
 				resume_name = generated_resume.Filename
@@ -162,7 +163,7 @@ func HandleGenerateResumeFromProfile(params GenerateResumeFromProfileParams, c *
 			})
 		}
 
-		latex_file, err := resumetemplates.ConvertResumeToLatex(params.TemplateName, resume_data.Convert(), user, profile)
+		latex_file, err := resumetemplates.ConvertResumeToLatex(params.TemplateName, params.Language, resume_data.Convert(), user, profile)
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 				"error":   "Could generate latex file",
@@ -192,7 +193,7 @@ func HandleGenerateResumeFromProfile(params GenerateResumeFromProfileParams, c *
 				Filename:     resume_name,
 				UserID:       user_id,
 				ResumeUid:    resume_uid,
-				TemplateName: params.TemplateName,
+				TemplateName: params.TemplateName + "/" + params.Language,
 			})
 			if err != nil {
 				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -205,7 +206,7 @@ func HandleGenerateResumeFromProfile(params GenerateResumeFromProfileParams, c *
 				ResumeFileID: file_id,
 				Filename:     pgtype.Text{String: resume_name, Valid: true},
 				ResumeUid:    pgtype.UUID{Bytes: resume_uid, Valid: true},
-				TemplateName: pgtype.Text{String: params.TemplateName, Valid: true},
+				TemplateName: pgtype.Text{String: params.TemplateName + "/" + params.Language, Valid: true},
 			})
 			if err != nil {
 				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -233,6 +234,7 @@ func HandleGenerateResumeFromProfile(params GenerateResumeFromProfileParams, c *
 
 type GenerateLiveResumeFromData struct {
 	ResumeData utils.InputResumeData `json:"resume_data"`
+	Language   string                `params:"language"`
 }
 
 func HandleGenerateLiveResumeFromData(params GenerateResumeFromProfileParams, data GenerateLiveResumeFromData, c *fiber.Ctx, db *db_lib.Database) error {
@@ -261,7 +263,7 @@ func HandleGenerateLiveResumeFromData(params GenerateResumeFromProfileParams, da
 		})
 	}
 
-	latex_file, err := resumetemplates.ConvertResumeToLatex(params.TemplateName, data.ResumeData, user, profile)
+	latex_file, err := resumetemplates.ConvertResumeToLatex(params.TemplateName, params.Language, data.ResumeData, user, profile)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error":   "Could generate latex file",
@@ -328,7 +330,7 @@ func HandleGenerateLiveResumeFromCache(params GenerateResumeFromProfileParams, d
 		})
 	}
 
-	latex_file, err := resumetemplates.ConvertResumeToLatex(params.TemplateName, resume_data.InputResumeData, user, profile)
+	latex_file, err := resumetemplates.ConvertResumeToLatex(params.TemplateName, params.Language, resume_data.InputResumeData, user, profile)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error":   "Could generate latex file",

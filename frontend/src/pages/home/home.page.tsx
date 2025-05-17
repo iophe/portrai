@@ -11,9 +11,13 @@ import ResumeAIPreview from "@components/resume/generators/online.view";
 import ResumeSettings from "@components/resume/resume.settings";
 import Footer from "@components/footer.default";
 import AsideSelector from "@components/resume/selector.aside";
-import { TutorialMetadata, TutorialProvider, useTutorial } from "@components/onboarding";
+import {
+	TutorialMetadata,
+	TutorialProvider,
+	useTutorial,
+} from "@components/onboarding";
 
-interface HomeProps { }
+interface HomeProps {}
 
 function Home(props: HomeProps) {
 	const navigate = useNavigate();
@@ -27,11 +31,20 @@ function Home(props: HomeProps) {
 	}
 
 	onMount(() => {
-		const tutorial_metadata_json = localStorage.getItem("tutorial-metadata") ?? "{}";
-		const tutorial_metadata = JSON.parse(tutorial_metadata_json) as TutorialMetadata;
+		const tutorial_metadata_json =
+			localStorage.getItem("tutorial-metadata") ?? "{}";
+		const tutorial_metadata = JSON.parse(
+			tutorial_metadata_json
+		) as TutorialMetadata;
 
-		if (!tutorial_metadata || !(tutorial_metadata["add-resume-item"]?.completed ?? false)) {
-			tutorial.show("add-resume-item",tutorial_metadata["add-resume-item"])
+		if (
+			!tutorial_metadata ||
+			!(tutorial_metadata["add-resume-item"]?.completed ?? false)
+		) {
+			tutorial.show(
+				"add-resume-item",
+				tutorial_metadata["add-resume-item"]
+			);
 		}
 	});
 

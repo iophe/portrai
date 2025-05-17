@@ -33,17 +33,17 @@ func ValidateTemplateName(template_name string) bool {
 	}
 }
 
-func ConvertResumeToLatex(template_name string, resume_data utils.InputResumeData, user sqlc_gen.GetUserByIdRow, profile sqlc_gen.GetProfileByUserIdRow) (string, error) {
+func ConvertResumeToLatex(template_name string, language string, resume_data utils.InputResumeData, user sqlc_gen.GetUserByIdRow, profile sqlc_gen.GetProfileByUserIdRow) (string, error) {
 	slog.Info("Chosen template", "name", template_name)
 	switch template_name {
 	case "standard-executive":
-		return ConvertResumeToLatex_STANDARD_EXECUTIVE(resume_data, user, profile)
+		return ConvertResumeToLatex_STANDARD_EXECUTIVE(language, resume_data, user, profile)
 	case "columns-executive":
-		return ConvertResumeToLatex_COLUMNS_EXECUTIVE(resume_data, user, profile)
+		return ConvertResumeToLatex_COLUMNS_EXECUTIVE(language, resume_data, user, profile)
 	case "senior-executive":
-		return ConvertResumeToLatex_SENIOR_EXECUTIVE(resume_data, user, profile)
+		return ConvertResumeToLatex_SENIOR_EXECUTIVE(language, resume_data, user, profile)
 	case "researcher":
-		return ConvertResumeToLatex_RESEARCHER(resume_data, user, profile)
+		return ConvertResumeToLatex_RESEARCHER(language, resume_data, user, profile)
 	default:
 		return "", fmt.Errorf("Unknown template")
 	}

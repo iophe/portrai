@@ -16,6 +16,7 @@ import { useFault } from "@components/fault";
 import { AxiosError } from "axios";
 import LoadingSpinner from "@components/loading.spinner";
 import EditIcon from "@assets/icons/edit.svg?component-solid";
+import { En, Fr, Lang, useLang } from "./language";
 
 interface AvatarSectionProps {}
 
@@ -89,7 +90,12 @@ export function AvatarSection(props: AvatarSectionProps) {
 				class="flex flex-row gap-4 border-b-2 border-forest-900 pb-2"
 			>
 				<AvatarIcon class="min-w-fit fill-forest-900 w-6 h-6" />
-				<h2 class="text-sm text-gray-500 uppercase">Profile Picture</h2>
+				<h2 class="text-sm text-gray-500 uppercase">
+					<Lang>
+						<En>Profile Picture</En>
+						<Fr>Photo de Profile</Fr>
+					</Lang>
+				</h2>
 			</Motion.header>
 
 			<article class="flex flex-row items-center gap-4 pt-4">
@@ -148,10 +154,21 @@ export function AvatarSection(props: AvatarSectionProps) {
 					class="flex-1 flex flex-col gap-2"
 				>
 					<p class="text-sm text-forest-700">
-						Upload a profile picture. Max file size 5MB.
+						<Lang>
+							<En>
+								Upload a profile picture. Max file size 5MB.
+							</En>
+							<Fr>
+								Télécharger une photo de profile. Taille
+								maximale 5MB.
+							</Fr>
+						</Lang>
 					</p>
 					<p class="text-xs text-gray-500">
-						Supported formats: JPG, PNG, WEBP
+						<Lang>
+							<En>Supported formats: JPG, PNG, WEBP.</En>
+							<Fr>Formats supportés: JPG, PNG, WEBP.</Fr>
+						</Lang>
 					</p>
 					<Motion.div
 						initial={{ opacity: 0, y: 5 }}
@@ -224,7 +241,10 @@ export function AvatarSection(props: AvatarSectionProps) {
 							for="avatar-upload"
 							class="text-sm flex flex-row gap-4 items-center text-lapis-500 hover:text-lapis-300 cursor-pointer smooth-transition"
 						>
-							Change
+							<Lang>
+								<En>Change</En>
+								<Fr>Changer</Fr>
+							</Lang>
 							<EditIcon class="min-w-fit fill-forest-900" />
 							<Presence>
 								<Show when={is_uploading()}>
