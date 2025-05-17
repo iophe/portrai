@@ -48,21 +48,25 @@ export function ResumeActions(props: ResumeActionsProps) {
 			>
 				<header class="flex flex-col gap-2 items-center">
 					<h3>
-					<Lang>{[
-				<En>Revise Resume</En>,
-				<Fr>Mettre à jour le CV</Fr>
-			  ]}
-			</Lang></h3>
+						<Lang>
+							<En>Revise Resume</En>
+							<Fr>Mettre à jour le CV</Fr>
+						</Lang>
+					</h3>
 					<span class="flex flex-row gap-2 opacity-40 cursor-help">
 						<HelpIcon class="fill-lapis-400 min-w-fit" />
 						<p class="text-lapis-300">
-						<Lang>{[
-				<En>Provide feedback to update your resume. Be specific
-				about what you'd like to change.</En>,
-				<Fr>Donnez votre retour pour mettre à jour votre CV. Soyez précis sur ce que vous aimeriez modifier.</Fr>
-			  ]}
-			</Lang>
-							
+							<Lang>
+								<En>
+									Provide feedback to update your resume. Be
+									specific about what you'd like to change.
+								</En>
+								<Fr>
+									Donnez votre retour pour mettre à jour votre
+									CV. Soyez précis sur ce que vous aimeriez
+									modifier.
+								</Fr>
+							</Lang>
 						</p>
 					</span>
 				</header>
@@ -94,12 +98,11 @@ export function ResumeActions(props: ResumeActionsProps) {
 									disabled={is_updating() || !comment()}
 								>
 									<RefreshIcon class="fill-snow-100" />
-									<Lang>{[
-				<En>Update Resume</En>,
-				<Fr>Mettre à jour le CV</Fr>
-			  ]}
-			</Lang>
-									
+									<Lang>
+										<En>Update Resume</En>
+										<Fr>Mettre à jour le CV</Fr>
+									</Lang>
+
 									<Show when={is_updating()}>
 										<LoadingSpinner white />
 									</Show>

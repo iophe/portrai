@@ -65,7 +65,8 @@ export function ProjectList(props: ProjectListProps) {
 		<section class="w-full flex flex-col gap-4 justify-items-center">
 			<SectionHeader
 				add={() => {}}
-				section_title="Projects"
+				en_section_title="Projects"
+				fr_section_title="Projects"
 				section_name="project"
 				form={(props) => (
 					<ProjectForm
@@ -84,13 +85,16 @@ export function ProjectList(props: ProjectListProps) {
 				fallback={
 					<span class="flex flex-wrap gap-2 text-lapis-500">
 						<HelpIcon class="min-w-fit fill-lapis-400" />{" "}
-						
 						<p>
-						<Lang>{[
-						<En>Add your personal projects in your resume</En>,
-						<Fr>Ajoutez vos projets personnels dans votre CV</Fr>
-					]}
-					</Lang></p>{" "}
+							<Lang>
+								<En>
+									Add your personal projects in your resume
+								</En>
+								<Fr>
+									Ajoutez vos projets personnels dans votre CV
+								</Fr>
+							</Lang>
+						</p>{" "}
 					</span>
 				}
 			/>
@@ -225,7 +229,8 @@ export function OfflineProjectList(props: OfflineProjectListProps) {
 		<section class="w-full flex flex-col gap-4 justify-items-center">
 			<SectionHeader
 				add={() => {}}
-				section_title="Projects"
+				en_section_title="Projects"
+				fr_section_title="Projects"
 				section_name="project"
 				form={(p) => (
 					<ProjectForm
@@ -246,12 +251,15 @@ export function OfflineProjectList(props: OfflineProjectListProps) {
 					<span class="flex flex-wrap gap-2 text-lapis-500">
 						<HelpIcon class="min-w-fit fill-lapis-400" />{" "}
 						<p>
-						<Lang>{[
-						<En>Add some personal projects in this resume</En>,
-						<Fr>Ajoutez des projets personnels dans votre CV</Fr>
-					]}
-					</Lang>
-					</p>{" "}
+							<Lang>
+								<En>
+									Add some personal projects in this resume
+								</En>
+								<Fr>
+									Ajoutez des projets personnels dans votre CV
+								</Fr>
+							</Lang>
+						</p>{" "}
 					</span>
 				}
 			/>

@@ -45,7 +45,7 @@ func RegisterGenerationRoutes(group fiber.Router) {
 
 	live := generation_group.Group("/live")
 
-	live.Post("/from-cache/:template_name",
+	live.Post("/from-cache/:template_name/:language",
 		middlewares.PayingFeature(middlewares.RESUME_GENERATION, &db.DB),
 		func(c *fiber.Ctx) error {
 			var params handlers.GenerateResumeFromProfileParams
@@ -68,7 +68,7 @@ func RegisterGenerationRoutes(group fiber.Router) {
 			return handlers.HandleGenerateLiveResumeFromCache(params, data, c, &cache.CACHE, &db.DB)
 		})
 
-	live.Post("/from-data/:template_name", func(c *fiber.Ctx) error {
+	live.Post("/from-data/:template_name/:language", func(c *fiber.Ctx) error {
 		var params handlers.GenerateResumeFromProfileParams
 		if err := c.ParamsParser(&params); err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -91,7 +91,7 @@ func RegisterGenerationRoutes(group fiber.Router) {
 
 	from_profile := generation_group.Group("/from-profile")
 
-	from_profile.Post("/:template_name", func(c *fiber.Ctx) error {
+	from_profile.Post("/:template_name/:language", func(c *fiber.Ctx) error {
 		var params handlers.GenerateResumeFromProfileParams
 		if err := c.ParamsParser(&params); err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{

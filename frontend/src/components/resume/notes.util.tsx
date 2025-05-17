@@ -54,10 +54,8 @@ export function NoteForm(props: NoteFormProps) {
 			>
 				<label class="text-sm text-gray-700">
 					<Lang>
-						{[
-							<En>What kind of comment?</En>,
-							<Fr>Quel type de commentaire ?</Fr>
-						]}
+						<En>What kind of comment?</En>
+						<Fr>Quel type de commentaire ?</Fr>
 					</Lang>
 				</label>
 				<select
@@ -67,18 +65,20 @@ export function NoteForm(props: NoteFormProps) {
 				>
 					<option value="instruction">
 						<Lang>
-							{[
-								<En>Instruction for the AI assistant</En>,
-								<Fr>Instruction pour l'assistant IA</Fr>
-							]}
+							<En>Instruction for the AI assistant</En>
+							<Fr>Instruction pour l'assistant IA</Fr>
 						</Lang>
 					</option>
 					<option value="additional">
 						<Lang>
-							{[
-								<En>Additional information about this {props.section_type}</En>,
-								<Fr>Informations supplémentaires sur {props.section_type}</Fr>
-							]}
+							<En>
+								Additional information about this{" "}
+								{props.section_type}
+							</En>
+							<Fr>
+								Informations supplémentaires sur{" "}
+								{props.section_type}
+							</Fr>
 						</Lang>
 					</option>
 				</select>
@@ -92,10 +92,8 @@ export function NoteForm(props: NoteFormProps) {
 			>
 				<label class="text-sm text-gray-700">
 					<Lang>
-						{[
-							<En>Comment</En>,
-							<Fr>Commentaire</Fr>
-						]}
+						<En>Comment</En>
+						<Fr>Commentaire</Fr>
 					</Lang>
 				</label>
 				<textarea
@@ -124,10 +122,8 @@ export function NoteForm(props: NoteFormProps) {
 					class="px-4 py-2 text-sm text-lapis-600 hover:bg-lapis-50 rounded"
 				>
 					<Lang>
-						{[
-							<En>Cancel</En>,
-							<Fr>Annuler</Fr>
-						]}
+						<En>Cancel</En>
+						<Fr>Annuler</Fr>
 					</Lang>
 				</Motion.button>
 				<Motion.button
@@ -138,10 +134,8 @@ export function NoteForm(props: NoteFormProps) {
 					class="px-4 py-2 text-sm text-white bg-lapis-600 hover:bg-lapis-700 rounded"
 				>
 					<Lang>
-						{[
-							<En>Submit</En>,
-							<Fr>Envoyer</Fr>
-						]}
+						<En>Submit</En>
+						<Fr>Envoyer</Fr>
 					</Lang>
 				</Motion.button>
 			</Motion.div>
@@ -193,22 +187,17 @@ export function NoteView(props: NoteViewProps) {
 				<p class="text-gray-600 text-sm">
 					<Switch>
 						<Match when={props.type === "additional"}>
-						<Lang>
-						{[
-							<En>Additional information about this</En>,
-							<Fr>Informations supplémentaires</Fr>
-						]}
-					</Lang>
-							{" "}
+							<Lang>
+								<En>Additional information about this</En>
+								<Fr>Informations supplémentaires</Fr>
+							</Lang>{" "}
 							{props.section_type}
 						</Match>
 						<Match when={props.type === "instruction"}>
-						<Lang>
-						{[
-							<En>Instruction for the AI assistant</En>,
-							<Fr>Instruction pour l'assitant IA</Fr>
-						]}
-					</Lang>
+							<Lang>
+								<En>Instruction for the AI assistant</En>
+								<Fr>Instruction pour l'assitant IA</Fr>
+							</Lang>
 						</Match>
 					</Switch>
 				</p>
@@ -258,12 +247,11 @@ export function NoteList(props: NoteListProps) {
 			>
 				<h3 class="flex flex-wrap items-center gap-2">
 					<span>
-					<Lang>
-						{[
-							<En>Comments :</En>,
+						<Lang>
+							<En>Comments :</En>
 							<Fr>Commentaires :</Fr>
-						]}
-					</Lang> </span>
+						</Lang>{" "}
+					</span>
 					<span class="flex flex-row gap-2 items-center">
 						<Motion
 							animate={{ rotate: [0, -15, 15, -8, 8, 0] }}
@@ -276,18 +264,22 @@ export function NoteList(props: NoteListProps) {
 							<HelpIcon class="min-w-fit fill-lapis-100" />
 						</Motion>
 						<p class="text-lapis-500 text-sm">
-						<Lang>
-						{[
-							<En>Comment this</En>,
-							<Fr>Commentez</Fr>
-						]}
-					</Lang> {props.section_type}						<Lang>
-						{[
-							<En> to help your AI
-							assistant understand it better</En>,
-							<Fr>pour aider votre assistant IA à mieux le comprendre</Fr>
-						]}
-					</Lang> 
+							<Lang>
+								<En>Comment this</En>
+								<Fr>Commentez</Fr>
+							</Lang>{" "}
+							{props.section_type}{" "}
+							<Lang>
+								<En>
+									{" "}
+									to help your AI assistant understand it
+									better
+								</En>
+								<Fr>
+									pour aider votre assistant IA à mieux le
+									comprendre
+								</Fr>
+							</Lang>
 						</p>
 					</span>
 				</h3>

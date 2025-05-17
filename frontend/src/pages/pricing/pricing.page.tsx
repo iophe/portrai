@@ -36,93 +36,93 @@ export const PRICING_PLANS: PricingPlan[] = [
 		id: "free-trial",
 		title: {
 			eng: "Starter Plan",
-			fr: "Forfait Débutant"
+			fr: "Forfait Débutant",
 		},
 		price: 0,
 		duration: {
 			eng: "7-day free trial, no credit card required",
-			fr: "Essai gratuit de 7 jours, aucune carte de crédit requise"
+			fr: "Essai gratuit de 7 jours, aucune carte de crédit requise",
 		},
 		features: [
 			{
 				eng: "Create 10 AI-optimized professional resumes",
-				fr: "Créez 10 CV professionnels optimisés par l'IA"
+				fr: "Créez 10 CV professionnels optimisés par l'IA",
 			},
 			{
 				eng: "Generate 10 tailored cover letters",
-				fr: "Générez 10 lettres de motivation personnalisées"
+				fr: "Générez 10 lettres de motivation personnalisées",
 			},
 			{
 				eng: "Customize up to 5 versions per resume",
-				fr: "Personnalisez jusqu'à 5 versions par CV"
+				fr: "Personnalisez jusqu'à 5 versions par CV",
 			},
 		],
 		envKey: import.meta.env.VITE_DEFAULT_PLAN,
 		action: {
 			eng: "Start Now",
-			fr: "Commencer maintenant"
+			fr: "Commencer maintenant",
 		},
 	},
 	{
 		id: "one-month",
 		title: {
 			eng: "Career Accelerator",
-			fr: "Accélérateur de Carrière"
+			fr: "Accélérateur de Carrière",
 		},
 		price: 9.99,
 		duration: {
 			eng: "for one month (no subcription)",
-			fr: "pour un mois (sans abonnement)"
+			fr: "pour un mois (sans abonnement)",
 		},
 		features: [
 			{
 				eng: "Create 50 AI-optimized professional resumes",
-				fr: "Créez 50 CV professionnels optimisés par l'IA"
+				fr: "Créez 50 CV professionnels optimisés par l'IA",
 			},
 			{
 				eng: "Generate 50 tailored cover letters",
-				fr: "Générez 50 lettres de motivation personnalisées"
+				fr: "Générez 50 lettres de motivation personnalisées",
 			},
 			{
 				eng: "Customize up to 10 versions per resume",
-				fr: "Personnalisez jusqu'à 10 versions par CV"
+				fr: "Personnalisez jusqu'à 10 versions par CV",
 			},
 		],
 		envKey: import.meta.env.VITE_PLAN_1_MONTH,
 		action: {
 			eng: "Buy Now",
-			fr: "Acheter maintenant"
+			fr: "Acheter maintenant",
 		},
 	},
 	{
 		id: "three-month",
 		title: {
 			eng: "Career Advantage",
-			fr: "Avantage Carrière"
+			fr: "Avantage Carrière",
 		},
 		price: 19.99,
 		duration: {
 			eng: "for 3 months (best value)",
-			fr: "pour 3 mois (meilleur rapport qualité-prix)"
+			fr: "pour 3 mois (meilleur rapport qualité-prix)",
 		},
 		features: [
 			{
 				eng: "Create 100 AI-optimized professional resumes",
-				fr: "Créez 100 CV professionnels optimisés par l'IA"
+				fr: "Créez 100 CV professionnels optimisés par l'IA",
 			},
 			{
 				eng: "Generate 100 tailored cover letters",
-				fr: "Générez 100 lettres de motivation personnalisées"
+				fr: "Générez 100 lettres de motivation personnalisées",
 			},
 			{
 				eng: "Unlimited resume versions and customizations",
-				fr: "Versions et personnalisations illimitées de CV"
+				fr: "Versions et personnalisations illimitées de CV",
 			},
 		],
 		envKey: import.meta.env.VITE_PLAN_3_MONTH,
 		action: {
 			eng: "Buy Now",
-			fr: "Acheter maintenant"
+			fr: "Acheter maintenant",
 		},
 	},
 ];
@@ -191,8 +191,16 @@ export function PricingCard(plan: PricingPlan) {
 					)}
 					<span class="text-base font-medium text-gray-600">
 						<Lang>
-							<En>{plan.price > 0 ? " " + plan.duration.eng : plan.duration.eng}</En>
-							<Fr>{plan.price > 0 ? " " + plan.duration.fr : plan.duration.fr}</Fr>
+							<En>
+								{plan.price > 0
+									? " " + plan.duration.eng
+									: plan.duration.eng}
+							</En>
+							<Fr>
+								{plan.price > 0
+									? " " + plan.duration.fr
+									: plan.duration.fr}
+							</Fr>
 						</Lang>
 					</span>
 				</p>
@@ -226,12 +234,15 @@ export function PricingCard(plan: PricingPlan) {
 					aria-busy={isLoading()}
 					aria-label={`Select ${plan.title.eng}`}
 				>
-					<Show when={isLoading()} fallback={
-						<Lang>
-							<En>{plan.action.eng}</En>
-							<Fr>{plan.action.fr}</Fr>
-						</Lang>
-					}>
+					<Show
+						when={isLoading()}
+						fallback={
+							<Lang>
+								<En>{plan.action.eng}</En>
+								<Fr>{plan.action.fr}</Fr>
+							</Lang>
+						}
+					>
 						<LoadingSpinner white />
 					</Show>
 				</button>
@@ -257,7 +268,10 @@ function Pricing(props: PricingProps) {
 						<p class="mt-4 text-xl text-gray-600">
 							<Lang>
 								<En>Find your next dream job within weeks</En>
-								<Fr>Trouvez votre prochain emploi de rêve en quelques semaines</Fr>
+								<Fr>
+									Trouvez votre prochain emploi de rêve en
+									quelques semaines
+								</Fr>
 							</Lang>
 						</p>
 					</header>

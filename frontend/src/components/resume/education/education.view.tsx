@@ -20,6 +20,7 @@ import {
 } from "../utils/form.input";
 import { useNavigate } from "@solidjs/router";
 import { ProcessMajorError } from "@utils/api";
+import { En, Fr, Lang } from "@components/language";
 
 interface EducationViewProps {
 	education: Education;
@@ -204,50 +205,91 @@ export function EducationForm(props: EducationFormProps) {
 					}
 				}}
 			/>
-			<FormLabeledInput label="Degree">
+			<FormLabeledInput
+				label={
+					<Lang>
+						<En>Degree</En>
+						<Fr>Diplôme</Fr>
+					</Lang>
+				}
+			>
 				<FormInputText
 					value={form_data.degree}
 					on_input={(value) => setFormData("degree", value)}
-					placeholder="Write the degree"
+					en_placeholder="Write the degree"
+					fr_placeholder="Écrivez le nom du diplôme"
 					required
 				/>
 			</FormLabeledInput>
 
-			<FormLabeledInput label="School">
+			<FormLabeledInput
+				label={
+					<Lang>
+						<En>School</En>
+						<Fr>École</Fr>
+					</Lang>
+				}
+			>
 				<FormInputText
 					value={form_data.school}
 					on_input={(value) => setFormData("school", value)}
-					placeholder="Write the school"
+					en_placeholder="Write the school"
+					fr_placeholder="Écrivez le nom de l'école"
 					required
 				/>
 			</FormLabeledInput>
 
-			<FormLabeledInput label="Location">
+			<FormLabeledInput
+				label={
+					<Lang>
+						<En>Location</En>
+						<Fr>Lieu</Fr>
+					</Lang>
+				}
+			>
 				<FormInputText
 					value={form_data.location}
 					on_input={(value) => setFormData("location", value)}
-					placeholder="Write the location"
+					en_placeholder="Write the location"
+					fr_placeholder="Écrivez le lieu"
 					required
 				/>
 			</FormLabeledInput>
 			<div class="grid grid-cols-2 gap-4">
-				<FormLabeledInput label="Start Date">
+				<FormLabeledInput
+					label={
+						<Lang>
+							<En>Start Date</En>
+							<Fr>Date de début</Fr>
+						</Lang>
+					}
+				>
 					<FormInputDate
 						value={form_data.start_date}
 						on_input={(value) => setFormData("start_date", value)}
-						placeholder="select start date"
+						en_placeholder="select start date"
+						fr_placeholder="Sélectionnez une date de début"
 						required
 					/>
 				</FormLabeledInput>
 
-				<FormLabeledInput label="End Date" optional>
+				<FormLabeledInput
+					label={
+						<Lang>
+							<En>End Date</En>
+							<Fr>Date de fin</Fr>
+						</Lang>
+					}
+					optional
+				>
 					<FormInputDate
 						value={form_data.optional_end_date}
 						on_input={(value) =>
 							setFormData("optional_end_date", value)
 						}
 						disabled={form_data.is_current}
-						placeholder="select end date"
+						en_placeholder="select end date"
+						fr_placeholder="Sélectionnez une date de fin"
 					/>
 				</FormLabeledInput>
 			</div>
@@ -259,7 +301,8 @@ export function EducationForm(props: EducationFormProps) {
 
 			<FormLabeledInput label="Description">
 				<FormTextArea
-					placeholder="write the description of this experience"
+					en_placeholder="write the description of this education"
+					fr_placeholder="Écrivez une description"
 					value={form_data.description}
 					on_input={(value) => setFormData("description", value)}
 					rows={4}

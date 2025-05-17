@@ -49,10 +49,8 @@ export function PlanSection(props: PlanSectionProps) {
 				<PlanIcon class="min-w-fit fill-forest-900" />
 				<h2 class="text-sm text-gray-500 uppercase">
 					<Lang>
-						{[
-							<En>Your Plan</En>,
-							<Fr>Votre Abonnement</Fr>
-						]}
+						<En>Your Plan</En>
+						<Fr>Votre Abonnement</Fr>
 					</Lang>
 				</h2>
 			</Motion.header>
@@ -79,10 +77,16 @@ export function PlanSection(props: PlanSectionProps) {
 								<VerifiedIcon class="min-w-fit fill-forest-500" />
 								<p>
 									<Lang>
-										{[
-											<En>Your account is active, your current plan is {status()?.price_description}</En>,
-											<Fr>Votre compte est actif, votre abonnement actuel est {status()?.price_description}</Fr>
-										]}
+										<En>
+											Your account is active, your current
+											plan is{" "}
+											{status()?.price_description}
+										</En>
+										<Fr>
+											Votre compte est actif, votre
+											abonnement actuel est{" "}
+											{status()?.price_description}
+										</Fr>
 									</Lang>
 								</p>
 							</Motion.span>
@@ -97,18 +101,34 @@ export function PlanSection(props: PlanSectionProps) {
 							>
 								<p>
 									<Lang>
-										{[
-											<En>since: {new Date(status()?.created_at!).toDateString()}</En>,
-											<Fr>depuis: {new Date(status()?.created_at!).toDateString()}</Fr>
-										]}
+										<En>
+											since:{" "}
+											{new Date(
+												status()?.created_at!
+											).toDateString()}
+										</En>
+										<Fr>
+											depuis:{" "}
+											{new Date(
+												status()?.created_at!
+											).toDateString()}
+										</Fr>
 									</Lang>
 								</p>
 								<p>
 									<Lang>
-										{[
-											<En>expire on: {new Date(status()?.expired_at!).toDateString()}</En>,
-											<Fr>expire le: {new Date(status()?.expired_at!).toDateString()}</Fr>
-										]}
+										<En>
+											expire on:{" "}
+											{new Date(
+												status()?.expired_at!
+											).toDateString()}
+										</En>
+										<Fr>
+											expire le:{" "}
+											{new Date(
+												status()?.expired_at!
+											).toDateString()}
+										</Fr>
 									</Lang>
 								</p>
 							</Motion.div>
@@ -130,10 +150,8 @@ export function PlanSection(props: PlanSectionProps) {
 							<UnverifiedIcon class="min-w-fit fill-forest-900" />
 							<p>
 								<Lang>
-									{[
-										<En>Your account is deactivated</En>,
-										<Fr>Votre compte est désactivé</Fr>
-									]}
+									<En>Your account is deactivated</En>
+									<Fr>Votre compte est désactivé</Fr>
 								</Lang>
 							</p>
 						</Motion.span>
@@ -144,10 +162,8 @@ export function PlanSection(props: PlanSectionProps) {
 							class="self-center"
 						>
 							<Lang>
-								{[
-									<En>to activate your account:</En>,
-									<Fr>pour activer votre compte:</Fr>
-								]}
+								<En>to activate your account:</En>
+								<Fr>pour activer votre compte:</Fr>
 							</Lang>
 						</Motion.span>
 						<Motion
@@ -162,10 +178,8 @@ export function PlanSection(props: PlanSectionProps) {
 								class="self-center w-fit px-4 py-2 bg-forest-300 hover:bg-forest-100 text-snow-100 rounded smooth-transition"
 							>
 								<Lang>
-									{[
-										<En>buy here</En>,
-										<Fr>acheter ici</Fr>
-									]}
+									<En>buy here</En>
+									<Fr>acheter ici</Fr>
 								</Lang>
 							</A>
 						</Motion>
@@ -183,10 +197,8 @@ export function PlanSection(props: PlanSectionProps) {
 						<fieldset class="overflow-hidden h-full flex flex-col gap-4">
 							<label>
 								<Lang>
-									{[
-										<En>Payment history:</En>,
-										<Fr>Historique des paiements:</Fr>
-									]}
+									<En>Payment history:</En>
+									<Fr>Historique des paiements:</Fr>
 								</Lang>
 							</label>
 							<ol class="overflow-y-auto h-full flex flex-col gap-2 items-center">
@@ -229,4 +241,3 @@ export function PlanSection(props: PlanSectionProps) {
 		</Motion.section>
 	);
 }
-

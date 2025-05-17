@@ -169,47 +169,56 @@ function RecoverPasswordPage(props: RecoverPasswordProps) {
 					</h1>
 
 					<Switch>
-					<Match when={recovery_status() === "success"}> 							
-						<div class="flex flex-col items-center justify-center py-6"> 								
-							<div class="w-16 h-16 bg-lapis-50 rounded-full flex items-center justify-center mb-4"> 									
-								<svg 										
-									xmlns="http://www.w3.org/2000/svg" 										
-									class="h-8 w-8 text-lapis-500" 										
-									fill="none" 										
-									viewBox="0 0 24 24" 										
-									stroke="currentColor" 									
-								> 										
-									<path 											
-										stroke-linecap="round" 											
-										stroke-linejoin="round" 											
-										stroke-width="2" 											
-										d="M5 13l4 4L19 7" 										
-									/> 									
-								</svg> 								
-							</div> 								
-							<h2 class="text-xl font-semibold mb-2 text-forest-800"> 									
-								<Lang>
-									<En>Password Reset Successful!</En>
-									<Fr>Réinitialisation du mot de passe réussie !</Fr>
-								</Lang> 								
-							</h2> 								
-							<p class="text-center mb-6"> 									
-								<Lang>
-									<En>Your password has been successfully reset.</En>
-									<Fr>Votre mot de passe a été réinitialisé avec succès.</Fr>
-								</Lang> 								
-							</p> 								
-							<A 									
-								href="/signin" 									
-								class="px-6 py-2 bg-forest-800 text-white rounded hover:bg-forest-700 smooth-transition" 								
-							> 									
-								<Lang>
-									<En>Go to Login</En>
-									<Fr>Se connecter</Fr>
-								</Lang> 								
-							</A> 							
-						</div> 						
-					</Match>
+						<Match when={recovery_status() === "success"}>
+							<div class="flex flex-col items-center justify-center py-6">
+								<div class="w-16 h-16 bg-lapis-50 rounded-full flex items-center justify-center mb-4">
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										class="h-8 w-8 text-lapis-500"
+										fill="none"
+										viewBox="0 0 24 24"
+										stroke="currentColor"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M5 13l4 4L19 7"
+										/>
+									</svg>
+								</div>
+								<h2 class="text-xl font-semibold mb-2 text-forest-800">
+									<Lang>
+										<En>Password Reset Successful!</En>
+										<Fr>
+											Réinitialisation du mot de passe
+											réussie !
+										</Fr>
+									</Lang>
+								</h2>
+								<p class="text-center mb-6">
+									<Lang>
+										<En>
+											Your password has been successfully
+											reset.
+										</En>
+										<Fr>
+											Votre mot de passe a été
+											réinitialisé avec succès.
+										</Fr>
+									</Lang>
+								</p>
+								<A
+									href="/signin"
+									class="px-6 py-2 bg-forest-800 text-white rounded hover:bg-forest-700 smooth-transition"
+								>
+									<Lang>
+										<En>Go to Login</En>
+										<Fr>Se connecter</Fr>
+									</Lang>
+								</A>
+							</div>
+						</Match>
 						<Match when={recovery_status() === "requested"}>
 							<div class="flex flex-col items-center justify-center py-6">
 								<div class="w-16 h-16 bg-lapis-50 rounded-full flex items-center justify-center mb-4">
@@ -236,8 +245,17 @@ function RecoverPasswordPage(props: RecoverPasswordProps) {
 								</h2>
 								<p class="text-center mb-6">
 									<Lang>
-										<En>Please check your inbox (and spam folder) for the password reset link or code.</En>
-										<Fr>Veuillez vérifier votre boîte de réception (et dossier spam) pour le lien ou le code de réinitialisation du mot de passe.</Fr>
+										<En>
+											Please check your inbox (and spam
+											folder) for the password reset link
+											or code.
+										</En>
+										<Fr>
+											Veuillez vérifier votre boîte de
+											réception (et dossier spam) pour le
+											lien ou le code de réinitialisation
+											du mot de passe.
+										</Fr>
 									</Lang>
 								</p>
 
@@ -285,7 +303,9 @@ function RecoverPasswordPage(props: RecoverPasswordProps) {
 											>
 												<Lang>
 													<En>Your Email Address</En>
-													<Fr>Votre adresse e-mail</Fr>
+													<Fr>
+														Votre adresse e-mail
+													</Fr>
 												</Lang>
 											</label>
 											<input
@@ -319,8 +339,13 @@ function RecoverPasswordPage(props: RecoverPasswordProps) {
 												fallback="Sending..."
 											>
 												<Lang>
-													<En>Resend Recovery Email</En>
-													<Fr>Renvoyer l'e-mail de récupération</Fr>
+													<En>
+														Resend Recovery Email
+													</En>
+													<Fr>
+														Renvoyer l'e-mail de
+														récupération
+													</Fr>
 												</Lang>
 											</Show>
 										</button>
@@ -339,7 +364,9 @@ function RecoverPasswordPage(props: RecoverPasswordProps) {
 											>
 												<Lang>
 													<En>Your Email Address</En>
-													<Fr>Votre adresse e-mail</Fr>
+													<Fr>
+														Votre adresse e-mail
+													</Fr>
 												</Lang>
 											</label>
 											<input
@@ -365,7 +392,9 @@ function RecoverPasswordPage(props: RecoverPasswordProps) {
 											>
 												<Lang>
 													<En>Recovery Code</En>
-													<Fr>Code de récupération</Fr>
+													<Fr>
+														Code de récupération
+													</Fr>
 												</Lang>
 											</label>
 											<input
@@ -394,7 +423,9 @@ function RecoverPasswordPage(props: RecoverPasswordProps) {
 											>
 												<Lang>
 													<En>New Password</En>
-													<Fr>Nouveau mot de passe</Fr>
+													<Fr>
+														Nouveau mot de passe
+													</Fr>
 												</Lang>
 											</label>
 											<input
@@ -420,7 +451,10 @@ function RecoverPasswordPage(props: RecoverPasswordProps) {
 											>
 												<Lang>
 													<En>Confirm Password</En>
-													<Fr>Confirmer le mot de passe</Fr>
+													<Fr>
+														Confirmer le mot de
+														passe
+													</Fr>
 												</Lang>
 											</label>
 											<input
@@ -458,7 +492,10 @@ function RecoverPasswordPage(props: RecoverPasswordProps) {
 											>
 												<Lang>
 													<En>Reset Password</En>
-													<Fr>Réinitialiser le mot de passe</Fr>
+													<Fr>
+														Réinitialiser le mot de
+														passe
+													</Fr>
 												</Lang>
 											</Show>
 										</button>
@@ -469,14 +506,29 @@ function RecoverPasswordPage(props: RecoverPasswordProps) {
 									<div class="text-center bg-lapis-50 p-4 rounded">
 										<p class="mb-2">
 											<Lang>
-												<En>Recovery email has been sent!</En>
-												<Fr>L'e-mail de récupération a été envoyé !</Fr>
+												<En>
+													Recovery email has been
+													sent!
+												</En>
+												<Fr>
+													L'e-mail de récupération a
+													été envoyé !
+												</Fr>
 											</Lang>
 										</p>
 										<p>
 											<Lang>
-												<En>Please check your inbox (and spam folder) for the recovery link or code.</En>
-												<Fr>Veuillez vérifier votre boîte de réception (et dossier spam) pour le lien ou le code de récupération.</Fr>
+												<En>
+													Please check your inbox (and
+													spam folder) for the
+													recovery link or code.
+												</En>
+												<Fr>
+													Veuillez vérifier votre
+													boîte de réception (et
+													dossier spam) pour le lien
+													ou le code de récupération.
+												</Fr>
 											</Lang>
 										</p>
 									</div>
@@ -526,7 +578,9 @@ function RecoverPasswordPage(props: RecoverPasswordProps) {
 										>
 											<Lang>
 												<En>Confirm Password</En>
-												<Fr>Confirmer le mot de passe</Fr>
+												<Fr>
+													Confirmer le mot de passe
+												</Fr>
 											</Lang>
 										</label>
 										<input
@@ -568,7 +622,10 @@ function RecoverPasswordPage(props: RecoverPasswordProps) {
 										>
 											<Lang>
 												<En>Reset Password</En>
-												<Fr>Réinitialiser le mot de passe</Fr>
+												<Fr>
+													Réinitialiser le mot de
+													passe
+												</Fr>
 											</Lang>
 										</Show>
 									</button>
@@ -597,13 +654,23 @@ function RecoverPasswordPage(props: RecoverPasswordProps) {
 								<h2 class="text-xl font-semibold mb-2 text-forest-800">
 									<Lang>
 										<En>Password Reset Failed</En>
-										<Fr>Échec de la réinitialisation du mot de passe</Fr>
+										<Fr>
+											Échec de la réinitialisation du mot
+											de passe
+										</Fr>
 									</Lang>
 								</h2>
 								<p class="text-center mb-6">
 									<Lang>
-										<En>We couldn't reset your password. Please try again.</En>
-										<Fr>Nous n'avons pas pu réinitialiser votre mot de passe. Veuillez réessayer.</Fr>
+										<En>
+											We couldn't reset your password.
+											Please try again.
+										</En>
+										<Fr>
+											Nous n'avons pas pu réinitialiser
+											votre mot de passe. Veuillez
+											réessayer.
+										</Fr>
 									</Lang>
 								</p>
 
@@ -636,7 +703,10 @@ function RecoverPasswordPage(props: RecoverPasswordProps) {
 								<h2 class="text-xl font-semibold mb-4 text-forest-800">
 									<Lang>
 										<En>Request Password Recovery</En>
-										<Fr>Demander la récupération du mot de passe</Fr>
+										<Fr>
+											Demander la récupération du mot de
+											passe
+										</Fr>
 									</Lang>
 								</h2>
 
@@ -684,7 +754,10 @@ function RecoverPasswordPage(props: RecoverPasswordProps) {
 										>
 											<Lang>
 												<En>Send Recovery Email</En>
-												<Fr>Envoyer l'e-mail de récupération</Fr>
+												<Fr>
+													Envoyer l'e-mail de
+													récupération
+												</Fr>
 											</Lang>
 										</Show>
 									</button>
@@ -694,7 +767,10 @@ function RecoverPasswordPage(props: RecoverPasswordProps) {
 									<p>
 										<Lang>
 											<En>Remember your password?</En>
-											<Fr>Vous vous souvenez de votre mot de passe ?</Fr>
+											<Fr>
+												Vous vous souvenez de votre mot
+												de passe ?
+											</Fr>
 										</Lang>{" "}
 										<A
 											href="/signin"

@@ -126,18 +126,18 @@ export function ResumeLoader(props: LoaderProps) {
 		>
 			<header class="mb-4 text-center">
 				<h3 class="text-lg font-semibold text-forest-800">
-				<Lang>{[
-						<En>Creating Your Resume</En>,
+					<Lang>
+						<En>Creating Your Resume</En>
 						<Fr>Créer votre CV</Fr>
-					]}
 					</Lang>
-					
 				</h3>
 				<p class="text-sm text-gray-500">
-				<Lang>{[
-						<En>Please wait while we optimize your resume</En>,
-						<Fr>Veuillez patienter pendant que nous optimisons votre CV</Fr>
-					]}
+					<Lang>
+						<En>Please wait while we optimize your resume</En>
+						<Fr>
+							Veuillez patienter pendant que nous optimisons votre
+							CV
+						</Fr>
 					</Lang>
 				</p>
 			</header>
@@ -236,12 +236,10 @@ export function ResumeLoader(props: LoaderProps) {
 						</svg>
 					</div>
 					<figcaption class="text-xs text-gray-500 mt-2">
-					<Lang>{[
-						<En>This may take a moment</En>,
-						<Fr>Cela peut prendre un moment</Fr>
-					]}
-					</Lang>
-						
+						<Lang>
+							<En>This may take a moment</En>
+							<Fr>Cela peut prendre un moment</Fr>
+						</Lang>
 					</figcaption>
 				</figure>
 			</footer>

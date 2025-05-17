@@ -66,11 +66,12 @@ export function SkillView(props: SkillViewProps) {
 			</Show>
 			<Show when={props.skill.optional_skill_level}>
 				<ItemInfo>
-				<Lang>{[
-						<En>Level:</En>,
+					<Lang>
+						<En>Level:</En>
 						<Fr>Niveau:</Fr>
-					]}
-					</Lang> {props.skill.optional_skill_level}</ItemInfo>
+					</Lang>{" "}
+					{props.skill.optional_skill_level}
+				</ItemInfo>
 			</Show>
 			<ItemText>{props.skill.description}</ItemText>
 			<Tags values={props.skill.tags} />
@@ -194,16 +195,32 @@ export function SkillForm(props: SkillFormProps) {
 					}
 				}}
 			/>
-			<FormLabeledInput label="Skill">
+			<FormLabeledInput
+				label={
+					<Lang>
+						<En>Skill</En>
+						<Fr>Compétence</Fr>
+					</Lang>
+				}
+			>
 				<FormInputText
 					value={form_data.skill_name}
 					on_input={(value) => setFormData("skill_name", value)}
-					placeholder="Write the skill"
+					en_placeholder="Write the skill"
+					fr_placeholder="Écrivez la compétence"
 					required
 				/>
 			</FormLabeledInput>
 
-			<FormLabeledInput label="Skill Type" optional>
+			<FormLabeledInput
+				label={
+					<Lang>
+						<En>Skill Type</En>
+						<Fr>Type de la compétence</Fr>
+					</Lang>
+				}
+				optional
+			>
 				<FormSelect
 					value={form_data.optional_skill_type}
 					on_input={(value) =>
@@ -221,7 +238,15 @@ export function SkillForm(props: SkillFormProps) {
 					select_label="Select Type"
 				/>
 			</FormLabeledInput>
-			<FormLabeledInput label="Skill Level" optional>
+			<FormLabeledInput
+				label={
+					<Lang>
+						<En>Skill Level</En>
+						<Fr>Niveau</Fr>
+					</Lang>
+				}
+				optional
+			>
 				<FormSelect
 					value={form_data.optional_skill_level}
 					on_input={(value) =>
@@ -239,7 +264,8 @@ export function SkillForm(props: SkillFormProps) {
 			</FormLabeledInput>
 			<FormLabeledInput label="Description">
 				<FormTextArea
-					placeholder="write the description of this skill"
+					en_placeholder="write the description of this skill"
+					fr_placeholder="Écrivez une description"
 					value={form_data.description}
 					on_input={(value) => setFormData("description", value)}
 					rows={4}

@@ -6,9 +6,12 @@ import STANDARD_EXECUTING_RESUME from "@assets/templates/standard_executive.jpg"
 import COLUMNS_EXECUTING_RESUME from "@assets/templates/columns_executive.jpg";
 import SENIOR_EXECUTING_RESUME from "@assets/templates/senior_executive.jpg";
 import RESEARCHER_RESUME from "@assets/templates/researcher.jpg";
+import LangFrIcon from "@assets/icons/lang_fr.svg?component-solid";
+import LangEnIcon from "@assets/icons/lang_en.svg?component-solid";
+import TutorialIcon from "@assets/icons/tutorial.svg?component-solid";
 import { Motion, Presence } from "solid-motionone";
 import { useFault } from "@components/fault";
-import { En, Fr, Lang } from "@components/language";
+import { En, Fr, Lang, useLang } from "@components/language";
 
 interface TemplatesPage {}
 
@@ -20,8 +23,11 @@ function TemplatesPage(props: TemplatesPage) {
 	const [current_template_id, set_current_template_id] = createSignal(
 		localStorage.getItem("template_name") || "standard-executive"
 	);
-	const [selected_template_name, set_selected_template_name] =
-		createSignal({ eng: "Executive", fr: "Cadre" });
+	const lang = useLang();
+	const [selected_template_name, set_selected_template_name] = createSignal({
+		eng: "Executive",
+		fr: "Cadre",
+	});
 	const [filter_category, set_filter_category] = createSignal("all");
 
 	const [templates_store, set_templates_store] = createStore([
@@ -51,9 +57,9 @@ function TemplatesPage(props: TemplatesPage) {
 			id: "columns-executive",
 			name: { eng: "Modern", fr: "Moderne" },
 			category: "simple",
-			description: { 
-				eng: "Clean, minimalist and modern design.", 
-				fr: "Design propre, minimaliste et moderne." 
+			description: {
+				eng: "Clean, minimalist and modern design.",
+				fr: "Design propre, minimaliste et moderne.",
 			},
 			image_url: COLUMNS_EXECUTING_RESUME,
 		},
@@ -61,9 +67,9 @@ function TemplatesPage(props: TemplatesPage) {
 			id: "standard-executive",
 			name: { eng: "Executive", fr: "Cadre" },
 			category: "professional",
-			description: { 
-				eng: "Sophisticated layout for professionals.", 
-				fr: "Mise en page sophistiquée pour les professionnels." 
+			description: {
+				eng: "Sophisticated layout for professionals.",
+				fr: "Mise en page sophistiquée pour les professionnels.",
 			},
 			image_url: STANDARD_EXECUTING_RESUME,
 		},
@@ -73,7 +79,7 @@ function TemplatesPage(props: TemplatesPage) {
 			category: "professional",
 			description: {
 				eng: "Professional design for C-suite and senior leadership.",
-				fr: "Design professionnel pour cadres dirigeants et direction générale."
+				fr: "Design professionnel pour cadres dirigeants et direction générale.",
 			},
 			image_url: SENIOR_EXECUTING_RESUME,
 		},
@@ -83,7 +89,7 @@ function TemplatesPage(props: TemplatesPage) {
 			category: "education",
 			description: {
 				eng: "Academic-focused layout for researchers and students.",
-				fr: "Mise en page académique pour chercheurs et étudiants."
+				fr: "Mise en page académique pour chercheurs et étudiants.",
 			},
 			image_url: RESEARCHER_RESUME,
 		},
@@ -120,7 +126,10 @@ function TemplatesPage(props: TemplatesPage) {
 
 	const categories = [
 		{ id: "all", name: { eng: "All Templates", fr: "Tous les modèles" } },
-		{ id: "professional", name: { eng: "Professional", fr: "Professionnel" } },
+		{
+			id: "professional",
+			name: { eng: "Professional", fr: "Professionnel" },
+		},
 		//{ id: "creative", name: "Creative" },
 		{ id: "simple", name: { eng: "Simple", fr: "Simple" } },
 		// { id: "technical", name: "Technical" },
@@ -171,12 +180,58 @@ function TemplatesPage(props: TemplatesPage) {
 						</h1>
 						<p class="text-gray-600 max-w-3xl mx-auto">
 							<Lang>
-								<En>Choose from our professionally designed templates to create your perfect resume. Click on a template to select it for your next application.</En>
-								<Fr>Choisissez parmi nos modèles conçus professionnellement pour créer votre CV parfait. Cliquez sur un modèle pour le sélectionner pour votre prochaine candidature.</Fr>
+								<En>
+									Choose from our professionally designed
+									templates to create your perfect resume.
+									Click on a template to select it for your
+									next application.
+								</En>
+								<Fr>
+									Choisissez parmi nos modèles conçus
+									professionnellement pour créer votre CV
+									parfait. Cliquez sur un modèle pour le
+									sélectionner pour votre prochaine
+									candidature.
+								</Fr>
 							</Lang>
 						</p>
 					</Motion>
 				</header>
+
+				<div class="flex flex-row items-center gap-2">
+					<button
+						onclick={() => lang.update("fr")}
+						disabled={lang.current() === "fr"}
+					>
+						<LangFrIcon
+							class="min-w-fit "
+							classList={{
+								"fill-forest-400": lang.current() === "fr",
+								"fill-forest-900": lang.current() !== "fr",
+							}}
+						/>
+					</button>
+					/
+					<button
+						onclick={() => lang.update("en")}
+						disabled={lang.current() === "en"}
+					>
+						<LangEnIcon
+							class="min-w-fit "
+							classList={{
+								"fill-forest-400": lang.current() === "en",
+								"fill-forest-900": lang.current() !== "en",
+							}}
+						/>
+					</button>
+					<span class="text-lapis-500 flex flex-row items-center gap-2">
+						<TutorialIcon class="fill-lapis-600" />{" "}
+						<Lang>
+							<En>Select the language of the templates</En>
+							<Fr>Choisissez la langue des modèles</Fr>
+						</Lang>
+					</span>
+				</div>
 
 				{/* Filter Categories */}
 				<Motion.nav
@@ -249,8 +304,12 @@ function TemplatesPage(props: TemplatesPage) {
 										</h3>
 										<p class="text-sm text-gray-600">
 											<Lang>
-												<En>{template.description.eng}</En>
-												<Fr>{template.description.fr}</Fr>
+												<En>
+													{template.description.eng}
+												</En>
+												<Fr>
+													{template.description.fr}
+												</Fr>
 											</Lang>
 										</p>
 
@@ -289,8 +348,13 @@ function TemplatesPage(props: TemplatesPage) {
 															class="px-4 py-2 bg-forest-700 text-white rounded hover:bg-forest-800 transition-colors"
 														>
 															<Lang>
-																<En>Use Template</En>
-																<Fr>Utiliser ce modèle</Fr>
+																<En>
+																	Use Template
+																</En>
+																<Fr>
+																	Utiliser ce
+																	modèle
+																</Fr>
 															</Lang>
 														</button>
 													</div>
@@ -335,8 +399,13 @@ function TemplatesPage(props: TemplatesPage) {
 							<div class="w-full py-12 text-center">
 								<p class="text-gray-500 text-lg">
 									<Lang>
-										<En>No templates found in this category.</En>
-										<Fr>Aucun modèle trouvé dans cette catégorie.</Fr>
+										<En>
+											No templates found in this category.
+										</En>
+										<Fr>
+											Aucun modèle trouvé dans cette
+											catégorie.
+										</Fr>
 									</Lang>
 								</p>
 								<Motion.button

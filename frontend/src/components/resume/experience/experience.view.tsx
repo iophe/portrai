@@ -20,6 +20,7 @@ import {
 } from "../utils/form.input";
 import { useNavigate } from "@solidjs/router";
 import { ProcessMajorError } from "@utils/api";
+import { En, Fr, Lang } from "@components/language";
 
 interface ExperienceViewProps {
 	experience: Experience;
@@ -201,63 +202,110 @@ export function ExperienceForm(props: ExperienceFormProps) {
 					}
 				}}
 			/>
-			<FormLabeledInput label="Job Title">
+			<FormLabeledInput
+				label={
+					<Lang>
+						<En>Job Title</En>
+						<Fr>Titre de l'emploi</Fr>
+					</Lang>
+				}
+			>
 				<FormInputText
 					value={form_data.job_title}
 					on_input={(value) => setFormData("job_title", value)}
-					placeholder="Write the job title"
+					en_placeholder="Write the job title"
+					fr_placeholder="Écrivez le nom de l'emploi"
 					required
 				/>
 			</FormLabeledInput>
 
-			<FormLabeledInput label="Company">
+			<FormLabeledInput
+				label={
+					<Lang>
+						<En>Company</En>
+						<Fr>Entreprise</Fr>
+					</Lang>
+				}
+			>
 				<FormInputText
 					value={form_data.company_name}
 					on_input={(value) => setFormData("company_name", value)}
-					placeholder="Write the company name"
+					en_placeholder="Write the company name"
+					fr_placeholder="Écrivez le nom de l'entreprise"
 					required
 				/>
 			</FormLabeledInput>
 
-			<FormLabeledInput label="Location">
+			<FormLabeledInput
+				label={
+					<Lang>
+						<En>Location</En>
+						<Fr>Lieu</Fr>
+					</Lang>
+				}
+			>
 				<FormInputText
 					value={form_data.location}
 					on_input={(value) => setFormData("location", value)}
-					placeholder="Write the location"
+					en_placeholder="Write the location"
+					fr_placeholder="Écrivez le lieu"
 					required
 				/>
 			</FormLabeledInput>
 
 			<div class="grid grid-cols-2 gap-4">
-				<FormLabeledInput label="Start Date">
+				<FormLabeledInput
+					label={
+						<Lang>
+							<En>Start Date</En>
+							<Fr>Date de début</Fr>
+						</Lang>
+					}
+				>
 					<FormInputDate
 						value={form_data.start_date}
 						on_input={(value) => setFormData("start_date", value)}
-						placeholder="select start date"
+						en_placeholder="select start date"
+						fr_placeholder="Sélectionnez une date de début"
 						required
 					/>
 				</FormLabeledInput>
 
-				<FormLabeledInput label="End Date" optional>
+				<FormLabeledInput
+					label={
+						<Lang>
+							<En>End Date</En>
+							<Fr>Date de fin</Fr>
+						</Lang>
+					}
+					optional
+				>
 					<FormInputDate
 						value={form_data.optional_end_date}
 						on_input={(value) =>
 							setFormData("optional_end_date", value)
 						}
 						disabled={form_data.is_current}
-						placeholder="select end date"
+						en_placeholder="select end date"
+						fr_placeholder="Sélectionnez une date de fin"
 					/>
 				</FormLabeledInput>
 			</div>
 			<FormCheckbox
-				label="Current Position"
+				label={
+					<Lang>
+						<En>Current Position</En>
+						<Fr>Actuel</Fr>
+					</Lang>
+				}
 				on_input={(value) => setFormData("is_current", value)}
 				value={form_data.is_current}
 			/>
 
 			<FormLabeledInput label="Description">
 				<FormTextArea
-					placeholder="write the description of this experience"
+					en_placeholder="write the description of this experience"
+					fr_placeholder="Écrivez une description"
 					value={form_data.description}
 					on_input={(value) => setFormData("description", value)}
 					rows={4}

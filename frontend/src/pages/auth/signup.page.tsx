@@ -131,7 +131,8 @@ function SignupPage(props: SignupPageProps) {
 						<div
 							id="g_id_onload"
 							data-client_id={
-								import.meta.env.VITE_GOOGLE_CLIENT_ID ?? "379453756631-48ig2rjv0qp8juto3jpcc2j6d9ro9k09.apps.googleusercontent.com"
+								import.meta.env.VITE_GOOGLE_CLIENT_ID ??
+								"379453756631-48ig2rjv0qp8juto3jpcc2j6d9ro9k09.apps.googleusercontent.com"
 							}
 							data-context="signup"
 							data-ux_mode="popup"
@@ -294,7 +295,9 @@ function SignupPage(props: SignupPageProps) {
 									>
 										<Lang>
 											<En>Privacy Policy</En>
-											<Fr>Politique de Confidentialité</Fr>
+											<Fr>
+												Politique de Confidentialité
+											</Fr>
 										</Lang>
 									</A>
 								</label>
@@ -320,8 +323,13 @@ function SignupPage(props: SignupPageProps) {
 									class="text-sm font-medium text-lapis-600 hover:text-lapis-500 smooth-transition"
 								>
 									<Lang>
-										<En>Already have an account? Sign in</En>
-										<Fr>Vous avez déjà un compte ? Connectez-vous</Fr>
+										<En>
+											Already have an account? Sign in
+										</En>
+										<Fr>
+											Vous avez déjà un compte ?
+											Connectez-vous
+										</Fr>
 									</Lang>
 								</A>
 							</Match>
@@ -331,8 +339,13 @@ function SignupPage(props: SignupPageProps) {
 									class="text-sm font-medium text-lapis-600 hover:text-lapis-500 smooth-transition"
 								>
 									<Lang>
-										<En>Already have an account? Sign in</En>
-										<Fr>Vous avez déjà un compte ? Connectez-vous</Fr>
+										<En>
+											Already have an account? Sign in
+										</En>
+										<Fr>
+											Vous avez déjà un compte ?
+											Connectez-vous
+										</Fr>
 									</Lang>
 								</A>
 							</Match>
