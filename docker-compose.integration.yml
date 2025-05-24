@@ -8,21 +8,6 @@ include:
   - latex_server/docker-compose.integration.yml
 
 services:
-  nginx:
-    image: nginx:alpine
-    container_name: portrai_nginx
-    profiles: [services,proxy]
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./nginx/ssl:/etc/nginx/ssl:ro
-      - /etc/letsencrypt:/etc/letsencrypt:ro
-    networks:
-      - proxy
-      - back
-    restart: unless-stopped
   portrai_backend:
     build:
       context: ./backend
