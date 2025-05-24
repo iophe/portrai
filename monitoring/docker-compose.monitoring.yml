@@ -21,6 +21,8 @@ services:
     image: grafana/grafana:latest
     container_name: portrai_grafana
     profiles: [services,monitoring]
+    networks:
+      - back
     ports:
       - "3450:3000"
 
