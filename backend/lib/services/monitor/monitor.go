@@ -25,9 +25,6 @@ type Monitor struct {
 	goroutines_count       prometheus.Gauge
 	cv_generation_counter  *prometheus.CounterVec
 	cv_generation_duration *prometheus.HistogramVec
-	active_users           prometheus.Gauge
-	db_query_duration      *prometheus.HistogramVec
-	db_connections         prometheus.Gauge
 }
 
 // InitMonitor initializes the global monitor instance
@@ -62,94 +59,51 @@ func InitMonitor() error {
 			},
 			[]string{"error_type"},
 		),
-		system_memory: prometheus.NewGauge(
-			prometheus.GaugeOpts{
-				Name: "system_memory_bytes",
-				Help: "Current system memory usage in bytes",
-			},
-		),
-		goroutines_count: prometheus.NewGauge(
-			prometheus.GaugeOpts{
-				Name: "goroutines_total",
-				Help: "Current number of goroutines",
-			},
-		),
-		// Métriques spécifiques au générateur de CV
+		// CV generator specific metrics
 		cv_generation_counter: prometheus.NewCounterVec(
 			prometheus.CounterOpts{
 				Name: "cv_generator_cv_generation_total",
-				Help: "Nombre total de CV générés",
+				Help: "Total number of CVs generated",
 			},
 			[]string{"success"},
 		),
 		cv_generation_duration: prometheus.NewHistogramVec(
 			prometheus.HistogramOpts{
 				Name:    "cv_generator_cv_generation_duration_seconds",
-				Help:    "Temps de génération d'un CV en secondes",
+				Help:    "CV generation time in seconds",
 				Buckets: prometheus.DefBuckets,
 			},
 			[]string{"template_type"},
-		),
-		active_users: prometheus.NewGauge(
-			prometheus.GaugeOpts{
-				Name: "cv_generator_active_users",
-				Help: "Nombre d'utilisateurs actifs",
-			},
-		),
-
-		// Métriques de base de données
-		db_query_duration: prometheus.NewHistogramVec(
-			prometheus.HistogramOpts{
-				Name:    "cv_generator_db_query_duration_seconds",
-				Help:    "Durée des requêtes de base de données en secondes",
-				Buckets: prometheus.DefBuckets,
-			},
-			[]string{"query_type"},
-		),
-		db_connections: prometheus.NewGauge(
-			prometheus.GaugeOpts{
-				Name: "cv_generator_db_connections",
-				Help: "Nombre de connexions à la base de données",
-			},
 		),
 	}
 
 	// Register all metrics with Prometheus
 	if err := prometheus.Register(MONITOR.request_counter); err != nil {
-		return fmt.Errorf("prometheus ne peut pas enregistrer request_counter: %v", err)
+		return fmt.Errorf("prometheus cannot register request_counter: %v", err)
 	}
 	if err := prometheus.Register(MONITOR.request_duration); err != nil {
-		return fmt.Errorf("prometheus ne peut pas enregistrer request_duration: %v", err)
+		return fmt.Errorf("prometheus cannot register request_duration: %v", err)
 	}
 	if err := prometheus.Register(MONITOR.request_in_flight); err != nil {
-		return fmt.Errorf("prometheus ne peut pas enregistrer request_in_flight: %v", err)
+		return fmt.Errorf("prometheus cannot register request_in_flight: %v", err)
 	}
 	if err := prometheus.Register(MONITOR.error_counter); err != nil {
-		return fmt.Errorf("prometheus ne peut pas enregistrer error_counter: %v", err)
+		return fmt.Errorf("prometheus cannot register error_counter: %v", err)
 	}
 	if err := prometheus.Register(MONITOR.system_memory); err != nil {
-		return fmt.Errorf("prometheus ne peut pas enregistrer system_memory: %v", err)
+		return fmt.Errorf("prometheus cannot register system_memory: %v", err)
 	}
 	if err := prometheus.Register(MONITOR.goroutines_count); err != nil {
-		return fmt.Errorf("prometheus ne peut pas enregistrer goroutines_count: %v", err)
+		return fmt.Errorf("prometheus cannot register goroutines_count: %v", err)
 	}
 	if err := prometheus.Register(MONITOR.cv_generation_counter); err != nil {
-		return fmt.Errorf("prometheus ne peut pas enregistrer cv_generation_counter: %v", err)
+		return fmt.Errorf("prometheus cannot register cv_generation_counter: %v", err)
 	}
 	if err := prometheus.Register(MONITOR.cv_generation_duration); err != nil {
-		return fmt.Errorf("prometheus ne peut pas enregistrer cv_generation_duration: %v", err)
-	}
-	if err := prometheus.Register(MONITOR.active_users); err != nil {
-		return fmt.Errorf("prometheus ne peut pas enregistrer active_users: %v", err)
-	}
-	if err := prometheus.Register(MONITOR.db_query_duration); err != nil {
-		return fmt.Errorf("prometheus ne peut pas enregistrer db_query_duration: %v", err)
-	}
-	if err := prometheus.Register(MONITOR.db_connections); err != nil {
-		return fmt.Errorf("prometheus ne peut pas enregistrer db_connections: %v", err)
+		return fmt.Errorf("prometheus cannot register cv_generation_duration: %v", err)
 	}
 
-	// Démarrer le goroutine de mise à jour des métriques système
+	// Start the goroutine to update system metrics
 	go updateSystemMetrics()
 
 	return nil
@@ -189,26 +143,18 @@ func RegisterMonitoringRoutes(app *fiber.App) {
 	app.Get("/metrics", promHandler)
 }
 
-func SetActiveUsers(count float64) {
-	MONITOR.active_users.Set(count)
-}
-
-func SetDBConnections(count float64) {
-	MONITOR.db_connections.Set(count)
-}
-
 func RecordError(errorType string) {
 	MONITOR.error_counter.WithLabelValues(errorType).Inc()
 }
 
-// TrackCVGeneration est une fonction helper pour mesurer le temps de génération d'un CV
+// TrackCVGeneration is a helper function to measure CV generation time
 func TrackCVGeneration(templateType string, fn func() error) error {
 	startTime := time.Now()
 
-	// Exécution de la génération du CV
+	// Execute CV generation
 	err := fn()
 
-	// Enregistrer les métriques
+	// Record metrics
 	duration := time.Since(startTime).Seconds()
 	success := "true"
 	if err != nil {
@@ -222,32 +168,17 @@ func TrackCVGeneration(templateType string, fn func() error) error {
 	return err
 }
 
-func TrackDBQuery(queryType string, fn func() error) error {
-	startTime := time.Now()
-
-	err := fn()
-
-	duration := time.Since(startTime).Seconds()
-	if err != nil {
-		MONITOR.error_counter.WithLabelValues("db_query").Inc()
-	}
-
-	MONITOR.db_query_duration.WithLabelValues(queryType).Observe(duration)
-
-	return err
-}
-
 func updateSystemMetrics() {
 	for {
-		// Mettre à jour le nombre de goroutines
+		// Update goroutine count
 		MONITOR.goroutines_count.Set(float64(runtime.NumGoroutine()))
 
-		// Mettre à jour l'utilisation de la mémoire
+		// Update memory usage
 		var memStats runtime.MemStats
 		runtime.ReadMemStats(&memStats)
 		MONITOR.system_memory.Set(float64(memStats.Alloc))
 
-		// Attendre avant la prochaine mise à jour
+		// Wait before next update
 		time.Sleep(15 * time.Second)
 	}
 }

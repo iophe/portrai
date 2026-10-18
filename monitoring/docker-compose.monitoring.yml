@@ -35,10 +35,56 @@ services:
     restart: unless-stopped
     depends_on:
       - portrai_prometheus
+  portrai_node_exporter:
+    image: prom/node-exporter:latest
+    container_name: portrai_node_exporter
+    profiles: [services,monitoring]
+    networks:
+      - back
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/rootfs'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    restart: unless-stopped
+  portrai_loki:
+    image: grafana/loki:latest
+    container_name: portrai_loki
+    profiles: [services, monitoring]
+    networks:
+      - back
+    ports:
+      - "3100:3100"
+    volumes:
+      - portrai_loki_data:/loki
+      - ./loki/loki.yml:/etc/loki/loki.yml
+    command: -config.file=/etc/loki/loki.yml
+    restart: unless-stopped
+
+  portrai_promtail:
+    image: grafana/promtail:latest
+    container_name: portrai_promtail
+    profiles: [services, monitoring]
+    networks:
+      - back
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./promtail/promtail.yml:/etc/promtail/config.yml
+    command: -config.file=/etc/promtail/config.yml
+    restart: unless-stopped
+    depends_on:
+      - portrai_loki
 
 volumes:
   portrai_prometheus_data:
   portrai_grafana_data:
+  portrai_loki_data:
 
 networks:
   portrai_monitoring:
