@@ -10,63 +10,61 @@ import LoadingSpinner from "@components/loading.spinner";
 import HelpIcon from "@assets/icons/help.svg?component-solid";
 import { createCachedResource } from "@utils/cache";
 import { useNavigate } from "@solidjs/router";
+import { ProcessMajorError } from "@utils/api";
+import { En, Fr, Lang } from "@components/language";
 
 interface ExperienceListProps {
 	onOrder?: (experienceIds: number[]) => void;
+	on_refetch: () => void;
 }
 
 export function ExperienceList(props: ExperienceListProps) {
 	const fault = useFault();
 	const navigate = useNavigate();
 
-	const [experiences, { mutate, refetch }] = createCachedResource(
-		async () => {
-			try {
-				const response = await api.get(
-					"/resume/items/by-type?item_type=experience"
-				);
-				const result = response.data.items as ResumeItem[];
+	const [experiences, { mutate, refetch: refetch_items }] =
+		createCachedResource(
+			async () => {
+				try {
+					const response = await api.get(
+						"/resume/items/by-type?item_type=experience"
+					);
+					const result = response.data.items as ResumeItem[];
 
-				const experienceItems: Experience[] = result.map(
-					(item) =>
-						({
-							experience_id: item.item_id,
-							job_title: item.title,
-							company_name: item.subtitle,
-							location: item.location,
-							start_date: item.start_date,
-							optional_end_date: item.end_date,
-							is_current: item.is_current,
-							description: item.description,
-							priority: item.priority,
-							is_visible: item.is_visible,
-							tags: item.tags,
-							notes: item.notes,
-						}) as Experience
-				);
+					const experienceItems: Experience[] = result.map(
+						(item) =>
+							({
+								experience_id: item.item_id,
+								job_title: item.title,
+								company_name: item.subtitle,
+								location: item.location,
+								start_date: item.start_date,
+								optional_end_date: item.end_date,
+								is_current: item.is_current,
+								description: item.description,
+								priority: item.priority,
+								is_visible: item.is_visible,
+								tags: item.tags,
+								notes: item.notes,
+							}) as Experience
+					);
 
-				return experienceItems;
-			} catch (error) {
-				if ((error as AxiosError).status === 402) {
-					navigate("/pricing");
+					return experienceItems;
+				} catch (error) {
+					ProcessMajorError(error, navigate, fault);
+					return [];
 				}
-				if (
-					(error as AxiosError).status !== 401 &&
-					(error as AxiosError).status !== 402
-				)
-					fault.minor({
-						message:
-							((error as AxiosError).response?.data as any)
-								.error ?? (error as AxiosError).message,
-					});
-				return [];
+			},
+			{
+				cache_key:
+					"ExperienceList:/resume/items/by-type?item_type=experience",
 			}
-		},
-		{
-			cache_key:
-				"ExperienceList:/resume/items/by-type?item_type=experience",
-		}
-	);
+		);
+
+	function refetch() {
+		refetch_items();
+		props.on_refetch();
+	}
 
 	const [editing_experiences, updateEditingExperiences] = createStore(
 		[] as number[]
@@ -77,7 +75,8 @@ export function ExperienceList(props: ExperienceListProps) {
 		<section class="w-full flex flex-col gap-4 justify-items-center">
 			<SectionHeader
 				add={() => {}}
-				section_title="Professional Experiences"
+				en_section_title="Professional Experiences"
+				fr_section_title="Experiences professionnels"
 				section_name="experience"
 				form={(props) => (
 					<ExperienceForm
@@ -98,7 +97,18 @@ export function ExperienceList(props: ExperienceListProps) {
 				fallback={
 					<span class="flex flex-wrap gap-2 text-lapis-500">
 						<HelpIcon class="min-w-fit fill-lapis-400" />{" "}
-						<p>Add your professional experiences in your resume</p>{" "}
+						<p>
+							<Lang>
+								<En>
+									Add your professional experiences in your
+									resume
+								</En>
+								<Fr>
+									Ajoutez vos expériences professionnelles
+									dans votre CV
+								</Fr>
+							</Lang>
+						</p>{" "}
 					</span>
 				}
 			/>
@@ -131,24 +141,11 @@ export function ExperienceList(props: ExperienceListProps) {
 											}
 										);
 									} catch (error) {
-										if (
-											(error as AxiosError).status === 402
-										) {
-											navigate("/pricing");
-										}
-										if (
-											(error as AxiosError).status !== 401
-										)
-											fault.minor({
-												message:
-													(
-														(error as AxiosError)
-															.response
-															?.data as any
-													).error ??
-													(error as AxiosError)
-														.message,
-											});
+										ProcessMajorError(
+											error,
+											navigate,
+											fault
+										);
 									}
 								}}
 							>
@@ -187,28 +184,11 @@ export function ExperienceList(props: ExperienceListProps) {
 												);
 												refetch();
 											} catch (error) {
-												if (
-													(error as AxiosError)
-														.status === 402
-												) {
-													navigate("/pricing");
-												}
-												if (
-													(error as AxiosError)
-														.status !== 401
-												)
-													fault.minor({
-														message:
-															(
-																(
-																	error as AxiosError
-																).response
-																	?.data as any
-															).error ??
-															(
-																error as AxiosError
-															).message,
-													});
+												ProcessMajorError(
+													error,
+													navigate,
+													fault
+												);
 											}
 										}}
 										onCancel={() => {
@@ -262,7 +242,8 @@ export function OfflineExperienceList(props: OfflineExperienceListProps) {
 		<section class="w-full flex flex-col gap-4 justify-items-center">
 			<SectionHeader
 				add={() => {}}
-				section_title="Professional Experiences"
+				en_section_title="Professional Experiences"
+				fr_section_title="Experiences professionnels"
 				section_name="experience"
 				form={(p) => (
 					<ExperienceForm
@@ -282,7 +263,18 @@ export function OfflineExperienceList(props: OfflineExperienceListProps) {
 				fallback={
 					<span class="flex flex-wrap gap-2 text-lapis-500">
 						<HelpIcon class="min-w-fit fill-lapis-400" />{" "}
-						<p>Add some professional experiences in this resume</p>{" "}
+						<p>
+							<Lang>
+								<En>
+									Add some professional experiences in your
+									resume
+								</En>
+								<Fr>
+									Ajoutez des expériences professionnelles
+									dans votre CV
+								</Fr>
+							</Lang>
+						</p>{" "}
 					</span>
 				}
 			/>

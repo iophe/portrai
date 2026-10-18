@@ -91,8 +91,6 @@ interface ResumeData {
 	skills: Skill[];
 	certificates: Certificate[];
 	projects: Project[];
-	letter: string;
-	title: string;
 }
 
 // Response interfaces for single items
@@ -138,7 +136,7 @@ interface ProjectsResponse {
 }
 
 interface UserResumeVersions {
-	version: string;
+	current_version: string;
 	all_versions: string[];
 }
 
@@ -158,10 +156,21 @@ interface UserValidityStatus {
 	created_at: string;
 	expired_at: string;
 	is_valid: boolean;
+	plan: string;
+	price_description: string;
 }
 
 interface UserPaymentHistory {
 	amount: number;
 	currency: string;
 	created_at: string;
+}
+
+interface GenerateResumeFromProfileData {
+	resume_id: string;
+	resume_name: string;
+}
+
+interface GenerateResumeFromAIData {
+	conversation_id: string;
 }

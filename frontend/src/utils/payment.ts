@@ -1,4 +1,7 @@
+import { FaultTarget } from "@components/fault";
 import { api } from "./api";
+import { AxiosError } from "axios";
+import { Navigator } from "@solidjs/router";
 
 interface PaymentConfig {
 	plan: string;

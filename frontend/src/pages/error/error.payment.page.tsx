@@ -7,7 +7,7 @@ interface ErrorPaymentPageProps {}
 
 function ErrorPayment(props: ErrorPaymentPageProps) {
 	return (
-		<main class="md:px-48 px-6 mx-auto justify-items-center py-4 flex flex-col gap-4 md:h-screen md:max-h-screen">
+		<main class="lg:px-48 px-6 mx-auto justify-items-center py-4 flex flex-col gap-4 lg:h-screen lg:max-h-screen">
 			<Header />
 
 			<section class="w-full flex flex-col gap-8 justify-center h-full overflow-y-auto items-center text-forest-900">
@@ -28,7 +28,7 @@ function ErrorPayment(props: ErrorPaymentPageProps) {
 						again with a different payment method or contact support
 						if you need assistance.
 					</p>
-					<div class="flex flex-col md:flex-row gap-4">
+					<div class="flex flex-col lg:flex-row gap-4">
 						<A
 							href="/checkout"
 							class="px-6 py-3 bg-forest-700 text-white rounded hover:bg-forest-800 smooth-transition"

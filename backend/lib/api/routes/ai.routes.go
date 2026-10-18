@@ -32,19 +32,102 @@ func RegisterAIRoutes(group fiber.Router) {
 		HandlerContextKey: "fiber.csrf.handler",
 	}))
 	ai_group.Use(
-		middlewares.Protected(),
-		middlewares.PayingFeature(),
+		middlewares.Protected(), middlewares.ActiveAccount(),
 	)
 
-	session_group := ai_group.Group("/session")
+	session_group := ai_group.Group("/conversation")
 
-	session_group.Post("/resume", middlewares.CVGenerationMiddleware("default"), func(c *fiber.Ctx) error {
-		var data handlers.BuildResumeData
-		if err := c.BodyParser(&data); err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "Invalid request body",
-			})
-		}
-		return handlers.HandleBuildResume(data, c, &cache.CACHE, &db.DB, ai.ANTHROPIC)
-	})
+	session_group.Post("/start",
+		middlewares.PayingFeature(middlewares.RESUME_GENERATION, &db.DB),
+		func(c *fiber.Ctx) error {
+			var data handlers.StartConversationData
+			if err := c.BodyParser(&data); err != nil {
+				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+					"error": "Invalid request body",
+				})
+			}
+			return handlers.HandleStartConversation(data, c, &cache.CACHE, &db.DB, &ai.ANTHROPIC)
+		})
+
+	session_group.Get("/metadata/:conversation_id",
+		middlewares.PayingFeature(middlewares.RESUME_GENERATION, &db.DB),
+		func(c *fiber.Ctx) error {
+			var params handlers.GetMetadataParams
+			if err := c.ParamsParser(&params); err != nil {
+				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+					"error": "Invalid request params",
+				})
+			}
+			return handlers.HandleGetMetadata(params, c, &cache.CACHE)
+		})
+
+	session_group.Post("/comment/resume/:conversation_id",
+		middlewares.PayingFeature(middlewares.RESUME_GENERATION, &db.DB),
+		func(c *fiber.Ctx) error {
+			var params handlers.CommentResumeParams
+			if err := c.ParamsParser(&params); err != nil {
+				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+					"error": "Invalid request params",
+				})
+			}
+			var data handlers.CommentResumeData
+			if err := c.BodyParser(&data); err != nil {
+				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+					"error": "Invalid request body",
+				})
+			}
+			return handlers.HandleCommentResume(params, data, c, &cache.CACHE, &db.DB, &ai.ANTHROPIC)
+		})
+	session_group.Post("/comment/letter/:conversation_id",
+		middlewares.PayingFeature(middlewares.COVER_LETTER_GENERATION, &db.DB),
+		func(c *fiber.Ctx) error {
+			var params handlers.CommentCoverLetterParams
+			if err := c.ParamsParser(&params); err != nil {
+				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+					"error": "Invalid request params",
+				})
+			}
+			var data handlers.CommentCoverLetterData
+			if err := c.BodyParser(&data); err != nil {
+				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+					"error": "Invalid request body",
+				})
+			}
+			return handlers.HandleCommentCoverLetter(params, data, c, &cache.CACHE, &db.DB, &ai.ANTHROPIC)
+		})
+	session_group.Post("/letter/:conversation_id",
+		middlewares.PayingFeature(middlewares.COVER_LETTER_GENERATION, &db.DB),
+		func(c *fiber.Ctx) error {
+			var params handlers.CreateCoverLetterParams
+			if err := c.ParamsParser(&params); err != nil {
+				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+					"error": "Invalid request params",
+				})
+			}
+			var data handlers.CreateCoverLetterData
+			if err := c.BodyParser(&data); err != nil {
+				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+					"error": "Invalid request body",
+				})
+			}
+			return handlers.HandleCreateCoverLetter(params, data, c, &cache.CACHE, &db.DB, &ai.ANTHROPIC)
+		})
+
+	session_group.Post("/resume/:conversation_id",
+		middlewares.PayingFeature(middlewares.RESUME_GENERATION, &db.DB),
+		func(c *fiber.Ctx) error {
+			var params handlers.CreateResumeParams
+			if err := c.ParamsParser(&params); err != nil {
+				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+					"error": "Invalid request params",
+				})
+			}
+			var data handlers.CreateResumeData
+			if err := c.BodyParser(&data); err != nil {
+				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+					"error": "Invalid request body",
+				})
+			}
+			return handlers.HandleCreateResume(params, data, c, &cache.CACHE, &db.DB, &ai.ANTHROPIC)
+		})
 }

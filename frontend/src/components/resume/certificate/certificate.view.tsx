@@ -18,6 +18,8 @@ import {
 	FormTextArea,
 } from "../utils/form.input";
 import { useNavigate } from "@solidjs/router";
+import { ProcessMajorError } from "@utils/api";
+import { En, Fr, Lang } from "@components/language";
 
 interface CertificateViewProps {
 	certificate: Certificate;
@@ -53,20 +55,7 @@ export function CertificateView(props: CertificateViewProps) {
 						});
 						props.refetch();
 					} catch (error) {
-						if ((error as AxiosError).status === 402) {
-							navigate("/pricing");
-						}
-						if (
-							(error as AxiosError).status !== 401 &&
-							(error as AxiosError).status !== 402
-						)
-							fault.minor({
-								message:
-									(
-										(error as AxiosError).response
-											?.data as any
-									).error ?? (error as AxiosError).message,
-							});
+						ProcessMajorError(error, navigate, fault);
 					}
 				}
 			}}
@@ -148,18 +137,7 @@ export function CertificateForm(props: CertificateFormProps) {
 					notes: [],
 				});
 			} catch (error) {
-				if ((error as AxiosError).status === 402) {
-					navigate("/pricing");
-				}
-				if (
-					(error as AxiosError).status !== 401 &&
-					(error as AxiosError).status !== 402
-				)
-					fault.minor({
-						message:
-							((error as AxiosError).response?.data as any)
-								.error ?? (error as AxiosError).message,
-					});
+				ProcessMajorError(error, navigate, fault);
 			}
 		} else {
 			try {
@@ -196,18 +174,7 @@ export function CertificateForm(props: CertificateFormProps) {
 					notes: [],
 				});
 			} catch (error) {
-				if ((error as AxiosError).status === 402) {
-					navigate("/pricing");
-				}
-				if (
-					(error as AxiosError).status !== 401 &&
-					(error as AxiosError).status !== 402
-				)
-					fault.minor({
-						message:
-							((error as AxiosError).response?.data as any)
-								.error ?? (error as AxiosError).message,
-					});
+				ProcessMajorError(error, navigate, fault);
 			}
 		}
 	}
@@ -224,45 +191,81 @@ export function CertificateForm(props: CertificateFormProps) {
 					}
 				}}
 			/>
-			<FormLabeledInput label="Certificate Name">
+			<FormLabeledInput
+				label={
+					<Lang>
+						<En>Certificate Name</En>
+						<Fr>Nom du certificat</Fr>
+					</Lang>
+				}
+			>
 				<FormInputText
 					value={form_data.certificate_name}
 					on_input={(value) => setFormData("certificate_name", value)}
-					placeholder="Write the name of the certificate"
+					en_placeholder="Write the name of the certificate"
+					fr_placeholder="Écrivez le nom du certificat"
 					required
 				/>
 			</FormLabeledInput>
 
-			<FormLabeledInput label="Issuer" optional>
+			<FormLabeledInput
+				label={
+					<Lang>
+						<En>Issuer</En>
+						<Fr>Émetteur du certificat</Fr>
+					</Lang>
+				}
+				optional
+			>
 				<FormInputText
 					value={form_data.optional_issuer}
 					on_input={(value) => setFormData("optional_issuer", value)}
-					placeholder="Write the issuer"
+					en_placeholder="Write the issuer"
+					fr_placeholder="Écrivez le nom de l'émetteur"
 				/>
 			</FormLabeledInput>
 
-			<FormLabeledInput label="Location" optional>
+			<FormLabeledInput
+				label={
+					<Lang>
+						<En>Location</En>
+						<Fr>Lieu</Fr>
+					</Lang>
+				}
+				optional
+			>
 				<FormInputText
 					value={form_data.optional_location}
 					on_input={(value) =>
 						setFormData("optional_location", value)
 					}
-					placeholder="Write the location"
+					en_placeholder="Write the location"
+					fr_placeholder="Écrivez le lieu"
 				/>
 			</FormLabeledInput>
-			<FormLabeledInput label="Granted Date" optional>
+			<FormLabeledInput
+				label={
+					<Lang>
+						<En>Granted Date</En>
+						<Fr>Date d'obtention</Fr>
+					</Lang>
+				}
+				optional
+			>
 				<FormInputDate
 					value={form_data.optional_granted_date}
 					on_input={(value) =>
 						setFormData("optional_granted_date", value)
 					}
-					placeholder="select granted date"
+					en_placeholder="select granted date"
+					fr_placeholder="Écrivez la date"
 				/>
 			</FormLabeledInput>
 
 			<FormLabeledInput label="Description">
 				<FormTextArea
-					placeholder="write the description of this certificate"
+					en_placeholder="write the description of this certificate"
+					fr_placeholder="Écrivez une description du certificat"
 					value={form_data.description}
 					on_input={(value) => setFormData("description", value)}
 					rows={4}

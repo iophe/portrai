@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -45,7 +46,7 @@ func Protected() fiber.Handler {
 			// Try to refresh using refresh token
 			refresh_token := c.Cookies("refresh_token")
 			if refresh_token != "" {
-				new_tokens, err := refreshSession(refresh_token)
+				new_tokens, err := RefreshSession(refresh_token)
 				if err == nil {
 					token_str = new_tokens.AccessToken
 					SetAuthCookies(c, new_tokens)
@@ -78,7 +79,7 @@ func Protected() fiber.Handler {
 				// Try to refresh using refresh token
 				refresh_token := c.Cookies("refresh_token")
 				if refresh_token != "" {
-					new_tokens, err := refreshSession(refresh_token)
+					new_tokens, err := RefreshSession(refresh_token)
 					if err == nil {
 						token_str = new_tokens.AccessToken
 						token, err = jwt.ParseWithClaims(token_str, &UserClaims{}, func(token *jwt.Token) (interface{}, error) {
@@ -174,7 +175,7 @@ type RefreshResponse struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
-func refreshSession(refresh_token string) (*RefreshResponse, error) {
+func RefreshSession(refresh_token string) (*RefreshResponse, error) {
 	data := map[string]string{
 		"refresh_token": refresh_token,
 	}
@@ -202,7 +203,8 @@ func refreshSession(refresh_token string) (*RefreshResponse, error) {
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to refresh token")
+		body_bytes, _ := io.ReadAll(response.Body)
+		return nil, fmt.Errorf("failed to refresh token" + string(body_bytes))
 	}
 
 	var refresh_response RefreshResponse

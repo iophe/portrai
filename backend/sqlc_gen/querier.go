@@ -20,15 +20,21 @@ type Querier interface {
 	CreateNoteOnResumeItem(ctx context.Context, arg CreateNoteOnResumeItemParams) error
 	CreateProfile(ctx context.Context, arg CreateProfileParams) error
 	CreateResumeItem(ctx context.Context, arg CreateResumeItemParams) (int64, error)
+	// Decrements the current resume versioning usage for a user
+	DecrementResumeVersioningUsage(ctx context.Context, userID uuid.UUID) error
 	DeleteNote(ctx context.Context, arg DeleteNoteParams) error
 	DeletePayment(ctx context.Context, paymentID string) error
 	// Delete a resume item
 	DeleteResumeItem(ctx context.Context, arg DeleteResumeItemParams) error
 	DeleteResumeVersion(ctx context.Context, arg DeleteResumeVersionParams) error
 	GetConsumptionCost(ctx context.Context, userID uuid.UUID) (pgtype.Numeric, error)
+	GetCurrentResumeUID(ctx context.Context, userID uuid.UUID) (pgtype.UUID, error)
 	GetCustomerByStripeID(ctx context.Context, stripeCustomerID string) (PaymentCustomer, error)
 	GetCustomerByUserID(ctx context.Context, userID uuid.UUID) (PaymentCustomer, error)
-	GetPaymentValidity(ctx context.Context, userID uuid.UUID) (pgtype.Timestamptz, error)
+	GetFeaturesUsageByProductID(ctx context.Context, productID string) ([]byte, error)
+	GetGeneratedResumeByUID(ctx context.Context, arg GetGeneratedResumeByUIDParams) (GeneratedResume, error)
+	GetGeneratedResumeByUserID(ctx context.Context, userID uuid.UUID) (GeneratedResume, error)
+	GetPaymentValidity(ctx context.Context, userID uuid.UUID) (GetPaymentValidityRow, error)
 	GetPriceByPlan(ctx context.Context, plan string) (GetPriceByPlanRow, error)
 	GetPriceForPayment(ctx context.Context, userID uuid.UUID) (pgtype.Int8, error)
 	GetProfileByUserId(ctx context.Context, userID uuid.UUID) (GetProfileByUserIdRow, error)
@@ -40,14 +46,23 @@ type Querier interface {
 	GetUserResumeVersions(ctx context.Context, userID uuid.UUID) (GetUserResumeVersionsRow, error)
 	GetUserValidityStatus(ctx context.Context, userID uuid.UUID) (GetUserValidityStatusRow, error)
 	GetValidityPeroidByProductID(ctx context.Context, productID string) (pgtype.Interval, error)
+	// Increments the current cover letter generation usage for a user
+	IncrementCoverLetterGenerationUsage(ctx context.Context, userID uuid.UUID) error
+	// Increments the current resume generation usage for a user
+	IncrementResumeGenerationUsage(ctx context.Context, userID uuid.UUID) error
+	// Increments the current resume versioning usage for a user
+	IncrementResumeVersioningUsage(ctx context.Context, userID uuid.UUID) error
+	InsertGeneratedResume(ctx context.Context, arg InsertGeneratedResumeParams) error
 	InsertPayment(ctx context.Context, arg InsertPaymentParams) error
 	RenameResumeVersion(ctx context.Context, arg RenameResumeVersionParams) error
 	// Finally, update the priority of the moved item
 	ReorderResumeItem(ctx context.Context, arg ReorderResumeItemParams) error
 	ToggleResumeItemVisibility(ctx context.Context, arg ToggleResumeItemVisibilityParams) (pgtype.Bool, error)
+	UpdateGeneratedResume(ctx context.Context, arg UpdateGeneratedResumeParams) error
 	UpdateNote(ctx context.Context, arg UpdateNoteParams) error
 	UpdateProfile(ctx context.Context, arg UpdateProfileParams) error
 	UpdateResumeItem(ctx context.Context, arg UpdateResumeItemParams) error
+	UpdateResumeUIDinVersion(ctx context.Context, arg UpdateResumeUIDinVersionParams) error
 	UpdateUser(ctx context.Context, arg UpdateUserParams) error
 	UpsertPaymentValidity(ctx context.Context, arg UpsertPaymentValidityParams) error
 }

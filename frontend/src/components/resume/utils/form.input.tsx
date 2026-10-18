@@ -4,9 +4,10 @@ import { Motion, Presence } from "solid-motionone";
 import DeleteIcon from "@assets/icons/delete.svg?component-solid";
 import EyeOpenIcon from "@assets/icons/eye.svg?component-solid";
 import EyeCloseIcon from "@assets/icons/eye-closed.svg?component-solid";
+import { En, Fr, Lang, useLang } from "@components/language";
 
 interface FormLabeledInputProps {
-	label: string;
+	label: JSXElement;
 	children: JSXElement;
 	optional?: boolean;
 }
@@ -28,7 +29,10 @@ export function FormLabeledInput(props: FormLabeledInputProps) {
 							animate={{ opacity: 1, scale: 1 }}
 							transition={{ duration: 0.1, delay: 0.1 }}
 						>
-							(optional)
+							<Lang>
+								<En>(optional)</En>
+								<Fr>(optionnel)</Fr>
+							</Lang>
 						</Motion.p>
 					</Show>
 				</span>
@@ -40,7 +44,8 @@ export function FormLabeledInput(props: FormLabeledInputProps) {
 
 interface FormInputTextProps {
 	value: string;
-	placeholder: string;
+	fr_placeholder: string;
+	en_placeholder: string;
 	on_input: (value: string) => void;
 	required?: boolean;
 	disabled?: boolean;
@@ -49,6 +54,7 @@ interface FormInputTextProps {
 
 export function FormInputText(props: FormInputTextProps) {
 	const max_length = props.max_length ?? 144;
+	const lang = useLang();
 
 	const handleInput = (e: Event) => {
 		const target = e.currentTarget as HTMLInputElement;
@@ -64,7 +70,11 @@ export function FormInputText(props: FormInputTextProps) {
 		<input
 			type="text"
 			value={props.value}
-			placeholder={props.placeholder}
+			placeholder={
+				lang.current() === "fr"
+					? props.fr_placeholder
+					: props.en_placeholder
+			}
 			onInput={handleInput}
 			class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-lapis-500"
 			required={props.required}
@@ -76,18 +86,24 @@ export function FormInputText(props: FormInputTextProps) {
 
 interface FormInputTelephoneProps {
 	value: string;
-	placeholder: string;
+	fr_placeholder: string;
+	en_placeholder: string;
 	on_input: (value: string) => void;
 	required?: boolean;
 	disabled?: boolean;
 }
 
 export function FormInputTelephone(props: FormInputTelephoneProps) {
+	const lang = useLang();
 	return (
 		<input
 			type="tel"
 			value={props.value}
-			placeholder={props.placeholder}
+			placeholder={
+				lang.current() === "fr"
+					? props.fr_placeholder
+					: props.en_placeholder
+			}
 			onInput={(e) => props.on_input(e.currentTarget.value)}
 			class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-lapis-500"
 			required={props.required}
@@ -97,7 +113,8 @@ export function FormInputTelephone(props: FormInputTelephoneProps) {
 
 interface FormTextAreaProps {
 	value: string;
-	placeholder: string;
+	fr_placeholder: string;
+	en_placeholder: string;
 	on_input: (value: string) => void;
 	rows?: number;
 	required?: boolean;
@@ -107,6 +124,7 @@ interface FormTextAreaProps {
 
 export function FormTextArea(props: FormTextAreaProps) {
 	const max_length = props.max_length ?? 1024;
+	const lang = useLang();
 	const handleInput = (e: Event) => {
 		const target = e.currentTarget as HTMLTextAreaElement;
 
@@ -120,7 +138,11 @@ export function FormTextArea(props: FormTextAreaProps) {
 	return (
 		<textarea
 			value={props.value}
-			placeholder={props.placeholder}
+			placeholder={
+				lang.current() === "fr"
+					? props.fr_placeholder
+					: props.en_placeholder
+			}
 			onInput={handleInput}
 			class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-lapis-500"
 			rows={props.rows ?? 4}
@@ -133,18 +155,24 @@ export function FormTextArea(props: FormTextAreaProps) {
 
 interface FormInputDateProps {
 	value: string;
-	placeholder: string;
+	fr_placeholder: string;
+	en_placeholder: string;
 	on_input: (value: string) => void;
 	required?: boolean;
 	disabled?: boolean;
 }
 
 export function FormInputDate(props: FormInputDateProps) {
+	const lang = useLang();
 	return (
 		<input
 			type="date"
 			value={props.value}
-			placeholder={props.placeholder}
+			placeholder={
+				lang.current() === "fr"
+					? props.fr_placeholder
+					: props.en_placeholder
+			}
 			onInput={(e) => props.on_input(e.currentTarget.value)}
 			class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-lapis-500"
 			required={props.required}
@@ -154,7 +182,7 @@ export function FormInputDate(props: FormInputDateProps) {
 
 interface FormCheckboxProps {
 	value: boolean;
-	label: string;
+	label: JSXElement;
 	on_input: (value: boolean) => void;
 }
 
@@ -212,7 +240,10 @@ export function FormCancelButton(props: FormCancelProps) {
 			onClick={props.cancel}
 			class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded"
 		>
-			Cancel
+			<Lang>
+				<En>Cancel</En>
+				<Fr>Annuler</Fr>
+			</Lang>
 		</Motion.button>
 	);
 }
@@ -227,7 +258,10 @@ export function FormSubmitButton(props: FormSubmitProps) {
 			type="submit"
 			class="px-4 py-2 w-fit bg-forest-900 text-white rounded hover:bg-forest-500"
 		>
-			Save
+			<Lang>
+				<En>Save</En>
+				<Fr>Sauvegarder</Fr>
+			</Lang>
 		</Motion.button>
 	);
 }

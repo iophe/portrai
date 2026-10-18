@@ -7,6 +7,8 @@ import NoteIcon from "@assets/icons/notes.svg?component-solid";
 import CloseIcon from "@assets/icons/close.svg?component-solid";
 import HelpIcon from "@assets/icons/help.svg?component-solid";
 import { useNavigate } from "@solidjs/router";
+import { ProcessMajorError } from "@utils/api";
+import { En, Fr, Lang } from "@components/language";
 
 interface NoteFormProps {
 	section_type: string;
@@ -37,18 +39,7 @@ export function NoteForm(props: NoteFormProps) {
 						item_type: props.section_type,
 					});
 				} catch (error) {
-					if ((error as AxiosError).status === 402) {
-						navigate("/pricing");
-					}
-					if (
-						(error as AxiosError).status !== 401 &&
-						(error as AxiosError).status !== 402
-					)
-						fault.minor({
-							message:
-								((error as AxiosError).response?.data as any)
-									.error ?? (error as AxiosError).message,
-						});
+					ProcessMajorError(error, navigate, fault);
 				} finally {
 					props.submit();
 				}
@@ -62,7 +53,10 @@ export function NoteForm(props: NoteFormProps) {
 				class="flex flex-col gap-2"
 			>
 				<label class="text-sm text-gray-700">
-					What kind of comment ?
+					<Lang>
+						<En>What kind of comment?</En>
+						<Fr>Quel type de commentaire ?</Fr>
+					</Lang>
 				</label>
 				<select
 					value={note_type()}
@@ -70,10 +64,22 @@ export function NoteForm(props: NoteFormProps) {
 					class="border border-gray-300 rounded px-3 py-2"
 				>
 					<option value="instruction">
-						Instruction for the AI assistant
+						<Lang>
+							<En>Instruction for the AI assistant</En>
+							<Fr>Instruction pour l'assistant IA</Fr>
+						</Lang>
 					</option>
 					<option value="additional">
-						Additional information about this {props.section_type}
+						<Lang>
+							<En>
+								Additional information about this{" "}
+								{props.section_type}
+							</En>
+							<Fr>
+								Informations supplémentaires sur{" "}
+								{props.section_type}
+							</Fr>
+						</Lang>
 					</option>
 				</select>
 			</Motion.div>
@@ -84,7 +90,12 @@ export function NoteForm(props: NoteFormProps) {
 				transition={{ duration: 0.1, delay: 0.2 }}
 				class="flex flex-col gap-2"
 			>
-				<label class="text-sm text-gray-700">Comment</label>
+				<label class="text-sm text-gray-700">
+					<Lang>
+						<En>Comment</En>
+						<Fr>Commentaire</Fr>
+					</Lang>
+				</label>
 				<textarea
 					value={note_content()}
 					onInput={(e) => set_note_content(e.target.value)}
@@ -110,7 +121,10 @@ export function NoteForm(props: NoteFormProps) {
 					onClick={() => props.cancel()}
 					class="px-4 py-2 text-sm text-lapis-600 hover:bg-lapis-50 rounded"
 				>
-					Cancel
+					<Lang>
+						<En>Cancel</En>
+						<Fr>Annuler</Fr>
+					</Lang>
 				</Motion.button>
 				<Motion.button
 					hover={{ scale: 1.02 }}
@@ -119,7 +133,10 @@ export function NoteForm(props: NoteFormProps) {
 					type="submit"
 					class="px-4 py-2 text-sm text-white bg-lapis-600 hover:bg-lapis-700 rounded"
 				>
-					Submit
+					<Lang>
+						<En>Submit</En>
+						<Fr>Envoyer</Fr>
+					</Lang>
 				</Motion.button>
 			</Motion.div>
 		</Motion.form>
@@ -170,11 +187,17 @@ export function NoteView(props: NoteViewProps) {
 				<p class="text-gray-600 text-sm">
 					<Switch>
 						<Match when={props.type === "additional"}>
-							Additional information about this{" "}
+							<Lang>
+								<En>Additional information about this</En>
+								<Fr>Informations supplémentaires</Fr>
+							</Lang>{" "}
 							{props.section_type}
 						</Match>
 						<Match when={props.type === "instruction"}>
-							Instruction for the AI assistant
+							<Lang>
+								<En>Instruction for the AI assistant</En>
+								<Fr>Instruction pour l'assitant IA</Fr>
+							</Lang>
 						</Match>
 					</Switch>
 				</p>
@@ -193,21 +216,7 @@ export function NoteView(props: NoteViewProps) {
 							});
 							props.refetch();
 						} catch (error) {
-							if ((error as AxiosError).status === 402) {
-								navigate("/pricing");
-							}
-							if (
-								(error as AxiosError).status !== 401 &&
-								(error as AxiosError).status !== 402
-							)
-								fault.minor({
-									message:
-										(
-											(error as AxiosError).response
-												?.data as any
-										).error ??
-										(error as AxiosError).message,
-								});
+							ProcessMajorError(error, navigate, fault);
 						}
 					}}
 				>
@@ -237,7 +246,12 @@ export function NoteList(props: NoteListProps) {
 				class="pt-4 flex flex-row justify-between"
 			>
 				<h3 class="flex flex-wrap items-center gap-2">
-					<span>Comments : </span>
+					<span>
+						<Lang>
+							<En>Comments :</En>
+							<Fr>Commentaires :</Fr>
+						</Lang>{" "}
+					</span>
 					<span class="flex flex-row gap-2 items-center">
 						<Motion
 							animate={{ rotate: [0, -15, 15, -8, 8, 0] }}
@@ -250,8 +264,22 @@ export function NoteList(props: NoteListProps) {
 							<HelpIcon class="min-w-fit fill-lapis-100" />
 						</Motion>
 						<p class="text-lapis-500 text-sm">
-							Comment this {props.section_type} to help your AI
-							assistant understand it better
+							<Lang>
+								<En>Comment this</En>
+								<Fr>Commentez</Fr>
+							</Lang>{" "}
+							{props.section_type}{" "}
+							<Lang>
+								<En>
+									{" "}
+									to help your AI assistant understand it
+									better
+								</En>
+								<Fr>
+									pour aider votre assistant IA à mieux le
+									comprendre
+								</Fr>
+							</Lang>
 						</p>
 					</span>
 				</h3>

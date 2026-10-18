@@ -133,10 +133,11 @@ function FaultPopup(props: FaultProps) {
 	return (
 		<div
 			ref={ref}
-			class="flex gap-4 justify-between h-fit rounded text-snow-100 font-normal show text-wrap transition-opacity duration-500"
+			class="flex gap-4 justify-between h-fit rounded font-normal show text-wrap transition-opacity duration-500"
 			classList={{
-				"bg-snow-100": props.severity === INFO,
-				"bg-red-500":
+				"bg-snow-100 text-lapis-600 border border-lapis-500":
+					props.severity === INFO,
+				"bg-red-500 text-snow-100":
 					props.severity === MINOR ||
 					props.severity === MAJOR ||
 					props.severity === CRITICAL,
@@ -153,7 +154,16 @@ function FaultPopup(props: FaultProps) {
 					};
 				}}
 			>
-				<CloseIcon class="min-w-fit fill-snow-100" />
+				<CloseIcon
+					class="min-w-fit "
+					classList={{
+						"fill-forest-900": props.severity === INFO,
+						"fill-snow-100":
+							props.severity === MINOR ||
+							props.severity === MAJOR ||
+							props.severity === CRITICAL,
+					}}
+				/>
 			</button>
 		</div>
 	);

@@ -1,6 +1,6 @@
 # portrai
 A resume and profile maker to help user find job with the help of AI
-
+read2
 # Dev Build and Usage
 ## Secrets managements
 
@@ -47,6 +47,11 @@ use only when using the back or front end outside of docker
 ```
 source .env
 source secrets.env
+```
+if that does not work :
+```
+export $(cat .env | grep -v '^#' | grep -v '^$' | xargs)
+export $(cat secrets.env | grep -v '^#' | grep -v '^$' | xargs)
 ```
 
 Then start the server: ( in the backend directory | cd backend )

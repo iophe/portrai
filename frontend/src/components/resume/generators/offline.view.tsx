@@ -1,18 +1,24 @@
 import { useFault } from "@components/fault";
-import { createResource, createSignal, For, Show } from "solid-js";
+import {
+	Accessor,
+	createEffect,
+	createResource,
+	createSignal,
+	For,
+	onMount,
+	Resource,
+	Show,
+} from "solid-js";
 import { Motion, Presence } from "solid-motionone";
-import { generatePDF } from "./generator.utils";
-import { TemplateData } from "./templates/template.utils";
 import { api } from "@utils/api";
 import { AxiosError } from "axios";
-import { ExecutiveTemplate } from "./templates/default.template";
 import { db, JobSpecificResume } from "@utils/db/db";
 import EditIcon from "@assets/icons/edit.svg?component-solid";
 import DeleteIcon from "@assets/icons/delete.svg?component-solid";
 import CloseIcon from "@assets/icons/close.svg?component-solid";
 import DownloadIcon from "@assets/icons/download.svg?component-solid";
 import { FormInputText } from "../utils/form.input";
-import { DB_JOB_SPECIFIC_RESUMES } from "@utils/db/resume.db";
+import { DB_JOB_SPECIFIC_RESUMES, DB_RESUME_PDFS } from "@utils/db/resume.db";
 import { createCachedResource } from "@utils/cache";
 import {
 	CACHED_IMAGE_KEY,
@@ -20,6 +26,8 @@ import {
 	CachedImage,
 } from "@components/avatar.section";
 import { useNavigate } from "@solidjs/router";
+import { PDFView } from "./pdf.view";
+import { En, Fr, Lang, useLang } from "@components/language";
 
 export function formatText(text: string) {
 	if (!text) return null;
@@ -51,88 +59,75 @@ export function formatText(text: string) {
 }
 
 interface ResumePreviewProps {
-	template_name?: string;
 	job_specific_resume: JobSpecificResume;
+	refresh_signal?: Accessor<number>;
 }
 
 function ResumePreview(props: ResumePreviewProps) {
 	const fault = useFault();
 	const navigate = useNavigate();
-
-	let cv_ref: HTMLDivElement | undefined = undefined;
-	const [is_generating, toGenerating] = createSignal(false);
+	const lang = useLang();
 	const [showing_more, show_more] = createSignal(false);
 	const [editing_title, edit_title] = createSignal(false);
 	const [new_title, set_new_title] = createSignal(
 		props.job_specific_resume.title
 	);
-
-	const [account, { refetch }] = createCachedResource(
-		async () => {
-			try {
-				const res = await api.get("/account/user");
-				const user = res.data.user as User;
-				return user;
-			} catch (error) {}
-		},
-		{ cache_key: "/account/user" }
-	);
-	const [profile, { mutate: mutate_profile, refetch: refetch_profile }] =
-		createCachedResource(
-			async () => {
-				try {
-					const response = await api.get("/account/profile");
-					const result = response.data.profile as Profile;
-					return result;
-				} catch (error) {
-					if ((error as AxiosError).status === 402) {
-						navigate("/pricing");
-					}
-					return;
-				}
-			},
-			{ cache_key: "/account/profile" }
-		);
-	const [avatar] = createResource(async () => {
-		const cached = window.localStorage.getItem(CACHED_IMAGE_KEY);
-		if (cached) {
-			const cached_data = JSON.parse(cached) as CachedImage;
-			const cache_date = new Date(cached_data.date);
-			const now = new Date();
-			const elapsed_time = now.getTime() - cache_date.getTime();
-
-			if (elapsed_time < cached_data.ttl) {
-				// if the data is valid
-				return cached_data.img;
-			} else {
-				window.localStorage.removeItem(CACHED_IMAGE_KEY);
-			}
-		}
+	const [pdf_blob, set_pdf_blob] = createSignal<Blob | undefined>();
+	createEffect(async () => {
 		try {
-			const res = await api.get("/account/profile/avatar", {
-				responseType: "blob",
-			});
-			const url = URL.createObjectURL(res.data);
-			const base64_url = (await new Promise((resolve) => {
-				const reader = new FileReader();
-				reader.onloadend = () => resolve(reader.result as string);
-				reader.readAsDataURL(res.data);
-			})) as string;
-			window.localStorage.setItem(
-				CACHED_IMAGE_KEY,
-				JSON.stringify({
-					img: base64_url,
-					date: new Date(),
-					ttl: CACHED_IMAGE_TTL,
-				} as CachedImage)
+			const cached_pdf = await DB_RESUME_PDFS.get(
+				db,
+				props.job_specific_resume.id
 			);
-			return base64_url;
-		} catch (error) {
-			if ((error as AxiosError).status === 402) {
-				navigate("/pricing");
+
+			if (cached_pdf) {
+				set_pdf_blob(cached_pdf.pdf_blob);
+				return;
 			}
+			// Generate the PDF
+			const response = await api.post(
+				"/generate/live/from-data/" +
+					props.job_specific_resume.template +
+					"/" +
+					lang.current(),
+				{
+					resume_data: props.job_specific_resume.resume_data,
+				},
+				{ responseType: "blob" }
+			);
+
+			await DB_RESUME_PDFS.upsert(db, props.job_specific_resume.id, {
+				pdf_blob: response.data,
+				filename: props.job_specific_resume.filename,
+			});
+			set_pdf_blob(response.data);
+		} catch (error) {}
+	});
+
+	const [old_refresh_signal, update_old_refresh_signal] = createSignal(0);
+
+	createEffect(async () => {
+		if (!props.refresh_signal) return;
+		if (props.refresh_signal() !== old_refresh_signal()) {
+			update_old_refresh_signal(props.refresh_signal());
+			const response = await api.post(
+				"/generate/live/from-data/" +
+					props.job_specific_resume.template +
+					"/" +
+					lang.current(),
+				{
+					resume_data: props.job_specific_resume.resume_data,
+				},
+				{ responseType: "blob" }
+			);
+			await DB_RESUME_PDFS.upsert(db, props.job_specific_resume.id, {
+				pdf_blob: response.data,
+				filename: props.job_specific_resume.filename,
+			});
+			set_pdf_blob(response.data);
 		}
 	});
+
 	return (
 		<section class="overflow-y-auto w-full h-full flex flex-col gap-4">
 			<Motion
@@ -186,7 +181,8 @@ function ResumePreview(props: ResumePreviewProps) {
 												on_input={(value) =>
 													set_new_title(value)
 												}
-												placeholder="Rename this resume"
+												en_placeholder="Rename this resume"
+												fr_placeholder="Renommé ce CV"
 											/>
 										</form>
 										<Motion
@@ -269,7 +265,10 @@ function ResumePreview(props: ResumePreviewProps) {
 						<div class="flex flex-col items-start gap-4">
 							<article class="p-4 border-l-4 border-l-lapis-50 bg-gradient-to-br from-lapis-10 to-white flex flex-col gap-2 w-full">
 								<h2 class="text-lapis-700 font-medium">
-									Job description:
+									<Lang>
+										<En>Job description:</En>
+										<Fr>Offre d'emploi ...</Fr>
+									</Lang>
 								</h2>
 								<div
 									class="line-clamp-6 transition-all duration-300"
@@ -303,7 +302,15 @@ function ResumePreview(props: ResumePreviewProps) {
 														}
 														class="text-lapis-600 hover:text-lapis-800 font-medium text-sm smooth-transition"
 													>
-														show more ...
+														<Lang>
+															<En>
+																show more ...
+															</En>
+															<Fr>
+																afficher plus
+																...
+															</Fr>
+														</Lang>
 													</button>
 												</Motion>
 											}
@@ -323,7 +330,12 @@ function ResumePreview(props: ResumePreviewProps) {
 													}
 													class="text-lapis-600 hover:text-lapis-800 font-medium text-sm smooth-transition"
 												>
-													show less ...
+													<Lang>
+														<En>show less ...</En>
+														<Fr>
+															afficher moins ...
+														</Fr>
+													</Lang>
 												</button>
 											</Motion>
 										</Show>
@@ -335,121 +347,17 @@ function ResumePreview(props: ResumePreviewProps) {
 				</section>
 			</Motion>
 
-			<Motion.section
-				initial={{ opacity: 0, y: 10 }}
-				animate={{ opacity: 1, y: 0 }}
-				transition={{ duration: 0.3, delay: 0.3, easing: "ease-out" }}
-				class="shadow rounded w-full p-4 bg-lapis-10 h-fit flex flex-col gap-4"
-			>
-				<Motion
-					initial={{ width: "0%" }}
-					animate={{ width: "100%" }}
-					transition={{
-						duration: 0.6,
-						easing: "ease-out",
-						delay: 0.4,
-					}}
-					style={{
-						position: "absolute",
-						left: "0",
-						top: "0",
-						height: "3px",
-						"background-color": "var(--forest-200)",
-					}}
-				></Motion>
-				<h3 class="alice-regular self-center text-sm">{`${account()?.full_name?.replace(" ", "_")}_resume_${new Date().toISOString().slice(0, 10).replace(/-/g, "_")}.pdf`}</h3>
-				<div class="flex flex-row self-center gap-4">
-					<Motion.button
-						hover={{ scale: 1.05 }}
-						press={{ scale: 0.95 }}
-						transition={{ duration: 0.15 }}
-						class="bg-lapis-100 rounded text-snow-100 py-2 px-4 flex items-center gap-2"
-						onClick={async () => {
-							if (!cv_ref) return;
-							try {
-								toGenerating(true);
-								generatePDF(cv_ref, {
-									name: `${account()?.full_name?.replace(" ", "_")}_resume_${new Date().toISOString().slice(0, 10).replace(/-/g, "_")}.pdf`,
-								});
-								fault.info({
-									message: "successfully generated the PDF",
-								});
-							} catch (error) {
-								fault.major({
-									message: "Failed to generate the PDF",
-								});
-							} finally {
-								toGenerating(false);
-							}
-						}}
-						disabled={is_generating()}
-					>
-						<Show
-							when={!is_generating()}
-							fallback={
-								<span class="flex items-center gap-2">
-									<Motion
-										animate={{ rotate: 360 }}
-										transition={{
-											duration: 1,
-											repeat: Infinity,
-										}}
-										style={{
-											display: "inline-block",
-										}}
-									>
-										<span class="block w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span>
-									</Motion>
-									Generating PDF...
-								</span>
-							}
-						>
-							<DownloadIcon class="min-w-fit fill-white w-5 h-5" />
-							<span>Download PDF</span>
-						</Show>
-					</Motion.button>
-				</div>
-
-				<Motion.div
-					initial={{ opacity: 0, scale: 0.98 }}
-					animate={{ opacity: 1, scale: 1 }}
-					transition={{ duration: 0.4, delay: 0.2 }}
-					ref={cv_ref}
-					class="max-w-[210mm] h-fit shadow md:block hidden"
-				>
-					<ExecutiveTemplate
-						data={{
-							resume_data: props.job_specific_resume.resume_data,
-							profile: profile(),
-							user: account(),
-						}}
-						settings={{
-							font_size: {
-								name: "2rem",
-								section_title: "1.25rem",
-								subsection_title: "1.1rem",
-								body: "0.9rem",
-							},
-							spacing: {
-								section: "1.5rem",
-								subsection: "1rem",
-								item: "0.75rem",
-							},
-							show_sections: {
-								summary: true,
-								experience: true,
-								education: true,
-								skills: true,
-								certificates: true,
-								projects: true,
-							},
-						}}
-					/>
-				</Motion.div>
-			</Motion.section>
+			<Show when={pdf_blob()}>
+				<PDFView
+					document_id={props.job_specific_resume.id}
+					document_name=""
+					pdf_data={pdf_blob()!}
+					document_title={props.job_specific_resume.title}
+				/>
+			</Show>
 
 			<Presence>
-				<Show when={props.job_specific_resume.resume_data.letter}>
+				<Show when={props.job_specific_resume.letter}>
 					<Motion.section
 						initial={{ opacity: 0, y: 10 }}
 						animate={{ opacity: 1, y: 0 }}
@@ -478,7 +386,10 @@ function ResumePreview(props: ResumePreviewProps) {
 							}}
 						></Motion>
 						<h2 class="text-lapis-700 font-medium">
-							Cover letter:
+							<Lang>
+								<En>Cover letter:</En>
+								<Fr>Lettre de motivation</Fr>
+							</Lang>
 						</h2>
 						<Motion
 							initial={{ opacity: 0, scale: 0.98 }}
@@ -486,9 +397,7 @@ function ResumePreview(props: ResumePreviewProps) {
 							transition={{ duration: 0.3, delay: 0.1 }}
 						>
 							<div class="bg-white border-lapis-100 shadow px-4 py-8">
-								{formatText(
-									props.job_specific_resume.resume_data.letter
-								)}
+								{formatText(props.job_specific_resume.letter)}
 							</div>
 						</Motion>
 					</Motion.section>

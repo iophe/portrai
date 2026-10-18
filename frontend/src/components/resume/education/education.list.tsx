@@ -10,55 +10,57 @@ import LoadingSpinner from "@components/loading.spinner";
 import HelpIcon from "@assets/icons/help.svg?component-solid";
 import { createCachedResource } from "@utils/cache";
 import { useNavigate } from "@solidjs/router";
+import { ProcessMajorError } from "@utils/api";
+import { En, Fr, Lang } from "@components/language";
 
-interface EducationListProps {}
+interface EducationListProps {
+	on_refetch: () => void;
+}
 
 export function EducationList(props: EducationListProps) {
 	const fault = useFault();
 	const navigate = useNavigate();
 
-	const [educations, { mutate, refetch }] = createCachedResource(
-		async () => {
-			try {
-				const response = await api.get(
-					"/resume/items/by-type?item_type=education"
-				);
-				const result = response.data.items as ResumeItem[];
+	const [educations, { mutate, refetch: refetch_items }] =
+		createCachedResource(
+			async () => {
+				try {
+					const response = await api.get(
+						"/resume/items/by-type?item_type=education"
+					);
+					const result = response.data.items as ResumeItem[];
 
-				const educationItems = result.map((item) => ({
-					education_id: item.item_id,
-					degree: item.title,
-					school: item.subtitle,
-					location: item.location,
-					start_date: item.start_date,
-					optional_end_date: item.end_date,
-					is_current: item.is_current,
-					description: item.description,
-					priority: item.priority,
-					is_visible: item.is_visible,
-					tags: item.tags,
-					notes: item.notes,
-				}));
+					const educationItems = result.map((item) => ({
+						education_id: item.item_id,
+						degree: item.title,
+						school: item.subtitle,
+						location: item.location,
+						start_date: item.start_date,
+						optional_end_date: item.end_date,
+						is_current: item.is_current,
+						description: item.description,
+						priority: item.priority,
+						is_visible: item.is_visible,
+						tags: item.tags,
+						notes: item.notes,
+					}));
 
-				return educationItems as Education[];
-			} catch (error) {
-				if ((error as AxiosError).status === 402) {
-					navigate("/pricing");
+					return educationItems as Education[];
+				} catch (error) {
+					ProcessMajorError(error, navigate, fault);
+					return [];
 				}
-				if (
-					(error as AxiosError).status !== 401 &&
-					(error as AxiosError).status !== 402
-				)
-					fault.minor({
-						message:
-							((error as AxiosError).response?.data as any)
-								.error ?? (error as AxiosError).message,
-					});
-				return [];
+			},
+			{
+				cache_key:
+					"EducationList:/resume/items/by-type?item_type=education",
 			}
-		},
-		{ cache_key: "EducationList:/resume/items/by-type?item_type=education" }
-	);
+		);
+
+	function refetch() {
+		refetch_items();
+		props.on_refetch();
+	}
 
 	const [editing_educations, updateEditingEducations] = createStore(
 		[] as number[]
@@ -70,7 +72,8 @@ export function EducationList(props: EducationListProps) {
 		<section class="w-full flex flex-col gap-4 justify-items-center">
 			<SectionHeader
 				add={() => {}}
-				section_title="Educations"
+				en_section_title="Educations"
+				fr_section_title="Éducations"
 				section_name="education"
 				form={(props) => (
 					<EducationForm
@@ -90,8 +93,17 @@ export function EducationList(props: EducationListProps) {
 					<span class="flex flex-wrap gap-2 text-lapis-500">
 						<HelpIcon class="min-w-fit fill-lapis-400" />{" "}
 						<p>
-							Add your educational background and qualifications
-							in your resume
+							<Lang>
+								<En>
+									Add your educational background and
+									qualifications in your resume
+								</En>
+								<Fr>
+									Ajoutez votre formation et vos
+									qualifications à votre CV
+								</Fr>
+							</Lang>
+							A
 						</p>{" "}
 					</span>
 				}
@@ -126,24 +138,11 @@ export function EducationList(props: EducationListProps) {
 											}
 										);
 									} catch (error) {
-										if (
-											(error as AxiosError).status === 402
-										) {
-											navigate("/pricing");
-										}
-										if (
-											(error as AxiosError).status !== 401
-										)
-											fault.minor({
-												message:
-													(
-														(error as AxiosError)
-															.response
-															?.data as any
-													).error ??
-													(error as AxiosError)
-														.message,
-											});
+										ProcessMajorError(
+											error,
+											navigate,
+											fault
+										);
 									}
 								}}
 							>
@@ -191,28 +190,11 @@ export function EducationList(props: EducationListProps) {
 												);
 												refetch();
 											} catch (error) {
-												if (
-													(error as AxiosError)
-														.status === 402
-												) {
-													navigate("/pricing");
-												}
-												if (
-													(error as AxiosError)
-														.status !== 401
-												)
-													fault.minor({
-														message:
-															(
-																(
-																	error as AxiosError
-																).response
-																	?.data as any
-															).error ??
-															(
-																error as AxiosError
-															).message,
-													});
+												ProcessMajorError(
+													error,
+													navigate,
+													fault
+												);
 											}
 										}}
 										onSubmit={() => {
@@ -258,7 +240,8 @@ export function OfflineEducationList(props: OfflineEducationListProps) {
 		<section class="w-full flex flex-col gap-4 justify-items-center">
 			<SectionHeader
 				add={() => {}}
-				section_title="Educations"
+				en_section_title="Educations"
+				fr_section_title="Éducations"
 				section_name="education"
 				form={(p) => (
 					<EducationForm
@@ -279,8 +262,16 @@ export function OfflineEducationList(props: OfflineEducationListProps) {
 					<span class="flex flex-wrap gap-2 text-lapis-500">
 						<HelpIcon class="min-w-fit fill-lapis-400" />{" "}
 						<p>
-							Add some educational background and qualifications
-							in this resume
+							<Lang>
+								<En>
+									Add some educational background and
+									qualifications in this resume
+								</En>
+								<Fr>
+									Ajoutez des formation et des qualifications
+									à votre CV
+								</Fr>
+							</Lang>
 						</p>{" "}
 					</span>
 				}

@@ -6,6 +6,8 @@ import { Pay } from "@utils/payment";
 import { Match, onMount, Switch } from "solid-js";
 import Footer from "@components/footer.default";
 import { useFault } from "@components/fault";
+import { AxiosError } from "axios";
+import { En, Fr, Lang } from "@components/language";
 
 interface SigninPageProps {}
 
@@ -56,7 +58,12 @@ function SigninPage(props: SigninPageProps) {
 				localStorage.setItem("IS_AUTHENTICATED", "true");
 
 				if (location.query.payment) {
-					Pay({ plan: location.query.payment as string });
+					if (
+						location.query.payment !=
+						import.meta.env.VITE_DEFAULT_PLAN
+					) {
+						Pay({ plan: location.query.payment as string });
+					}
 				} else {
 					navigate("/", { replace: true });
 				}
@@ -75,12 +82,15 @@ function SigninPage(props: SigninPageProps) {
 	});
 
 	return (
-		<main class="md:px-48 px-8 mx-auto justify-items-center  p-4 flex flex-col gap-4 h-screen max-h-screen">
+		<main class="lg:px-48 px-8 mx-auto justify-items-center  p-4 flex flex-col gap-4 h-screen max-h-screen">
 			<Header />
-			<section class="md:py-16 py-8 h-full flex flex-col gap-16 items-center">
+			<section class="lg:py-16 py-8 h-full flex flex-col gap-16 items-center">
 				<section class="max-w-md w-full space-y-8 grow">
 					<h2 class="text-center text-3xl text-forest-900">
-						Sign in to your account
+						<Lang>
+							<En>Sign in to your account</En>
+							<Fr>Connectez-vous à votre compte</Fr>
+						</Lang>
 					</h2>
 
 					<div class="flex flex-col items-center w-full">
@@ -88,7 +98,7 @@ function SigninPage(props: SigninPageProps) {
 							id="g_id_onload"
 							data-client_id={
 								import.meta.env.VITE_GOOGLE_CLIENT_ID ??
-								"379453756631-b7kpec1652oq9ihd2bl1n5gvnu48j2gl.apps.googleusercontent.com"
+								"379453756631-48ig2rjv0qp8juto3jpcc2j6d9ro9k09.apps.googleusercontent.com"
 							}
 							data-context="signin"
 							data-ux_mode="popup"
@@ -116,7 +126,10 @@ function SigninPage(props: SigninPageProps) {
 						</div>
 						<div class="relative flex justify-center text-sm">
 							<span class="px-2 bg-forest-50 text-forest-500">
-								Or continue with
+								<Lang>
+									<En>Or continue with</En>
+									<Fr>Ou continuer avec</Fr>
+								</Lang>
 							</span>
 						</div>
 					</div>
@@ -134,14 +147,33 @@ function SigninPage(props: SigninPageProps) {
 									"true"
 								);
 								if (location.query.payment) {
-									Pay({
-										plan: location.query.payment as string,
-									});
+									if (
+										location.query.payment !=
+										import.meta.env.VITE_DEFAULT_PLAN
+									) {
+										Pay({
+											plan: location.query
+												.payment as string,
+										});
+									}
 								} else {
 									navigate("/", { replace: true });
 								}
 							} catch (error) {
 								console.error("Signin error:", error);
+								const msg =
+									((
+										(error as AxiosError).response
+											?.data as any
+									).error as string) ?? "";
+								if (msg.includes("Email not confirmed")) {
+									fault.major({
+										message:
+											"Please confirm your email address",
+									});
+									navigate("/verify-account");
+									return;
+								}
 								fault.major({
 									message:
 										"Invalid password or email address",
@@ -153,7 +185,10 @@ function SigninPage(props: SigninPageProps) {
 						<div class="rounded shadow-sm -space-y-px">
 							<div>
 								<label for="email" class="sr-only">
-									Email address
+									<Lang>
+										<En>Email address</En>
+										<Fr>Adresse e-mail</Fr>
+									</Lang>
 								</label>
 								<input
 									id="email"
@@ -168,7 +203,10 @@ function SigninPage(props: SigninPageProps) {
 							</div>
 							<div>
 								<label for="password" class="sr-only">
-									Password
+									<Lang>
+										<En>Password</En>
+										<Fr>Mot de passe</Fr>
+									</Lang>
 								</label>
 								<input
 									id="password"
@@ -187,7 +225,10 @@ function SigninPage(props: SigninPageProps) {
 							type="submit"
 							class="w-full flex justify-center py-2 px-4 border border-transparent rounded shadow-sm text-sm font-medium text-white bg-forest-600 hover:bg-forest-400 smooth-transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-forest-500"
 						>
-							Sign in
+							<Lang>
+								<En>Sign in</En>
+								<Fr>Se connecter</Fr>
+							</Lang>
 						</button>
 					</form>
 
@@ -196,7 +237,10 @@ function SigninPage(props: SigninPageProps) {
 							href="/forgot-password"
 							class="text-sm font-medium text-lapis-600 hover:text-lapis-500 smooth-transition"
 						>
-							Forgot your password?
+							<Lang>
+								<En>Forgot your password?</En>
+								<Fr>Mot de passe oublié ?</Fr>
+							</Lang>
 						</A>
 						<Switch>
 							<Match when={location.query.payment}>
@@ -204,7 +248,10 @@ function SigninPage(props: SigninPageProps) {
 									href={`/signup?payment=${location.query.payment}`}
 									class="text-sm font-medium text-lapis-600 hover:text-lapis-500 smooth-transition"
 								>
-									No account? Sign up
+									<Lang>
+										<En>No account? Sign up</En>
+										<Fr>Pas de compte ? Inscrivez-vous</Fr>
+									</Lang>
 								</A>
 							</Match>
 							<Match when={!location.query.payment}>
@@ -212,7 +259,10 @@ function SigninPage(props: SigninPageProps) {
 									href="/signup"
 									class="text-sm font-medium text-lapis-600 hover:text-lapis-500 smooth-transition"
 								>
-									No account? Sign up
+									<Lang>
+										<En>No account? Sign up</En>
+										<Fr>Pas de compte ? Inscrivez-vous</Fr>
+									</Lang>
 								</A>
 							</Match>
 						</Switch>

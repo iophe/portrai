@@ -17,11 +17,8 @@ import {
 	Suspense,
 } from "solid-js";
 import EditIcon from "@assets/icons/edit.svg?component-solid";
-import DeleteIcon from "@assets/icons/delete.svg?component-solid";
-import CloseIcon from "@assets/icons/close.svg?component-solid";
-import { FormInputText } from "@components/resume/utils/form.input";
-import { randomUUID } from "crypto";
 import Footer from "@components/footer.default";
+import { En, Fr, Lang } from "@components/language";
 
 interface HistoryPageProps {}
 
@@ -34,7 +31,7 @@ function HistoryPage(props: HistoryPageProps) {
 			return res;
 		} catch (err) {
 			fault.major({
-				message: (err as JobSpecificResumeNotFoundError).message,
+				message: `${(err as JobSpecificResumeNotFoundError).message}`,
 			});
 			return [];
 		}
@@ -51,29 +48,41 @@ function HistoryPage(props: HistoryPageProps) {
 			return res;
 		} catch (err) {
 			fault.major({
-				message: (err as JobSpecificResumeNotFoundError).message,
+				message: `${(err as JobSpecificResumeNotFoundError).message}`,
 			});
 		}
 	});
 
 	return (
-		<main class="md:px-48 px-6 mx-auto justify-items-center py-4 flex flex-col gap-4 min-h-screen md:max-h-screen">
+		<main class="lg:px-48 px-6 mx-auto justify-items-center py-4 flex flex-col gap-4 min-h-screen lg:max-h-screen">
 			<Header />
 			<section
-				class="md:grid md:grid-cols-2 flex flex-col md:gap-4 gap-16 justify-start h-full grow overflow-hidden
+				class="lg:grid lg:grid-cols-2 flex flex-col lg:gap-4 gap-16 justify-start h-full grow overflow-hidden
 			 items-start text-forest-900"
 			>
-				<section class="overflow-y-hidden pr-4 md:h-full  md:max-h-full max-h-96 w-full">
-					<div class="overflow-y-hidden md:h-full  md:max-h-full max-h-96 flex flex-col gap-4">
+				<section class="overflow-y-hidden pr-4 lg:h-full  lg:max-h-full max-h-96 w-full">
+					<div class="overflow-y-hidden lg:h-full  lg:max-h-full max-h-96 flex flex-col gap-4">
 						<h2 class="w-full border-b-2 border-forest-900 pb-2">
-							Recently created resumes :
+							<Lang>
+								<En>Recently created resumes:</En>
+								<Fr>CV récemment créés :</Fr>
+							</Lang>
 						</h2>
 						<Suspense fallback={<LoadingSpinner />}>
 							<ol class="overflow-y-auto w-full flex flex-col gap-4">
 								<For
 									each={resumes()}
 									fallback={
-										"Start creating resumes for your next dream job"
+										<Lang>
+											<En>
+												Start creating resumes for your
+												next dream job
+											</En>
+											<Fr>
+												Commencez à créer des CV pour
+												votre prochain emploi de rêve
+											</Fr>
+										</Lang>
 									}
 								>
 									{(resume) => {
@@ -107,7 +116,7 @@ function HistoryPage(props: HistoryPageProps) {
 												</div>
 												<A
 													href={`/resume/${resume.id}`}
-													class="flex-shrink-0 md:hidden md:group-hover:block"
+													class="flex-shrink-0 lg:hidden lg:group-hover:block"
 												>
 													<EditIcon class="min-w-fit fill-forest-900" />
 												</A>
@@ -126,14 +135,27 @@ function HistoryPage(props: HistoryPageProps) {
 							<div class="w-full h-full flex flex-col items-center justify-center">
 								<div class="items-center flex flex-col gap-4">
 									<h2>
-										No resume to display, Start creating
-										resumes for your next dream job
+										<Lang>
+											<En>
+												No resume to display, Start
+												creating resumes for your next
+												dream job
+											</En>
+											<Fr>
+												Aucun CV à afficher, commencez à
+												créer des CV pour votre prochain
+												emploi de rêve
+											</Fr>
+										</Lang>
 									</h2>
 									<A
 										href="/"
 										class="w-fit text-center px-4 py-2 bg-lapis-200 hover:bg-lapis-100 text-snow-100 rounded"
 									>
-										Return to home page
+										<Lang>
+											<En>Return to home page</En>
+											<Fr>Retour à la page d'accueil</Fr>
+										</Lang>
 									</A>
 								</div>
 							</div>

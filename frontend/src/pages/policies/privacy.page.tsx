@@ -15,14 +15,14 @@ function PrivacyPage(props: PrivacyPageProps) {
 		}
 	};
 	return (
-		<main class="md:px-48 px-6 mx-auto justify-items-center py-4 flex flex-col gap-4 md:h-screen md:max-h-screen">
+		<main class="lg:px-48 px-6 mx-auto justify-items-center py-4 flex flex-col gap-4 lg:h-screen lg:max-h-screen">
 			<Header />
 
 			<section class="w-full flex flex-col gap-4 justify-start h-full overflow-y-auto items-start">
 				<main class="privacy-policy">
 					<article class="policy-container">
 						<header class="flex flex-col gap-2 py-6 border-b border-lapis-200">
-							<h1 class="text-3xl md:text-4xl font-bold text-forest-900">
+							<h1 class="text-3xl lg:text-4xl font-bold text-forest-900">
 								PRIVACY POLICY
 							</h1>
 							<p class="text-sm text-forest-700">
@@ -84,7 +84,7 @@ function PrivacyPage(props: PrivacyPageProps) {
 						</section>
 
 						<section class="py-6 border-b border-lapis-200">
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								SUMMARY OF KEY POINTS
 							</h2>
 							<p class="mb-4">
@@ -307,7 +307,7 @@ function PrivacyPage(props: PrivacyPageProps) {
 						</section>
 
 						<nav id="toc" class="py-6 border-b border-lapis-200">
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								TABLE OF CONTENTS
 							</h2>
 							<ol class="list-decimal pl-5 flex flex-col gap-2">
@@ -530,7 +530,7 @@ function PrivacyPage(props: PrivacyPageProps) {
 							id="what-info"
 							class="py-6 border-b border-lapis-200"
 						>
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								1. WHAT INFORMATION DO WE COLLECT?
 							</h2>
 
@@ -647,7 +647,7 @@ function PrivacyPage(props: PrivacyPageProps) {
 							id="info-processing"
 							class="py-6 border-b border-lapis-200"
 						>
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								2. HOW DO WE PROCESS YOUR INFORMATION?
 							</h2>
 
@@ -693,7 +693,7 @@ function PrivacyPage(props: PrivacyPageProps) {
 							id="legal-bases"
 							class="py-6 border-b border-lapis-200"
 						>
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								3. WHAT LEGAL BASES DO WE RELY ON TO PROCESS
 								YOUR INFORMATION?
 							</h2>
@@ -873,7 +873,7 @@ function PrivacyPage(props: PrivacyPageProps) {
 							id="info-sharing"
 							class="py-6 border-b border-lapis-200"
 						>
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								4. WHEN AND WITH WHOM DO WE SHARE YOUR PERSONAL
 								INFORMATION?
 							</h2>
@@ -905,7 +905,7 @@ function PrivacyPage(props: PrivacyPageProps) {
 							id="cookies"
 							class="py-6 border-b border-lapis-200"
 						>
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								5. DO WE USE COOKIES AND OTHER TRACKING
 								TECHNOLOGIES?
 							</h2>
@@ -973,7 +973,7 @@ function PrivacyPage(props: PrivacyPageProps) {
 							id="ai-products"
 							class="py-6 border-b border-lapis-200"
 						>
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								6. DO WE OFFER ARTIFICIAL INTELLIGENCE-BASED
 								PRODUCTS?
 							</h2>
@@ -1059,7 +1059,7 @@ function PrivacyPage(props: PrivacyPageProps) {
 							id="social-logins"
 							class="py-6 border-b border-lapis-200"
 						>
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								7. HOW DO WE HANDLE YOUR SOCIAL LOGINS?
 							</h2>
 
@@ -1109,7 +1109,7 @@ function PrivacyPage(props: PrivacyPageProps) {
 							id="retention"
 							class="py-6 border-b border-lapis-200"
 						>
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								8. HOW LONG DO WE KEEP YOUR INFORMATION?
 							</h2>
 
@@ -1153,7 +1153,7 @@ function PrivacyPage(props: PrivacyPageProps) {
 							id="info-safety"
 							class="py-6 border-b border-lapis-200"
 						>
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								9. HOW DO WE KEEP YOUR INFORMATION SAFE?
 							</h2>
 
@@ -1189,7 +1189,7 @@ function PrivacyPage(props: PrivacyPageProps) {
 							id="minors"
 							class="py-6 border-b border-lapis-200"
 						>
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								10. DO WE COLLECT INFORMATION FROM MINORS?
 							</h2>
 
@@ -1227,7 +1227,7 @@ function PrivacyPage(props: PrivacyPageProps) {
 							id="privacy-rights"
 							class="py-6 border-b border-lapis-200"
 						>
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								11. WHAT ARE YOUR PRIVACY RIGHTS?
 							</h2>
 
@@ -1394,7 +1394,7 @@ function PrivacyPage(props: PrivacyPageProps) {
 							id="dnt"
 							class="py-6 border-b border-lapis-200"
 						>
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								12. CONTROLS FOR DO-NOT-TRACK FEATURES
 							</h2>
 
@@ -1434,7 +1434,7 @@ function PrivacyPage(props: PrivacyPageProps) {
 							id="us-rights"
 							class="py-6 border-b border-lapis-200"
 						>
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								13. DO UNITED STATES RESIDENTS HAVE SPECIFIC
 								PRIVACY RIGHTS?
 							</h2>
@@ -2016,7 +2016,7 @@ function PrivacyPage(props: PrivacyPageProps) {
 							id="other-regions"
 							class="py-6 border-b border-lapis-200"
 						>
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								14. DO OTHER REGIONS HAVE SPECIFIC PRIVACY
 								RIGHTS?
 							</h2>
@@ -2099,7 +2099,7 @@ function PrivacyPage(props: PrivacyPageProps) {
 							id="updates"
 							class="py-6 border-b border-lapis-200"
 						>
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								15. DO WE MAKE UPDATES TO THIS NOTICE?
 							</h2>
 
@@ -2130,7 +2130,7 @@ function PrivacyPage(props: PrivacyPageProps) {
 							id="contact"
 							class="py-6 border-b border-lapis-200"
 						>
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								16. HOW CAN YOU CONTACT US ABOUT THIS NOTICE?
 							</h2>
 
@@ -2161,7 +2161,7 @@ function PrivacyPage(props: PrivacyPageProps) {
 							id="review"
 							class="py-6 border-b border-lapis-200"
 						>
-							<h2 class="text-2xl md:text-3xl font-bold text-forest-900 mb-4">
+							<h2 class="text-2xl lg:text-3xl font-bold text-forest-900 mb-4">
 								17. HOW CAN YOU REVIEW, UPDATE, OR DELETE THE
 								DATA WE COLLECT FROM YOU?
 							</h2>

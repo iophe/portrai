@@ -384,18 +384,29 @@ SELECT jsonb_build_object(
 ) as resume_data;
 
 -- name: GetUserResumeVersions :one
-SELECT
-    (SELECT version from public.resume_versions rv where rv.version_id = u.current_resume_version AND rv.user_id = @user_id::uuid),
+WITH user_data AS (
+    SELECT 
+        u.id, 
+        u.current_resume_version
+    FROM 
+        public.users u
+    WHERE 
+        u.id = @user_id::uuid
+)
+SELECT 
+    current_rv.version AS current_version,
     ARRAY(
         SELECT rv.version 
         FROM public.resume_versions rv 
-        WHERE rv.user_id = u.id
+        WHERE rv.user_id = ud.id
         ORDER BY rv.version
     )::text[] AS all_versions
 FROM 
-    public.users u
-WHERE 
-    u.id = @user_id::uuid;
+    user_data ud
+JOIN 
+    public.resume_versions current_rv ON current_rv.version_id = ud.current_resume_version 
+                                     AND current_rv.user_id = @user_id::uuid
+LIMIT 1;
 
 -- name: ChangeResumeVersion :exec
 UPDATE public.users
@@ -421,3 +432,76 @@ SET
 WHERE 
     user_id = @user_id::uuid
     AND version = @old_name::text;
+
+
+-- name: UpdateResumeUIDinVersion :exec
+UPDATE public.resume_versions
+SET 
+    resume_uid = @resume_uid::uuid
+WHERE 
+    user_id = @user_id::uuid
+    AND version_id = @version_id::bigint;
+
+-- name: InsertGeneratedResume :exec
+INSERT INTO public.generated_resume (
+    resume_file_id,
+    filename,
+    user_id,
+    resume_uid,
+    template_name
+) VALUES (
+    @resume_file_id::uuid,
+    @filename::text,
+    @user_id::uuid,
+    @resume_uid::uuid,
+    @template_name::text
+);
+
+-- name: GetCurrentResumeUID :one
+SELECT 
+    rv.resume_uid
+FROM 
+    public.users u
+JOIN 
+    public.resume_versions rv ON rv.version_id = u.current_resume_version AND rv.user_id = @user_id::uuid
+WHERE 
+    u.id = @user_id::uuid
+LIMIT 1;
+
+-- name: GetGeneratedResumeByUID :one
+SELECT 
+    resume_file_id,
+    filename,
+    user_id,
+    resume_uid,
+    template_name,
+    created_at
+FROM 
+    public.generated_resume
+WHERE 
+    resume_uid = @resume_uid::uuid and user_id = @user_id::uuid
+LIMIT 1;
+
+-- name: GetGeneratedResumeByUserID :one
+SELECT 
+    resume_file_id,
+    filename,
+    user_id,
+    resume_uid,
+    template_name,
+    created_at
+FROM 
+    public.generated_resume
+WHERE 
+    user_id = @user_id::uuid
+LIMIT 1;
+
+-- name: UpdateGeneratedResume :exec
+UPDATE public.generated_resume
+SET
+    template_name = COALESCE(sqlc.narg(template_name)::text, template_name),
+    resume_uid = COALESCE(sqlc.narg(resume_uid)::uuid, resume_uid),
+    created_at = CURRENT_TIMESTAMP,
+    filename = COALESCE(sqlc.narg(filename)::text, filename)
+WHERE 
+    resume_file_id = @resume_file_id::uuid;
